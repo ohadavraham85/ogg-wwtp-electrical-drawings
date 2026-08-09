@@ -125,6 +125,11 @@
     max-height:65vh;
     border-radius:8px;
     border:1px solid var(--line);
+    transition:box-shadow .15s, border-color .15s;
+  }
+  .table-scroll.dragOver{
+    border-color:var(--accent);
+    box-shadow:inset 0 0 0 2px var(--accent);
   }
   table{
     width:100%;
@@ -424,7 +429,7 @@
     <div class="folderBar">
       <button type="button" id="pickBtn-panels">📁 בחרו את תיקיית התוכניות (OneDrive)</button>
       <button type="button" id="refreshBtn-panels" style="display:none">🔄 רענן קבצים</button>
-      <span class="folderStatus" id="folderStatus-panels">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים</span>
+      <span class="folderStatus" id="folderStatus-panels">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים (אפשר גם לגרור קבצים או תיקייה לתוך הטבלה)</span>
       <a href="#" class="changeFolder" id="changeFolder-panels">תיקייה אחרת</a>
       <input type="file" id="folderInput-panels" webkitdirectory directory multiple style="display:none">
     </div>
@@ -455,7 +460,7 @@
     <div class="folderBar">
       <button type="button" id="pickBtn-planner">📁 בחרו את תיקיית תוכניות המתכנן</button>
       <button type="button" id="refreshBtn-planner" style="display:none">🔄 רענן קבצים</button>
-      <span class="folderStatus" id="folderStatus-planner">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים</span>
+      <span class="folderStatus" id="folderStatus-planner">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים (אפשר גם לגרור קבצים או תיקייה לתוך הטבלה)</span>
       <a href="#" class="changeFolder" id="changeFolder-planner">תיקייה אחרת</a>
       <input type="file" id="folderInput-planner" webkitdirectory directory multiple style="display:none">
     </div>
@@ -483,7 +488,7 @@
     <div class="folderBar">
       <button type="button" id="pickBtn-greenhouses">📁 בחרו את תיקיית לוחות החממות</button>
       <button type="button" id="refreshBtn-greenhouses" style="display:none">🔄 רענן קבצים</button>
-      <span class="folderStatus" id="folderStatus-greenhouses">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים</span>
+      <span class="folderStatus" id="folderStatus-greenhouses">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים (אפשר גם לגרור קבצים או תיקייה לתוך הטבלה)</span>
       <a href="#" class="changeFolder" id="changeFolder-greenhouses">תיקייה אחרת</a>
       <input type="file" id="folderInput-greenhouses" webkitdirectory directory multiple style="display:none">
     </div>
@@ -510,7 +515,7 @@
     <div class="folderBar">
       <button type="button" id="pickBtn-hvac">📁 בחרו את תיקיית לוחות מיזוג האוויר</button>
       <button type="button" id="refreshBtn-hvac" style="display:none">🔄 רענן קבצים</button>
-      <span class="folderStatus" id="folderStatus-hvac">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים</span>
+      <span class="folderStatus" id="folderStatus-hvac">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים (אפשר גם לגרור קבצים או תיקייה לתוך הטבלה)</span>
       <a href="#" class="changeFolder" id="changeFolder-hvac">תיקייה אחרת</a>
       <input type="file" id="folderInput-hvac" webkitdirectory directory multiple style="display:none">
     </div>
@@ -537,7 +542,7 @@
     <div class="folderBar">
       <button type="button" id="pickBtn-hv">📁 בחרו את תיקיית לוחות מתח גבוה</button>
       <button type="button" id="refreshBtn-hv" style="display:none">🔄 רענן קבצים</button>
-      <span class="folderStatus" id="folderStatus-hv">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים</span>
+      <span class="folderStatus" id="folderStatus-hv">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים (אפשר גם לגרור קבצים או תיקייה לתוך הטבלה)</span>
       <a href="#" class="changeFolder" id="changeFolder-hv">תיקייה אחרת</a>
       <input type="file" id="folderInput-hv" webkitdirectory directory multiple style="display:none">
     </div>
@@ -564,7 +569,7 @@
     <div class="folderBar">
       <button type="button" id="pickBtn-mtsh-lv">📁 בחרו את תיקיית מט"ש קיים - מתח נמוך</button>
       <button type="button" id="refreshBtn-mtsh-lv" style="display:none">🔄 רענן קבצים</button>
-      <span class="folderStatus" id="folderStatus-mtsh-lv">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים</span>
+      <span class="folderStatus" id="folderStatus-mtsh-lv">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים (אפשר גם לגרור קבצים או תיקייה לתוך הטבלה)</span>
       <a href="#" class="changeFolder" id="changeFolder-mtsh-lv">תיקייה אחרת</a>
       <input type="file" id="folderInput-mtsh-lv" webkitdirectory directory multiple style="display:none">
     </div>
@@ -594,7 +599,7 @@
     <div class="folderBar">
       <button type="button" id="pickBtn-mtsh-hv">📁 בחרו את תיקיית מט"ש קיים - מתח גבוה</button>
       <button type="button" id="refreshBtn-mtsh-hv" style="display:none">🔄 רענן קבצים</button>
-      <span class="folderStatus" id="folderStatus-mtsh-hv">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים</span>
+      <span class="folderStatus" id="folderStatus-mtsh-hv">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים (אפשר גם לגרור קבצים או תיקייה לתוך הטבלה)</span>
       <a href="#" class="changeFolder" id="changeFolder-mtsh-hv">תיקייה אחרת</a>
       <input type="file" id="folderInput-mtsh-hv" webkitdirectory directory multiple style="display:none">
     </div>
@@ -619,6 +624,9 @@
     זרקתם קובץ חדש לתוך התיקייה? לחצו "רענן קבצים" כדי שהדף יזהה אותו מיד, בלי לבחור תיקייה מחדש.
     בדפדפנים אחרים (פיירפוקס/ספארי) עדיין צריך לבחור את התיקייה בכל פתיחה.
     <br>לעדכון רשימת התוכניות עצמה (שורות חדשות/סטטוסים) — שלחו קובץ CSV/Excel מעודכן.
+    <br>בכל טאב אפשר גם לגרור קבצים (או תיקייה שלמה) ישירות לתוך הטבלה במקום להשתמש בכפתור "בחרו תיקייה" —
+    הקבצים שנגררים מצטרפים לקבצים שכבר נטענו. בטאב "מט"ש קיים - מתח גבוה" (הריק, למילוי ידני):
+    אם קובץ שנגרר לא תואם לאף שורה קיימת, תיווצר עבורו שורה חדשה אוטומטית לפי מספר התוכנית מתוך שם הקובץ.
     <br>בטאבים "חממות" / "מיזוג אוויר" / "מתח גבוה" / "מט"ש קיים - מתח נמוך" / "מט"ש קיים - מתח גבוה":
     עמודת מס' המבנה ניתנת למילוי ידני ישירות בטבלה,
     ונשמרת אוטומטית בדפדפן הזה (לא מסתנכרנת בין מחשבים/דפדפנים שונים).
@@ -805,9 +813,11 @@ function createPanelTable(cfg){
     });
   }
 
-  function buildFileIndex(fileList){
-    fileByFull = new Map();
-    fileBySuffix = new Map();
+  function buildFileIndex(fileList, merge){
+    if (!merge){
+      fileByFull = new Map();
+      fileBySuffix = new Map();
+    }
     const files = Array.from(fileList).filter(f => /\.(pdf|dwg|xlsx)$/i.test(f.name));
     files.forEach(f => {
       const ln = leadingNum(f.name);
@@ -850,6 +860,89 @@ function createPanelTable(cfg){
       }
     });
     return matchedCount;
+  }
+
+  // ---- Drag & drop: drop files (or whole folders) straight onto the table ----
+  async function walkDataTransferItems(items){
+    const files = [];
+    const queue = [];
+    for (const item of items){
+      const entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
+      if (entry){
+        queue.push(entry);
+      } else if (item.getAsFile){
+        const f = item.getAsFile();
+        if (f) files.push(f);
+      }
+    }
+    while (queue.length){
+      const entry = queue.shift();
+      if (entry.isFile){
+        const f = await new Promise((res) => entry.file(res, () => res(null)));
+        if (f) files.push(f);
+      } else if (entry.isDirectory){
+        const reader = entry.createReader();
+        const readAll = () => new Promise((res) => reader.readEntries(res, () => res([])));
+        let batch;
+        do {
+          batch = await readAll();
+          queue.push(...batch);
+        } while (batch.length > 0);
+      }
+    }
+    return files;
+  }
+
+  function handleDroppedFiles(files){
+    const relevant = files.filter(f => /\.(pdf|dwg|xlsx)$/i.test(f.name));
+    buildFileIndex(relevant, true);
+    let createdCount = 0;
+    if (fullyEditable){
+      const existingCodes = new Set(panels.map(p => normCode(p.code || '')));
+      relevant.forEach(f => {
+        const raw = f.name.replace(/\.[a-z0-9]+$/i, '').trim().split(/\s+/)[0];
+        const norm = normCode(raw);
+        if (!norm || existingCodes.has(norm)) return;
+        existingCodes.add(norm);
+        panels.push({ _id: uid(), code: raw, name: '', building_num: '' });
+        createdCount++;
+      });
+      if (createdCount) persistFullTable();
+    }
+    const matched = matchPanelsToFiles();
+    applyFilters();
+    if (folderStatus){
+      const extra = createdCount ? ` — נוצרו ${createdCount} שורות חדשות` : '';
+      folderStatus.textContent = relevant.length
+        ? `נגררו ${relevant.length} קבצים — שויכו ${matched} מתוך ${panels.length} רשומות${extra}`
+        : 'לא נמצאו קבצי PDF/DWG/XLSX בגרירה';
+      folderStatus.classList.add('ok');
+    }
+  }
+
+  const dropZone = tbody.closest('.table-scroll');
+  if (dropZone){
+    let dragDepth = 0;
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); });
+    dropZone.addEventListener('dragenter', (e) => {
+      e.preventDefault();
+      dragDepth++;
+      dropZone.classList.add('dragOver');
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dragDepth = Math.max(0, dragDepth - 1);
+      if (dragDepth === 0) dropZone.classList.remove('dragOver');
+    });
+    dropZone.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      dragDepth = 0;
+      dropZone.classList.remove('dragOver');
+      const items = e.dataTransfer.items;
+      const files = items && items.length
+        ? await walkDataTransferItems(Array.from(items))
+        : Array.from(e.dataTransfer.files);
+      if (files.length) handleDroppedFiles(files);
+    });
   }
 
   pickBtn.addEventListener('click', async () => {
