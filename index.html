@@ -371,6 +371,8 @@
     <button class="tabBtn" data-tab="tab-greenhouses">לוחות חממות</button>
     <button class="tabBtn" data-tab="tab-hvac">לוחות מיזוג אוויר</button>
     <button class="tabBtn" data-tab="tab-hv">לוחות מתח גבוה</button>
+    <button class="tabBtn" data-tab="tab-mtsh-lv">מט"ש קיים - מתח נמוך</button>
+    <button class="tabBtn" data-tab="tab-mtsh-hv">מט"ש קיים - מתח גבוה</button>
   </div>
   </div>
 
@@ -517,6 +519,60 @@
     </div>
   </div>
 
+  <div id="tab-mtsh-lv" class="tabPanel">
+    <div class="stickyControls" id="stickyControls-mtsh-lv">
+    <div class="topRow"><div class="sub matchStat" id="matchStat-mtsh-lv"></div><div class="sub" id="count-mtsh-lv"></div></div>
+    <div class="controls">
+      <input type="text" id="search-mtsh-lv" placeholder="חיפוש לפי מספר תוכנית / שם...">
+      <label class="hasFileToggle"><input type="checkbox" id="hasFile-mtsh-lv"> הצג רק שורות עם קובץ מקושר</label>
+    </div>
+    <div class="folderBar">
+      <button type="button" id="pickBtn-mtsh-lv">📁 בחרו את תיקיית מט"ש קיים - מתח נמוך</button>
+      <button type="button" id="refreshBtn-mtsh-lv" style="display:none">🔄 רענן קבצים</button>
+      <span class="folderStatus" id="folderStatus-mtsh-lv">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים</span>
+      <a href="#" class="changeFolder" id="changeFolder-mtsh-lv">תיקייה אחרת</a>
+      <input type="file" id="folderInput-mtsh-lv" webkitdirectory directory multiple style="display:none">
+    </div>
+    <div class="colToggleWrap">
+      <div class="colToggle" id="colToggle-mtsh-lv"></div>
+      <div class="colToggleCount" id="colToggleCount-mtsh-lv"></div>
+    </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr id="headRow-mtsh-lv"></tr></thead>
+        <tbody id="tableBody-mtsh-lv"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-mtsh-hv" class="tabPanel">
+    <div class="stickyControls" id="stickyControls-mtsh-hv">
+    <div class="topRow"><div class="sub matchStat" id="matchStat-mtsh-hv"></div><div class="sub" id="count-mtsh-hv"></div></div>
+    <div class="controls">
+      <input type="text" id="search-mtsh-hv" placeholder="חיפוש לפי מספר תוכנית / שם...">
+      <label class="hasFileToggle"><input type="checkbox" id="hasFile-mtsh-hv"> הצג רק שורות עם קובץ מקושר</label>
+    </div>
+    <div class="folderBar">
+      <button type="button" id="pickBtn-mtsh-hv">📁 בחרו את תיקיית מט"ש קיים - מתח גבוה</button>
+      <button type="button" id="refreshBtn-mtsh-hv" style="display:none">🔄 רענן קבצים</button>
+      <span class="folderStatus" id="folderStatus-mtsh-hv">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים</span>
+      <a href="#" class="changeFolder" id="changeFolder-mtsh-hv">תיקייה אחרת</a>
+      <input type="file" id="folderInput-mtsh-hv" webkitdirectory directory multiple style="display:none">
+    </div>
+    <div class="colToggleWrap">
+      <div class="colToggle" id="colToggle-mtsh-hv"></div>
+      <div class="colToggleCount" id="colToggleCount-mtsh-hv"></div>
+    </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr id="headRow-mtsh-hv"></tr></thead>
+        <tbody id="tableBody-mtsh-hv"></tbody>
+      </table>
+    </div>
+  </div>
+
   <footer>
     הדף לא שומר עותק של הקבצים בתוכו — הוא קורא אותם ישירות מהתיקייה שתבחרו בכל טאב (כל טאב עם תיקייה נפרדת משלו).
     ההתאמה נעשית לפי מספר התוכנית מול מספרי הקבצים בפועל בתיקייה.
@@ -525,7 +581,8 @@
     זרקתם קובץ חדש לתוך התיקייה? לחצו "רענן קבצים" כדי שהדף יזהה אותו מיד, בלי לבחור תיקייה מחדש.
     בדפדפנים אחרים (פיירפוקס/ספארי) עדיין צריך לבחור את התיקייה בכל פתיחה.
     <br>לעדכון רשימת התוכניות עצמה (שורות חדשות/סטטוסים) — שלחו קובץ CSV/Excel מעודכן.
-    <br>בטאבים "חממות" / "מיזוג אוויר" / "מתח גבוה": עמודת מס' המבנה ניתנת למילוי ידני ישירות בטבלה,
+    <br>בטאבים "חממות" / "מיזוג אוויר" / "מתח גבוה" / "מט"ש קיים - מתח נמוך" / "מט"ש קיים - מתח גבוה":
+    עמודת מס' המבנה ניתנת למילוי ידני ישירות בטבלה,
     ונשמרת אוטומטית בדפדפן הזה (לא מסתנכרנת בין מחשבים/דפדפנים שונים).
   </footer>
 
@@ -1076,6 +1133,8 @@ createPanelTable({
 });
 makeScannedTab('hvac', [{"code": "24005.1", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.1-9", "name": "לוחות מיזוג .pdf עדכון שגיא", "file_count": 1, "building_num": ""}, {"code": "24005.2", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.3", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.4", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.5", "name": "", "file_count": 1, "building_num": "90"}, {"code": "24005.6", "name": "", "file_count": 1, "building_num": "100"}, {"code": "24005.7", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.8", "name": "", "file_count": 1, "building_num": "102"}, {"code": "24005.9", "name": "", "file_count": 1, "building_num": ""}]);
 makeScannedTab('hv', [{"code": "25-0089", "name": "", "file_count": 1, "building_num": ""}, {"code": "3723300062-1", "name": "", "file_count": 1, "building_num": "83"}, {"code": "3723300062-3", "name": "AS MADE 26.08.25 Daniel", "file_count": 2, "building_num": "50"}]);
+makeScannedTab('mtsh-lv', [{"code": "652-001-10", "name": "לוח ראשי EB - AS MADE 15.4.12", "file_count": 4, "building_num": ""}, {"code": "652-002-10", "name": "לוח MCC1", "file_count": 38, "building_num": ""}, {"code": "652-003-10", "name": "לוח MCC2", "file_count": 38, "building_num": ""}, {"code": "652-005-11", "name": "EB2-1 לוח שרותי בית", "file_count": 8, "building_num": ""}, {"code": "652-006-11", "name": "EB2 לוח", "file_count": 12, "building_num": ""}, {"code": "652-007-11", "name": "EB1 לוח ראשי", "file_count": 22, "building_num": ""}, {"code": "652-008-11", "name": "EB1-1 לוח שירותי בית", "file_count": 6, "building_num": ""}, {"code": "652-009-11", "name": "EB1-MCC לוח", "file_count": 58, "building_num": ""}, {"code": "652-010-11", "name": "לוח משנה-מנהלה", "file_count": 15, "building_num": ""}, {"code": "652-011-11", "name": "שירותי ביתCB2 לוח משנה", "file_count": 8, "building_num": ""}, {"code": "652-014-11", "name": "MCC1 לוח ווסתי מהירות", "file_count": 5, "building_num": ""}, {"code": "652-015-11", "name": "MCC2 לוח ווסתי מהירות", "file_count": 4, "building_num": ""}, {"code": "652-016-11", "name": "EB1 PLC", "file_count": 14, "building_num": ""}, {"code": "652-017-11", "name": "תיבת פיקוד מקומית", "file_count": 3, "building_num": ""}, {"code": "652-018-11", "name": "תיבת פיקוד מקומית", "file_count": 2, "building_num": ""}, {"code": "652-019-11", "name": "EB2 לוח בקר", "file_count": 9, "building_num": ""}, {"code": "מבנה חדר חשמל - EB1 (מבוטל)", "name": "מבנה חדר חשמל - EB1 (מבוטל)", "file_count": 3, "building_num": ""}, {"code": "DWG טכנומטיק עבודות מוקדמות", "name": "DWG טכנומטיק עבודות מוקדמות", "file_count": 28, "building_num": ""}, {"code": "EB2 לוחות בחדר חשמל", "name": "EB2 לוחות בחדר חשמל", "file_count": 4, "building_num": ""}, {"code": "EB2 קדם טיפול", "name": "EB2 קדם טיפול", "file_count": 4, "building_num": ""}, {"code": "ECB מבנה מנהלה", "name": "ECB מבנה מנהלה", "file_count": 2, "building_num": ""}, {"code": "PDF Images", "name": "PDF Images", "file_count": 6, "building_num": ""}, {"code": "PDF layout", "name": "PDF layout", "file_count": 6, "building_num": ""}, {"code": "PDF תוכניות יצרן לוחות חשמל", "name": "PDF תוכניות יצרן לוחות חשמל", "file_count": 1, "building_num": ""}, {"code": "RFQ's", "name": "RFQ's", "file_count": 47, "building_num": ""}, {"code": "חדר קדם טיפול EB2", "name": "חדר קדם טיפול EB2", "file_count": 10, "building_num": ""}, {"code": "לוח חשמל MCC1", "name": "לוח חשמל MCC1", "file_count": 3, "building_num": ""}, {"code": "לוח חשמל MCC2", "name": "לוח חשמל MCC2", "file_count": 16, "building_num": ""}, {"code": "לוח חשמל MCC3", "name": "לוח חשמל MCC3", "file_count": 13, "building_num": ""}, {"code": "לוח חשמל ראשי שנאי 1 שנאי 2", "name": "לוח חשמל ראשי שנאי 1 שנאי 2", "file_count": 27, "building_num": ""}, {"code": "לוח מדידות וגלישה ILS", "name": "לוח מדידות וגלישה ILS", "file_count": 15, "building_num": ""}, {"code": "לוחות בתכנון וייצור מקומי", "name": "לוחות בתכנון וייצור מקומי", "file_count": 17, "building_num": ""}, {"code": "לוחות מקומיים", "name": "לוחות מקומיים", "file_count": 5, "building_num": ""}, {"code": "מבנה משרדים וחדר חשמל ECB", "name": "מבנה משרדים וחדר חשמל ECB", "file_count": 13, "building_num": ""}, {"code": "ציוד", "name": "ציוד", "file_count": 25, "building_num": ""}, {"code": "קבצים למיון", "name": "קבצים כלליים לא ממוינים (מגוון לוחות)", "file_count": 73, "building_num": ""}, {"code": "קבצים כלליים (שורש הארכיון)", "name": "קבצים כלליים (שורש הארכיון)", "file_count": 3, "building_num": ""}, {"code": "תוכניות סרוקות AS MADE", "name": "תוכניות סרוקות AS MADE", "file_count": 2, "building_num": ""}, {"code": "תכנון לוח משאבת אימפלר גומי", "name": "תוכניות לוח - משאבת אימפלר גומי", "file_count": 5, "building_num": ""}, {"code": "תיקיה חדשה (3)", "name": "תיקיה חדשה (3)", "file_count": 15, "building_num": ""}]);
+makeScannedTab('mtsh-hv', [{"code": "652-012-11", "name": "2- לוח שירותי  בית בתחנת מיתוג ראשית", "file_count": 6, "building_num": ""}, {"code": "652-020", "name": "לוח תחנת שאיבה G", "file_count": 10, "building_num": ""}]);
 
 // Register service worker for PWA installability (works only when served over
 // HTTPS from a real URL, e.g. GitHub Pages — silently does nothing on file://).
