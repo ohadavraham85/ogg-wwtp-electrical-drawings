@@ -406,7 +406,7 @@
   </header>
 
   <div class="tabs">
-    <button class="tabBtn active" data-tab="tab-panels">לוחות חשמל</button>
+    <button class="tabBtn active" data-tab="tab-panels">לוחות ILS /חלומה</button>
     <button class="tabBtn" data-tab="tab-planner">תוכניות מתכנן</button>
     <button class="tabBtn" data-tab="tab-greenhouses">לוחות חממות</button>
     <button class="tabBtn" data-tab="tab-hvac">לוחות מיזוג אוויר</button>
@@ -432,6 +432,10 @@
       <span class="folderStatus" id="folderStatus-panels">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים (אפשר גם לגרור קבצים או תיקייה לתוך הטבלה)</span>
       <a href="#" class="changeFolder" id="changeFolder-panels">תיקייה אחרת</a>
       <input type="file" id="folderInput-panels" webkitdirectory directory multiple style="display:none">
+    </div>
+    <div class="folderBar">
+      <button type="button" id="pickBtn2-panels">📁 הוסיפו תיקייה נוספת (ILS / חלומה)</button>
+      <span class="folderStatus" id="folderStatus2-panels">אפשר לשייך עוד תיקייה — הקבצים ממנה יצטרפו לתיקייה הראשונה</span>
     </div>
     <div class="colToggleWrap">
       <div class="colToggle" id="colToggle-panels"></div>
@@ -1021,7 +1025,7 @@ function createPanelTable(cfg){
   }
 
   // Try to reuse a previously granted folder handle on load (Chrome/Edge only)
-  (async () => {
+  const primaryRestorePromise = (async () => {
     if (!supportsFSAccess) return;
     const dirHandle = await handleDB.get(handleKey);
     if (!dirHandle) return;
@@ -1035,6 +1039,77 @@ function createPanelTable(cfg){
       }
     } catch(err){ /* handle no longer valid, ignore */ }
   })();
+
+  // ---- Optional second folder (e.g. ILS/חלומה manufacturer drawings), only wired up
+  // when the tab's markup includes a pickBtn2 — currently just the panels tab. Its files
+  // merge into the same index as the main folder instead of replacing it.
+  const pickBtn2 = document.getElementById('pickBtn2-' + idPrefix);
+  const folderStatus2 = document.getElementById('folderStatus2-' + idPrefix);
+  if (pickBtn2){
+    const handleKey2 = 'dir2-' + idPrefix;
+
+    async function scanDirHandle2(dirHandle){
+      if (folderStatus2) folderStatus2.textContent = 'סורק תיקייה...';
+      try {
+        const files = await collectFilesFromDirHandle(dirHandle);
+        const fileCount = buildFileIndex(files, true);
+        const matched = matchPanelsToFiles();
+        if (folderStatus2){
+          folderStatus2.textContent = fileCount === 0
+            ? `⚠️ ${dirHandle.name} — לא נמצאו קבצי PDF/DWG/XLSX בתיקייה הזו`
+            : `📂 ${dirHandle.name} — נוספו ${fileCount} קבצים, שויכו ${matched} מתוך ${panels.length} רשומות בסה"כ`;
+          folderStatus2.classList.add('ok');
+        }
+        applyFilters();
+      } catch(err){
+        console.error(err);
+        if (folderStatus2){
+          folderStatus2.textContent = 'שגיאה בסריקת התיקייה — נסו שוב';
+          folderStatus2.classList.remove('ok');
+        }
+      }
+    }
+
+    pickBtn2.addEventListener('click', async () => {
+      if (!supportsFSAccess){
+        alert('שיוך תיקייה נוספת נתמך רק בכרום/אדג׳ (File System Access API)');
+        return;
+      }
+      const savedHandle2 = await handleDB.get(handleKey2);
+      if (savedHandle2){
+        try {
+          const perm = await savedHandle2.requestPermission({ mode: 'read' });
+          if (perm === 'granted'){ await scanDirHandle2(savedHandle2); return; }
+        } catch(err){
+          console.warn('saved second handle no longer valid, opening fresh picker', err);
+        }
+      }
+      try {
+        const dirHandle = await window.showDirectoryPicker();
+        await handleDB.set(handleKey2, dirHandle);
+        await scanDirHandle2(dirHandle);
+      } catch(err){
+        if (err.name !== 'AbortError') console.error(err);
+      }
+    });
+
+    // Restore after the primary folder so its merge isn't wiped out by the primary
+    // folder's own (index-replacing) restore, whichever order they'd otherwise race in.
+    (async () => {
+      await primaryRestorePromise;
+      if (!supportsFSAccess) return;
+      const dirHandle2 = await handleDB.get(handleKey2);
+      if (!dirHandle2) return;
+      try {
+        const perm = await dirHandle2.queryPermission({ mode: 'read' });
+        if (perm === 'granted'){
+          await scanDirHandle2(dirHandle2);
+        } else if (folderStatus2){
+          folderStatus2.textContent = `📂 ${dirHandle2.name} — לחצו כדי לאשר גישה מחדש`;
+        }
+      } catch(err){ /* handle no longer valid, ignore */ }
+    })();
+  }
 
   folderInput.addEventListener('change', (e) => {
     const fileCount = buildFileIndex(e.target.files);
