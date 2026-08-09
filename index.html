@@ -208,6 +208,41 @@
     padding:5px 8px;
   }
   input.editCell:focus{outline:none;border-color:var(--accent);}
+  .editWrap{position:relative;}
+  .fillHandle{
+    position:absolute;
+    width:8px;height:8px;
+    right:-1px;bottom:-1px;
+    background:var(--accent);
+    border:1px solid var(--bg);
+    cursor:crosshair;
+    display:none;
+    z-index:2;
+  }
+  .editWrap:hover .fillHandle,
+  .editWrap:focus-within .fillHandle{display:block;}
+  td.fillPreview{outline:1.5px dashed var(--accent); outline-offset:-1px;}
+  .delRowBtn{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:4px;
+    color:var(--text-dim);
+    cursor:pointer;
+    font-size:.78rem;
+    padding:3px 8px;
+    line-height:1;
+  }
+  .delRowBtn:hover{color:var(--red);border-color:var(--red);}
+  .addRowBtn{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--text);
+    cursor:pointer;
+    font-size:.85rem;
+    padding:8px 14px;
+  }
+  .addRowBtn:hover{border-color:var(--accent);color:var(--accent);}
   .badge{
     display:inline-block;
     padding:3px 10px;
@@ -552,7 +587,10 @@
     <div class="controls">
       <input type="text" id="search-mtsh-hv" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-mtsh-hv"> הצג רק שורות עם קובץ מקושר</label>
+      <button type="button" class="addRowBtn" id="addRowBtn-mtsh-hv">+ הוסף שורה</button>
+      <button type="button" class="addRowBtn" id="addRows10Btn-mtsh-hv">+ 10 שורות</button>
     </div>
+    <div class="sub" style="margin-bottom:10px">טבלה ריקה למילוי ידני — הקלידו את מס' התוכנית, התיאור ומס' המבנה. אפשר לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל). לאחר המילוי, בחרו תיקייה למטה כדי לקשר קבצים לפי מס' התוכנית.</div>
     <div class="folderBar">
       <button type="button" id="pickBtn-mtsh-hv">📁 בחרו את תיקיית מט"ש קיים - מתח גבוה</button>
       <button type="button" id="refreshBtn-mtsh-hv" style="display:none">🔄 רענן קבצים</button>
@@ -654,20 +692,45 @@ async function collectFilesFromDirHandle(dirHandle){
 function createPanelTable(cfg){
   const {
     idPrefix, panels, columns, defaultVisible,
-    statusClassFn, searchKeys, extraFilters, editableFields, matchMode
+    statusClassFn, searchKeys, extraFilters, editableFields, matchMode,
+    fullyEditable, allowAddRows
   } = cfg;
   const editable = new Set(editableFields || []);
   const editStoreKey = f => 'panel-edit:' + idPrefix + ':' + f;
+  const fullTableKey = 'panel-fulltable:' + idPrefix;
+  let uidCounter = 0;
+  function uid(){ return 'r' + Date.now().toString(36) + (uidCounter++).toString(36); }
+
+  if (fullyEditable){
+    // The whole table (every field of every row) is persisted as one blob, since
+    // rows are user-created and have no stable identity of their own until saved.
+    try {
+      const saved = JSON.parse(localStorage.getItem(fullTableKey) || 'null');
+      if (Array.isArray(saved)){
+        panels.length = 0;
+        saved.forEach(p => panels.push(p));
+      }
+    } catch(err){ console.warn('could not load saved table', err); }
+    panels.forEach(p => { if (!p._id) p._id = uid(); });
+  }
+
+  function persistFullTable(){
+    try { localStorage.setItem(fullTableKey, JSON.stringify(panels)); }
+    catch(err){ console.warn('could not save table', err); }
+  }
 
   // Load any previously saved manual edits (persisted per browser via localStorage) and apply them.
-  editable.forEach(field => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(editStoreKey(field)) || '{}');
-      panels.forEach(p => {
-        if (p.code && saved[p.code] !== undefined) p[field] = saved[p.code];
-      });
-    } catch(err){ console.warn('could not load saved edits for', field, err); }
-  });
+  // (Fully-editable tables persist the whole row set instead — see fullTableKey above.)
+  if (!fullyEditable){
+    editable.forEach(field => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(editStoreKey(field)) || '{}');
+        panels.forEach(p => {
+          if (p.code && saved[p.code] !== undefined) p[field] = saved[p.code];
+        });
+      } catch(err){ console.warn('could not load saved edits for', field, err); }
+    });
+  }
 
   function saveEdit(field, code, value){
     try {
@@ -710,15 +773,37 @@ function createPanelTable(cfg){
   }
   function normCode(s){ return matchMode === 'alphanumeric' ? normAlnum(s) : normDigits(s); }
 
+  function findEditedRow(target){
+    const id = target.dataset.id;
+    if (id) return panels.find(pp => pp._id === id);
+    return panels.find(pp => pp.code === target.dataset.code);
+  }
+
   tbody.addEventListener('input', (e) => {
     if (!e.target.classList.contains('editCell')) return;
     const field = e.target.dataset.field;
-    const code = e.target.dataset.code;
     const value = e.target.value;
-    const p = panels.find(pp => pp.code === code);
+    const p = findEditedRow(e.target);
     if (p) p[field] = value;
-    saveEdit(field, code, value);
+    if (fullyEditable) persistFullTable();
+    else saveEdit(field, e.target.dataset.code, value);
   });
+
+  if (fullyEditable){
+    // Re-run file matching (which can turn the code cell into a link) once typing is
+    // done. Refresh only that row's code cell — a full re-render (tbody.innerHTML = '')
+    // here would destroy whatever the user just tabbed/clicked into next, stealing focus.
+    tbody.addEventListener('change', (e) => {
+      if (!e.target.classList.contains('editCell') || e.target.dataset.field !== 'code') return;
+      const id = e.target.dataset.id;
+      matchPanelsToFiles();
+      updateMatchStat();
+      const idx = panels.findIndex(pp => pp._id === id);
+      if (idx === -1) return;
+      const td = tbody.querySelector(`tr[data-id="${CSS.escape(id)}"] td[data-col="code"]`);
+      if (td) td.innerHTML = cellContent(panels[idx], 'code', idx);
+    });
+  }
 
   function buildFileIndex(fileList){
     fileByFull = new Map();
@@ -903,10 +988,32 @@ function createPanelTable(cfg){
     });
   }
 
+  function editableCellHtml(p, key, placeholder){
+    const val = (p[key] || '').replace(/"/g, '&quot;');
+    const idAttr = p._id ? ` data-id="${p._id}"` : '';
+    const codeAttr = ` data-code="${(p.code||'').replace(/"/g,'&quot;')}"`;
+    return `<div class="editWrap">` +
+      `<input type="text" class="editCell" data-field="${key}"${idAttr}${codeAttr} value="${val}" placeholder="${placeholder||'...'}">` +
+      (fullyEditable ? `<span class="fillHandle" data-field="${key}"></span>` : '') +
+      `</div>`;
+  }
+
   function cellContent(p, key, idx){
+    if (key === '__delete__'){
+      return `<button type="button" class="delRowBtn" data-id="${p._id||''}" title="מחק שורה">✕</button>`;
+    }
+    if (key === 'code' && fullyEditable){
+      const files = panelFiles.get(idx);
+      let linksHtml = '';
+      if (files && files.length){
+        linksHtml = `<div class="fileList">` +
+          files.map((f,i) => `<a href="${f.url}" target="_blank" rel="noopener">📄 קובץ ${i+1}</a>`).join(' · ') +
+          `</div>`;
+      }
+      return editableCellHtml(p, 'code', "מס' תוכנית...") + linksHtml;
+    }
     if (editable.has(key)){
-      const val = (p[key] || '').replace(/"/g, '&quot;');
-      return `<input type="text" class="editCell" data-field="${key}" data-code="${(p.code||'').replace(/"/g,'&quot;')}" value="${val}" placeholder="...">`;
+      return editableCellHtml(p, key);
     }
     if (key === 'code'){
       const files = panelFiles.get(idx);
@@ -930,27 +1037,34 @@ function createPanelTable(cfg){
     return p[key] || '';
   }
 
+  function updateMatchStat(){
+    if (!matchStatEl) return;
+    const totalMatched = panels.reduce((n, p, i) => n + (panelFiles.has(i) ? 1 : 0), 0);
+    matchStatEl.textContent = totalMatched > 0 ? `✓ ${totalMatched} עם תוכנית מקושרת` : '';
+  }
+
   function render(list){
     const cols = activeColumns();
     tbody.innerHTML = '';
     if (list.length === 0){
-      tbody.innerHTML = `<tr><td colspan="${cols.length}" class="empty">לא נמצאו רשומות תואמות</td></tr>`;
+      const emptyMsg = (fullyEditable && panels.length === 0)
+        ? 'הטבלה ריקה — לחצו "הוסף שורה" כדי להתחיל למלא'
+        : 'לא נמצאו רשומות תואמות';
+      tbody.innerHTML = `<tr><td colspan="${cols.length}" class="empty">${emptyMsg}</td></tr>`;
     } else {
       list.forEach(({p, idx}, rowPos) => {
         const tr = document.createElement('tr');
+        if (p._id) tr.dataset.id = p._id;
         tr.innerHTML = cols.map(c => {
           if (c.key === '__rownum__') return `<td class="rownum">${rowPos + 1}</td>`;
           const wrapClass = (c.key === 'notes' || c.key === 'ils_notes' || c.key === 'update_f') ? ' class="wrap-notes"' : '';
-          return `<td${wrapClass}>${cellContent(p, c.key, idx)}</td>`;
+          return `<td${wrapClass} data-col="${c.key}">${cellContent(p, c.key, idx)}</td>`;
         }).join('');
         tbody.appendChild(tr);
       });
     }
     countEl.textContent = list.length + ' / ' + panels.length + ' רשומות';
-    if (matchStatEl){
-      const totalMatched = panels.reduce((n, p, i) => n + (panelFiles.has(i) ? 1 : 0), 0);
-      matchStatEl.textContent = totalMatched > 0 ? `✓ ${totalMatched} עם תוכנית מקושרת` : '';
-    }
+    updateMatchStat();
   }
 
   function applyFilters(){
@@ -994,6 +1108,90 @@ function createPanelTable(cfg){
       });
     }
   });
+
+  if (fullyEditable){
+    tbody.addEventListener('click', (e) => {
+      const btn = e.target.closest('.delRowBtn');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      const i = panels.findIndex(pp => pp._id === id);
+      if (i === -1) return;
+      panels.splice(i, 1);
+      persistFullTable();
+      applyFilters();
+    });
+  }
+
+  if (allowAddRows){
+    function blankRow(){
+      const row = { _id: uid() };
+      columns.forEach(c => {
+        if (c.key !== '__rownum__' && c.key !== '__delete__') row[c.key] = '';
+      });
+      return row;
+    }
+    const addRowBtn = document.getElementById('addRowBtn-' + idPrefix);
+    const addRows10Btn = document.getElementById('addRows10Btn-' + idPrefix);
+    if (addRowBtn) addRowBtn.addEventListener('click', () => {
+      panels.push(blankRow());
+      persistFullTable();
+      applyFilters();
+    });
+    if (addRows10Btn) addRows10Btn.addEventListener('click', () => {
+      for (let i = 0; i < 10; i++) panels.push(blankRow());
+      persistFullTable();
+      applyFilters();
+    });
+  }
+
+  if (fullyEditable){
+    // Excel-style fill handle: drag the little square at a cell's corner down (or up)
+    // a column to copy that cell's value into every row it passes over.
+    let fillDrag = null;
+    tbody.addEventListener('mousedown', (e) => {
+      const handle = e.target.closest('.fillHandle');
+      if (!handle) return;
+      e.preventDefault();
+      const startTr = handle.closest('tr');
+      const startTd = handle.closest('td');
+      const input = startTd.querySelector('.editCell');
+      fillDrag = {
+        field: handle.dataset.field,
+        value: input ? input.value : '',
+        startTr,
+        rows: Array.from(tbody.children).filter(tr => tr.tagName === 'TR')
+      };
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!fillDrag) return;
+      const overTr = document.elementFromPoint(e.clientX, e.clientY)?.closest('tr');
+      tbody.querySelectorAll('td.fillPreview').forEach(td => td.classList.remove('fillPreview'));
+      if (!overTr || !fillDrag.rows.includes(overTr)) return;
+      const startIdx = fillDrag.rows.indexOf(fillDrag.startTr);
+      const overIdx = fillDrag.rows.indexOf(overTr);
+      const [from, to] = startIdx <= overIdx ? [startIdx, overIdx] : [overIdx, startIdx];
+      for (let i = from; i <= to; i++){
+        const td = fillDrag.rows[i].querySelector(`td[data-col="${fillDrag.field}"]`);
+        if (td) td.classList.add('fillPreview');
+      }
+    });
+    document.addEventListener('mouseup', () => {
+      if (!fillDrag) return;
+      tbody.querySelectorAll('td.fillPreview').forEach(td => {
+        td.classList.remove('fillPreview');
+        const tr = td.closest('tr');
+        const id = tr.dataset.id;
+        const p = panels.find(pp => pp._id === id);
+        const input = td.querySelector('.editCell');
+        if (p) p[fillDrag.field] = fillDrag.value;
+        if (input) input.value = fillDrag.value;
+      });
+      persistFullTable();
+      matchPanelsToFiles();
+      applyFilters();
+      fillDrag = null;
+    });
+  }
 
   renderHead();
   applyFilters();
@@ -1134,7 +1332,26 @@ createPanelTable({
 makeScannedTab('hvac', [{"code": "24005.1", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.1-9", "name": "לוחות מיזוג .pdf עדכון שגיא", "file_count": 1, "building_num": ""}, {"code": "24005.2", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.3", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.4", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.5", "name": "", "file_count": 1, "building_num": "90"}, {"code": "24005.6", "name": "", "file_count": 1, "building_num": "100"}, {"code": "24005.7", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.8", "name": "", "file_count": 1, "building_num": "102"}, {"code": "24005.9", "name": "", "file_count": 1, "building_num": ""}]);
 makeScannedTab('hv', [{"code": "25-0089", "name": "", "file_count": 1, "building_num": ""}, {"code": "3723300062-1", "name": "", "file_count": 1, "building_num": "83"}, {"code": "3723300062-3", "name": "AS MADE 26.08.25 Daniel", "file_count": 2, "building_num": "50"}]);
 makeScannedTab('mtsh-lv', [{"code": "652-001-10", "name": "לוח ראשי EB - AS MADE 15.4.12", "file_count": 4, "building_num": ""}, {"code": "652-002-10", "name": "לוח MCC1", "file_count": 38, "building_num": ""}, {"code": "652-003-10", "name": "לוח MCC2", "file_count": 38, "building_num": ""}, {"code": "652-005-11", "name": "EB2-1 לוח שרותי בית", "file_count": 8, "building_num": ""}, {"code": "652-006-11", "name": "EB2 לוח", "file_count": 12, "building_num": ""}, {"code": "652-007-11", "name": "EB1 לוח ראשי", "file_count": 22, "building_num": ""}, {"code": "652-008-11", "name": "EB1-1 לוח שירותי בית", "file_count": 6, "building_num": ""}, {"code": "652-009-11", "name": "EB1-MCC לוח", "file_count": 58, "building_num": ""}, {"code": "652-010-11", "name": "לוח משנה-מנהלה", "file_count": 15, "building_num": ""}, {"code": "652-011-11", "name": "שירותי ביתCB2 לוח משנה", "file_count": 8, "building_num": ""}, {"code": "652-014-11", "name": "MCC1 לוח ווסתי מהירות", "file_count": 5, "building_num": ""}, {"code": "652-015-11", "name": "MCC2 לוח ווסתי מהירות", "file_count": 4, "building_num": ""}, {"code": "652-016-11", "name": "EB1 PLC", "file_count": 14, "building_num": ""}, {"code": "652-017-11", "name": "תיבת פיקוד מקומית", "file_count": 3, "building_num": ""}, {"code": "652-018-11", "name": "תיבת פיקוד מקומית", "file_count": 2, "building_num": ""}, {"code": "652-019-11", "name": "EB2 לוח בקר", "file_count": 9, "building_num": ""}, {"code": "מבנה חדר חשמל - EB1 (מבוטל)", "name": "מבנה חדר חשמל - EB1 (מבוטל)", "file_count": 3, "building_num": ""}, {"code": "DWG טכנומטיק עבודות מוקדמות", "name": "DWG טכנומטיק עבודות מוקדמות", "file_count": 28, "building_num": ""}, {"code": "EB2 לוחות בחדר חשמל", "name": "EB2 לוחות בחדר חשמל", "file_count": 4, "building_num": ""}, {"code": "EB2 קדם טיפול", "name": "EB2 קדם טיפול", "file_count": 4, "building_num": ""}, {"code": "ECB מבנה מנהלה", "name": "ECB מבנה מנהלה", "file_count": 2, "building_num": ""}, {"code": "PDF Images", "name": "PDF Images", "file_count": 6, "building_num": ""}, {"code": "PDF layout", "name": "PDF layout", "file_count": 6, "building_num": ""}, {"code": "PDF תוכניות יצרן לוחות חשמל", "name": "PDF תוכניות יצרן לוחות חשמל", "file_count": 1, "building_num": ""}, {"code": "RFQ's", "name": "RFQ's", "file_count": 47, "building_num": ""}, {"code": "חדר קדם טיפול EB2", "name": "חדר קדם טיפול EB2", "file_count": 10, "building_num": ""}, {"code": "לוח חשמל MCC1", "name": "לוח חשמל MCC1", "file_count": 3, "building_num": ""}, {"code": "לוח חשמל MCC2", "name": "לוח חשמל MCC2", "file_count": 16, "building_num": ""}, {"code": "לוח חשמל MCC3", "name": "לוח חשמל MCC3", "file_count": 13, "building_num": ""}, {"code": "לוח חשמל ראשי שנאי 1 שנאי 2", "name": "לוח חשמל ראשי שנאי 1 שנאי 2", "file_count": 27, "building_num": ""}, {"code": "לוח מדידות וגלישה ILS", "name": "לוח מדידות וגלישה ILS", "file_count": 15, "building_num": ""}, {"code": "לוחות בתכנון וייצור מקומי", "name": "לוחות בתכנון וייצור מקומי", "file_count": 17, "building_num": ""}, {"code": "לוחות מקומיים", "name": "לוחות מקומיים", "file_count": 5, "building_num": ""}, {"code": "מבנה משרדים וחדר חשמל ECB", "name": "מבנה משרדים וחדר חשמל ECB", "file_count": 13, "building_num": ""}, {"code": "ציוד", "name": "ציוד", "file_count": 25, "building_num": ""}, {"code": "קבצים למיון", "name": "קבצים כלליים לא ממוינים (מגוון לוחות)", "file_count": 73, "building_num": ""}, {"code": "קבצים כלליים (שורש הארכיון)", "name": "קבצים כלליים (שורש הארכיון)", "file_count": 3, "building_num": ""}, {"code": "תוכניות סרוקות AS MADE", "name": "תוכניות סרוקות AS MADE", "file_count": 2, "building_num": ""}, {"code": "תכנון לוח משאבת אימפלר גומי", "name": "תוכניות לוח - משאבת אימפלר גומי", "file_count": 5, "building_num": ""}, {"code": "תיקיה חדשה (3)", "name": "תיקיה חדשה (3)", "file_count": 15, "building_num": ""}]);
-makeScannedTab('mtsh-hv', [{"code": "652-012-11", "name": "2- לוח שירותי  בית בתחנת מיתוג ראשית", "file_count": 6, "building_num": ""}, {"code": "652-020", "name": "לוח תחנת שאיבה G", "file_count": 10, "building_num": ""}]);
+// Tab "מט"ש קיים - מתח גבוה" starts as a blank, fully-editable grid (like a small
+// Excel sheet) — the user fills in rows themselves, then links a folder of files.
+createPanelTable({
+  idPrefix: 'mtsh-hv',
+  panels: [],
+  columns: [
+    { key: '__rownum__',   label: '#',              required: true },
+    { key: 'code',         label: "מס' תוכנית",      required: true },
+    { key: 'name',         label: 'תיאור',           required: true },
+    { key: 'building_num', label: "מס' מבנה",        required: true },
+    { key: '__delete__',   label: '',                required: true },
+  ],
+  defaultVisible: [],
+  statusClassFn: statusClassNeutral,
+  searchKeys: ['code','name','building_num'],
+  extraFilters: [],
+  editableFields: ['code','name','building_num'],
+  fullyEditable: true,
+  allowAddRows: true,
+});
 
 // Register service worker for PWA installability (works only when served over
 // HTTPS from a real URL, e.g. GitHub Pages — silently does nothing on file://).
