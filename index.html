@@ -968,14 +968,21 @@ function createPanelTable(cfg){
   async function walkDataTransferItems(items){
     const files = [];
     const queue = [];
+    // Plain files: use getAsFile() — synchronous and reliable, no round-trip needed.
+    // Only items with no File of their own (i.e. folders) go through webkitGetAsEntry(),
+    // since that's the only way to read what's inside a dropped directory. Doing it the
+    // other way around (entry first, getAsFile as fallback) meant every plain file drag
+    // went through the async entry.file() read — which can fail silently for a real
+    // OS-level drag depending on browser/OS, wiping out the drop with no visible error.
     for (const item of items){
-      const entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
-      if (entry){
-        queue.push(entry);
-      } else if (item.getAsFile){
-        const f = item.getAsFile();
-        if (f) files.push(f);
+      if (item.kind !== 'file') continue;
+      const f = item.getAsFile ? item.getAsFile() : null;
+      if (f){
+        files.push(f);
+        continue;
       }
+      const entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
+      if (entry) queue.push(entry);
     }
     while (queue.length){
       const entry = queue.shift();
@@ -1085,10 +1092,20 @@ function createPanelTable(cfg){
       dragDepth = 0;
       if (dropHighlightEl) dropHighlightEl.classList.remove('dragOver');
       const items = e.dataTransfer.items;
-      const files = items && items.length
+      let files = items && items.length
         ? await walkDataTransferItems(Array.from(items))
-        : Array.from(e.dataTransfer.files);
-      if (files.length) handleDroppedFiles(files);
+        : [];
+      // Fall back to the plain FileList if item-based extraction came up empty for any
+      // reason — it's simpler and doesn't depend on webkitGetAsEntry at all.
+      if (!files.length && e.dataTransfer.files && e.dataTransfer.files.length){
+        files = Array.from(e.dataTransfer.files);
+      }
+      if (files.length){
+        handleDroppedFiles(files);
+      } else if (folderStatus){
+        folderStatus.textContent = 'לא הצלחנו לקרוא קבצים מהגרירה — נסו שוב, או השתמשו ב"בחרו תיקייה"';
+        folderStatus.classList.remove('ok');
+      }
     });
   }
 
