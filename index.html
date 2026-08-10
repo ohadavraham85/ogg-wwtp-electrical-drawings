@@ -664,22 +664,6 @@
     </div>
   </div>
 
-  <footer>
-    הדף לא שומר עותק של הקבצים בתוכו — הוא קורא אותם ישירות מהתיקייה שתבחרו בכל טאב (כל טאב עם תיקייה נפרדת משלו).
-    ההתאמה נעשית לפי מספר התוכנית מול מספרי הקבצים בפועל בתיקייה.
-    <br>בכרום/אדג': אחרי בחירת תיקייה פעם אחת, הדפדפן זוכר את הגישה אליה גם בפתיחות הבאות של הדף —
-    בפתיחה הבאה תתבקשו רק לאשר גישה (לחיצה אחת), בלי לבחור את התיקייה מחדש.
-    זרקתם קובץ חדש לתוך התיקייה? לחצו "רענן קבצים" כדי שהדף יזהה אותו מיד, בלי לבחור תיקייה מחדש.
-    בדפדפנים אחרים (פיירפוקס/ספארי) עדיין צריך לבחור את התיקייה בכל פתיחה.
-    <br>לעדכון רשימת התוכניות עצמה (שורות חדשות/סטטוסים) — שלחו קובץ CSV/Excel מעודכן.
-    <br>בכל טאב אפשר גם לגרור קבצים (או תיקייה שלמה) ישירות לתוך הטבלה במקום להשתמש בכפתור "בחרו תיקייה" —
-    הקבצים שנגררים מצטרפים לקבצים שכבר נטענו. בטאבים הניתנים לעריכה מלאה ("מתח גבוה", "מט"ש קיים - מתח נמוך"):
-    אם קובץ שנגרר (או נטען מתיקייה) לא תואם לאף שורה קיימת, תיווצר עבורו שורה חדשה אוטומטית לפי מספר התוכנית מתוך שם הקובץ.
-    <br>בטאבים "חממות" / "מיזוג אוויר" / "מתח גבוה" / "מט"ש קיים - מתח נמוך": כל התאים ניתנים לעריכה ישירות בטבלה
-    (כולל הוספה/מחיקה של שורות וגרירה למילוי כמו באקסל בטאבי "מתח גבוה" ו"מט"ש קיים - מתח נמוך"),
-    ונשמרים אוטומטית בדפדפן הזה (לא מסתנכרנים בין מחשבים/דפדפנים שונים).
-  </footer>
-
   <div class="copyright">כל הזכויות שמורות לאוהד אברהם, מט"ש אוג, מבט"י</div>
 </div>
 
@@ -788,6 +772,14 @@ function createPanelTable(cfg){
     statusClassFn, searchKeys, extraFilters, editableFields, matchMode,
     fullyEditable, allowAddRows
   } = cfg;
+  // Every tab that matches files by code gets a "סוג קובץ" column automatically,
+  // showing the extension(s) of whatever file(s) ended up linked to that row.
+  if (columns.some(c => c.key === 'code') && !columns.some(c => c.key === '__filetype__')){
+    const deleteIdx = columns.findIndex(c => c.key === '__delete__');
+    const filetypeCol = { key: '__filetype__', label: 'סוג קובץ', required: true };
+    if (deleteIdx === -1) columns.push(filetypeCol);
+    else columns.splice(deleteIdx, 0, filetypeCol);
+  }
   const editable = new Set(editableFields || []);
   const editStoreKey = f => 'panel-edit:' + idPrefix + ':' + f;
   const fullTableKey = 'panel-fulltable:' + idPrefix;
@@ -1361,6 +1353,13 @@ function createPanelTable(cfg){
   function cellContent(p, key, idx){
     if (key === '__delete__'){
       return `<button type="button" class="delRowBtn" data-id="${p._id||''}" title="מחק שורה">✕</button>`;
+    }
+    if (key === '__filetype__'){
+      const files = panelFiles.get(idx);
+      if (!files || !files.length) return '<span class="bnum">—</span>';
+      const exts = [...new Set(files.map(f => (f.name.match(/\.([a-z0-9]+)$/i) || [])[1] || '?').map(e => e.toUpperCase()))];
+      const cls = e => e === 'PDF' ? 'b-blue' : e === 'DWG' ? 'b-green' : 'b-gray';
+      return exts.map(e => `<span class="badge ${cls(e)}">${e}</span>`).join(' ');
     }
     if (key === 'code' && fullyEditable){
       const files = panelFiles.get(idx);
