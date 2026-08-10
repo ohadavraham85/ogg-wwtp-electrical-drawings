@@ -151,6 +151,12 @@
     background:var(--panel);
     z-index:5;
   }
+  thead th.sortableCol{
+    cursor:pointer;
+    user-select:none;
+    white-space:nowrap;
+  }
+  thead th.sortableCol:hover{color:var(--accent);}
   tbody tr{
     border-bottom:1px solid var(--line);
     transition:background .12s ease;
@@ -1136,11 +1142,26 @@ function createPanelTable(cfg){
     return columns.filter(c => c.required || visible.has(c.key));
   }
 
+  let sortState = { key: null, dir: 1 };
+
   function renderHead(){
     headRow.innerHTML = '';
     activeColumns().forEach(c => {
       const th = document.createElement('th');
-      th.textContent = c.label;
+      const sortable = c.key !== '__rownum__' && c.key !== '__delete__';
+      if (sortable){
+        th.classList.add('sortableCol');
+        const arrow = sortState.key === c.key ? (sortState.dir === 1 ? ' ▲' : ' ▼') : '';
+        th.textContent = c.label + arrow;
+        th.addEventListener('click', () => {
+          if (sortState.key === c.key) sortState.dir *= -1;
+          else sortState = { key: c.key, dir: 1 };
+          renderHead();
+          applyFilters();
+        });
+      } else {
+        th.textContent = c.label;
+      }
       headRow.appendChild(th);
     });
   }
@@ -1224,29 +1245,52 @@ function createPanelTable(cfg){
     updateMatchStat();
   }
 
+  // Every tab that tracks a building number gets a "לפי מבנה" filter automatically,
+  // so it doesn't have to be hand-wired into each tab's HTML. If a tab already defines
+  // its own filter on that key (e.g. panels/planner filtering by the 'building' name),
+  // this is skipped so we don't show two overlapping dropdowns.
+  const filters = [...(extraFilters || [])];
+  if (columns.some(c => c.key === 'building_num') && !filters.some(f => f.key === 'building_num')){
+    filters.push({ id: 'building_num', key: 'building_num', label: "מס' מבנה" });
+  }
+  filters.forEach(f => {
+    if (!document.getElementById(f.id + '-' + idPrefix)){
+      const sel = document.createElement('select');
+      sel.id = f.id + '-' + idPrefix;
+      const opt = document.createElement('option');
+      opt.value = ''; opt.textContent = f.label ? `כל ${f.label}` : 'הכל';
+      sel.appendChild(opt);
+      searchBox.insertAdjacentElement('afterend', sel);
+    }
+  });
+
   function applyFilters(){
     const q = searchBox.value.trim().toLowerCase();
-    const filterVals = (extraFilters || []).map(f => document.getElementById(f.id + '-' + idPrefix).value);
+    const filterVals = filters.map(f => document.getElementById(f.id + '-' + idPrefix).value);
     const onlyWithFile = hasFileBox && hasFileBox.checked;
     const filtered = panels
       .map((p, idx) => ({p, idx}))
       .filter(({p, idx}) => {
-        const matchesQ = !q || searchKeys.some(k => (p[k]||'').toLowerCase().includes(q));
-        const matchesExtra = (extraFilters || []).every((f, i) => !filterVals[i] || (p[f.key]||'').trim() === filterVals[i]);
+        const matchesQ = !q || Object.keys(p).some(k => k !== '_id' && String(p[k]||'').toLowerCase().includes(q));
+        const matchesExtra = filters.every((f, i) => !filterVals[i] || (p[f.key]||'').trim() === filterVals[i]);
         const matchesFile = !onlyWithFile || panelFiles.has(idx);
         return matchesQ && matchesExtra && matchesFile;
       });
+    if (sortState.key){
+      const k = sortState.key;
+      filtered.sort((a, b) => sortState.dir * String(a.p[k]||'').localeCompare(String(b.p[k]||''), 'he', { numeric: true, sensitivity: 'base' }));
+    }
     render(filtered);
   }
 
   searchBox.addEventListener('input', applyFilters);
   if (hasFileBox) hasFileBox.addEventListener('change', applyFilters);
-  (extraFilters || []).forEach(f => {
+  filters.forEach(f => {
     document.getElementById(f.id + '-' + idPrefix).addEventListener('change', applyFilters);
   });
 
   // populate extra filter dropdowns
-  (extraFilters || []).forEach(f => {
+  filters.forEach(f => {
     const sel = document.getElementById(f.id + '-' + idPrefix);
     if (f.key === 'building'){
       const bmap = new Map();
@@ -1257,7 +1301,7 @@ function createPanelTable(cfg){
         sel.appendChild(opt);
       });
     } else {
-      const vals = [...new Set(panels.map(p => (p[f.key]||'').trim()).filter(Boolean))].sort();
+      const vals = [...new Set(panels.map(p => (p[f.key]||'').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'he', { numeric: true }));
       vals.forEach(v => {
         const opt = document.createElement('option');
         opt.value = v; opt.textContent = v;
