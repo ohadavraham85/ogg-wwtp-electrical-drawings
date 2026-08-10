@@ -451,41 +451,64 @@
     header img.logo{height:22px;}
     h1{font-size:.8rem;line-height:1.3;}
 
-    .tabs{
-      overflow-x:auto;
+    /* Dashboard: the big desktop cards would eat the whole screen before any table
+       row is visible, so on a phone it becomes one horizontally-scrollable strip of
+       small pills instead — same info (tap still switches tabs), a fraction of the
+       height. */
+    .dashboard{margin-bottom:8px;}
+    .dashTotal{font-size:.68rem;margin-bottom:4px;}
+    .dashTotal b{font-size:.8rem;}
+    .dashGrid{
+      display:flex;
       flex-wrap:nowrap;
+      overflow-x:auto;
       -webkit-overflow-scrolling:touch;
-      gap:2px;
-      margin-bottom:12px;
+      gap:6px;
+      padding-bottom:2px;
     }
-    .tabBtn{
+    .dashCard{
       flex:0 0 auto;
-      padding:9px 12px;
-      font-size:.82rem;
-      white-space:nowrap;
+      display:flex;
+      align-items:center;
+      gap:5px;
+      padding:5px 10px;
+      border-radius:16px;
+      scroll-snap-align:start;
     }
+    .dashGrid{scroll-snap-type:x proximity;}
+    .dashLabel{
+      font-size:.68rem;
+      margin-bottom:0;
+      max-width:90px;
+    }
+    .dashNum{font-size:.78rem;}
+    .dashSub{display:none;}
+
+    /* Filter row: three full-width stacked <select>s used to be a wall of taps to
+       scroll past; two per row halves that. */
+    .controls{display:flex;flex-wrap:wrap;}
+    .controls input[type="text"]{flex:1 1 100%;}
+    .controls select{flex:1 1 calc(50% - 4px);min-width:0;}
+    .hasFileToggle{flex:1 1 100%;}
 
     .topRow{gap:2px;}
-    .controls{gap:8px;}
-    .controls input, .controls select{
-      flex:1 1 100%;
-      min-width:0;
+    .controls input[type="text"], .controls select{
       font-size:.9rem;
       padding:11px 12px;
     }
-    .hasFileToggle{flex:1 1 100%;font-size:.8rem;}
 
     .folderBar{
       flex-direction:column;
       align-items:stretch;
       gap:8px;
-      padding:10px;
+      padding:8px;
+      margin-bottom:6px;
     }
-    .folderBar button{width:100%;padding:12px 14px;font-size:.88rem;}
-    .folderStatus{font-size:.76rem;text-align:center;}
+    .folderBar button{width:100%;padding:11px 14px;font-size:.85rem;}
+    .folderStatus{font-size:.72rem;text-align:center;}
     .changeFolder{margin-inline-start:0;text-align:center;}
 
-    .colToggleWrap{margin-bottom:10px;}
+    .colToggleWrap{margin-bottom:8px;}
     .colToggle{gap:8px 12px;}
     .colToggle label{font-size:.78rem;}
 
@@ -498,8 +521,6 @@
     thead th{font-size:.68rem;padding:9px 10px;}
     td{font-size:.8rem;padding:9px 10px;}
     input.editCell{font-size:.85rem;padding:7px 8px;}
-
-    footer{font-size:.72rem;}
   }
 </style>
 </head>
