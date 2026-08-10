@@ -155,8 +155,22 @@
     cursor:pointer;
     user-select:none;
     white-space:nowrap;
+    position:relative;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
   thead th.sortableCol:hover{color:var(--accent);}
+  .colResizeHandle{
+    position:absolute;
+    top:0;
+    bottom:0;
+    left:-4px;
+    width:8px;
+    cursor:col-resize;
+    z-index:6;
+  }
+  .colResizeHandle:hover,
+  .colResizeHandle:active{background:var(--accent);opacity:.5;}
   tbody tr{
     border-bottom:1px solid var(--line);
     transition:background .12s ease;
@@ -696,18 +710,17 @@ function createPanelTable(cfg){
   let uidCounter = 0;
   function uid(){ return 'r' + Date.now().toString(36) + (uidCounter++).toString(36); }
 
-  if (fullyEditable){
-    // The whole table (every field of every row) is persisted as one blob, since
-    // rows are user-created and have no stable identity of their own until saved.
-    try {
-      const saved = JSON.parse(localStorage.getItem(fullTableKey) || 'null');
-      if (Array.isArray(saved)){
-        panels.length = 0;
-        saved.forEach(p => panels.push(p));
-      }
-    } catch(err){ console.warn('could not load saved table', err); }
-    panels.forEach(p => { if (!p._id) p._id = uid(); });
-  }
+  // Every tab (not just the fully-editable ones) restores from a previously-saved full
+  // snapshot when one exists, so row deletion works everywhere: deleting a row is itself
+  // a change to the row set, saved the same way an edited/added row would be.
+  try {
+    const saved = JSON.parse(localStorage.getItem(fullTableKey) || 'null');
+    if (Array.isArray(saved)){
+      panels.length = 0;
+      saved.forEach(p => panels.push(p));
+    }
+  } catch(err){ console.warn('could not load saved table', err); }
+  panels.forEach(p => { if (!p._id) p._id = uid(); });
 
   function persistFullTable(){
     try { localStorage.setItem(fullTableKey, JSON.stringify(panels)); }
@@ -1144,9 +1157,52 @@ function createPanelTable(cfg){
 
   let sortState = { key: null, dir: 1 };
 
+  const colWidthsKey = 'col-widths:' + idPrefix;
+  let colWidths = {};
+  try { colWidths = JSON.parse(localStorage.getItem(colWidthsKey) || '{}'); } catch(err){ colWidths = {}; }
+  function persistColWidths(){
+    try { localStorage.setItem(colWidthsKey, JSON.stringify(colWidths)); } catch(err){ /* ignore */ }
+  }
+
+  // Column-width resizing, Excel-style: a thin handle sits on a <th>'s physical-left
+  // edge (the boundary with its visual-left neighbor in this RTL layout) and drags a
+  // <col> element's width. <col> widths need no table-layout:fixed to take effect here
+  // because every resizable cell's content is either an <input style="width:100%"> or
+  // ordinary text that's free to wrap/ellipsis within whatever width the <col> gives it.
+  function startColResize(e, key, colEl, th){
+    e.preventDefault();
+    e.stopPropagation();
+    const startWidth = th.getBoundingClientRect().width;
+    const startX = e.clientX;
+    function onMove(ev){
+      const delta = startX - ev.clientX;
+      const newWidth = Math.max(40, Math.round(startWidth + delta));
+      colEl.style.width = newWidth + 'px';
+    }
+    function onUp(){
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      colWidths[key] = parseInt(colEl.style.width, 10);
+      persistColWidths();
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
   function renderHead(){
+    const table = headRow.closest('table');
+    let colgroupEl = table.querySelector('colgroup');
+    if (!colgroupEl){
+      colgroupEl = document.createElement('colgroup');
+      table.insertBefore(colgroupEl, table.firstChild);
+    }
+    colgroupEl.innerHTML = '';
     headRow.innerHTML = '';
     activeColumns().forEach(c => {
+      const col = document.createElement('col');
+      if (colWidths[c.key]) col.style.width = colWidths[c.key] + 'px';
+      colgroupEl.appendChild(col);
+
       const th = document.createElement('th');
       const sortable = c.key !== '__rownum__' && c.key !== '__delete__';
       if (sortable){
@@ -1159,6 +1215,11 @@ function createPanelTable(cfg){
           renderHead();
           applyFilters();
         });
+        const handle = document.createElement('span');
+        handle.className = 'colResizeHandle';
+        handle.title = 'גררו לשינוי רוחב העמודה';
+        handle.addEventListener('mousedown', (e) => startColResize(e, c.key, col, th));
+        th.appendChild(handle);
       } else {
         th.textContent = c.label;
       }
@@ -1310,18 +1371,17 @@ function createPanelTable(cfg){
     }
   });
 
-  if (fullyEditable){
-    tbody.addEventListener('click', (e) => {
-      const btn = e.target.closest('.delRowBtn');
-      if (!btn) return;
-      const id = btn.dataset.id;
-      const i = panels.findIndex(pp => pp._id === id);
-      if (i === -1) return;
-      panels.splice(i, 1);
-      persistFullTable();
-      applyFilters();
-    });
-  }
+  tbody.addEventListener('click', (e) => {
+    const btn = e.target.closest('.delRowBtn');
+    if (!btn) return;
+    if (!confirm('למחוק את השורה הזו?')) return;
+    const id = btn.dataset.id;
+    const i = panels.findIndex(pp => pp._id === id);
+    if (i === -1) return;
+    panels.splice(i, 1);
+    persistFullTable();
+    applyFilters();
+  });
 
   if (allowAddRows){
     function blankRow(){
@@ -1474,6 +1534,7 @@ createPanelTable({
     { key: 'delivery',           label: 'תאריך אספקה',     required: false },
     { key: 'notes',              label: 'הערות מפקח',      required: false },
     { key: 'eli',                label: 'אלי',             required: false },
+    { key: '__delete__',         label: '',                required: true },
   ],
   defaultVisible: [],
   statusClassFn: statusClassPanels,
@@ -1508,6 +1569,7 @@ createPanelTable({
     { key: 'date',          label: 'תאריך',        required: false },
     { key: 'scale',         label: 'קנ"מ',         required: false },
     { key: 'notes',         label: 'הערות',        required: false },
+    { key: '__delete__',    label: '',             required: true },
   ],
   defaultVisible: [],
   statusClassFn: statusClassPlanner,
@@ -1532,6 +1594,7 @@ function makeScannedTab(idPrefix, data){
       { key: 'name',         label: 'תיאור (משם הקובץ)', required: true },
       { key: 'building_num', label: 'מס\' מבנה (למילוי ידני)', required: true },
       { key: 'file_count',   label: 'מס\' קבצים',      required: false },
+      { key: '__delete__',   label: '',                required: true },
     ],
     defaultVisible: [],
     statusClassFn: statusClassNeutral,
@@ -1553,6 +1616,7 @@ createPanelTable({
     { key: 'equip_tag',    label: 'תגית ציוד',             required: true },
     { key: 'panel_type',   label: 'סוג לוח',              required: true },
     { key: 'building_num', label: 'מס\' מבנה (למילוי ידני)', required: true },
+    { key: '__delete__',   label: '',                       required: true },
   ],
   defaultVisible: [],
   statusClassFn: statusClassNeutral,
