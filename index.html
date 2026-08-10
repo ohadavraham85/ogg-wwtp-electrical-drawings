@@ -1863,7 +1863,7 @@ function createPanelTable(cfg){
   });
   document.addEventListener('mousemove', (e) => {
     if (!rowDrag) return;
-    rowDrag.ghost.style.transform = `translate(${e.clientX - rowDrag.startX}px, ${e.clientY - rowDrag.startY}px) rotate(-1deg) scale(1.02)`;
+    rowDrag.ghost.style.transform = `translate(${e.clientX - rowDrag.startX}px, ${e.clientY - rowDrag.startY}px)`;
     tbody.querySelectorAll('tr.dropBefore, tr.dropAfter').forEach(tr => tr.classList.remove('dropBefore', 'dropAfter'));
     const overTr = document.elementFromPoint(e.clientX, e.clientY)?.closest('tr');
     if (!overTr || !rowDrag.rows.includes(overTr) || overTr.dataset.id === rowDrag.id){
