@@ -569,7 +569,10 @@
     <div class="controls">
       <input type="text" id="search-mtsh-lv" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-mtsh-lv"> הצג רק שורות עם קובץ מקושר</label>
+      <button type="button" class="addRowBtn" id="addRowBtn-mtsh-lv">+ הוסף שורה</button>
+      <button type="button" class="addRowBtn" id="addRows10Btn-mtsh-lv">+ 10 שורות</button>
     </div>
+    <div class="sub" style="margin-bottom:10px">כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
       <button type="button" id="pickBtn-mtsh-lv">📁 בחרו את תיקיית מט"ש קיים - מתח נמוך</button>
       <button type="button" id="refreshBtn-mtsh-lv" style="display:none">🔄 רענן קבצים</button>
@@ -835,7 +838,7 @@ function createPanelTable(cfg){
         }
       }
     });
-    return files.length;
+    return files;
   }
 
   function matchPanelsToFiles(){
@@ -897,22 +900,28 @@ function createPanelTable(cfg){
     return files;
   }
 
-  function handleDroppedFiles(files){
-    const relevant = files.filter(f => /\.(pdf|dwg|xlsx)$/i.test(f.name));
-    buildFileIndex(relevant, true);
+  // Shared by every file-loading path (folder picker, refresh, second folder, drag & drop):
+  // for fully-editable tabs, any file whose leading number doesn't match an existing row's
+  // code gets its own new row instead of silently sitting unmatched in the file index.
+  function autoCreateRowsForUnmatchedFiles(files){
+    if (!fullyEditable) return 0;
     let createdCount = 0;
-    if (fullyEditable){
-      const existingCodes = new Set(panels.map(p => normCode(p.code || '')));
-      relevant.forEach(f => {
-        const raw = f.name.replace(/\.[a-z0-9]+$/i, '').trim().split(/\s+/)[0];
-        const norm = normCode(raw);
-        if (!norm || existingCodes.has(norm)) return;
-        existingCodes.add(norm);
-        panels.push({ _id: uid(), code: raw, name: '', building_num: '' });
-        createdCount++;
-      });
-      if (createdCount) persistFullTable();
-    }
+    const existingCodes = new Set(panels.map(p => normCode(p.code || '')));
+    files.forEach(f => {
+      const raw = f.name.replace(/\.[a-z0-9]+$/i, '').trim().split(/\s+/)[0];
+      const norm = normCode(raw);
+      if (!norm || existingCodes.has(norm)) return;
+      existingCodes.add(norm);
+      panels.push({ _id: uid(), code: raw, name: '', building_num: '' });
+      createdCount++;
+    });
+    if (createdCount) persistFullTable();
+    return createdCount;
+  }
+
+  function handleDroppedFiles(files){
+    const relevant = buildFileIndex(files, true);
+    const createdCount = autoCreateRowsForUnmatchedFiles(relevant);
     const matched = matchPanelsToFiles();
     applyFilters();
     if (folderStatus){
@@ -1006,13 +1015,15 @@ function createPanelTable(cfg){
     folderStatus.textContent = 'סורק תיקייה...';
     try {
       const files = await collectFilesFromDirHandle(dirHandle);
-      const fileCount = buildFileIndex(files);
+      const relevant = buildFileIndex(files);
+      const createdCount = autoCreateRowsForUnmatchedFiles(relevant);
       const matched = matchPanelsToFiles();
-      if (fileCount === 0){
+      if (relevant.length === 0){
         folderStatus.textContent = `⚠️ ${dirHandle.name} — לא נמצאו קבצי PDF/DWG/XLSX בתיקייה הזו (או בתתי-התיקיות שלה)`;
         folderStatus.classList.remove('ok');
       } else {
-        folderStatus.textContent = `📂 ${dirHandle.name} — נטענו ${fileCount} קבצים, שויכו ${matched} מתוך ${panels.length} רשומות`;
+        const extra = createdCount ? ` — נוצרו ${createdCount} שורות חדשות` : '';
+        folderStatus.textContent = `📂 ${dirHandle.name} — נטענו ${relevant.length} קבצים, שויכו ${matched} מתוך ${panels.length} רשומות${extra}`;
         folderStatus.classList.add('ok');
       }
       if (refreshBtn) refreshBtn.style.display = 'inline-block';
@@ -1052,12 +1063,14 @@ function createPanelTable(cfg){
       if (folderStatus2) folderStatus2.textContent = 'סורק תיקייה...';
       try {
         const files = await collectFilesFromDirHandle(dirHandle);
-        const fileCount = buildFileIndex(files, true);
+        const relevant = buildFileIndex(files, true);
+        const createdCount = autoCreateRowsForUnmatchedFiles(relevant);
         const matched = matchPanelsToFiles();
         if (folderStatus2){
-          folderStatus2.textContent = fileCount === 0
+          const extra = createdCount ? ` — נוצרו ${createdCount} שורות חדשות` : '';
+          folderStatus2.textContent = relevant.length === 0
             ? `⚠️ ${dirHandle.name} — לא נמצאו קבצי PDF/DWG/XLSX בתיקייה הזו`
-            : `📂 ${dirHandle.name} — נוספו ${fileCount} קבצים, שויכו ${matched} מתוך ${panels.length} רשומות בסה"כ`;
+            : `📂 ${dirHandle.name} — נוספו ${relevant.length} קבצים, שויכו ${matched} מתוך ${panels.length} רשומות בסה"כ${extra}`;
           folderStatus2.classList.add('ok');
         }
         applyFilters();
@@ -1112,9 +1125,11 @@ function createPanelTable(cfg){
   }
 
   folderInput.addEventListener('change', (e) => {
-    const fileCount = buildFileIndex(e.target.files);
+    const relevant = buildFileIndex(e.target.files);
+    const createdCount = autoCreateRowsForUnmatchedFiles(relevant);
     const matched = matchPanelsToFiles();
-    folderStatus.textContent = `נטענו ${fileCount} קבצים מהתיקייה — שויכו ${matched} מתוך ${panels.length} רשומות`;
+    const extra = createdCount ? ` — נוצרו ${createdCount} שורות חדשות` : '';
+    folderStatus.textContent = `נטענו ${relevant.length} קבצים מהתיקייה — שויכו ${matched} מתוך ${panels.length} רשומות${extra}`;
     folderStatus.classList.add('ok');
     applyFilters();
   });
@@ -1499,7 +1514,24 @@ createPanelTable({
 });
 makeScannedTab('hvac', [{"code": "24005.1", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.1-9", "name": "לוחות מיזוג .pdf עדכון שגיא", "file_count": 1, "building_num": ""}, {"code": "24005.2", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.3", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.4", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.5", "name": "", "file_count": 1, "building_num": "90"}, {"code": "24005.6", "name": "", "file_count": 1, "building_num": "100"}, {"code": "24005.7", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.8", "name": "", "file_count": 1, "building_num": "102"}, {"code": "24005.9", "name": "", "file_count": 1, "building_num": ""}]);
 makeScannedTab('hv', [{"code": "25-0089", "name": "", "file_count": 1, "building_num": ""}, {"code": "3723300062-1", "name": "", "file_count": 1, "building_num": "83"}, {"code": "3723300062-3", "name": "AS MADE 26.08.25 Daniel", "file_count": 2, "building_num": "50"}]);
-makeScannedTab('mtsh-lv', [{"code": "652-001-10", "name": "לוח ראשי EB - AS MADE 15.4.12", "file_count": 4, "building_num": ""}, {"code": "652-002-10", "name": "לוח MCC1", "file_count": 38, "building_num": ""}, {"code": "652-003-10", "name": "לוח MCC2", "file_count": 38, "building_num": ""}, {"code": "652-005-11", "name": "EB2-1 לוח שרותי בית", "file_count": 8, "building_num": ""}, {"code": "652-006-11", "name": "EB2 לוח", "file_count": 12, "building_num": ""}, {"code": "652-007-11", "name": "EB1 לוח ראשי", "file_count": 22, "building_num": ""}, {"code": "652-008-11", "name": "EB1-1 לוח שירותי בית", "file_count": 6, "building_num": ""}, {"code": "652-009-11", "name": "EB1-MCC לוח", "file_count": 58, "building_num": ""}, {"code": "652-010-11", "name": "לוח משנה-מנהלה", "file_count": 15, "building_num": ""}, {"code": "652-011-11", "name": "שירותי ביתCB2 לוח משנה", "file_count": 8, "building_num": ""}, {"code": "652-014-11", "name": "MCC1 לוח ווסתי מהירות", "file_count": 5, "building_num": ""}, {"code": "652-015-11", "name": "MCC2 לוח ווסתי מהירות", "file_count": 4, "building_num": ""}, {"code": "652-016-11", "name": "EB1 PLC", "file_count": 14, "building_num": ""}, {"code": "652-017-11", "name": "תיבת פיקוד מקומית", "file_count": 3, "building_num": ""}, {"code": "652-018-11", "name": "תיבת פיקוד מקומית", "file_count": 2, "building_num": ""}, {"code": "652-019-11", "name": "EB2 לוח בקר", "file_count": 9, "building_num": ""}, {"code": "מבנה חדר חשמל - EB1 (מבוטל)", "name": "מבנה חדר חשמל - EB1 (מבוטל)", "file_count": 3, "building_num": ""}, {"code": "DWG טכנומטיק עבודות מוקדמות", "name": "DWG טכנומטיק עבודות מוקדמות", "file_count": 28, "building_num": ""}, {"code": "EB2 לוחות בחדר חשמל", "name": "EB2 לוחות בחדר חשמל", "file_count": 4, "building_num": ""}, {"code": "EB2 קדם טיפול", "name": "EB2 קדם טיפול", "file_count": 4, "building_num": ""}, {"code": "ECB מבנה מנהלה", "name": "ECB מבנה מנהלה", "file_count": 2, "building_num": ""}, {"code": "PDF Images", "name": "PDF Images", "file_count": 6, "building_num": ""}, {"code": "PDF layout", "name": "PDF layout", "file_count": 6, "building_num": ""}, {"code": "PDF תוכניות יצרן לוחות חשמל", "name": "PDF תוכניות יצרן לוחות חשמל", "file_count": 1, "building_num": ""}, {"code": "RFQ's", "name": "RFQ's", "file_count": 47, "building_num": ""}, {"code": "חדר קדם טיפול EB2", "name": "חדר קדם טיפול EB2", "file_count": 10, "building_num": ""}, {"code": "לוח חשמל MCC1", "name": "לוח חשמל MCC1", "file_count": 3, "building_num": ""}, {"code": "לוח חשמל MCC2", "name": "לוח חשמל MCC2", "file_count": 16, "building_num": ""}, {"code": "לוח חשמל MCC3", "name": "לוח חשמל MCC3", "file_count": 13, "building_num": ""}, {"code": "לוח חשמל ראשי שנאי 1 שנאי 2", "name": "לוח חשמל ראשי שנאי 1 שנאי 2", "file_count": 27, "building_num": ""}, {"code": "לוח מדידות וגלישה ILS", "name": "לוח מדידות וגלישה ILS", "file_count": 15, "building_num": ""}, {"code": "לוחות בתכנון וייצור מקומי", "name": "לוחות בתכנון וייצור מקומי", "file_count": 17, "building_num": ""}, {"code": "לוחות מקומיים", "name": "לוחות מקומיים", "file_count": 5, "building_num": ""}, {"code": "מבנה משרדים וחדר חשמל ECB", "name": "מבנה משרדים וחדר חשמל ECB", "file_count": 13, "building_num": ""}, {"code": "ציוד", "name": "ציוד", "file_count": 25, "building_num": ""}, {"code": "קבצים למיון", "name": "קבצים כלליים לא ממוינים (מגוון לוחות)", "file_count": 73, "building_num": ""}, {"code": "קבצים כלליים (שורש הארכיון)", "name": "קבצים כלליים (שורש הארכיון)", "file_count": 3, "building_num": ""}, {"code": "תוכניות סרוקות AS MADE", "name": "תוכניות סרוקות AS MADE", "file_count": 2, "building_num": ""}, {"code": "תכנון לוח משאבת אימפלר גומי", "name": "תוכניות לוח - משאבת אימפלר גומי", "file_count": 5, "building_num": ""}, {"code": "תיקיה חדשה (3)", "name": "תיקיה חדשה (3)", "file_count": 15, "building_num": ""}]);
+createPanelTable({
+  idPrefix: 'mtsh-lv',
+  panels: [{"code": "652-001-10", "name": "לוח ראשי EB - AS MADE 15.4.12", "file_count": 4, "building_num": ""}, {"code": "652-002-10", "name": "לוח MCC1", "file_count": 38, "building_num": ""}, {"code": "652-003-10", "name": "לוח MCC2", "file_count": 38, "building_num": ""}, {"code": "652-005-11", "name": "EB2-1 לוח שרותי בית", "file_count": 8, "building_num": ""}, {"code": "652-006-11", "name": "EB2 לוח", "file_count": 12, "building_num": ""}, {"code": "652-007-11", "name": "EB1 לוח ראשי", "file_count": 22, "building_num": ""}, {"code": "652-008-11", "name": "EB1-1 לוח שירותי בית", "file_count": 6, "building_num": ""}, {"code": "652-009-11", "name": "EB1-MCC לוח", "file_count": 58, "building_num": ""}, {"code": "652-010-11", "name": "לוח משנה-מנהלה", "file_count": 15, "building_num": ""}, {"code": "652-011-11", "name": "שירותי ביתCB2 לוח משנה", "file_count": 8, "building_num": ""}, {"code": "652-014-11", "name": "MCC1 לוח ווסתי מהירות", "file_count": 5, "building_num": ""}, {"code": "652-015-11", "name": "MCC2 לוח ווסתי מהירות", "file_count": 4, "building_num": ""}, {"code": "652-016-11", "name": "EB1 PLC", "file_count": 14, "building_num": ""}, {"code": "652-017-11", "name": "תיבת פיקוד מקומית", "file_count": 3, "building_num": ""}, {"code": "652-018-11", "name": "תיבת פיקוד מקומית", "file_count": 2, "building_num": ""}, {"code": "652-019-11", "name": "EB2 לוח בקר", "file_count": 9, "building_num": ""}, {"code": "מבנה חדר חשמל - EB1 (מבוטל)", "name": "מבנה חדר חשמל - EB1 (מבוטל)", "file_count": 3, "building_num": ""}, {"code": "DWG טכנומטיק עבודות מוקדמות", "name": "DWG טכנומטיק עבודות מוקדמות", "file_count": 28, "building_num": ""}, {"code": "EB2 לוחות בחדר חשמל", "name": "EB2 לוחות בחדר חשמל", "file_count": 4, "building_num": ""}, {"code": "EB2 קדם טיפול", "name": "EB2 קדם טיפול", "file_count": 4, "building_num": ""}, {"code": "ECB מבנה מנהלה", "name": "ECB מבנה מנהלה", "file_count": 2, "building_num": ""}, {"code": "PDF Images", "name": "PDF Images", "file_count": 6, "building_num": ""}, {"code": "PDF layout", "name": "PDF layout", "file_count": 6, "building_num": ""}, {"code": "PDF תוכניות יצרן לוחות חשמל", "name": "PDF תוכניות יצרן לוחות חשמל", "file_count": 1, "building_num": ""}, {"code": "RFQ's", "name": "RFQ's", "file_count": 47, "building_num": ""}, {"code": "חדר קדם טיפול EB2", "name": "חדר קדם טיפול EB2", "file_count": 10, "building_num": ""}, {"code": "לוח חשמל MCC1", "name": "לוח חשמל MCC1", "file_count": 3, "building_num": ""}, {"code": "לוח חשמל MCC2", "name": "לוח חשמל MCC2", "file_count": 16, "building_num": ""}, {"code": "לוח חשמל MCC3", "name": "לוח חשמל MCC3", "file_count": 13, "building_num": ""}, {"code": "לוח חשמל ראשי שנאי 1 שנאי 2", "name": "לוח חשמל ראשי שנאי 1 שנאי 2", "file_count": 27, "building_num": ""}, {"code": "לוח מדידות וגלישה ILS", "name": "לוח מדידות וגלישה ILS", "file_count": 15, "building_num": ""}, {"code": "לוחות בתכנון וייצור מקומי", "name": "לוחות בתכנון וייצור מקומי", "file_count": 17, "building_num": ""}, {"code": "לוחות מקומיים", "name": "לוחות מקומיים", "file_count": 5, "building_num": ""}, {"code": "מבנה משרדים וחדר חשמל ECB", "name": "מבנה משרדים וחדר חשמל ECB", "file_count": 13, "building_num": ""}, {"code": "ציוד", "name": "ציוד", "file_count": 25, "building_num": ""}, {"code": "קבצים למיון", "name": "קבצים כלליים לא ממוינים (מגוון לוחות)", "file_count": 73, "building_num": ""}, {"code": "קבצים כלליים (שורש הארכיון)", "name": "קבצים כלליים (שורש הארכיון)", "file_count": 3, "building_num": ""}, {"code": "תוכניות סרוקות AS MADE", "name": "תוכניות סרוקות AS MADE", "file_count": 2, "building_num": ""}, {"code": "תכנון לוח משאבת אימפלר גומי", "name": "תוכניות לוח - משאבת אימפלר גומי", "file_count": 5, "building_num": ""}, {"code": "תיקיה חדשה (3)", "name": "תיקיה חדשה (3)", "file_count": 15, "building_num": ""}],
+  columns: [
+    { key: '__rownum__',   label: '#',              required: true },
+    { key: 'code',         label: "מס' תוכנית",      required: true },
+    { key: 'name',         label: 'תיאור',           required: true },
+    { key: 'building_num', label: "מס' מבנה",        required: true },
+    { key: '__delete__',   label: '',                required: true },
+  ],
+  defaultVisible: [],
+  statusClassFn: statusClassNeutral,
+  searchKeys: ['code','name','building_num'],
+  extraFilters: [],
+  editableFields: ['code','name','building_num'],
+  fullyEditable: true,
+  allowAddRows: true,
+});
 // Tab "מט"ש קיים - מתח גבוה" starts as a blank, fully-editable grid (like a small
 // Excel sheet) — the user fills in rows themselves, then links a folder of files.
 createPanelTable({
