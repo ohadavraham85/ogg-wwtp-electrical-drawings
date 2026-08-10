@@ -454,7 +454,9 @@
     </div>
     <div class="folderBar">
       <button type="button" id="pickBtn2-panels">📁 הוסיפו תיקייה נוספת (ILS / חלומה)</button>
+      <button type="button" id="refreshBtn2-panels" style="display:none">🔄 רענן קבצים</button>
       <span class="folderStatus" id="folderStatus2-panels">אפשר לשייך עוד תיקייה — הקבצים ממנה יצטרפו לתיקייה הראשונה</span>
+      <a href="#" class="changeFolder" id="changeFolder2-panels">תיקייה אחרת</a>
     </div>
     <div class="colToggleWrap">
       <div class="colToggle" id="colToggle-panels"></div>
@@ -893,6 +895,18 @@ function createPanelTable(cfg){
     return files;
   }
 
+  // Split a filename (extension already stripped) into a leading code and a trailing
+  // description, e.g. "652-020-01 לוח תחנת שאיבה" -> code "652-020-01", name "לוח תחנת
+  // שאיבה". Filenames commonly use underscores in place of spaces, so those are treated
+  // the same way. Filenames that are just a bare code (no separator) get no name — that's
+  // a feature, not a bug: better an empty field than a guessed one.
+  function splitFilenameIntoCodeAndName(base){
+    const normalized = base.replace(/_+/g, ' ').replace(/\s+/g, ' ').trim();
+    const m = normalized.match(/^([A-Za-z0-9][\w\-.]*)\s+(.+)$/);
+    if (m) return { code: m[1], name: m[2].trim() };
+    return { code: normalized, name: '' };
+  }
+
   // Shared by every file-loading path (folder picker, refresh, second folder, drag & drop):
   // for fully-editable tabs, any file whose leading number doesn't match an existing row's
   // code gets its own new row instead of silently sitting unmatched in the file index.
@@ -901,11 +915,12 @@ function createPanelTable(cfg){
     let createdCount = 0;
     const existingCodes = new Set(panels.map(p => normCode(p.code || '')));
     files.forEach(f => {
-      const raw = f.name.replace(/\.[a-z0-9]+$/i, '').trim().split(/\s+/)[0];
+      const base = f.name.replace(/\.[a-z0-9]+$/i, '').trim();
+      const { code: raw, name } = splitFilenameIntoCodeAndName(base);
       const norm = normCode(raw);
       if (!norm || existingCodes.has(norm)) return;
       existingCodes.add(norm);
-      panels.push({ _id: uid(), code: raw, name: '', building_num: '' });
+      panels.push({ _id: uid(), code: raw, name, building_num: '' });
       createdCount++;
     });
     if (createdCount) persistFullTable();
@@ -1049,6 +1064,8 @@ function createPanelTable(cfg){
   // merge into the same index as the main folder instead of replacing it.
   const pickBtn2 = document.getElementById('pickBtn2-' + idPrefix);
   const folderStatus2 = document.getElementById('folderStatus2-' + idPrefix);
+  const refreshBtn2 = document.getElementById('refreshBtn2-' + idPrefix);
+  const changeFolder2Link = document.getElementById('changeFolder2-' + idPrefix);
   if (pickBtn2){
     const handleKey2 = 'dir2-' + idPrefix;
 
@@ -1066,6 +1083,7 @@ function createPanelTable(cfg){
             : `📂 ${dirHandle.name} — נוספו ${relevant.length} קבצים, שויכו ${matched} מתוך ${panels.length} רשומות בסה"כ${extra}`;
           folderStatus2.classList.add('ok');
         }
+        if (refreshBtn2) refreshBtn2.style.display = 'inline-block';
         applyFilters();
       } catch(err){
         console.error(err);
@@ -1074,6 +1092,27 @@ function createPanelTable(cfg){
           folderStatus2.classList.remove('ok');
         }
       }
+    }
+
+    if (changeFolder2Link){
+      changeFolder2Link.addEventListener('click', async (e) => {
+        e.preventDefault();
+        if (!supportsFSAccess) return;
+        try {
+          const dirHandle = await window.showDirectoryPicker();
+          await handleDB.set(handleKey2, dirHandle);
+          await scanDirHandle2(dirHandle);
+        } catch(err){
+          if (err.name !== 'AbortError') console.error(err);
+        }
+      });
+    }
+
+    if (refreshBtn2){
+      refreshBtn2.addEventListener('click', async () => {
+        const dirHandle2 = await handleDB.get(handleKey2);
+        if (dirHandle2) await scanDirHandle2(dirHandle2);
+      });
     }
 
     pickBtn2.addEventListener('click', async () => {
@@ -1110,8 +1149,9 @@ function createPanelTable(cfg){
         const perm = await dirHandle2.queryPermission({ mode: 'read' });
         if (perm === 'granted'){
           await scanDirHandle2(dirHandle2);
-        } else if (folderStatus2){
-          folderStatus2.textContent = `📂 ${dirHandle2.name} — לחצו כדי לאשר גישה מחדש`;
+        } else {
+          if (folderStatus2) folderStatus2.textContent = `📂 ${dirHandle2.name} — לחצו כדי לאשר גישה מחדש`;
+          if (refreshBtn2) refreshBtn2.style.display = 'inline-block';
         }
       } catch(err){ /* handle no longer valid, ignore */ }
     })();
