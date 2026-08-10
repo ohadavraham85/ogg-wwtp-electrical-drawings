@@ -1467,6 +1467,43 @@ function createPanelTable(cfg){
     applyFilters();
   });
 
+  // Selecting a whole *folder* on Android goes through a more restricted system picker
+  // that often doesn't list cloud providers (OneDrive, etc.) even when they're properly
+  // installed and show up everywhere else — a browser-level limitation, not something
+  // fixable from here. A plain multi-file picker (no folder/webkitdirectory) triggers the
+  // regular, unrestricted document chooser instead, so it reaches those same providers.
+  const primaryFolderBar = document.querySelector(`#tab-${idPrefix} .folderBar`);
+  if (primaryFolderBar && !document.getElementById('filesInput-' + idPrefix)){
+    const filesInput = document.createElement('input');
+    filesInput.type = 'file';
+    filesInput.id = 'filesInput-' + idPrefix;
+    filesInput.multiple = true;
+    filesInput.accept = '.pdf,.dwg,.xlsx';
+    filesInput.style.display = 'none';
+
+    const filesBtn = document.createElement('button');
+    filesBtn.type = 'button';
+    filesBtn.textContent = '📄 בחרו קבצים בודדים';
+    filesBtn.title = 'בחירה של כמה קבצים בודדים (לא תיקייה שלמה) — שימושי בטלפון כשבורר התיקיות לא מציג את OneDrive/Drive';
+    filesBtn.addEventListener('click', () => filesInput.click());
+
+    filesInput.addEventListener('change', (e) => {
+      const relevant = buildFileIndex(e.target.files, true);
+      const createResult = autoCreateRowsForUnmatchedFiles(relevant);
+      const matched = matchPanelsToFiles();
+      const extra = autoCreateStatusSuffix(createResult);
+      folderStatus.textContent = relevant.length
+        ? `נבחרו ${relevant.length} קבצים — שויכו ${matched} מתוך ${panels.length} רשומות${extra}`
+        : 'לא נבחרו קבצי PDF/DWG/XLSX';
+      folderStatus.classList.add('ok');
+      applyFilters();
+      filesInput.value = '';
+    });
+
+    primaryFolderBar.appendChild(filesBtn);
+    primaryFolderBar.appendChild(filesInput);
+  }
+
   function updateColToggleCount(){
     if (!colToggleCount) return;
     colToggleCount.textContent = visible.size > 0
