@@ -43,6 +43,9 @@
     background:var(--bg);
   }
   .stickyControls{
+    position:sticky;
+    top:var(--sticky-top-h, 0);
+    z-index:20;
     background:var(--bg);
     padding-bottom:4px;
   }
@@ -87,6 +90,12 @@
     transition:border-color .15s;
   }
   .dashCard:hover{border-color:var(--accent);}
+  .dashCard.active{
+    border-color:var(--accent);
+    background:linear-gradient(var(--panel-hover), var(--panel-hover)), var(--panel);
+    box-shadow:inset 0 0 0 1px var(--accent);
+  }
+  .dashCard.active .dashLabel{color:var(--accent);}
   .dashLabel{
     font-size:.76rem;
     color:var(--text-dim);
@@ -107,11 +116,12 @@
   }
   .dashSub.warn{color:var(--accent);}
 
+  /* The dashboard cards above are the tab switcher now (they show more — counts and
+     completeness — and clicking one still just clicks the matching button here), so
+     this bar would be a second, redundant way to do the same thing. Kept in the
+     markup (not deleted) since the switching logic still targets these buttons. */
   .tabs{
-    display:flex;
-    gap:6px;
-    margin-bottom:18px;
-    border-bottom:1px solid var(--line);
+    display:none;
   }
   .tabBtn{
     background:none;
@@ -730,8 +740,9 @@ async function collectFilesFromDirHandle(dirHandle){
   return out;
 }
 
-// ============ Home dashboard: a live summary card per tab ============
+// ============ Home dashboard: a live summary card per tab, doubling as the tab bar ============
 const tableRegistry = [];
+let currentActiveTab = 'tab-panels';
 
 function renderDashboard(){
   const el = document.getElementById('dashboard');
@@ -752,7 +763,8 @@ function renderDashboard(){
     if (hasCode && withCode < total){
       sub += `<div class="dashSub warn">בלי מס' תוכנית: ${total - withCode}</div>`;
     }
-    return `<div class="dashCard" data-tab="tab-${t.idPrefix}">
+    const activeCls = ('tab-' + t.idPrefix) === currentActiveTab ? ' active' : '';
+    return `<div class="dashCard${activeCls}" data-tab="tab-${t.idPrefix}">
       <div class="dashLabel">${t.label}</div>
       <div class="dashNum">${total}</div>
       ${sub}
@@ -1660,17 +1672,33 @@ function createPanelTable(cfg){
 }
 
 function setupGlobalStickyOffset(){
-  // no-op: kept for compatibility, sticky headers now use a simpler bounded-height scroll container
+  // .stickyTop (header + dashboard) is pinned at top:0. Each tab's own .stickyControls
+  // (search/filters/folder bar) needs to stick right below it — but .stickyTop's height
+  // isn't fixed (the dashboard re-renders with different row counts, the header can wrap
+  // on narrow screens), so the offset is measured and kept in sync live.
+  const stickyTop = document.querySelector('.stickyTop');
+  if (!stickyTop) return;
+  function update(){
+    const h = stickyTop.getBoundingClientRect().height;
+    document.documentElement.style.setProperty('--sticky-top-h', h + 'px');
+  }
+  update();
+  window.addEventListener('resize', update);
+  new ResizeObserver(update).observe(stickyTop);
 }
 setupGlobalStickyOffset();
 
-// ============ Tab switching ============
+// ============ Tab switching (driven by the dashboard cards; the old tab bar is kept
+// in the markup but hidden — its click listeners still work, so a dashboard card just
+// clicks the matching hidden button instead of duplicating the switch logic) ============
 document.querySelectorAll('.tabBtn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tabBtn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tabPanel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(btn.dataset.tab).classList.add('active');
+    currentActiveTab = btn.dataset.tab;
+    renderDashboard();
   });
 });
 
