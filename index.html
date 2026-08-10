@@ -225,6 +225,19 @@
   }
   .colResizeHandle:hover,
   .colResizeHandle:active{background:var(--accent);opacity:.5;}
+  .dragHandle{
+    cursor:grab;
+    color:var(--text-dim);
+    display:block;
+    text-align:center;
+    user-select:none;
+    font-size:.95rem;
+  }
+  .dragHandle:hover{color:var(--accent);}
+  .dragHandle:active{cursor:grabbing;}
+  tr.rowDragging{opacity:.35;}
+  tr.dropBefore td{box-shadow:inset 0 2px 0 0 var(--accent);}
+  tr.dropAfter td{box-shadow:inset 0 -2px 0 0 var(--accent);}
   tbody tr{
     border-bottom:1px solid var(--line);
     transition:background .12s ease;
@@ -721,6 +734,104 @@ const supportsFSAccess = typeof window.showDirectoryPicker === 'function';
 window.addEventListener('dragover', (e) => e.preventDefault());
 window.addEventListener('drop', (e) => e.preventDefault());
 
+// ============ Minimal dependency-free ZIP writer (STORED, no compression) ============
+// Used by the "ייצוא קבצים" button — no CDN library, so it keeps working even if a
+// third-party script host is ever unreachable. Compression isn't worth the added code
+// here since PDFs/DWGs are already fairly dense; this only needs to bundle files, not
+// shrink them.
+const CRC32_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for (let n = 0; n < 256; n++){
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    table[n] = c >>> 0;
+  }
+  return table;
+})();
+function crc32(bytes){
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++){
+    crc = CRC32_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+  }
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+async function buildZip(entries){
+  const encoder = new TextEncoder();
+  const now = new Date();
+  const dosTime = (((now.getHours() & 0x1F) << 11) | ((now.getMinutes() & 0x3F) << 5) | ((now.getSeconds() / 2) & 0x1F)) & 0xFFFF;
+  const dosDate = ((((now.getFullYear() - 1980) & 0x7F) << 9) | (((now.getMonth() + 1) & 0xF) << 5) | (now.getDate() & 0x1F)) & 0xFFFF;
+  const fileParts = [];
+  const centralParts = [];
+  let offset = 0;
+  for (const entry of entries){
+    const nameBytes = encoder.encode(entry.name);
+    const buf = new Uint8Array(await entry.blob.arrayBuffer());
+    const crc = crc32(buf);
+    const size = buf.length;
+
+    const local = new DataView(new ArrayBuffer(30));
+    local.setUint32(0, 0x04034b50, true);
+    local.setUint16(4, 20, true);
+    local.setUint16(6, 0, true);
+    local.setUint16(8, 0, true);
+    local.setUint16(10, dosTime, true);
+    local.setUint16(12, dosDate, true);
+    local.setUint32(14, crc, true);
+    local.setUint32(18, size, true);
+    local.setUint32(22, size, true);
+    local.setUint16(26, nameBytes.length, true);
+    local.setUint16(28, 0, true);
+    fileParts.push(new Uint8Array(local.buffer), nameBytes, buf);
+
+    const central = new DataView(new ArrayBuffer(46));
+    central.setUint32(0, 0x02014b50, true);
+    central.setUint16(4, 20, true);
+    central.setUint16(6, 20, true);
+    central.setUint16(8, 0, true);
+    central.setUint16(10, 0, true);
+    central.setUint16(12, dosTime, true);
+    central.setUint16(14, dosDate, true);
+    central.setUint32(16, crc, true);
+    central.setUint32(20, size, true);
+    central.setUint32(24, size, true);
+    central.setUint16(28, nameBytes.length, true);
+    central.setUint16(30, 0, true);
+    central.setUint16(32, 0, true);
+    central.setUint16(34, 0, true);
+    central.setUint16(36, 0, true);
+    central.setUint32(38, 0, true);
+    central.setUint32(42, offset, true);
+    centralParts.push(new Uint8Array(central.buffer), nameBytes);
+
+    offset += 30 + nameBytes.length + size;
+  }
+  const centralStart = offset;
+  const centralSize = centralParts.reduce((n, p) => n + p.length, 0);
+
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true);
+  end.setUint16(4, 0, true);
+  end.setUint16(6, 0, true);
+  end.setUint16(8, entries.length, true);
+  end.setUint16(10, entries.length, true);
+  end.setUint32(12, centralSize, true);
+  end.setUint32(16, centralStart, true);
+  end.setUint16(20, 0, true);
+
+  return new Blob([...fileParts, ...centralParts, new Uint8Array(end.buffer)], { type: 'application/zip' });
+}
+function uniqueZipName(name, used){
+  if (!used.has(name)){ used.add(name); return name; }
+  const dot = name.lastIndexOf('.');
+  const base = dot > 0 ? name.slice(0, dot) : name;
+  const ext = dot > 0 ? name.slice(dot) : '';
+  let i = 2;
+  let candidate = `${base} (${i})${ext}`;
+  while (used.has(candidate)){ i++; candidate = `${base} (${i})${ext}`; }
+  used.add(candidate);
+  return candidate;
+}
+
 async function collectFilesFromDirHandle(dirHandle){
   const out = [];
   async function walk(handle){
@@ -792,6 +903,11 @@ function createPanelTable(cfg){
     statusClassFn, searchKeys, extraFilters, editableFields, matchMode,
     fullyEditable, allowAddRows
   } = cfg;
+  // Every tab gets a drag handle as its very first column, so rows can be manually
+  // reordered by grabbing and dragging — independent of whatever sort/filter is active.
+  if (!columns.some(c => c.key === '__drag__')){
+    columns.unshift({ key: '__drag__', label: '', required: true });
+  }
   // Every tab that matches files by code gets a "סוג קובץ" column automatically,
   // showing the extension(s) of whatever file(s) ended up linked to that row.
   if (columns.some(c => c.key === 'code') && !columns.some(c => c.key === '__filetype__')){
@@ -957,7 +1073,7 @@ function createPanelTable(cfg){
       matches.forEach(f => { if (!seen.has(f.name)){ seen.add(f.name); uniq.push(f); } });
       if (uniq.length){
         matchedCount++;
-        panelFiles.set(idx, uniq.map(f => ({ name: f.name, url: URL.createObjectURL(f) })));
+        panelFiles.set(idx, uniq.map(f => ({ name: f.name, url: URL.createObjectURL(f), file: f })));
       }
     });
     return matchedCount;
@@ -1420,6 +1536,9 @@ function createPanelTable(cfg){
   }
 
   function cellContent(p, key, idx){
+    if (key === '__drag__'){
+      return `<span class="dragHandle" data-id="${p._id||''}" title="גררו לשינוי סדר השורות">⠿</span>`;
+    }
     if (key === '__delete__'){
       return `<button type="button" class="delRowBtn" data-id="${p._id||''}" title="מחק שורה">✕</button>`;
     }
@@ -1676,13 +1795,118 @@ function createPanelTable(cfg){
     });
   }
 
+  // Row reordering: grab the ⠿ handle and drag up/down to move a row to a new position.
+  // Works on every tab (not just the fully-editable ones) since it only changes the
+  // panels array's order, the same underlying array delete/persist already touches.
+  // Dropping clears any active column sort, since a sort and a manual order can't both
+  // govern the display at once — and the drop target is anchored to the specific
+  // neighboring row's real position in `panels`, not a visual row slot, so this still
+  // does the right thing when search/filters have the view narrowed to a subset.
+  let rowDrag = null;
+  tbody.addEventListener('mousedown', (e) => {
+    const handle = e.target.closest('.dragHandle');
+    if (!handle) return;
+    e.preventDefault();
+    const startTr = handle.closest('tr');
+    if (!startTr || !startTr.dataset.id) return;
+    rowDrag = {
+      id: startTr.dataset.id,
+      targetId: null,
+      before: true,
+      rows: Array.from(tbody.children).filter(tr => tr.tagName === 'TR' && tr.dataset.id),
+    };
+    startTr.classList.add('rowDragging');
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!rowDrag) return;
+    tbody.querySelectorAll('tr.dropBefore, tr.dropAfter').forEach(tr => tr.classList.remove('dropBefore', 'dropAfter'));
+    const overTr = document.elementFromPoint(e.clientX, e.clientY)?.closest('tr');
+    if (!overTr || !rowDrag.rows.includes(overTr) || overTr.dataset.id === rowDrag.id){
+      rowDrag.targetId = null;
+      return;
+    }
+    const rect = overTr.getBoundingClientRect();
+    const before = e.clientY < rect.top + rect.height / 2;
+    overTr.classList.add(before ? 'dropBefore' : 'dropAfter');
+    rowDrag.targetId = overTr.dataset.id;
+    rowDrag.before = before;
+  });
+  document.addEventListener('mouseup', () => {
+    if (!rowDrag) return;
+    tbody.querySelectorAll('tr.rowDragging').forEach(tr => tr.classList.remove('rowDragging'));
+    tbody.querySelectorAll('tr.dropBefore, tr.dropAfter').forEach(tr => tr.classList.remove('dropBefore', 'dropAfter'));
+    if (rowDrag.targetId && rowDrag.targetId !== rowDrag.id){
+      const fromIdx = panels.findIndex(p => p._id === rowDrag.id);
+      if (fromIdx !== -1){
+        const [moved] = panels.splice(fromIdx, 1);
+        let targetIdx = panels.findIndex(p => p._id === rowDrag.targetId);
+        if (targetIdx !== -1){
+          targetIdx += rowDrag.before ? 0 : 1;
+          panels.splice(targetIdx, 0, moved);
+          sortState = { key: null, dir: 1 };
+          persistFullTable();
+          renderHead();
+          applyFilters();
+        }
+      }
+    }
+    rowDrag = null;
+  });
+
   const tabBtnEl = document.querySelector(`.tabBtn[data-tab="tab-${idPrefix}"]`);
   tableRegistry.push({ idPrefix, label: tabBtnEl ? tabBtnEl.textContent.trim() : idPrefix, panels, columns });
+
+  // Bundle every currently-linked file in this tab into one ZIP download — the answer
+  // to "I need all these files collected in one organized folder" without needing
+  // write access to some destination folder: just download the zip and unpack it
+  // wherever they want.
+  const controlsEl = document.querySelector(`#tab-${idPrefix} .controls`);
+  if (controlsEl && !document.getElementById('exportFilesBtn-' + idPrefix)){
+    const exportFilesBtn = document.createElement('button');
+    exportFilesBtn.type = 'button';
+    exportFilesBtn.id = 'exportFilesBtn-' + idPrefix;
+    exportFilesBtn.className = 'addRowBtn';
+    const exportFilesLabel = '📦 ייצוא קבצים (ZIP)';
+    exportFilesBtn.textContent = exportFilesLabel;
+    exportFilesBtn.addEventListener('click', async () => {
+      const entries = [];
+      const usedNames = new Set();
+      panels.forEach((p, idx) => {
+        const files = panelFiles.get(idx);
+        if (!files) return;
+        files.forEach(f => {
+          entries.push({ name: uniqueZipName(f.name, usedNames), blob: f.file });
+        });
+      });
+      if (!entries.length){
+        alert('אין עדיין קבצים מקושרים בטאב הזה לייצוא — בחרו תיקייה קודם כדי לקשר קבצים.');
+        return;
+      }
+      exportFilesBtn.disabled = true;
+      exportFilesBtn.textContent = `מכין ZIP... (${entries.length} קבצים)`;
+      try {
+        const zipBlob = await buildZip(entries);
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(zipBlob);
+        a.download = `${tableRegistry.find(t => t.idPrefix === idPrefix)?.label || idPrefix} - קבצים.zip`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+      } catch(err){
+        console.error(err);
+        alert('יצירת ה-ZIP נכשלה — נסו שוב.');
+      } finally {
+        exportFilesBtn.disabled = false;
+        exportFilesBtn.textContent = exportFilesLabel;
+      }
+    });
+    controlsEl.appendChild(exportFilesBtn);
+  }
 
   // Every tab can be reset back to the data shipped in this page, discarding whatever
   // got added/edited/deleted locally — the escape hatch for exactly the kind of mess a
   // big folder scan full of unmatched files can make.
-  const controlsEl = document.querySelector(`#tab-${idPrefix} .controls`);
   if (controlsEl && !document.getElementById('resetBtn-' + idPrefix)){
     const resetBtn = document.createElement('button');
     resetBtn.type = 'button';
