@@ -571,6 +571,7 @@
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-mtsh-lv"> הצג רק שורות עם קובץ מקושר</label>
       <button type="button" class="addRowBtn" id="addRowBtn-mtsh-lv">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-mtsh-lv">+ 10 שורות</button>
+      <button type="button" class="addRowBtn" id="exportBtn-mtsh-lv">📋 העתק את הנתונים</button>
     </div>
     <div class="sub" style="margin-bottom:10px">כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
@@ -601,6 +602,7 @@
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-mtsh-hv"> הצג רק שורות עם קובץ מקושר</label>
       <button type="button" class="addRowBtn" id="addRowBtn-mtsh-hv">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-mtsh-hv">+ 10 שורות</button>
+      <button type="button" class="addRowBtn" id="exportBtn-mtsh-hv">📋 העתק את הנתונים</button>
     </div>
     <div class="sub" style="margin-bottom:10px">טבלה ריקה למילוי ידני — הקלידו את מס' התוכנית, התיאור ומס' המבנה. אפשר לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל). לאחר המילוי, בחרו תיקייה למטה כדי לקשר קבצים לפי מס' התוכנית.</div>
     <div class="folderBar">
@@ -1325,6 +1327,38 @@ function createPanelTable(cfg){
       persistFullTable();
       applyFilters();
     });
+  }
+
+  if (fullyEditable){
+    const exportBtn = document.getElementById('exportBtn-' + idPrefix);
+    if (exportBtn){
+      const exportLabel = exportBtn.textContent;
+      exportBtn.addEventListener('click', async () => {
+        const text = JSON.stringify(panels);
+        let copied = false;
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText){
+            await navigator.clipboard.writeText(text);
+            copied = true;
+          }
+        } catch(err){ /* fall through to the manual-copy fallback below */ }
+        if (!copied){
+          try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            copied = document.execCommand('copy');
+            document.body.removeChild(ta);
+          } catch(err){ copied = false; }
+        }
+        exportBtn.textContent = copied ? '✓ הועתק! הדביקו בהודעה' : '⚠️ ההעתקה נכשלה — נסו שוב';
+        setTimeout(() => { exportBtn.textContent = exportLabel; }, 3000);
+      });
+    }
   }
 
   if (fullyEditable){
