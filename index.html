@@ -993,7 +993,6 @@ function createPanelTable(cfg){
   // for fully-editable tabs, any file whose leading number doesn't match an existing row's
   // code gets its own new row instead of silently sitting unmatched in the file index.
   function autoCreateRowsForUnmatchedFiles(files){
-    if (!fullyEditable) return 0;
     let createdCount = 0;
     const existingCodes = new Set(panels.map(p => normCode(p.code || '')));
     files.forEach(f => {
