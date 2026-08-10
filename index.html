@@ -412,7 +412,6 @@
     <button class="tabBtn" data-tab="tab-hvac">לוחות מיזוג אוויר</button>
     <button class="tabBtn" data-tab="tab-hv">לוחות מתח גבוה</button>
     <button class="tabBtn" data-tab="tab-mtsh-lv">מט"ש קיים - מתח נמוך</button>
-    <button class="tabBtn" data-tab="tab-mtsh-hv">מט"ש קיים - מתח גבוה</button>
   </div>
   </div>
 
@@ -542,7 +541,11 @@
     <div class="controls">
       <input type="text" id="search-hv" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-hv"> הצג רק שורות עם קובץ מקושר</label>
+      <button type="button" class="addRowBtn" id="addRowBtn-hv">+ הוסף שורה</button>
+      <button type="button" class="addRowBtn" id="addRows10Btn-hv">+ 10 שורות</button>
+      <button type="button" class="addRowBtn" id="exportBtn-hv">📋 העתק את הנתונים</button>
     </div>
+    <div class="sub" style="margin-bottom:10px">כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
       <button type="button" id="pickBtn-hv">📁 בחרו את תיקיית לוחות מתח גבוה</button>
       <button type="button" id="refreshBtn-hv" style="display:none">🔄 רענן קבצים</button>
@@ -594,37 +597,6 @@
     </div>
   </div>
 
-  <div id="tab-mtsh-hv" class="tabPanel">
-    <div class="stickyControls" id="stickyControls-mtsh-hv">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-mtsh-hv"></div><div class="sub" id="count-mtsh-hv"></div></div>
-    <div class="controls">
-      <input type="text" id="search-mtsh-hv" placeholder="חיפוש לפי מספר תוכנית / שם...">
-      <label class="hasFileToggle"><input type="checkbox" id="hasFile-mtsh-hv"> הצג רק שורות עם קובץ מקושר</label>
-      <button type="button" class="addRowBtn" id="addRowBtn-mtsh-hv">+ הוסף שורה</button>
-      <button type="button" class="addRowBtn" id="addRows10Btn-mtsh-hv">+ 10 שורות</button>
-      <button type="button" class="addRowBtn" id="exportBtn-mtsh-hv">📋 העתק את הנתונים</button>
-    </div>
-    <div class="sub" style="margin-bottom:10px">טבלה ריקה למילוי ידני — הקלידו את מס' התוכנית, התיאור ומס' המבנה. אפשר לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל). לאחר המילוי, בחרו תיקייה למטה כדי לקשר קבצים לפי מס' התוכנית.</div>
-    <div class="folderBar">
-      <button type="button" id="pickBtn-mtsh-hv">📁 בחרו את תיקיית מט"ש קיים - מתח גבוה</button>
-      <button type="button" id="refreshBtn-mtsh-hv" style="display:none">🔄 רענן קבצים</button>
-      <span class="folderStatus" id="folderStatus-mtsh-hv">עדיין לא נבחרה תיקייה — מספרי התוכנית לא לחיצים (אפשר גם לגרור קבצים או תיקייה לתוך הטבלה)</span>
-      <a href="#" class="changeFolder" id="changeFolder-mtsh-hv">תיקייה אחרת</a>
-      <input type="file" id="folderInput-mtsh-hv" webkitdirectory directory multiple style="display:none">
-    </div>
-    <div class="colToggleWrap">
-      <div class="colToggle" id="colToggle-mtsh-hv"></div>
-      <div class="colToggleCount" id="colToggleCount-mtsh-hv"></div>
-    </div>
-    </div>
-    <div class="table-scroll">
-      <table>
-        <thead><tr id="headRow-mtsh-hv"></tr></thead>
-        <tbody id="tableBody-mtsh-hv"></tbody>
-      </table>
-    </div>
-  </div>
-
   <footer>
     הדף לא שומר עותק של הקבצים בתוכו — הוא קורא אותם ישירות מהתיקייה שתבחרו בכל טאב (כל טאב עם תיקייה נפרדת משלו).
     ההתאמה נעשית לפי מספר התוכנית מול מספרי הקבצים בפועל בתיקייה.
@@ -634,11 +606,11 @@
     בדפדפנים אחרים (פיירפוקס/ספארי) עדיין צריך לבחור את התיקייה בכל פתיחה.
     <br>לעדכון רשימת התוכניות עצמה (שורות חדשות/סטטוסים) — שלחו קובץ CSV/Excel מעודכן.
     <br>בכל טאב אפשר גם לגרור קבצים (או תיקייה שלמה) ישירות לתוך הטבלה במקום להשתמש בכפתור "בחרו תיקייה" —
-    הקבצים שנגררים מצטרפים לקבצים שכבר נטענו. בטאב "מט"ש קיים - מתח גבוה" (הריק, למילוי ידני):
-    אם קובץ שנגרר לא תואם לאף שורה קיימת, תיווצר עבורו שורה חדשה אוטומטית לפי מספר התוכנית מתוך שם הקובץ.
-    <br>בטאבים "חממות" / "מיזוג אוויר" / "מתח גבוה" / "מט"ש קיים - מתח נמוך" / "מט"ש קיים - מתח גבוה":
-    עמודת מס' המבנה ניתנת למילוי ידני ישירות בטבלה,
-    ונשמרת אוטומטית בדפדפן הזה (לא מסתנכרנת בין מחשבים/דפדפנים שונים).
+    הקבצים שנגררים מצטרפים לקבצים שכבר נטענו. בטאבים הניתנים לעריכה מלאה ("מתח גבוה", "מט"ש קיים - מתח נמוך"):
+    אם קובץ שנגרר (או נטען מתיקייה) לא תואם לאף שורה קיימת, תיווצר עבורו שורה חדשה אוטומטית לפי מספר התוכנית מתוך שם הקובץ.
+    <br>בטאבים "חממות" / "מיזוג אוויר" / "מתח גבוה" / "מט"ש קיים - מתח נמוך": כל התאים ניתנים לעריכה ישירות בטבלה
+    (כולל הוספה/מחיקה של שורות וגרירה למילוי כמו באקסל בטאבי "מתח גבוה" ו"מט"ש קיים - מתח נמוך"),
+    ונשמרים אוטומטית בדפדפן הזה (לא מסתנכרנים בין מחשבים/דפדפנים שונים).
   </footer>
 
   <div class="copyright">כל הזכויות שמורות לאוהד אברהם, מט"ש אוג, מבט"י</div>
@@ -1547,10 +1519,9 @@ createPanelTable({
   editableFields: ['building_num'],
 });
 makeScannedTab('hvac', [{"code": "24005.1", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.1-9", "name": "לוחות מיזוג .pdf עדכון שגיא", "file_count": 1, "building_num": ""}, {"code": "24005.2", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.3", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.4", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.5", "name": "", "file_count": 1, "building_num": "90"}, {"code": "24005.6", "name": "", "file_count": 1, "building_num": "100"}, {"code": "24005.7", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.8", "name": "", "file_count": 1, "building_num": "102"}, {"code": "24005.9", "name": "", "file_count": 1, "building_num": ""}]);
-makeScannedTab('hv', [{"code": "25-0089", "name": "", "file_count": 1, "building_num": ""}, {"code": "3723300062-1", "name": "", "file_count": 1, "building_num": "83"}, {"code": "3723300062-3", "name": "AS MADE 26.08.25 Daniel", "file_count": 2, "building_num": "50"}]);
 createPanelTable({
-  idPrefix: 'mtsh-lv',
-  panels: [{"code": "652-001-10", "name": "לוח ראשי EB - AS MADE 15.4.12", "file_count": 4, "building_num": ""}, {"code": "652-002-10", "name": "לוח MCC1", "file_count": 38, "building_num": ""}, {"code": "652-003-10", "name": "לוח MCC2", "file_count": 38, "building_num": ""}, {"code": "652-005-11", "name": "EB2-1 לוח שרותי בית", "file_count": 8, "building_num": ""}, {"code": "652-006-11", "name": "EB2 לוח", "file_count": 12, "building_num": ""}, {"code": "652-007-11", "name": "EB1 לוח ראשי", "file_count": 22, "building_num": ""}, {"code": "652-008-11", "name": "EB1-1 לוח שירותי בית", "file_count": 6, "building_num": ""}, {"code": "652-009-11", "name": "EB1-MCC לוח", "file_count": 58, "building_num": ""}, {"code": "652-010-11", "name": "לוח משנה-מנהלה", "file_count": 15, "building_num": ""}, {"code": "652-011-11", "name": "שירותי ביתCB2 לוח משנה", "file_count": 8, "building_num": ""}, {"code": "652-014-11", "name": "MCC1 לוח ווסתי מהירות", "file_count": 5, "building_num": ""}, {"code": "652-015-11", "name": "MCC2 לוח ווסתי מהירות", "file_count": 4, "building_num": ""}, {"code": "652-016-11", "name": "EB1 PLC", "file_count": 14, "building_num": ""}, {"code": "652-017-11", "name": "תיבת פיקוד מקומית", "file_count": 3, "building_num": ""}, {"code": "652-018-11", "name": "תיבת פיקוד מקומית", "file_count": 2, "building_num": ""}, {"code": "652-019-11", "name": "EB2 לוח בקר", "file_count": 9, "building_num": ""}, {"code": "מבנה חדר חשמל - EB1 (מבוטל)", "name": "מבנה חדר חשמל - EB1 (מבוטל)", "file_count": 3, "building_num": ""}, {"code": "DWG טכנומטיק עבודות מוקדמות", "name": "DWG טכנומטיק עבודות מוקדמות", "file_count": 28, "building_num": ""}, {"code": "EB2 לוחות בחדר חשמל", "name": "EB2 לוחות בחדר חשמל", "file_count": 4, "building_num": ""}, {"code": "EB2 קדם טיפול", "name": "EB2 קדם טיפול", "file_count": 4, "building_num": ""}, {"code": "ECB מבנה מנהלה", "name": "ECB מבנה מנהלה", "file_count": 2, "building_num": ""}, {"code": "PDF Images", "name": "PDF Images", "file_count": 6, "building_num": ""}, {"code": "PDF layout", "name": "PDF layout", "file_count": 6, "building_num": ""}, {"code": "PDF תוכניות יצרן לוחות חשמל", "name": "PDF תוכניות יצרן לוחות חשמל", "file_count": 1, "building_num": ""}, {"code": "RFQ's", "name": "RFQ's", "file_count": 47, "building_num": ""}, {"code": "חדר קדם טיפול EB2", "name": "חדר קדם טיפול EB2", "file_count": 10, "building_num": ""}, {"code": "לוח חשמל MCC1", "name": "לוח חשמל MCC1", "file_count": 3, "building_num": ""}, {"code": "לוח חשמל MCC2", "name": "לוח חשמל MCC2", "file_count": 16, "building_num": ""}, {"code": "לוח חשמל MCC3", "name": "לוח חשמל MCC3", "file_count": 13, "building_num": ""}, {"code": "לוח חשמל ראשי שנאי 1 שנאי 2", "name": "לוח חשמל ראשי שנאי 1 שנאי 2", "file_count": 27, "building_num": ""}, {"code": "לוח מדידות וגלישה ILS", "name": "לוח מדידות וגלישה ILS", "file_count": 15, "building_num": ""}, {"code": "לוחות בתכנון וייצור מקומי", "name": "לוחות בתכנון וייצור מקומי", "file_count": 17, "building_num": ""}, {"code": "לוחות מקומיים", "name": "לוחות מקומיים", "file_count": 5, "building_num": ""}, {"code": "מבנה משרדים וחדר חשמל ECB", "name": "מבנה משרדים וחדר חשמל ECB", "file_count": 13, "building_num": ""}, {"code": "ציוד", "name": "ציוד", "file_count": 25, "building_num": ""}, {"code": "קבצים למיון", "name": "קבצים כלליים לא ממוינים (מגוון לוחות)", "file_count": 73, "building_num": ""}, {"code": "קבצים כלליים (שורש הארכיון)", "name": "קבצים כלליים (שורש הארכיון)", "file_count": 3, "building_num": ""}, {"code": "תוכניות סרוקות AS MADE", "name": "תוכניות סרוקות AS MADE", "file_count": 2, "building_num": ""}, {"code": "תכנון לוח משאבת אימפלר גומי", "name": "תוכניות לוח - משאבת אימפלר גומי", "file_count": 5, "building_num": ""}, {"code": "תיקיה חדשה (3)", "name": "תיקיה חדשה (3)", "file_count": 15, "building_num": ""}],
+  idPrefix: 'hv',
+  panels: [{"code": "25-0089", "name": "", "building_num": ""}, {"code": "3723300062-1", "name": "", "building_num": "83"}, {"code": "3723300062-3", "name": "AS MADE 26.08.25 Daniel", "building_num": "50"}, {"_id": "rmsm6qlq20", "code": "", "name": "תחנת מיתוג ראשית חח\"י בכניסה", "building_num": "EBHH"}, {"_id": "rmsmk644u0", "code": "", "name": "תחנת מיתוג לשנאים 1+2 מבנה משרדים ובקרה", "building_num": "EB2"}, {"_id": "rmsmkjqqm1", "code": "", "name": "תחנת מיתוג לשנאי 9  שער כניסה ליד חדר חח\"י", "building_num": "EB6"}, {"_id": "rmsmkoi890", "code": "21104111-6", "name": "", "building_num": ""}, {"_id": "rmsmkoi891", "code": "21104111-7", "name": "", "building_num": ""}, {"_id": "rmsmkoi892", "code": "21104112-4", "name": "", "building_num": ""}, {"_id": "rmsmkoi893", "code": "21104112-3", "name": "", "building_num": ""}, {"_id": "rmsmkoi894", "code": "21104112-5", "name": "", "building_num": ""}, {"_id": "rmsmkoi895", "code": "21104112-1", "name": "", "building_num": ""}, {"_id": "rmsmkoi896", "code": "21104112-2", "name": "", "building_num": ""}, {"_id": "rmsmkoi897", "code": "NHJC231112_A1", "name": "", "building_num": ""}, {"_id": "rmsmkoi898", "code": "211-041-1-2_מתח_גבוה_תחנה_מספר1__EB1", "name": "", "building_num": ""}, {"_id": "rmsmkoi899", "code": "21104111-5", "name": "", "building_num": ""}, {"_id": "rmsmkoi89a", "code": "21104113-2", "name": "", "building_num": ""}, {"_id": "rmsmkoi89b", "code": "מתח_גבוה_תחנה_מספר2__211-041-1-3", "name": "", "building_num": ""}, {"_id": "rmsmkoi89c", "code": "21104111-4", "name": "", "building_num": ""}, {"_id": "rmsmkoi89d", "code": "21104111-3", "name": "", "building_num": ""}, {"_id": "rmsmkoi89e", "code": "21104111-2", "name": "", "building_num": ""}, {"_id": "rmsmkoi89f", "code": "21104111-8", "name": "", "building_num": ""}, {"_id": "rmsmkoi89g", "code": "21104111-1", "name": "", "building_num": ""}, {"_id": "rmsmkoi89h", "code": "211-041-1-1_מתח_גבוה_-תחנה_ראשית", "name": "", "building_num": ""}, {"_id": "rmsmkoi89i", "code": "2254-0-038-Model", "name": "", "building_num": ""}, {"_id": "rmsmkoi89j", "code": "63230-216-241_A1_CSH120_200_Install_Sheet", "name": "", "building_num": ""}],
   columns: [
     { key: '__rownum__',   label: '#',              required: true },
     { key: 'code',         label: "מס' תוכנית",      required: true },
@@ -1566,11 +1537,9 @@ createPanelTable({
   fullyEditable: true,
   allowAddRows: true,
 });
-// Tab "מט"ש קיים - מתח גבוה" starts as a blank, fully-editable grid (like a small
-// Excel sheet) — the user fills in rows themselves, then links a folder of files.
 createPanelTable({
-  idPrefix: 'mtsh-hv',
-  panels: [],
+  idPrefix: 'mtsh-lv',
+  panels: [{"code": "652-001-10", "name": "לוח ראשי EB - AS MADE 15.4.12", "file_count": 4, "building_num": ""}, {"code": "652-002-10", "name": "לוח MCC1", "file_count": 38, "building_num": ""}, {"code": "652-003-10", "name": "לוח MCC2", "file_count": 38, "building_num": ""}, {"code": "652-005-11", "name": "EB2-1 לוח שרותי בית", "file_count": 8, "building_num": ""}, {"code": "652-006-11", "name": "EB2 לוח", "file_count": 12, "building_num": ""}, {"code": "652-007-11", "name": "EB1 לוח ראשי", "file_count": 22, "building_num": ""}, {"code": "652-008-11", "name": "EB1-1 לוח שירותי בית", "file_count": 6, "building_num": ""}, {"code": "652-009-11", "name": "EB1-MCC לוח", "file_count": 58, "building_num": ""}, {"code": "652-010-11", "name": "לוח משנה-מנהלה", "file_count": 15, "building_num": ""}, {"code": "652-011-11", "name": "שירותי ביתCB2 לוח משנה", "file_count": 8, "building_num": ""}, {"code": "652-014-11", "name": "MCC1 לוח ווסתי מהירות", "file_count": 5, "building_num": ""}, {"code": "652-015-11", "name": "MCC2 לוח ווסתי מהירות", "file_count": 4, "building_num": ""}, {"code": "652-016-11", "name": "EB1 PLC", "file_count": 14, "building_num": ""}, {"code": "652-017-11", "name": "תיבת פיקוד מקומית", "file_count": 3, "building_num": ""}, {"code": "652-018-11", "name": "תיבת פיקוד מקומית", "file_count": 2, "building_num": ""}, {"code": "652-019-11", "name": "EB2 לוח בקר", "file_count": 9, "building_num": ""}, {"code": "מבנה חדר חשמל - EB1 (מבוטל)", "name": "מבנה חדר חשמל - EB1 (מבוטל)", "file_count": 3, "building_num": ""}, {"code": "DWG טכנומטיק עבודות מוקדמות", "name": "DWG טכנומטיק עבודות מוקדמות", "file_count": 28, "building_num": ""}, {"code": "EB2 לוחות בחדר חשמל", "name": "EB2 לוחות בחדר חשמל", "file_count": 4, "building_num": ""}, {"code": "EB2 קדם טיפול", "name": "EB2 קדם טיפול", "file_count": 4, "building_num": ""}, {"code": "ECB מבנה מנהלה", "name": "ECB מבנה מנהלה", "file_count": 2, "building_num": ""}, {"code": "PDF Images", "name": "PDF Images", "file_count": 6, "building_num": ""}, {"code": "PDF layout", "name": "PDF layout", "file_count": 6, "building_num": ""}, {"code": "PDF תוכניות יצרן לוחות חשמל", "name": "PDF תוכניות יצרן לוחות חשמל", "file_count": 1, "building_num": ""}, {"code": "RFQ's", "name": "RFQ's", "file_count": 47, "building_num": ""}, {"code": "חדר קדם טיפול EB2", "name": "חדר קדם טיפול EB2", "file_count": 10, "building_num": ""}, {"code": "לוח חשמל MCC1", "name": "לוח חשמל MCC1", "file_count": 3, "building_num": ""}, {"code": "לוח חשמל MCC2", "name": "לוח חשמל MCC2", "file_count": 16, "building_num": ""}, {"code": "לוח חשמל MCC3", "name": "לוח חשמל MCC3", "file_count": 13, "building_num": ""}, {"code": "לוח חשמל ראשי שנאי 1 שנאי 2", "name": "לוח חשמל ראשי שנאי 1 שנאי 2", "file_count": 27, "building_num": ""}, {"code": "לוח מדידות וגלישה ILS", "name": "לוח מדידות וגלישה ILS", "file_count": 15, "building_num": ""}, {"code": "לוחות בתכנון וייצור מקומי", "name": "לוחות בתכנון וייצור מקומי", "file_count": 17, "building_num": ""}, {"code": "לוחות מקומיים", "name": "לוחות מקומיים", "file_count": 5, "building_num": ""}, {"code": "מבנה משרדים וחדר חשמל ECB", "name": "מבנה משרדים וחדר חשמל ECB", "file_count": 13, "building_num": ""}, {"code": "ציוד", "name": "ציוד", "file_count": 25, "building_num": ""}, {"code": "קבצים למיון", "name": "קבצים כלליים לא ממוינים (מגוון לוחות)", "file_count": 73, "building_num": ""}, {"code": "קבצים כלליים (שורש הארכיון)", "name": "קבצים כלליים (שורש הארכיון)", "file_count": 3, "building_num": ""}, {"code": "תוכניות סרוקות AS MADE", "name": "תוכניות סרוקות AS MADE", "file_count": 2, "building_num": ""}, {"code": "תכנון לוח משאבת אימפלר גומי", "name": "תוכניות לוח - משאבת אימפלר גומי", "file_count": 5, "building_num": ""}, {"code": "תיקיה חדשה (3)", "name": "תיקיה חדשה (3)", "file_count": 15, "building_num": ""}],
   columns: [
     { key: '__rownum__',   label: '#',              required: true },
     { key: 'code',         label: "מס' תוכנית",      required: true },
