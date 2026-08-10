@@ -235,9 +235,30 @@
   }
   .dragHandle:hover{color:var(--accent);}
   .dragHandle:active{cursor:grabbing;}
-  tr.rowDragging{opacity:.35;}
-  tr.dropBefore td{box-shadow:inset 0 2px 0 0 var(--accent);}
-  tr.dropAfter td{box-shadow:inset 0 -2px 0 0 var(--accent);}
+  tr.rowDragging{
+    opacity:.15;
+    outline:1px dashed var(--accent);
+    outline-offset:-1px;
+  }
+  tr.rowDragging td{padding-top:2px;padding-bottom:2px;}
+  tr.dropBefore td{box-shadow:inset 0 3px 0 0 var(--accent);}
+  tr.dropAfter td{box-shadow:inset 0 -3px 0 0 var(--accent);}
+  .rowGhost{
+    position:fixed;
+    z-index:200;
+    pointer-events:none;
+    background:var(--panel-hover);
+    border:1px solid var(--accent);
+    border-radius:8px;
+    padding:10px 16px;
+    box-shadow:0 12px 30px rgba(0,0,0,.5), 0 0 0 1px rgba(232,163,61,.2);
+    font-size:.85rem;
+    font-weight:600;
+    color:var(--text);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
   tbody tr{
     border-bottom:1px solid var(--line);
     transition:background .12s ease;
@@ -1803,22 +1824,46 @@ function createPanelTable(cfg){
   // neighboring row's real position in `panels`, not a visual row slot, so this still
   // does the right thing when search/filters have the view narrowed to a subset.
   let rowDrag = null;
+  function rowSummaryText(tr){
+    const inputs = tr.querySelectorAll('input.editCell');
+    const parts = [];
+    inputs.forEach(inp => { if (inp.value.trim()) parts.push(inp.value.trim()); });
+    if (parts.length) return parts.slice(0, 2).join(' — ');
+    const link = tr.querySelector('a.code, span.code');
+    if (link && link.textContent.trim()) return link.textContent.trim();
+    const firstCell = tr.querySelector('td:nth-child(3)');
+    return firstCell ? firstCell.textContent.trim().slice(0, 60) : 'שורה';
+  }
   tbody.addEventListener('mousedown', (e) => {
     const handle = e.target.closest('.dragHandle');
     if (!handle) return;
     e.preventDefault();
     const startTr = handle.closest('tr');
     if (!startTr || !startTr.dataset.id) return;
+    const rect = startTr.getBoundingClientRect();
+    const ghost = document.createElement('div');
+    ghost.className = 'rowGhost';
+    ghost.textContent = '⠿ ' + rowSummaryText(startTr);
+    ghost.style.top = rect.top + 'px';
+    ghost.style.left = rect.left + 'px';
+    ghost.style.width = rect.width + 'px';
+    document.body.appendChild(ghost);
     rowDrag = {
       id: startTr.dataset.id,
       targetId: null,
       before: true,
+      startX: e.clientX,
+      startY: e.clientY,
+      baseTop: rect.top,
+      baseLeft: rect.left,
+      ghost,
       rows: Array.from(tbody.children).filter(tr => tr.tagName === 'TR' && tr.dataset.id),
     };
     startTr.classList.add('rowDragging');
   });
   document.addEventListener('mousemove', (e) => {
     if (!rowDrag) return;
+    rowDrag.ghost.style.transform = `translate(${e.clientX - rowDrag.startX}px, ${e.clientY - rowDrag.startY}px) rotate(-1deg) scale(1.02)`;
     tbody.querySelectorAll('tr.dropBefore, tr.dropAfter').forEach(tr => tr.classList.remove('dropBefore', 'dropAfter'));
     const overTr = document.elementFromPoint(e.clientX, e.clientY)?.closest('tr');
     if (!overTr || !rowDrag.rows.includes(overTr) || overTr.dataset.id === rowDrag.id){
@@ -1833,6 +1878,7 @@ function createPanelTable(cfg){
   });
   document.addEventListener('mouseup', () => {
     if (!rowDrag) return;
+    rowDrag.ghost.remove();
     tbody.querySelectorAll('tr.rowDragging').forEach(tr => tr.classList.remove('rowDragging'));
     tbody.querySelectorAll('tr.dropBefore, tr.dropAfter').forEach(tr => tr.classList.remove('dropBefore', 'dropAfter'));
     if (rowDrag.targetId && rowDrag.targetId !== rowDrag.id){
