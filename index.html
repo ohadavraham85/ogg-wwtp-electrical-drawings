@@ -311,6 +311,8 @@
     padding:8px 14px;
   }
   .addRowBtn:hover{border-color:var(--accent);color:var(--accent);}
+  .resetBtn{color:var(--text-dim);}
+  .resetBtn:hover{border-color:var(--red);color:var(--red);}
   .badge{
     display:inline-block;
     padding:3px 10px;
@@ -984,29 +986,51 @@ function createPanelTable(cfg){
   // Shared by every file-loading path (folder picker, refresh, second folder, drag & drop):
   // for fully-editable tabs, any file whose leading number doesn't match an existing row's
   // code gets its own new row instead of silently sitting unmatched in the file index.
+  // Capped deliberately: some tabs' rows represent a whole drawing set (dozens of
+  // individual files sharing one folder-level code), so scanning a real folder can
+  // easily surface hundreds of individual filenames that don't match any existing
+  // row. Auto-creating a row per file in that case doesn't help anyone — it just
+  // floods the table. A handful of genuinely new files (a deliberate drag of one or
+  // a few) still gets rows; a bulk folder scan with many unmatched files does not.
+  const AUTO_CREATE_CAP = 15;
+
   function autoCreateRowsForUnmatchedFiles(files){
-    let createdCount = 0;
     const existingCodes = new Set(panels.map(p => normCode(p.code || '')));
+    const toCreate = [];
+    const seenThisBatch = new Set();
     files.forEach(f => {
       const base = f.name.replace(/\.[a-z0-9]+$/i, '').trim();
       const { code: raw, name } = splitFilenameIntoCodeAndName(base);
       const norm = normCode(raw);
-      if (!norm || existingCodes.has(norm)) return;
-      existingCodes.add(norm);
-      panels.push({ _id: uid(), code: raw, name, building_num: '' });
-      createdCount++;
+      if (!norm || existingCodes.has(norm) || seenThisBatch.has(norm)) return;
+      seenThisBatch.add(norm);
+      toCreate.push({ raw, name });
     });
-    if (createdCount) persistFullTable();
-    return createdCount;
+    if (toCreate.length > AUTO_CREATE_CAP){
+      return { createdCount: 0, skippedCount: toCreate.length };
+    }
+    toCreate.forEach(({ raw, name }) => {
+      panels.push({ _id: uid(), code: raw, name, building_num: '' });
+    });
+    if (toCreate.length) persistFullTable();
+    return { createdCount: toCreate.length, skippedCount: 0 };
+  }
+
+  function autoCreateStatusSuffix(result){
+    if (result.skippedCount){
+      return ` — ⚠️ ${result.skippedCount} קבצים לא תואמים לא נוצרו כשורות (יותר מדי בבת אחת, מעל ${AUTO_CREATE_CAP}) — גררו אותם בנפרד או הוסיפו שורות ידנית`;
+    }
+    if (result.createdCount) return ` — נוצרו ${result.createdCount} שורות חדשות`;
+    return '';
   }
 
   function handleDroppedFiles(files){
     const relevant = buildFileIndex(files, true);
-    const createdCount = autoCreateRowsForUnmatchedFiles(relevant);
+    const createResult = autoCreateRowsForUnmatchedFiles(relevant);
     const matched = matchPanelsToFiles();
     applyFilters();
     if (folderStatus){
-      const extra = createdCount ? ` — נוצרו ${createdCount} שורות חדשות` : '';
+      const extra = autoCreateStatusSuffix(createResult);
       folderStatus.textContent = relevant.length
         ? `נגררו ${relevant.length} קבצים — שויכו ${matched} מתוך ${panels.length} רשומות${extra}`
         : 'לא נמצאו קבצי PDF/DWG/XLSX בגרירה';
@@ -1097,13 +1121,13 @@ function createPanelTable(cfg){
     try {
       const files = await collectFilesFromDirHandle(dirHandle);
       const relevant = buildFileIndex(files);
-      const createdCount = autoCreateRowsForUnmatchedFiles(relevant);
+      const createResult = autoCreateRowsForUnmatchedFiles(relevant);
       const matched = matchPanelsToFiles();
       if (relevant.length === 0){
         folderStatus.textContent = `⚠️ ${dirHandle.name} — לא נמצאו קבצי PDF/DWG/XLSX בתיקייה הזו (או בתתי-התיקיות שלה)`;
         folderStatus.classList.remove('ok');
       } else {
-        const extra = createdCount ? ` — נוצרו ${createdCount} שורות חדשות` : '';
+        const extra = autoCreateStatusSuffix(createResult);
         folderStatus.textContent = `📂 ${dirHandle.name} — נטענו ${relevant.length} קבצים, שויכו ${matched} מתוך ${panels.length} רשומות${extra}`;
         folderStatus.classList.add('ok');
       }
@@ -1147,10 +1171,10 @@ function createPanelTable(cfg){
       try {
         const files = await collectFilesFromDirHandle(dirHandle);
         const relevant = buildFileIndex(files, true);
-        const createdCount = autoCreateRowsForUnmatchedFiles(relevant);
+        const createResult = autoCreateRowsForUnmatchedFiles(relevant);
         const matched = matchPanelsToFiles();
         if (folderStatus2){
-          const extra = createdCount ? ` — נוצרו ${createdCount} שורות חדשות` : '';
+          const extra = autoCreateStatusSuffix(createResult);
           folderStatus2.textContent = relevant.length === 0
             ? `⚠️ ${dirHandle.name} — לא נמצאו קבצי PDF/DWG/XLSX בתיקייה הזו`
             : `📂 ${dirHandle.name} — נוספו ${relevant.length} קבצים, שויכו ${matched} מתוך ${panels.length} רשומות בסה"כ${extra}`;
@@ -1232,9 +1256,9 @@ function createPanelTable(cfg){
 
   folderInput.addEventListener('change', (e) => {
     const relevant = buildFileIndex(e.target.files);
-    const createdCount = autoCreateRowsForUnmatchedFiles(relevant);
+    const createResult = autoCreateRowsForUnmatchedFiles(relevant);
     const matched = matchPanelsToFiles();
-    const extra = createdCount ? ` — נוצרו ${createdCount} שורות חדשות` : '';
+    const extra = autoCreateStatusSuffix(createResult);
     folderStatus.textContent = `נטענו ${relevant.length} קבצים מהתיקייה — שויכו ${matched} מתוך ${panels.length} רשומות${extra}`;
     folderStatus.classList.add('ok');
     applyFilters();
@@ -1609,6 +1633,27 @@ function createPanelTable(cfg){
 
   const tabBtnEl = document.querySelector(`.tabBtn[data-tab="tab-${idPrefix}"]`);
   tableRegistry.push({ idPrefix, label: tabBtnEl ? tabBtnEl.textContent.trim() : idPrefix, panels, columns });
+
+  // Every tab can be reset back to the data shipped in this page, discarding whatever
+  // got added/edited/deleted locally — the escape hatch for exactly the kind of mess a
+  // big folder scan full of unmatched files can make.
+  const controlsEl = document.querySelector(`#tab-${idPrefix} .controls`);
+  if (controlsEl && !document.getElementById('resetBtn-' + idPrefix)){
+    const resetBtn = document.createElement('button');
+    resetBtn.type = 'button';
+    resetBtn.id = 'resetBtn-' + idPrefix;
+    resetBtn.className = 'addRowBtn resetBtn';
+    resetBtn.textContent = '↺ אפס לנתונים המקוריים';
+    resetBtn.addEventListener('click', () => {
+      if (!confirm('לאפס את הטאב הזה לנתונים המקוריים? כל שינוי מקומי בטאב הזה (שורות שנוספו/נמחקו/נערכו) יימחק.')) return;
+      try {
+        localStorage.removeItem(fullTableKey);
+        editable.forEach(field => localStorage.removeItem(editStoreKey(field)));
+      } catch(err){ console.warn('could not clear saved data', err); }
+      location.reload();
+    });
+    controlsEl.appendChild(resetBtn);
+  }
 
   renderHead();
   applyFilters();
