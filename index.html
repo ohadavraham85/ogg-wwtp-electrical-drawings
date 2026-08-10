@@ -64,6 +64,49 @@
   .sub{color:var(--text-dim);font-size:.82rem;}
   .matchStat{color:var(--green);font-weight:600;}
 
+  .dashboard{
+    margin-bottom:18px;
+  }
+  .dashTotal{
+    font-size:.85rem;
+    color:var(--text-dim);
+    margin-bottom:10px;
+  }
+  .dashTotal b{color:var(--accent);font-size:1rem;}
+  .dashGrid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+    gap:10px;
+  }
+  .dashCard{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:12px 14px;
+    cursor:pointer;
+    transition:border-color .15s;
+  }
+  .dashCard:hover{border-color:var(--accent);}
+  .dashLabel{
+    font-size:.76rem;
+    color:var(--text-dim);
+    margin-bottom:4px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .dashNum{
+    font-size:1.5rem;
+    font-weight:700;
+    color:var(--text);
+  }
+  .dashSub{
+    font-size:.72rem;
+    color:var(--text-dim);
+    margin-top:4px;
+  }
+  .dashSub.warn{color:var(--accent);}
+
   .tabs{
     display:flex;
     gap:6px;
@@ -425,6 +468,8 @@
     </div>
   </header>
 
+  <div id="dashboard" class="dashboard"></div>
+
   <div class="tabs">
     <button class="tabBtn active" data-tab="tab-panels">לוחות ILS /חלומה</button>
     <button class="tabBtn" data-tab="tab-planner">תוכניות מתכנן</button>
@@ -697,6 +742,43 @@ async function collectFilesFromDirHandle(dirHandle){
   }
   await walk(dirHandle);
   return out;
+}
+
+// ============ Home dashboard: a live summary card per tab ============
+const tableRegistry = [];
+
+function renderDashboard(){
+  const el = document.getElementById('dashboard');
+  if (!el || tableRegistry.length === 0) return;
+  let totalAll = 0;
+  const cards = tableRegistry.map(t => {
+    const total = t.panels.length;
+    totalAll += total;
+    const hasBuilding = t.columns.some(c => c.key === 'building_num');
+    const withBuilding = hasBuilding ? t.panels.filter(p => (p.building_num || '').trim()).length : null;
+    const hasCode = t.columns.some(c => c.key === 'code');
+    const withCode = hasCode ? t.panels.filter(p => (p.code || '').trim()).length : null;
+    let sub = '';
+    if (hasBuilding){
+      const warn = withBuilding < total ? ' warn' : '';
+      sub += `<div class="dashSub${warn}">מס' מבנה: ${withBuilding}/${total}</div>`;
+    }
+    if (hasCode && withCode < total){
+      sub += `<div class="dashSub warn">בלי מס' תוכנית: ${total - withCode}</div>`;
+    }
+    return `<div class="dashCard" data-tab="tab-${t.idPrefix}">
+      <div class="dashLabel">${t.label}</div>
+      <div class="dashNum">${total}</div>
+      ${sub}
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div class="dashTotal">סה"כ <b>${totalAll}</b> שורות בכל הטאבים</div><div class="dashGrid">${cards}</div>`;
+  el.querySelectorAll('.dashCard').forEach(card => {
+    card.addEventListener('click', () => {
+      const btn = document.querySelector(`.tabBtn[data-tab="${card.dataset.tab}"]`);
+      if (btn) btn.click();
+    });
+  });
 }
 
 // ============ Generic reusable table module ============
@@ -1382,6 +1464,7 @@ function createPanelTable(cfg){
       filtered.sort((a, b) => sortState.dir * String(a.p[k]||'').localeCompare(String(b.p[k]||''), 'he', { numeric: true, sensitivity: 'base' }));
     }
     render(filtered);
+    renderDashboard();
   }
 
   searchBox.addEventListener('input', applyFilters);
@@ -1525,6 +1608,9 @@ function createPanelTable(cfg){
       fillDrag = null;
     });
   }
+
+  const tabBtnEl = document.querySelector(`.tabBtn[data-tab="tab-${idPrefix}"]`);
+  tableRegistry.push({ idPrefix, label: tabBtnEl ? tabBtnEl.textContent.trim() : idPrefix, panels, columns });
 
   renderHead();
   applyFilters();
