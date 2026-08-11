@@ -11,6 +11,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="תוכניות חשמל">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<script src="vendor/leaflet/leaflet.js"></script>
 <style>
   :root{
     --bg:#0f1720;
@@ -386,6 +388,115 @@
   }
   .lockToggleBtn:hover{border-color:var(--accent);color:var(--accent);}
   .lockToggleBtn.isUnlocked{border-color:var(--green);color:var(--green);}
+
+  .locBtn{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--text-dim);
+    cursor:pointer;
+    font-size:.78rem;
+    padding:5px 9px;
+    white-space:nowrap;
+    font-family:var(--mono);
+  }
+  .locBtn:hover{border-color:var(--accent);color:var(--accent);}
+  .locBtn.locBtnSet{color:var(--green);border-color:var(--green);}
+
+  .locationModalOverlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.6);
+    z-index:500;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .locationModalBox{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    width:min(720px, 100%);
+    max-height:90vh;
+    overflow:auto;
+    box-shadow:0 20px 50px rgba(0,0,0,.5);
+  }
+  .locationModalHeader{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 16px;
+    border-bottom:1px solid var(--line);
+  }
+  .locationModalTitle{font-weight:700;font-size:.95rem;}
+  .locationModalClose{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--text-dim);
+    cursor:pointer;
+    padding:4px 10px;
+    font-size:.85rem;
+  }
+  .locationModalClose:hover{border-color:var(--red);color:var(--red);}
+  .locationModalBody{padding:14px 16px;display:flex;flex-direction:column;gap:12px;}
+  #locationMapContainer{
+    width:100%;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--bg);
+  }
+  .locationModalRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .locationModalRow label{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--text-dim);flex:1;min-width:220px;}
+  .locationModalRow input{
+    flex:1;
+    padding:8px 10px;
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--text);
+    font-family:var(--mono);
+    font-size:.85rem;
+  }
+  .locationModalActions{display:flex;gap:10px;}
+  .locationModalActions button{
+    background:var(--panel-hover);
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--text);
+    cursor:pointer;
+    padding:9px 16px;
+    font-size:.85rem;
+  }
+  #locationSaveBtn{border-color:var(--green);color:var(--green);}
+  #locationSaveBtn:hover{background:rgba(63,174,106,.12);}
+  #locationClearBtn:hover{border-color:var(--red);color:var(--red);}
+  #locationGoogleLink{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--text-dim);
+    cursor:pointer;
+    padding:8px 14px;
+    font-size:.82rem;
+    white-space:nowrap;
+  }
+  #locationGoogleLink:hover{border-color:var(--accent);color:var(--accent);}
+  .leaflet-tooltip.mapPinLabel{
+    background:var(--panel);
+    border:1px solid var(--accent);
+    color:var(--text);
+    font-size:.76rem;
+    font-weight:600;
+    padding:2px 7px;
+  }
+  #aggregateMapContainer{width:100%;}
+  .leaflet-popup-content-wrapper, .leaflet-popup-tip{
+    background:var(--panel);
+    color:var(--text);
+  }
+  .leaflet-popup-content a{color:var(--accent);}
   .badge{
     display:inline-block;
     padding:3px 10px;
@@ -572,6 +683,7 @@
     <button class="tabBtn" data-tab="tab-hvac">לוחות מיזוג אוויר</button>
     <button class="tabBtn" data-tab="tab-hv">לוחות מתח גבוה</button>
     <button class="tabBtn" data-tab="tab-mtsh-lv">מט"ש קיים - מתח נמוך</button>
+    <button class="tabBtn" data-tab="tab-map">🗺️ מפה</button>
   </div>
   </div>
 
@@ -775,6 +887,37 @@
     </div>
   </div>
 
+  <!-- TAB 7: מפה מרוכזת — כל הלוחות שסומן להם מיקום, מכל 6 הטאבים, על מפת לוויין אחת -->
+  <div id="tab-map" class="tabPanel">
+    <div class="stickyControls" id="stickyControls-map">
+      <div class="topRow"><div class="sub" id="mapPinCount"></div></div>
+      <div class="sub" style="margin-bottom:10px">כל הלוחות שסומן להם מיקום, מכל 6 הטאבים, על מפת לוויין אחת. לחצו על סמן כדי לראות את שם הלוח ולפתוח אותו בגוגל מפות. כדי לסמן מיקום חדש — פתחו עריכה בטאב הרלוונטי ולחצו על עמודת "מיקום" בשורה.</div>
+    </div>
+    <div id="aggregateMapContainer" style="height:70vh"></div>
+  </div>
+
+</div>
+
+<!-- מודאל בחירת/צפייה במיקום — משותף לכל הטאבים -->
+<div class="locationModalOverlay" id="locationModal" style="display:none">
+  <div class="locationModalBox">
+    <div class="locationModalHeader">
+      <div class="locationModalTitle" id="locationModalTitle"></div>
+      <button type="button" class="locationModalClose" id="locationModalClose">✕</button>
+    </div>
+    <div class="locationModalBody">
+      <div id="locationMapContainer" style="height:360px"></div>
+      <div class="locationModalRow">
+        <label>קואורדינטות: <input type="text" id="locationCoordsInput" placeholder="32.123456, 34.987654"></label>
+        <button type="button" id="locationGoogleLink">🌐 פתח בגוגל מפות</button>
+      </div>
+      <div class="locationModalActions" id="locationModalActions">
+        <button type="button" id="locationSaveBtn">💾 שמור מיקום</button>
+        <button type="button" id="locationClearBtn">🗑️ נקה מיקום</button>
+      </div>
+      <div class="sub" id="locationHint"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -973,7 +1116,14 @@ function renderDashboard(){
       ${sub}
     </div>`;
   }).join('');
-  el.innerHTML = `<div class="dashTotal">סה"כ <b>${totalAll}</b> שורות בכל הטאבים</div><div class="dashGrid">${cards}</div>`;
+  const totalPinned = tableRegistry.reduce((n, t) => n + t.panels.filter(p => p.lat && p.lng).length, 0);
+  const mapActiveCls = currentActiveTab === 'tab-map' ? ' active' : '';
+  const mapCard = `<div class="dashCard${mapActiveCls}" data-tab="tab-map">
+      <div class="dashLabel">🗺️ מפה</div>
+      <div class="dashNum">${totalPinned}</div>
+      <div class="dashSub">לוחות ממוקמים על המפה</div>
+    </div>`;
+  el.innerHTML = `<div class="dashTotal">סה"כ <b>${totalAll}</b> שורות בכל הטאבים</div><div class="dashGrid">${cards}${mapCard}</div>`;
   el.querySelectorAll('.dashCard').forEach(card => {
     card.addEventListener('click', () => {
       const btn = document.querySelector(`.tabBtn[data-tab="${card.dataset.tab}"]`);
@@ -981,6 +1131,181 @@ function renderDashboard(){
     });
   });
 }
+
+// ============ Shared location picker (modal) + aggregate map ============
+// One Leaflet-based picker, reused by every tab's "מיקום" column: click a row's location
+// button to view (locked) or set/drag a pin (unlocked). Uses Esri World Imagery — free,
+// keyless satellite tiles — for the interactive picker itself, since Google's own tiles
+// can't legally be pulled into a third-party map without their paid JS API. The "פתח
+// בגוגל מפות" link still hands off to the real Google Maps satellite view (best available
+// imagery, whatever Google currently has for that spot — there's no free API that
+// guarantees "last month" freshness for an arbitrary location).
+function escapeHtml(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+if (window.L){
+  // Leaflet's default marker icon otherwise resolves to a relative path that 404s
+  // outside a bundler setup — point it at the vendored copy explicitly.
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'vendor/leaflet/images/marker-icon-2x.png',
+    iconUrl: 'vendor/leaflet/images/marker-icon.png',
+    shadowUrl: 'vendor/leaflet/images/marker-shadow.png',
+  });
+}
+
+const SATELLITE_TILE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const SATELLITE_ATTRIBUTION = 'Imagery &copy; Esri, Maxar, Earthstar Geographics';
+const DEFAULT_MAP_CENTER = [32.0, 34.9]; // fallback center (Israel) when nothing is pinned yet
+
+let pickerMap = null;
+let pickerMarker = null;
+let currentLocationCtx = null; // { p, idPrefix, editable, tableLabel }
+
+function googleMapsUrl(lat, lng, label){
+  const q = label ? `${lat},${lng}(${label})` : `${lat},${lng}`;
+  return `https://www.google.com/maps?q=${encodeURIComponent(q)}&t=k&z=18`;
+}
+
+function ensurePickerMap(){
+  if (pickerMap) return pickerMap;
+  pickerMap = L.map('locationMapContainer');
+  L.tileLayer(SATELLITE_TILE_URL, { attribution: SATELLITE_ATTRIBUTION, maxZoom: 19 }).addTo(pickerMap);
+  pickerMap.on('click', (e) => {
+    if (!currentLocationCtx || !currentLocationCtx.editable) return;
+    setPickerMarker(e.latlng.lat, e.latlng.lng);
+  });
+  return pickerMap;
+}
+
+function setPickerMarker(lat, lng){
+  const map = ensurePickerMap();
+  if (pickerMarker){
+    pickerMarker.setLatLng([lat, lng]);
+  } else {
+    pickerMarker = L.marker([lat, lng], { draggable: !!(currentLocationCtx && currentLocationCtx.editable) }).addTo(map);
+    pickerMarker.on('dragend', () => {
+      const ll = pickerMarker.getLatLng();
+      updatePickerCoordsUI(ll.lat, ll.lng);
+    });
+  }
+  if (pickerMarker.dragging){
+    if (currentLocationCtx && currentLocationCtx.editable) pickerMarker.dragging.enable();
+    else pickerMarker.dragging.disable();
+  }
+  updatePickerCoordsUI(lat, lng);
+}
+
+function updatePickerCoordsUI(lat, lng){
+  const input = document.getElementById('locationCoordsInput');
+  if (input) input.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  const link = document.getElementById('locationGoogleLink');
+  if (link){
+    const label = currentLocationCtx && currentLocationCtx.p ? (currentLocationCtx.p.name || currentLocationCtx.p.code || '') : '';
+    link.onclick = () => window.open(googleMapsUrl(lat, lng, label), '_blank', 'noopener');
+  }
+}
+
+window.openLocationModal = function openLocationModal({ p, idPrefix, editable, tableLabel }){
+  currentLocationCtx = { p, idPrefix, editable, tableLabel };
+  const overlay = document.getElementById('locationModal');
+  overlay.style.display = 'flex';
+  document.getElementById('locationModalTitle').textContent = (p.name || p.code || 'לוח') + (tableLabel ? ' — ' + tableLabel : '');
+  document.getElementById('locationModalActions').style.display = editable ? 'flex' : 'none';
+  document.getElementById('locationCoordsInput').readOnly = !editable;
+  document.getElementById('locationHint').textContent = editable
+    ? 'לחצו על המפה כדי למקם סמן, או גררו אותו לדיוק. אפשר גם להדביק קואורדינטות (מגוגל מפות) בשדה למעלה ולאשר עם Enter.'
+    : 'תצוגה בלבד — כדי לשנות את המיקום, פתחו עריכה בטאב (סמל המנעול) ולחצו שוב על המיקום.';
+
+  setTimeout(() => {
+    const map = ensurePickerMap();
+    map.invalidateSize();
+    if (pickerMarker){ pickerMarker.remove(); pickerMarker = null; }
+    if (p.lat && p.lng){
+      const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
+      map.setView([lat, lng], 17);
+      setPickerMarker(lat, lng);
+    } else {
+      map.setView(DEFAULT_MAP_CENTER, 11);
+      const input = document.getElementById('locationCoordsInput');
+      if (input) input.value = '';
+      updatePickerCoordsUI(DEFAULT_MAP_CENTER[0], DEFAULT_MAP_CENTER[1]);
+    }
+  }, 30);
+};
+
+function closeLocationModal(){
+  document.getElementById('locationModal').style.display = 'none';
+  currentLocationCtx = null;
+}
+
+document.getElementById('locationModalClose').addEventListener('click', closeLocationModal);
+document.getElementById('locationModal').addEventListener('click', (e) => {
+  if (e.target.id === 'locationModal') closeLocationModal();
+});
+document.getElementById('locationCoordsInput').addEventListener('change', (e) => {
+  if (!currentLocationCtx || !currentLocationCtx.editable) return;
+  const m = e.target.value.match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/);
+  if (!m) return;
+  const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+  ensurePickerMap().setView([lat, lng], 17);
+  setPickerMarker(lat, lng);
+});
+document.getElementById('locationSaveBtn').addEventListener('click', () => {
+  if (!currentLocationCtx || !currentLocationCtx.editable) return;
+  const { p, idPrefix } = currentLocationCtx;
+  if (pickerMarker){
+    const ll = pickerMarker.getLatLng();
+    p.lat = String(ll.lat);
+    p.lng = String(ll.lng);
+  }
+  if (window.__panelTableSaveLocation && window.__panelTableSaveLocation[idPrefix]) window.__panelTableSaveLocation[idPrefix]();
+  closeLocationModal();
+});
+document.getElementById('locationClearBtn').addEventListener('click', () => {
+  if (!currentLocationCtx || !currentLocationCtx.editable) return;
+  const { p, idPrefix } = currentLocationCtx;
+  delete p.lat; delete p.lng;
+  if (pickerMarker){ pickerMarker.remove(); pickerMarker = null; }
+  if (window.__panelTableSaveLocation && window.__panelTableSaveLocation[idPrefix]) window.__panelTableSaveLocation[idPrefix]();
+  closeLocationModal();
+});
+
+// The aggregate "מפה" tab: one map, every pinned row from every tab, labeled by name.
+let aggregateMap = null;
+let aggregateMarkers = [];
+window.__aggregateMapInvalidate = () => { if (aggregateMap) aggregateMap.invalidateSize(); };
+
+window.renderAggregateMap = function renderAggregateMap(){
+  if (!document.getElementById('aggregateMapContainer')) return;
+  if (!aggregateMap){
+    aggregateMap = L.map('aggregateMapContainer');
+    L.tileLayer(SATELLITE_TILE_URL, { attribution: SATELLITE_ATTRIBUTION, maxZoom: 19 }).addTo(aggregateMap);
+    aggregateMap.setView(DEFAULT_MAP_CENTER, 8);
+  }
+  aggregateMarkers.forEach(m => m.remove());
+  aggregateMarkers = [];
+  const bounds = [];
+  tableRegistry.forEach(t => {
+    t.panels.forEach(p => {
+      if (!p.lat || !p.lng) return;
+      const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
+      if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+      const label = p.name || p.code || 'לוח';
+      const marker = L.marker([lat, lng]).addTo(aggregateMap);
+      marker.bindTooltip(label, { permanent: true, direction: 'top', className: 'mapPinLabel', offset: [0, -8] });
+      marker.bindPopup(
+        `<b>${escapeHtml(label)}</b><br>${escapeHtml(t.label)}<br>` +
+        `<a href="${googleMapsUrl(lat, lng, label)}" target="_blank" rel="noopener">פתח בגוגל מפות 🌐</a>`
+      );
+      aggregateMarkers.push(marker);
+      bounds.push([lat, lng]);
+    });
+  });
+  const countEl = document.getElementById('mapPinCount');
+  if (countEl) countEl.textContent = aggregateMarkers.length + ' לוחות ממוקמים על המפה';
+  if (bounds.length) aggregateMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 16 });
+};
 
 // ============ Generic reusable table module ============
 function createPanelTable(cfg){
@@ -1001,6 +1326,14 @@ function createPanelTable(cfg){
     const filetypeCol = { key: '__filetype__', label: 'סוג קובץ', required: true };
     if (deleteIdx === -1) columns.push(filetypeCol);
     else columns.splice(deleteIdx, 0, filetypeCol);
+  }
+  // Every tab gets a "מיקום" column with a map picker, so any row can be pinned to an
+  // exact geographic spot (see the shared location modal / aggregate map wiring below).
+  if (!columns.some(c => c.key === '__location__')){
+    const deleteIdx2 = columns.findIndex(c => c.key === '__delete__');
+    const locationCol = { key: '__location__', label: '📍 מיקום', required: true };
+    if (deleteIdx2 === -1) columns.push(locationCol);
+    else columns.splice(deleteIdx2, 0, locationCol);
   }
   const editable = new Set(editableFields || []);
   // Matching (see matchPanelsToFiles) tries ils_num before code, so the clickable
@@ -1681,6 +2014,16 @@ function createPanelTable(cfg){
       const cls = e => e === 'PDF' ? 'b-blue' : e === 'DWG' ? 'b-green' : 'b-gray';
       return exts.map(e => `<span class="badge ${cls(e)}">${e}</span>`).join(' ');
     }
+    if (key === '__location__'){
+      const hasLoc = p.lat && p.lng;
+      if (locked){
+        if (!hasLoc) return '<span class="bnum">—</span>';
+        return `<button type="button" class="locBtn locBtnSet" data-id="${p._id||''}" title="פתח במפה">📍 ${Number(p.lat).toFixed(4)}, ${Number(p.lng).toFixed(4)}</button>`;
+      }
+      return `<button type="button" class="locBtn${hasLoc ? ' locBtnSet' : ''}" data-id="${p._id||''}" title="קבעו מיקום על המפה">` +
+        (hasLoc ? `📍 ${Number(p.lat).toFixed(4)}, ${Number(p.lng).toFixed(4)}` : '📍 קבע מיקום') +
+        `</button>`;
+    }
     if (key === linkKey && fullyEditable && !locked){
       const files = panelFiles.get(idx);
       let linksHtml = '';
@@ -1822,6 +2165,17 @@ function createPanelTable(cfg){
     panels.splice(i, 1);
     persistFullTable();
     applyFilters();
+  });
+
+  tbody.addEventListener('click', (e) => {
+    const btn = e.target.closest('.locBtn');
+    if (!btn) return;
+    const p = panels.find(pp => pp._id === btn.dataset.id);
+    if (!p) return;
+    if (locked && !(p.lat && p.lng)) return; // locked & nothing to view — nothing to do
+    if (window.openLocationModal){
+      window.openLocationModal({ p, idPrefix, editable: !locked, tableLabel: tabLabel });
+    }
   });
 
   if (allowAddRows){
@@ -2013,7 +2367,8 @@ function createPanelTable(cfg){
   });
 
   const tabBtnEl = document.querySelector(`.tabBtn[data-tab="tab-${idPrefix}"]`);
-  tableRegistry.push({ idPrefix, label: tabBtnEl ? tabBtnEl.textContent.trim() : idPrefix, panels, columns });
+  const tabLabel = tabBtnEl ? tabBtnEl.textContent.trim() : idPrefix;
+  tableRegistry.push({ idPrefix, label: tabLabel, panels, columns });
 
   // Bundle every currently-linked file in this tab into one ZIP download — the answer
   // to "I need all these files collected in one organized folder" without needing
@@ -2115,6 +2470,17 @@ function createPanelTable(cfg){
     applyFilters();
   };
 
+  // Called by the shared location modal (see openLocationModal below) after a row's
+  // lat/lng is set or cleared, so this table persists it and re-renders that cell —
+  // and the aggregate map tab, which reads across every table's panels array, stays
+  // in sync too.
+  window.__panelTableSaveLocation = window.__panelTableSaveLocation || {};
+  window.__panelTableSaveLocation[idPrefix] = () => {
+    persistFullTable();
+    applyFilters();
+    if (window.renderAggregateMap) window.renderAggregateMap();
+  };
+
   renderHead();
   applyFilters();
 }
@@ -2156,6 +2522,10 @@ document.querySelectorAll('.tabBtn').forEach(btn => {
       if (window.__panelTableRelock && window.__panelTableRelock[enteredPrefix]){
         window.__panelTableRelock[enteredPrefix]();
       }
+    }
+    if (btn.dataset.tab === 'tab-map' && window.renderAggregateMap){
+      window.renderAggregateMap();
+      setTimeout(() => { if (window.__aggregateMapInvalidate) window.__aggregateMapInvalidate(); }, 50);
     }
     renderDashboard();
   });
