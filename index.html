@@ -235,6 +235,15 @@
   }
   .dragHandle:hover{color:var(--accent);}
   .dragHandle:active{cursor:grabbing;}
+  .dragHandleOff{
+    cursor:default;
+    color:var(--text-dim);
+    opacity:.35;
+    display:block;
+    text-align:center;
+    user-select:none;
+    font-size:.95rem;
+  }
   tr.rowDragging{
     opacity:.15;
     outline:1px dashed var(--accent);
@@ -356,8 +365,27 @@
     padding:8px 14px;
   }
   .addRowBtn:hover{border-color:var(--accent);color:var(--accent);}
+  .addRowBtn:disabled{opacity:.4;cursor:not-allowed;}
+  .addRowBtn:disabled:hover{border-color:var(--line);color:var(--text);}
   .resetBtn{color:var(--text-dim);}
   .resetBtn:hover{border-color:var(--red);color:var(--red);}
+  .lockToggleBtn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 14px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--text-dim);
+    font-size:.82rem;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:border-color .15s, color .15s;
+  }
+  .lockToggleBtn:hover{border-color:var(--accent);color:var(--accent);}
+  .lockToggleBtn.isUnlocked{border-color:var(--green);color:var(--green);}
   .badge{
     display:inline-block;
     padding:3px 10px;
@@ -550,13 +578,17 @@
   <!-- TAB 1: לוחות חשמל -->
   <div id="tab-panels" class="tabPanel active">
     <div class="stickyControls" id="stickyControls-panels">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-panels"></div><div class="sub" id="count-panels"></div></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-panels"></div><div class="sub" id="count-panels"></div><button type="button" class="lockToggleBtn" id="lockBtn-panels"></button></div>
     <div class="controls">
       <input type="text" id="search-panels" placeholder="חיפוש לפי מס' תוכנית / שם לוח / מבנה...">
       <select id="building-panels"><option value="">כל המבנים</option></select>
       <select id="status-panels"><option value="">כל הסטטוסים</option></select>
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-panels"> הצג רק לוחות עם תוכנית מקושרת</label>
+      <button type="button" class="addRowBtn" id="addRowBtn-panels">+ הוסף שורה</button>
+      <button type="button" class="addRowBtn" id="addRows10Btn-panels">+ 10 שורות</button>
+      <button type="button" class="addRowBtn" id="exportBtn-panels">📋 העתק את הנתונים</button>
     </div>
+    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
       <button type="button" id="pickBtn-panels">📁 בחרו את תיקיית התוכניות (OneDrive)</button>
       <button type="button" id="refreshBtn-panels" style="display:none">🔄 רענן קבצים</button>
@@ -586,14 +618,18 @@
   <!-- TAB 2: תוכניות מתכנן -->
   <div id="tab-planner" class="tabPanel">
     <div class="stickyControls" id="stickyControls-planner">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-planner"></div><div class="sub" id="count-planner"></div></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-planner"></div><div class="sub" id="count-planner"></div><button type="button" class="lockToggleBtn" id="lockBtn-planner"></button></div>
     <div class="controls">
       <input type="text" id="search-planner" placeholder="חיפוש לפי מס' תוכנית / שם / מבנה...">
       <select id="building-planner"><option value="">כל המבנים</option></select>
       <select id="status-planner"><option value="">כל הסטטוסים</option></select>
       <select id="sheet-planner"><option value="">כל הגיליונות</option></select>
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-planner"> הצג רק תוכניות עם קובץ מקושר</label>
+      <button type="button" class="addRowBtn" id="addRowBtn-planner">+ הוסף שורה</button>
+      <button type="button" class="addRowBtn" id="addRows10Btn-planner">+ 10 שורות</button>
+      <button type="button" class="addRowBtn" id="exportBtn-planner">📋 העתק את הנתונים</button>
     </div>
+    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
       <button type="button" id="pickBtn-planner">📁 בחרו את תיקיית תוכניות המתכנן</button>
       <button type="button" id="refreshBtn-planner" style="display:none">🔄 רענן קבצים</button>
@@ -616,12 +652,16 @@
 
   <div id="tab-greenhouses" class="tabPanel">
     <div class="stickyControls" id="stickyControls-greenhouses">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-greenhouses"></div><div class="sub" id="count-greenhouses"></div></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-greenhouses"></div><div class="sub" id="count-greenhouses"></div><button type="button" class="lockToggleBtn" id="lockBtn-greenhouses"></button></div>
     <div class="controls">
       <input type="text" id="search-greenhouses" placeholder="חיפוש לפי מספר תוכנית / שם / תגית ציוד...">
       <select id="panel_type-greenhouses"><option value="">כל סוגי הלוח</option></select>
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-greenhouses"> הצג רק שורות עם קובץ מקושר</label>
+      <button type="button" class="addRowBtn" id="addRowBtn-greenhouses">+ הוסף שורה</button>
+      <button type="button" class="addRowBtn" id="addRows10Btn-greenhouses">+ 10 שורות</button>
+      <button type="button" class="addRowBtn" id="exportBtn-greenhouses">📋 העתק את הנתונים</button>
     </div>
+    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
       <button type="button" id="pickBtn-greenhouses">📁 בחרו את תיקיית לוחות החממות</button>
       <button type="button" id="refreshBtn-greenhouses" style="display:none">🔄 רענן קבצים</button>
@@ -644,11 +684,15 @@
 
   <div id="tab-hvac" class="tabPanel">
     <div class="stickyControls" id="stickyControls-hvac">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-hvac"></div><div class="sub" id="count-hvac"></div></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-hvac"></div><div class="sub" id="count-hvac"></div><button type="button" class="lockToggleBtn" id="lockBtn-hvac"></button></div>
     <div class="controls">
       <input type="text" id="search-hvac" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-hvac"> הצג רק שורות עם קובץ מקושר</label>
+      <button type="button" class="addRowBtn" id="addRowBtn-hvac">+ הוסף שורה</button>
+      <button type="button" class="addRowBtn" id="addRows10Btn-hvac">+ 10 שורות</button>
+      <button type="button" class="addRowBtn" id="exportBtn-hvac">📋 העתק את הנתונים</button>
     </div>
+    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
       <button type="button" id="pickBtn-hvac">📁 בחרו את תיקיית לוחות מיזוג האוויר</button>
       <button type="button" id="refreshBtn-hvac" style="display:none">🔄 רענן קבצים</button>
@@ -671,7 +715,7 @@
 
   <div id="tab-hv" class="tabPanel">
     <div class="stickyControls" id="stickyControls-hv">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-hv"></div><div class="sub" id="count-hv"></div></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-hv"></div><div class="sub" id="count-hv"></div><button type="button" class="lockToggleBtn" id="lockBtn-hv"></button></div>
     <div class="controls">
       <input type="text" id="search-hv" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-hv"> הצג רק שורות עם קובץ מקושר</label>
@@ -679,7 +723,7 @@
       <button type="button" class="addRowBtn" id="addRows10Btn-hv">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-hv">📋 העתק את הנתונים</button>
     </div>
-    <div class="sub" style="margin-bottom:10px">כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
+    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
       <button type="button" id="pickBtn-hv">📁 בחרו את תיקיית לוחות מתח גבוה</button>
       <button type="button" id="refreshBtn-hv" style="display:none">🔄 רענן קבצים</button>
@@ -702,7 +746,7 @@
 
   <div id="tab-mtsh-lv" class="tabPanel">
     <div class="stickyControls" id="stickyControls-mtsh-lv">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-mtsh-lv"></div><div class="sub" id="count-mtsh-lv"></div></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-mtsh-lv"></div><div class="sub" id="count-mtsh-lv"></div><button type="button" class="lockToggleBtn" id="lockBtn-mtsh-lv"></button></div>
     <div class="controls">
       <input type="text" id="search-mtsh-lv" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-mtsh-lv"> הצג רק שורות עם קובץ מקושר</label>
@@ -710,7 +754,7 @@
       <button type="button" class="addRowBtn" id="addRows10Btn-mtsh-lv">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-mtsh-lv">📋 העתק את הנתונים</button>
     </div>
-    <div class="sub" style="margin-bottom:10px">כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
+    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
       <button type="button" id="pickBtn-mtsh-lv">📁 בחרו את תיקיית מט"ש קיים - מתח נמוך</button>
       <button type="button" id="refreshBtn-mtsh-lv" style="display:none">🔄 רענן קבצים</button>
@@ -968,6 +1012,11 @@ function createPanelTable(cfg){
   const fullTableKey = 'panel-fulltable:' + idPrefix;
   let uidCounter = 0;
   function uid(){ return 'r' + Date.now().toString(36) + (uidCounter++).toString(36); }
+  // Every tab opens locked (read-only) and only becomes editable once the lock icon is
+  // clicked — see the lockBtn wiring near the end of this function. Re-declared to true
+  // on every re-entry into the tab (see the tab-switch handler below), so leaving and
+  // coming back always lands back in view-only mode.
+  let locked = true;
 
   // Every tab (not just the fully-editable ones) restores from a previously-saved full
   // snapshot when one exists, so row deletion works everywhere: deleting a row is itself
@@ -986,18 +1035,20 @@ function createPanelTable(cfg){
     catch(err){ console.warn('could not save table', err); }
   }
 
-  // Load any previously saved manual edits (persisted per browser via localStorage) and apply them.
-  // (Fully-editable tables persist the whole row set instead — see fullTableKey above.)
-  if (!fullyEditable){
-    editable.forEach(field => {
-      try {
-        const saved = JSON.parse(localStorage.getItem(editStoreKey(field)) || '{}');
-        panels.forEach(p => {
-          if (p.code && saved[p.code] !== undefined) p[field] = saved[p.code];
-        });
-      } catch(err){ console.warn('could not load saved edits for', field, err); }
-    });
-  }
+  // Load any previously saved manual edits (persisted per browser via localStorage, keyed
+  // per field per code) and apply them on top of whatever panels holds so far. This always
+  // runs — including for fully-editable tables, which primarily restore from the
+  // fullTableKey snapshot above — because a tab that used to save edits this way before
+  // being converted to fullyEditable has no fullTableKey snapshot from that period, and
+  // skipping this would silently drop those older edits.
+  editable.forEach(field => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(editStoreKey(field)) || '{}');
+      panels.forEach(p => {
+        if (p.code && saved[p.code] !== undefined) p[field] = saved[p.code];
+      });
+    } catch(err){ console.warn('could not load saved edits for', field, err); }
+  });
 
   function saveEdit(field, code, value){
     try {
@@ -1616,9 +1667,11 @@ function createPanelTable(cfg){
 
   function cellContent(p, key, idx){
     if (key === '__drag__'){
+      if (locked) return `<span class="dragHandleOff" title="פתחו עריכה כדי לשנות סדר שורות">⠿</span>`;
       return `<span class="dragHandle" data-id="${p._id||''}" title="גררו לשינוי סדר השורות">⠿</span>`;
     }
     if (key === '__delete__'){
+      if (locked) return '';
       return `<button type="button" class="delRowBtn" data-id="${p._id||''}" title="מחק שורה">✕</button>`;
     }
     if (key === '__filetype__'){
@@ -1628,7 +1681,7 @@ function createPanelTable(cfg){
       const cls = e => e === 'PDF' ? 'b-blue' : e === 'DWG' ? 'b-green' : 'b-gray';
       return exts.map(e => `<span class="badge ${cls(e)}">${e}</span>`).join(' ');
     }
-    if (key === linkKey && fullyEditable){
+    if (key === linkKey && fullyEditable && !locked){
       const files = panelFiles.get(idx);
       let linksHtml = '';
       if (files && files.length){
@@ -1638,7 +1691,7 @@ function createPanelTable(cfg){
       }
       return editableCellHtml(p, linkKey, "מס' תוכנית...") + linksHtml;
     }
-    if (editable.has(key)){
+    if (!locked && editable.has(key)){
       return editableCellHtml(p, key);
     }
     if (key === linkKey){
@@ -1674,7 +1727,7 @@ function createPanelTable(cfg){
     tbody.innerHTML = '';
     if (list.length === 0){
       const emptyMsg = (fullyEditable && panels.length === 0)
-        ? 'הטבלה ריקה — לחצו "הוסף שורה" כדי להתחיל למלא'
+        ? (locked ? 'הטבלה ריקה — פתחו עריכה (סמל המנעול) ולחצו "הוסף שורה" כדי להתחיל למלא' : 'הטבלה ריקה — לחצו "הוסף שורה" כדי להתחיל למלא')
         : 'לא נמצאו רשומות תואמות';
       tbody.innerHTML = `<tr><td colspan="${cols.length}" class="empty">${emptyMsg}</td></tr>`;
     } else {
@@ -1782,11 +1835,13 @@ function createPanelTable(cfg){
     const addRowBtn = document.getElementById('addRowBtn-' + idPrefix);
     const addRows10Btn = document.getElementById('addRows10Btn-' + idPrefix);
     if (addRowBtn) addRowBtn.addEventListener('click', () => {
+      if (locked) return;
       panels.push(blankRow());
       persistFullTable();
       applyFilters();
     });
     if (addRows10Btn) addRows10Btn.addEventListener('click', () => {
+      if (locked) return;
       for (let i = 0; i < 10; i++) panels.push(blankRow());
       persistFullTable();
       applyFilters();
@@ -2028,6 +2083,38 @@ function createPanelTable(cfg){
     controlsEl.appendChild(resetBtn);
   }
 
+  // Lock/edit toggle: every tab opens read-only (locked) and only becomes editable
+  // (cell editing, drag-fill, row drag-reorder, add/delete rows) once this icon is
+  // clicked. Re-entering the tab (see the tabBtn click handler below) resets it back
+  // to locked, via the relock hook registered here.
+  const lockBtn = document.getElementById('lockBtn-' + idPrefix);
+  const addRowBtn2 = document.getElementById('addRowBtn-' + idPrefix);
+  const addRows10Btn2 = document.getElementById('addRows10Btn-' + idPrefix);
+  function updateLockUI(){
+    if (lockBtn){
+      lockBtn.textContent = locked ? '🔒 נעול לתצוגה — לחצו לפתיחת עריכה' : '🔓 פתוח לעריכה — לחצו לנעילה';
+      lockBtn.classList.toggle('isUnlocked', !locked);
+      lockBtn.setAttribute('aria-pressed', String(!locked));
+    }
+    if (addRowBtn2) addRowBtn2.disabled = locked;
+    if (addRows10Btn2) addRows10Btn2.disabled = locked;
+  }
+  if (lockBtn){
+    lockBtn.addEventListener('click', () => {
+      locked = !locked;
+      updateLockUI();
+      applyFilters();
+    });
+  }
+  updateLockUI();
+  window.__panelTableRelock = window.__panelTableRelock || {};
+  window.__panelTableRelock[idPrefix] = () => {
+    if (locked) return;
+    locked = true;
+    updateLockUI();
+    applyFilters();
+  };
+
   renderHead();
   applyFilters();
 }
@@ -2054,11 +2141,22 @@ setupGlobalStickyOffset();
 // clicks the matching hidden button instead of duplicating the switch logic) ============
 document.querySelectorAll('.tabBtn').forEach(btn => {
   btn.addEventListener('click', () => {
+    const wasAlreadyActive = currentActiveTab === btn.dataset.tab;
     document.querySelectorAll('.tabBtn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tabPanel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(btn.dataset.tab).classList.add('active');
     currentActiveTab = btn.dataset.tab;
+    // Every tab re-locks (view-only) each time it's freshly entered — see the lockBtn
+    // wiring inside createPanelTable, which registers this relock hook per idPrefix.
+    // Skipped when the click just re-selects the tab that was already open, so an
+    // in-progress edit isn't wiped out by clicking its own dashboard card again.
+    if (!wasAlreadyActive){
+      const enteredPrefix = btn.dataset.tab.replace(/^tab-/, '');
+      if (window.__panelTableRelock && window.__panelTableRelock[enteredPrefix]){
+        window.__panelTableRelock[enteredPrefix]();
+      }
+    }
     renderDashboard();
   });
 });
@@ -2101,6 +2199,9 @@ createPanelTable({
     { id: 'building', key: 'building' },
     { id: 'status', key: 'status' },
   ],
+  editableFields: ['ils_num','code','name','building_num','building','status','stage','ils_notes','prod_start','check_date','update_f','expected_delivery','delivery','notes','eli'],
+  fullyEditable: true,
+  allowAddRows: true,
 });
 
 // ============ Tab 2: תוכניות מתכנן ============
@@ -2137,6 +2238,9 @@ createPanelTable({
     { id: 'status', key: 'status' },
     { id: 'sheet', key: 'sheet' },
   ],
+  editableFields: ['code','name','building_num','building','status','sheet','revision','date','scale','notes'],
+  fullyEditable: true,
+  allowAddRows: true,
 });
 
 // ============ Simple scanned-only tabs: built purely from folder scans, no data sheet ============
@@ -2158,7 +2262,9 @@ function makeScannedTab(idPrefix, data){
     statusClassFn: statusClassNeutral,
     searchKeys: ['code','name','building_num'],
     extraFilters: [],
-    editableFields: ['building_num'],
+    editableFields: ['code','name','building_num','file_count'],
+    fullyEditable: true,
+    allowAddRows: true,
   });
 }
 
@@ -2182,7 +2288,9 @@ createPanelTable({
   extraFilters: [
     { id: 'panel_type', key: 'panel_type' },
   ],
-  editableFields: ['building_num'],
+  editableFields: ['code','ils_num','name','equip_tag','panel_type','building_num'],
+  fullyEditable: true,
+  allowAddRows: true,
 });
 makeScannedTab('hvac', [{"code": "24005.1", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.1-9", "name": "לוחות מיזוג .pdf עדכון שגיא", "file_count": 1, "building_num": ""}, {"code": "24005.2", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.3", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.4", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.5", "name": "", "file_count": 1, "building_num": "90"}, {"code": "24005.6", "name": "", "file_count": 1, "building_num": "100"}, {"code": "24005.7", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.8", "name": "", "file_count": 1, "building_num": "102"}, {"code": "24005.9", "name": "", "file_count": 1, "building_num": ""}]);
 createPanelTable({
