@@ -11,6 +11,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="תוכניות חשמל">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<script src="vendor/leaflet/leaflet.js"></script>
 <style>
   :root{
     --bg:#0f1720;
@@ -235,6 +237,15 @@
   }
   .dragHandle:hover{color:var(--accent);}
   .dragHandle:active{cursor:grabbing;}
+  .dragHandleOff{
+    cursor:default;
+    color:var(--text-dim);
+    opacity:.35;
+    display:block;
+    text-align:center;
+    user-select:none;
+    font-size:.95rem;
+  }
   tr.rowDragging{
     opacity:.15;
     outline:1px dashed var(--accent);
@@ -356,8 +367,136 @@
     padding:8px 14px;
   }
   .addRowBtn:hover{border-color:var(--accent);color:var(--accent);}
+  .addRowBtn:disabled{opacity:.4;cursor:not-allowed;}
+  .addRowBtn:disabled:hover{border-color:var(--line);color:var(--text);}
   .resetBtn{color:var(--text-dim);}
   .resetBtn:hover{border-color:var(--red);color:var(--red);}
+  .lockToggleBtn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 14px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--text-dim);
+    font-size:.82rem;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:border-color .15s, color .15s;
+  }
+  .lockToggleBtn:hover{border-color:var(--accent);color:var(--accent);}
+  .lockToggleBtn.isUnlocked{border-color:var(--green);color:var(--green);}
+
+  .locBtn{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--text-dim);
+    cursor:pointer;
+    font-size:.78rem;
+    padding:5px 9px;
+    white-space:nowrap;
+    font-family:var(--mono);
+  }
+  .locBtn:hover{border-color:var(--accent);color:var(--accent);}
+  .locBtn.locBtnSet{color:var(--green);border-color:var(--green);}
+
+  .locationModalOverlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.6);
+    z-index:500;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .locationModalBox{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    width:min(720px, 100%);
+    max-height:90vh;
+    overflow:auto;
+    box-shadow:0 20px 50px rgba(0,0,0,.5);
+  }
+  .locationModalHeader{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 16px;
+    border-bottom:1px solid var(--line);
+  }
+  .locationModalTitle{font-weight:700;font-size:.95rem;}
+  .locationModalClose{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--text-dim);
+    cursor:pointer;
+    padding:4px 10px;
+    font-size:.85rem;
+  }
+  .locationModalClose:hover{border-color:var(--red);color:var(--red);}
+  .locationModalBody{padding:14px 16px;display:flex;flex-direction:column;gap:12px;}
+  #locationMapContainer{
+    width:100%;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--bg);
+  }
+  .locationModalRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .locationModalRow label{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--text-dim);flex:1;min-width:220px;}
+  .locationModalRow input{
+    flex:1;
+    padding:8px 10px;
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--text);
+    font-family:var(--mono);
+    font-size:.85rem;
+  }
+  .locationModalActions{display:flex;gap:10px;}
+  .locationModalActions button{
+    background:var(--panel-hover);
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--text);
+    cursor:pointer;
+    padding:9px 16px;
+    font-size:.85rem;
+  }
+  #locationSaveBtn{border-color:var(--green);color:var(--green);}
+  #locationSaveBtn:hover{background:rgba(63,174,106,.12);}
+  #locationClearBtn:hover{border-color:var(--red);color:var(--red);}
+  #locationGoogleLink{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--text-dim);
+    cursor:pointer;
+    padding:8px 14px;
+    font-size:.82rem;
+    white-space:nowrap;
+  }
+  #locationGoogleLink:hover{border-color:var(--accent);color:var(--accent);}
+  .leaflet-tooltip.mapPinLabel{
+    background:var(--panel);
+    border:1px solid var(--accent);
+    color:var(--text);
+    font-size:.76rem;
+    font-weight:600;
+    padding:2px 7px;
+  }
+  #aggregateMapContainer{width:100%;}
+  .leaflet-popup-content-wrapper, .leaflet-popup-tip{
+    background:var(--panel);
+    color:var(--text);
+  }
+  .leaflet-popup-content a{color:var(--accent);}
   .badge{
     display:inline-block;
     padding:3px 10px;
@@ -544,19 +683,24 @@
     <button class="tabBtn" data-tab="tab-hvac">לוחות מיזוג אוויר</button>
     <button class="tabBtn" data-tab="tab-hv">לוחות מתח גבוה</button>
     <button class="tabBtn" data-tab="tab-mtsh-lv">מט"ש קיים - מתח נמוך</button>
+    <button class="tabBtn" data-tab="tab-map">🗺️ מפה</button>
   </div>
   </div>
 
   <!-- TAB 1: לוחות חשמל -->
   <div id="tab-panels" class="tabPanel active">
     <div class="stickyControls" id="stickyControls-panels">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-panels"></div><div class="sub" id="count-panels"></div></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-panels"></div><div class="sub" id="count-panels"></div><button type="button" class="lockToggleBtn" id="lockBtn-panels"></button></div>
     <div class="controls">
       <input type="text" id="search-panels" placeholder="חיפוש לפי מס' תוכנית / שם לוח / מבנה...">
       <select id="building-panels"><option value="">כל המבנים</option></select>
       <select id="status-panels"><option value="">כל הסטטוסים</option></select>
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-panels"> הצג רק לוחות עם תוכנית מקושרת</label>
+      <button type="button" class="addRowBtn" id="addRowBtn-panels">+ הוסף שורה</button>
+      <button type="button" class="addRowBtn" id="addRows10Btn-panels">+ 10 שורות</button>
+      <button type="button" class="addRowBtn" id="exportBtn-panels">📋 העתק את הנתונים</button>
     </div>
+    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
       <button type="button" id="pickBtn-panels">📁 בחרו את תיקיית התוכניות (OneDrive)</button>
       <button type="button" id="refreshBtn-panels" style="display:none">🔄 רענן קבצים</button>
@@ -586,14 +730,18 @@
   <!-- TAB 2: תוכניות מתכנן -->
   <div id="tab-planner" class="tabPanel">
     <div class="stickyControls" id="stickyControls-planner">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-planner"></div><div class="sub" id="count-planner"></div></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-planner"></div><div class="sub" id="count-planner"></div><button type="button" class="lockToggleBtn" id="lockBtn-planner"></button></div>
     <div class="controls">
       <input type="text" id="search-planner" placeholder="חיפוש לפי מס' תוכנית / שם / מבנה...">
       <select id="building-planner"><option value="">כל המבנים</option></select>
       <select id="status-planner"><option value="">כל הסטטוסים</option></select>
       <select id="sheet-planner"><option value="">כל הגיליונות</option></select>
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-planner"> הצג רק תוכניות עם קובץ מקושר</label>
+      <button type="button" class="addRowBtn" id="addRowBtn-planner">+ הוסף שורה</button>
+      <button type="button" class="addRowBtn" id="addRows10Btn-planner">+ 10 שורות</button>
+      <button type="button" class="addRowBtn" id="exportBtn-planner">📋 העתק את הנתונים</button>
     </div>
+    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
       <button type="button" id="pickBtn-planner">📁 בחרו את תיקיית תוכניות המתכנן</button>
       <button type="button" id="refreshBtn-planner" style="display:none">🔄 רענן קבצים</button>
@@ -616,12 +764,16 @@
 
   <div id="tab-greenhouses" class="tabPanel">
     <div class="stickyControls" id="stickyControls-greenhouses">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-greenhouses"></div><div class="sub" id="count-greenhouses"></div></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-greenhouses"></div><div class="sub" id="count-greenhouses"></div><button type="button" class="lockToggleBtn" id="lockBtn-greenhouses"></button></div>
     <div class="controls">
       <input type="text" id="search-greenhouses" placeholder="חיפוש לפי מספר תוכנית / שם / תגית ציוד...">
       <select id="panel_type-greenhouses"><option value="">כל סוגי הלוח</option></select>
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-greenhouses"> הצג רק שורות עם קובץ מקושר</label>
+      <button type="button" class="addRowBtn" id="addRowBtn-greenhouses">+ הוסף שורה</button>
+      <button type="button" class="addRowBtn" id="addRows10Btn-greenhouses">+ 10 שורות</button>
+      <button type="button" class="addRowBtn" id="exportBtn-greenhouses">📋 העתק את הנתונים</button>
     </div>
+    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
       <button type="button" id="pickBtn-greenhouses">📁 בחרו את תיקיית לוחות החממות</button>
       <button type="button" id="refreshBtn-greenhouses" style="display:none">🔄 רענן קבצים</button>
@@ -644,11 +796,15 @@
 
   <div id="tab-hvac" class="tabPanel">
     <div class="stickyControls" id="stickyControls-hvac">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-hvac"></div><div class="sub" id="count-hvac"></div></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-hvac"></div><div class="sub" id="count-hvac"></div><button type="button" class="lockToggleBtn" id="lockBtn-hvac"></button></div>
     <div class="controls">
       <input type="text" id="search-hvac" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-hvac"> הצג רק שורות עם קובץ מקושר</label>
+      <button type="button" class="addRowBtn" id="addRowBtn-hvac">+ הוסף שורה</button>
+      <button type="button" class="addRowBtn" id="addRows10Btn-hvac">+ 10 שורות</button>
+      <button type="button" class="addRowBtn" id="exportBtn-hvac">📋 העתק את הנתונים</button>
     </div>
+    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
       <button type="button" id="pickBtn-hvac">📁 בחרו את תיקיית לוחות מיזוג האוויר</button>
       <button type="button" id="refreshBtn-hvac" style="display:none">🔄 רענן קבצים</button>
@@ -671,7 +827,7 @@
 
   <div id="tab-hv" class="tabPanel">
     <div class="stickyControls" id="stickyControls-hv">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-hv"></div><div class="sub" id="count-hv"></div></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-hv"></div><div class="sub" id="count-hv"></div><button type="button" class="lockToggleBtn" id="lockBtn-hv"></button></div>
     <div class="controls">
       <input type="text" id="search-hv" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-hv"> הצג רק שורות עם קובץ מקושר</label>
@@ -679,7 +835,7 @@
       <button type="button" class="addRowBtn" id="addRows10Btn-hv">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-hv">📋 העתק את הנתונים</button>
     </div>
-    <div class="sub" style="margin-bottom:10px">כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
+    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
       <button type="button" id="pickBtn-hv">📁 בחרו את תיקיית לוחות מתח גבוה</button>
       <button type="button" id="refreshBtn-hv" style="display:none">🔄 רענן קבצים</button>
@@ -702,7 +858,7 @@
 
   <div id="tab-mtsh-lv" class="tabPanel">
     <div class="stickyControls" id="stickyControls-mtsh-lv">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-mtsh-lv"></div><div class="sub" id="count-mtsh-lv"></div></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-mtsh-lv"></div><div class="sub" id="count-mtsh-lv"></div><button type="button" class="lockToggleBtn" id="lockBtn-mtsh-lv"></button></div>
     <div class="controls">
       <input type="text" id="search-mtsh-lv" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-mtsh-lv"> הצג רק שורות עם קובץ מקושר</label>
@@ -710,7 +866,7 @@
       <button type="button" class="addRowBtn" id="addRows10Btn-mtsh-lv">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-mtsh-lv">📋 העתק את הנתונים</button>
     </div>
-    <div class="sub" style="margin-bottom:10px">כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
+    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
       <button type="button" id="pickBtn-mtsh-lv">📁 בחרו את תיקיית מט"ש קיים - מתח נמוך</button>
       <button type="button" id="refreshBtn-mtsh-lv" style="display:none">🔄 רענן קבצים</button>
@@ -731,6 +887,37 @@
     </div>
   </div>
 
+  <!-- TAB 7: מפה מרוכזת — כל הלוחות שסומן להם מיקום, מכל 6 הטאבים, על מפת לוויין אחת -->
+  <div id="tab-map" class="tabPanel">
+    <div class="stickyControls" id="stickyControls-map">
+      <div class="topRow"><div class="sub" id="mapPinCount"></div></div>
+      <div class="sub" style="margin-bottom:10px">כל הלוחות שסומן להם מיקום, מכל 6 הטאבים, על מפת לוויין אחת. לחצו על סמן כדי לראות את שם הלוח ולפתוח אותו בגוגל מפות. כדי לסמן מיקום חדש — פתחו עריכה בטאב הרלוונטי ולחצו על עמודת "מיקום" בשורה.</div>
+    </div>
+    <div id="aggregateMapContainer" style="height:70vh"></div>
+  </div>
+
+</div>
+
+<!-- מודאל בחירת/צפייה במיקום — משותף לכל הטאבים -->
+<div class="locationModalOverlay" id="locationModal" style="display:none">
+  <div class="locationModalBox">
+    <div class="locationModalHeader">
+      <div class="locationModalTitle" id="locationModalTitle"></div>
+      <button type="button" class="locationModalClose" id="locationModalClose">✕</button>
+    </div>
+    <div class="locationModalBody">
+      <div id="locationMapContainer" style="height:360px"></div>
+      <div class="locationModalRow">
+        <label>קואורדינטות: <input type="text" id="locationCoordsInput" placeholder="32.123456, 34.987654"></label>
+        <button type="button" id="locationGoogleLink">🌐 פתח בגוגל מפות</button>
+      </div>
+      <div class="locationModalActions" id="locationModalActions">
+        <button type="button" id="locationSaveBtn">💾 שמור מיקום</button>
+        <button type="button" id="locationClearBtn">🗑️ נקה מיקום</button>
+      </div>
+      <div class="sub" id="locationHint"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -929,7 +1116,14 @@ function renderDashboard(){
       ${sub}
     </div>`;
   }).join('');
-  el.innerHTML = `<div class="dashTotal">סה"כ <b>${totalAll}</b> שורות בכל הטאבים</div><div class="dashGrid">${cards}</div>`;
+  const totalPinned = tableRegistry.reduce((n, t) => n + t.panels.filter(p => p.lat && p.lng).length, 0);
+  const mapActiveCls = currentActiveTab === 'tab-map' ? ' active' : '';
+  const mapCard = `<div class="dashCard${mapActiveCls}" data-tab="tab-map">
+      <div class="dashLabel">🗺️ מפה</div>
+      <div class="dashNum">${totalPinned}</div>
+      <div class="dashSub">לוחות ממוקמים על המפה</div>
+    </div>`;
+  el.innerHTML = `<div class="dashTotal">סה"כ <b>${totalAll}</b> שורות בכל הטאבים</div><div class="dashGrid">${cards}${mapCard}</div>`;
   el.querySelectorAll('.dashCard').forEach(card => {
     card.addEventListener('click', () => {
       const btn = document.querySelector(`.tabBtn[data-tab="${card.dataset.tab}"]`);
@@ -937,6 +1131,181 @@ function renderDashboard(){
     });
   });
 }
+
+// ============ Shared location picker (modal) + aggregate map ============
+// One Leaflet-based picker, reused by every tab's "מיקום" column: click a row's location
+// button to view (locked) or set/drag a pin (unlocked). Uses Esri World Imagery — free,
+// keyless satellite tiles — for the interactive picker itself, since Google's own tiles
+// can't legally be pulled into a third-party map without their paid JS API. The "פתח
+// בגוגל מפות" link still hands off to the real Google Maps satellite view (best available
+// imagery, whatever Google currently has for that spot — there's no free API that
+// guarantees "last month" freshness for an arbitrary location).
+function escapeHtml(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+if (window.L){
+  // Leaflet's default marker icon otherwise resolves to a relative path that 404s
+  // outside a bundler setup — point it at the vendored copy explicitly.
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'vendor/leaflet/images/marker-icon-2x.png',
+    iconUrl: 'vendor/leaflet/images/marker-icon.png',
+    shadowUrl: 'vendor/leaflet/images/marker-shadow.png',
+  });
+}
+
+const SATELLITE_TILE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const SATELLITE_ATTRIBUTION = 'Imagery &copy; Esri, Maxar, Earthstar Geographics';
+const DEFAULT_MAP_CENTER = [32.0, 34.9]; // fallback center (Israel) when nothing is pinned yet
+
+let pickerMap = null;
+let pickerMarker = null;
+let currentLocationCtx = null; // { p, idPrefix, editable, tableLabel }
+
+function googleMapsUrl(lat, lng, label){
+  const q = label ? `${lat},${lng}(${label})` : `${lat},${lng}`;
+  return `https://www.google.com/maps?q=${encodeURIComponent(q)}&t=k&z=18`;
+}
+
+function ensurePickerMap(){
+  if (pickerMap) return pickerMap;
+  pickerMap = L.map('locationMapContainer');
+  L.tileLayer(SATELLITE_TILE_URL, { attribution: SATELLITE_ATTRIBUTION, maxZoom: 19 }).addTo(pickerMap);
+  pickerMap.on('click', (e) => {
+    if (!currentLocationCtx || !currentLocationCtx.editable) return;
+    setPickerMarker(e.latlng.lat, e.latlng.lng);
+  });
+  return pickerMap;
+}
+
+function setPickerMarker(lat, lng){
+  const map = ensurePickerMap();
+  if (pickerMarker){
+    pickerMarker.setLatLng([lat, lng]);
+  } else {
+    pickerMarker = L.marker([lat, lng], { draggable: !!(currentLocationCtx && currentLocationCtx.editable) }).addTo(map);
+    pickerMarker.on('dragend', () => {
+      const ll = pickerMarker.getLatLng();
+      updatePickerCoordsUI(ll.lat, ll.lng);
+    });
+  }
+  if (pickerMarker.dragging){
+    if (currentLocationCtx && currentLocationCtx.editable) pickerMarker.dragging.enable();
+    else pickerMarker.dragging.disable();
+  }
+  updatePickerCoordsUI(lat, lng);
+}
+
+function updatePickerCoordsUI(lat, lng){
+  const input = document.getElementById('locationCoordsInput');
+  if (input) input.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  const link = document.getElementById('locationGoogleLink');
+  if (link){
+    const label = currentLocationCtx && currentLocationCtx.p ? (currentLocationCtx.p.name || currentLocationCtx.p.code || '') : '';
+    link.onclick = () => window.open(googleMapsUrl(lat, lng, label), '_blank', 'noopener');
+  }
+}
+
+window.openLocationModal = function openLocationModal({ p, idPrefix, editable, tableLabel }){
+  currentLocationCtx = { p, idPrefix, editable, tableLabel };
+  const overlay = document.getElementById('locationModal');
+  overlay.style.display = 'flex';
+  document.getElementById('locationModalTitle').textContent = (p.name || p.code || 'לוח') + (tableLabel ? ' — ' + tableLabel : '');
+  document.getElementById('locationModalActions').style.display = editable ? 'flex' : 'none';
+  document.getElementById('locationCoordsInput').readOnly = !editable;
+  document.getElementById('locationHint').textContent = editable
+    ? 'לחצו על המפה כדי למקם סמן, או גררו אותו לדיוק. אפשר גם להדביק קואורדינטות (מגוגל מפות) בשדה למעלה ולאשר עם Enter.'
+    : 'תצוגה בלבד — כדי לשנות את המיקום, פתחו עריכה בטאב (סמל המנעול) ולחצו שוב על המיקום.';
+
+  setTimeout(() => {
+    const map = ensurePickerMap();
+    map.invalidateSize();
+    if (pickerMarker){ pickerMarker.remove(); pickerMarker = null; }
+    if (p.lat && p.lng){
+      const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
+      map.setView([lat, lng], 17);
+      setPickerMarker(lat, lng);
+    } else {
+      map.setView(DEFAULT_MAP_CENTER, 11);
+      const input = document.getElementById('locationCoordsInput');
+      if (input) input.value = '';
+      updatePickerCoordsUI(DEFAULT_MAP_CENTER[0], DEFAULT_MAP_CENTER[1]);
+    }
+  }, 30);
+};
+
+function closeLocationModal(){
+  document.getElementById('locationModal').style.display = 'none';
+  currentLocationCtx = null;
+}
+
+document.getElementById('locationModalClose').addEventListener('click', closeLocationModal);
+document.getElementById('locationModal').addEventListener('click', (e) => {
+  if (e.target.id === 'locationModal') closeLocationModal();
+});
+document.getElementById('locationCoordsInput').addEventListener('change', (e) => {
+  if (!currentLocationCtx || !currentLocationCtx.editable) return;
+  const m = e.target.value.match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/);
+  if (!m) return;
+  const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+  ensurePickerMap().setView([lat, lng], 17);
+  setPickerMarker(lat, lng);
+});
+document.getElementById('locationSaveBtn').addEventListener('click', () => {
+  if (!currentLocationCtx || !currentLocationCtx.editable) return;
+  const { p, idPrefix } = currentLocationCtx;
+  if (pickerMarker){
+    const ll = pickerMarker.getLatLng();
+    p.lat = String(ll.lat);
+    p.lng = String(ll.lng);
+  }
+  if (window.__panelTableSaveLocation && window.__panelTableSaveLocation[idPrefix]) window.__panelTableSaveLocation[idPrefix]();
+  closeLocationModal();
+});
+document.getElementById('locationClearBtn').addEventListener('click', () => {
+  if (!currentLocationCtx || !currentLocationCtx.editable) return;
+  const { p, idPrefix } = currentLocationCtx;
+  delete p.lat; delete p.lng;
+  if (pickerMarker){ pickerMarker.remove(); pickerMarker = null; }
+  if (window.__panelTableSaveLocation && window.__panelTableSaveLocation[idPrefix]) window.__panelTableSaveLocation[idPrefix]();
+  closeLocationModal();
+});
+
+// The aggregate "מפה" tab: one map, every pinned row from every tab, labeled by name.
+let aggregateMap = null;
+let aggregateMarkers = [];
+window.__aggregateMapInvalidate = () => { if (aggregateMap) aggregateMap.invalidateSize(); };
+
+window.renderAggregateMap = function renderAggregateMap(){
+  if (!document.getElementById('aggregateMapContainer')) return;
+  if (!aggregateMap){
+    aggregateMap = L.map('aggregateMapContainer');
+    L.tileLayer(SATELLITE_TILE_URL, { attribution: SATELLITE_ATTRIBUTION, maxZoom: 19 }).addTo(aggregateMap);
+    aggregateMap.setView(DEFAULT_MAP_CENTER, 8);
+  }
+  aggregateMarkers.forEach(m => m.remove());
+  aggregateMarkers = [];
+  const bounds = [];
+  tableRegistry.forEach(t => {
+    t.panels.forEach(p => {
+      if (!p.lat || !p.lng) return;
+      const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
+      if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+      const label = p.name || p.code || 'לוח';
+      const marker = L.marker([lat, lng]).addTo(aggregateMap);
+      marker.bindTooltip(label, { permanent: true, direction: 'top', className: 'mapPinLabel', offset: [0, -8] });
+      marker.bindPopup(
+        `<b>${escapeHtml(label)}</b><br>${escapeHtml(t.label)}<br>` +
+        `<a href="${googleMapsUrl(lat, lng, label)}" target="_blank" rel="noopener">פתח בגוגל מפות 🌐</a>`
+      );
+      aggregateMarkers.push(marker);
+      bounds.push([lat, lng]);
+    });
+  });
+  const countEl = document.getElementById('mapPinCount');
+  if (countEl) countEl.textContent = aggregateMarkers.length + ' לוחות ממוקמים על המפה';
+  if (bounds.length) aggregateMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 16 });
+};
 
 // ============ Generic reusable table module ============
 function createPanelTable(cfg){
@@ -958,6 +1327,14 @@ function createPanelTable(cfg){
     if (deleteIdx === -1) columns.push(filetypeCol);
     else columns.splice(deleteIdx, 0, filetypeCol);
   }
+  // Every tab gets a "מיקום" column with a map picker, so any row can be pinned to an
+  // exact geographic spot (see the shared location modal / aggregate map wiring below).
+  if (!columns.some(c => c.key === '__location__')){
+    const deleteIdx2 = columns.findIndex(c => c.key === '__delete__');
+    const locationCol = { key: '__location__', label: '📍 מיקום', required: true };
+    if (deleteIdx2 === -1) columns.push(locationCol);
+    else columns.splice(deleteIdx2, 0, locationCol);
+  }
   const editable = new Set(editableFields || []);
   // Matching (see matchPanelsToFiles) tries ils_num before code, so the clickable
   // file link belongs on whichever of those two columns is actually the real match
@@ -968,6 +1345,11 @@ function createPanelTable(cfg){
   const fullTableKey = 'panel-fulltable:' + idPrefix;
   let uidCounter = 0;
   function uid(){ return 'r' + Date.now().toString(36) + (uidCounter++).toString(36); }
+  // Every tab opens locked (read-only) and only becomes editable once the lock icon is
+  // clicked — see the lockBtn wiring near the end of this function. Re-declared to true
+  // on every re-entry into the tab (see the tab-switch handler below), so leaving and
+  // coming back always lands back in view-only mode.
+  let locked = true;
 
   // Every tab (not just the fully-editable ones) restores from a previously-saved full
   // snapshot when one exists, so row deletion works everywhere: deleting a row is itself
@@ -986,18 +1368,20 @@ function createPanelTable(cfg){
     catch(err){ console.warn('could not save table', err); }
   }
 
-  // Load any previously saved manual edits (persisted per browser via localStorage) and apply them.
-  // (Fully-editable tables persist the whole row set instead — see fullTableKey above.)
-  if (!fullyEditable){
-    editable.forEach(field => {
-      try {
-        const saved = JSON.parse(localStorage.getItem(editStoreKey(field)) || '{}');
-        panels.forEach(p => {
-          if (p.code && saved[p.code] !== undefined) p[field] = saved[p.code];
-        });
-      } catch(err){ console.warn('could not load saved edits for', field, err); }
-    });
-  }
+  // Load any previously saved manual edits (persisted per browser via localStorage, keyed
+  // per field per code) and apply them on top of whatever panels holds so far. This always
+  // runs — including for fully-editable tables, which primarily restore from the
+  // fullTableKey snapshot above — because a tab that used to save edits this way before
+  // being converted to fullyEditable has no fullTableKey snapshot from that period, and
+  // skipping this would silently drop those older edits.
+  editable.forEach(field => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(editStoreKey(field)) || '{}');
+      panels.forEach(p => {
+        if (p.code && saved[p.code] !== undefined) p[field] = saved[p.code];
+      });
+    } catch(err){ console.warn('could not load saved edits for', field, err); }
+  });
 
   function saveEdit(field, code, value){
     try {
@@ -1616,9 +2000,11 @@ function createPanelTable(cfg){
 
   function cellContent(p, key, idx){
     if (key === '__drag__'){
+      if (locked) return `<span class="dragHandleOff" title="פתחו עריכה כדי לשנות סדר שורות">⠿</span>`;
       return `<span class="dragHandle" data-id="${p._id||''}" title="גררו לשינוי סדר השורות">⠿</span>`;
     }
     if (key === '__delete__'){
+      if (locked) return '';
       return `<button type="button" class="delRowBtn" data-id="${p._id||''}" title="מחק שורה">✕</button>`;
     }
     if (key === '__filetype__'){
@@ -1628,7 +2014,17 @@ function createPanelTable(cfg){
       const cls = e => e === 'PDF' ? 'b-blue' : e === 'DWG' ? 'b-green' : 'b-gray';
       return exts.map(e => `<span class="badge ${cls(e)}">${e}</span>`).join(' ');
     }
-    if (key === linkKey && fullyEditable){
+    if (key === '__location__'){
+      const hasLoc = p.lat && p.lng;
+      if (locked){
+        if (!hasLoc) return '<span class="bnum">—</span>';
+        return `<button type="button" class="locBtn locBtnSet" data-id="${p._id||''}" title="פתח במפה">📍 ${Number(p.lat).toFixed(4)}, ${Number(p.lng).toFixed(4)}</button>`;
+      }
+      return `<button type="button" class="locBtn${hasLoc ? ' locBtnSet' : ''}" data-id="${p._id||''}" title="קבעו מיקום על המפה">` +
+        (hasLoc ? `📍 ${Number(p.lat).toFixed(4)}, ${Number(p.lng).toFixed(4)}` : '📍 קבע מיקום') +
+        `</button>`;
+    }
+    if (key === linkKey && fullyEditable && !locked){
       const files = panelFiles.get(idx);
       let linksHtml = '';
       if (files && files.length){
@@ -1638,7 +2034,7 @@ function createPanelTable(cfg){
       }
       return editableCellHtml(p, linkKey, "מס' תוכנית...") + linksHtml;
     }
-    if (editable.has(key)){
+    if (!locked && editable.has(key)){
       return editableCellHtml(p, key);
     }
     if (key === linkKey){
@@ -1674,7 +2070,7 @@ function createPanelTable(cfg){
     tbody.innerHTML = '';
     if (list.length === 0){
       const emptyMsg = (fullyEditable && panels.length === 0)
-        ? 'הטבלה ריקה — לחצו "הוסף שורה" כדי להתחיל למלא'
+        ? (locked ? 'הטבלה ריקה — פתחו עריכה (סמל המנעול) ולחצו "הוסף שורה" כדי להתחיל למלא' : 'הטבלה ריקה — לחצו "הוסף שורה" כדי להתחיל למלא')
         : 'לא נמצאו רשומות תואמות';
       tbody.innerHTML = `<tr><td colspan="${cols.length}" class="empty">${emptyMsg}</td></tr>`;
     } else {
@@ -1771,6 +2167,17 @@ function createPanelTable(cfg){
     applyFilters();
   });
 
+  tbody.addEventListener('click', (e) => {
+    const btn = e.target.closest('.locBtn');
+    if (!btn) return;
+    const p = panels.find(pp => pp._id === btn.dataset.id);
+    if (!p) return;
+    if (locked && !(p.lat && p.lng)) return; // locked & nothing to view — nothing to do
+    if (window.openLocationModal){
+      window.openLocationModal({ p, idPrefix, editable: !locked, tableLabel: tabLabel });
+    }
+  });
+
   if (allowAddRows){
     function blankRow(){
       const row = { _id: uid() };
@@ -1782,11 +2189,13 @@ function createPanelTable(cfg){
     const addRowBtn = document.getElementById('addRowBtn-' + idPrefix);
     const addRows10Btn = document.getElementById('addRows10Btn-' + idPrefix);
     if (addRowBtn) addRowBtn.addEventListener('click', () => {
+      if (locked) return;
       panels.push(blankRow());
       persistFullTable();
       applyFilters();
     });
     if (addRows10Btn) addRows10Btn.addEventListener('click', () => {
+      if (locked) return;
       for (let i = 0; i < 10; i++) panels.push(blankRow());
       persistFullTable();
       applyFilters();
@@ -1958,7 +2367,8 @@ function createPanelTable(cfg){
   });
 
   const tabBtnEl = document.querySelector(`.tabBtn[data-tab="tab-${idPrefix}"]`);
-  tableRegistry.push({ idPrefix, label: tabBtnEl ? tabBtnEl.textContent.trim() : idPrefix, panels, columns });
+  const tabLabel = tabBtnEl ? tabBtnEl.textContent.trim() : idPrefix;
+  tableRegistry.push({ idPrefix, label: tabLabel, panels, columns });
 
   // Bundle every currently-linked file in this tab into one ZIP download — the answer
   // to "I need all these files collected in one organized folder" without needing
@@ -2028,6 +2438,49 @@ function createPanelTable(cfg){
     controlsEl.appendChild(resetBtn);
   }
 
+  // Lock/edit toggle: every tab opens read-only (locked) and only becomes editable
+  // (cell editing, drag-fill, row drag-reorder, add/delete rows) once this icon is
+  // clicked. Re-entering the tab (see the tabBtn click handler below) resets it back
+  // to locked, via the relock hook registered here.
+  const lockBtn = document.getElementById('lockBtn-' + idPrefix);
+  const addRowBtn2 = document.getElementById('addRowBtn-' + idPrefix);
+  const addRows10Btn2 = document.getElementById('addRows10Btn-' + idPrefix);
+  function updateLockUI(){
+    if (lockBtn){
+      lockBtn.textContent = locked ? '🔒 נעול לתצוגה — לחצו לפתיחת עריכה' : '🔓 פתוח לעריכה — לחצו לנעילה';
+      lockBtn.classList.toggle('isUnlocked', !locked);
+      lockBtn.setAttribute('aria-pressed', String(!locked));
+    }
+    if (addRowBtn2) addRowBtn2.disabled = locked;
+    if (addRows10Btn2) addRows10Btn2.disabled = locked;
+  }
+  if (lockBtn){
+    lockBtn.addEventListener('click', () => {
+      locked = !locked;
+      updateLockUI();
+      applyFilters();
+    });
+  }
+  updateLockUI();
+  window.__panelTableRelock = window.__panelTableRelock || {};
+  window.__panelTableRelock[idPrefix] = () => {
+    if (locked) return;
+    locked = true;
+    updateLockUI();
+    applyFilters();
+  };
+
+  // Called by the shared location modal (see openLocationModal below) after a row's
+  // lat/lng is set or cleared, so this table persists it and re-renders that cell —
+  // and the aggregate map tab, which reads across every table's panels array, stays
+  // in sync too.
+  window.__panelTableSaveLocation = window.__panelTableSaveLocation || {};
+  window.__panelTableSaveLocation[idPrefix] = () => {
+    persistFullTable();
+    applyFilters();
+    if (window.renderAggregateMap) window.renderAggregateMap();
+  };
+
   renderHead();
   applyFilters();
 }
@@ -2054,11 +2507,26 @@ setupGlobalStickyOffset();
 // clicks the matching hidden button instead of duplicating the switch logic) ============
 document.querySelectorAll('.tabBtn').forEach(btn => {
   btn.addEventListener('click', () => {
+    const wasAlreadyActive = currentActiveTab === btn.dataset.tab;
     document.querySelectorAll('.tabBtn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tabPanel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(btn.dataset.tab).classList.add('active');
     currentActiveTab = btn.dataset.tab;
+    // Every tab re-locks (view-only) each time it's freshly entered — see the lockBtn
+    // wiring inside createPanelTable, which registers this relock hook per idPrefix.
+    // Skipped when the click just re-selects the tab that was already open, so an
+    // in-progress edit isn't wiped out by clicking its own dashboard card again.
+    if (!wasAlreadyActive){
+      const enteredPrefix = btn.dataset.tab.replace(/^tab-/, '');
+      if (window.__panelTableRelock && window.__panelTableRelock[enteredPrefix]){
+        window.__panelTableRelock[enteredPrefix]();
+      }
+    }
+    if (btn.dataset.tab === 'tab-map' && window.renderAggregateMap){
+      window.renderAggregateMap();
+      setTimeout(() => { if (window.__aggregateMapInvalidate) window.__aggregateMapInvalidate(); }, 50);
+    }
     renderDashboard();
   });
 });
@@ -2101,6 +2569,9 @@ createPanelTable({
     { id: 'building', key: 'building' },
     { id: 'status', key: 'status' },
   ],
+  editableFields: ['ils_num','code','name','building_num','building','status','stage','ils_notes','prod_start','check_date','update_f','expected_delivery','delivery','notes','eli'],
+  fullyEditable: true,
+  allowAddRows: true,
 });
 
 // ============ Tab 2: תוכניות מתכנן ============
@@ -2137,6 +2608,9 @@ createPanelTable({
     { id: 'status', key: 'status' },
     { id: 'sheet', key: 'sheet' },
   ],
+  editableFields: ['code','name','building_num','building','status','sheet','revision','date','scale','notes'],
+  fullyEditable: true,
+  allowAddRows: true,
 });
 
 // ============ Simple scanned-only tabs: built purely from folder scans, no data sheet ============
@@ -2158,7 +2632,9 @@ function makeScannedTab(idPrefix, data){
     statusClassFn: statusClassNeutral,
     searchKeys: ['code','name','building_num'],
     extraFilters: [],
-    editableFields: ['building_num'],
+    editableFields: ['code','name','building_num','file_count'],
+    fullyEditable: true,
+    allowAddRows: true,
   });
 }
 
@@ -2182,7 +2658,9 @@ createPanelTable({
   extraFilters: [
     { id: 'panel_type', key: 'panel_type' },
   ],
-  editableFields: ['building_num'],
+  editableFields: ['code','ils_num','name','equip_tag','panel_type','building_num'],
+  fullyEditable: true,
+  allowAddRows: true,
 });
 makeScannedTab('hvac', [{"code": "24005.1", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.1-9", "name": "לוחות מיזוג .pdf עדכון שגיא", "file_count": 1, "building_num": ""}, {"code": "24005.2", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.3", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.4", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.5", "name": "", "file_count": 1, "building_num": "90"}, {"code": "24005.6", "name": "", "file_count": 1, "building_num": "100"}, {"code": "24005.7", "name": "", "file_count": 1, "building_num": ""}, {"code": "24005.8", "name": "", "file_count": 1, "building_num": "102"}, {"code": "24005.9", "name": "", "file_count": 1, "building_num": ""}]);
 createPanelTable({
