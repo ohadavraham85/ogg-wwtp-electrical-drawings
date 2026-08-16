@@ -483,13 +483,28 @@
     white-space:nowrap;
   }
   #locationGoogleLink:hover{border-color:var(--accent);color:var(--accent);}
-  .leaflet-tooltip.mapPinLabel{
+  .mapNamePinIcon{background:none;border:none;}
+  .mapNamePinBadge{
+    position:relative;
+    transform:translate(-50%, -100%);
     background:var(--panel);
-    border:1px solid var(--accent);
+    border:1.5px solid var(--accent);
     color:var(--text);
-    font-size:.76rem;
-    font-weight:600;
-    padding:2px 7px;
+    font-size:.78rem;
+    font-weight:700;
+    padding:4px 9px;
+    border-radius:14px;
+    white-space:nowrap;
+    box-shadow:0 3px 8px rgba(0,0,0,.45);
+  }
+  .mapNamePinBadge::after{
+    content:'';
+    position:absolute;
+    left:50%;
+    bottom:-6px;
+    transform:translateX(-50%);
+    border:6px solid transparent;
+    border-top-color:var(--accent);
   }
   #aggregateMapContainer{width:100%;}
   .leaflet-popup-content-wrapper, .leaflet-popup-tip{
@@ -1144,6 +1159,15 @@ function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// Formats a File API lastModified timestamp (epoch ms) as DD/MM/YYYY — the file's own
+// last-save date on disk, not a table-edit timestamp.
+function formatFileDate(ms){
+  const d = new Date(ms);
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
+
 if (window.L){
   // Leaflet's default marker icon otherwise resolves to a relative path that 404s
   // outside a bundler setup — point it at the vendored copy explicitly.
@@ -1156,7 +1180,10 @@ if (window.L){
 
 const SATELLITE_TILE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 const SATELLITE_ATTRIBUTION = 'Imagery &copy; Esri, Maxar, Earthstar Geographics';
-const DEFAULT_MAP_CENTER = [32.0, 34.9]; // fallback center (Israel) when nothing is pinned yet
+// The site itself — every map (picker and aggregate) opens centered here by default,
+// instead of a generic country-wide view, whenever there's no pinned location yet to
+// center on.
+const DEFAULT_MAP_CENTER = [31.803804, 35.428483];
 
 let pickerMap = null;
 let pickerMarker = null;
@@ -1165,6 +1192,19 @@ let currentLocationCtx = null; // { p, idPrefix, editable, tableLabel }
 function googleMapsUrl(lat, lng, label){
   const q = label ? `${lat},${lng}(${label})` : `${lat},${lng}`;
   return `https://www.google.com/maps?q=${encodeURIComponent(q)}&t=k&z=18`;
+}
+
+// A labeled pin: shows the panel's name directly on the map instead of a generic
+// unlabeled marker icon. iconSize/iconAnchor are left at the origin because the badge
+// itself is positioned with a CSS transform (see .mapNamePinBadge) so its pointer tip
+// lands exactly on the marker's lat/lng regardless of how wide the name text is.
+function nameMarkerIcon(label){
+  return L.divIcon({
+    className: 'mapNamePinIcon',
+    html: `<div class="mapNamePinBadge">📍 ${escapeHtml(label)}</div>`,
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+  });
 }
 
 function ensurePickerMap(){
@@ -1180,10 +1220,15 @@ function ensurePickerMap(){
 
 function setPickerMarker(lat, lng){
   const map = ensurePickerMap();
+  const label = (currentLocationCtx && currentLocationCtx.p) ? (currentLocationCtx.p.name || currentLocationCtx.p.code || 'לוח') : 'לוח';
   if (pickerMarker){
     pickerMarker.setLatLng([lat, lng]);
+    pickerMarker.setIcon(nameMarkerIcon(label));
   } else {
-    pickerMarker = L.marker([lat, lng], { draggable: !!(currentLocationCtx && currentLocationCtx.editable) }).addTo(map);
+    pickerMarker = L.marker([lat, lng], {
+      draggable: !!(currentLocationCtx && currentLocationCtx.editable),
+      icon: nameMarkerIcon(label),
+    }).addTo(map);
     pickerMarker.on('dragend', () => {
       const ll = pickerMarker.getLatLng();
       updatePickerCoordsUI(ll.lat, ll.lng);
@@ -1226,10 +1271,11 @@ window.openLocationModal = function openLocationModal({ p, idPrefix, editable, t
       map.setView([lat, lng], 17);
       setPickerMarker(lat, lng);
     } else {
-      map.setView(DEFAULT_MAP_CENTER, 11);
+      map.setView(DEFAULT_MAP_CENTER, 16);
       const input = document.getElementById('locationCoordsInput');
       if (input) input.value = '';
-      updatePickerCoordsUI(DEFAULT_MAP_CENTER[0], DEFAULT_MAP_CENTER[1]);
+      const link = document.getElementById('locationGoogleLink');
+      if (link) link.onclick = () => window.open(googleMapsUrl(DEFAULT_MAP_CENTER[0], DEFAULT_MAP_CENTER[1]), '_blank', 'noopener');
     }
   }, 30);
 };
@@ -1281,7 +1327,7 @@ window.renderAggregateMap = function renderAggregateMap(){
   if (!aggregateMap){
     aggregateMap = L.map('aggregateMapContainer');
     L.tileLayer(SATELLITE_TILE_URL, { attribution: SATELLITE_ATTRIBUTION, maxZoom: 19 }).addTo(aggregateMap);
-    aggregateMap.setView(DEFAULT_MAP_CENTER, 8);
+    aggregateMap.setView(DEFAULT_MAP_CENTER, 15);
   }
   aggregateMarkers.forEach(m => m.remove());
   aggregateMarkers = [];
@@ -1292,8 +1338,7 @@ window.renderAggregateMap = function renderAggregateMap(){
       const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
       if (Number.isNaN(lat) || Number.isNaN(lng)) return;
       const label = p.name || p.code || 'לוח';
-      const marker = L.marker([lat, lng]).addTo(aggregateMap);
-      marker.bindTooltip(label, { permanent: true, direction: 'top', className: 'mapPinLabel', offset: [0, -8] });
+      const marker = L.marker([lat, lng], { icon: nameMarkerIcon(label) }).addTo(aggregateMap);
       marker.bindPopup(
         `<b>${escapeHtml(label)}</b><br>${escapeHtml(t.label)}<br>` +
         `<a href="${googleMapsUrl(lat, lng, label)}" target="_blank" rel="noopener">פתח בגוגל מפות 🌐</a>`
@@ -1304,7 +1349,7 @@ window.renderAggregateMap = function renderAggregateMap(){
   });
   const countEl = document.getElementById('mapPinCount');
   if (countEl) countEl.textContent = aggregateMarkers.length + ' לוחות ממוקמים על המפה';
-  if (bounds.length) aggregateMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 16 });
+  if (bounds.length) aggregateMap.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
 };
 
 // ============ Generic reusable table module ============
@@ -1326,6 +1371,14 @@ function createPanelTable(cfg){
     const filetypeCol = { key: '__filetype__', label: 'סוג קובץ', required: true };
     if (deleteIdx === -1) columns.push(filetypeCol);
     else columns.splice(deleteIdx, 0, filetypeCol);
+  }
+  // ...and a "תאריך שמירה אחרונה" column right beside it, showing the linked file's own
+  // last-modified date (from the OS file, via the File API — not a table-edit timestamp).
+  if (columns.some(c => c.key === 'code') && !columns.some(c => c.key === '__filedate__')){
+    const deleteIdx3 = columns.findIndex(c => c.key === '__delete__');
+    const filedateCol = { key: '__filedate__', label: 'תאריך שמירה אחרונה', required: true };
+    if (deleteIdx3 === -1) columns.push(filedateCol);
+    else columns.splice(deleteIdx3, 0, filedateCol);
   }
   // Every tab gets a "מיקום" column with a map picker, so any row can be pinned to an
   // exact geographic spot (see the shared location modal / aggregate map wiring below).
@@ -2013,6 +2066,13 @@ function createPanelTable(cfg){
       const exts = [...new Set(files.map(f => (f.name.match(/\.([a-z0-9]+)$/i) || [])[1] || '?').map(e => e.toUpperCase()))];
       const cls = e => e === 'PDF' ? 'b-blue' : e === 'DWG' ? 'b-green' : 'b-gray';
       return exts.map(e => `<span class="badge ${cls(e)}">${e}</span>`).join(' ');
+    }
+    if (key === '__filedate__'){
+      const files = panelFiles.get(idx);
+      const stamps = (files || []).map(f => f.file && f.file.lastModified).filter(Boolean);
+      if (!stamps.length) return '<span class="bnum">—</span>';
+      const latest = Math.max(...stamps);
+      return `<span class="bnum" title="תאריך השינוי האחרון של הקובץ המקושר (מהמערכת שלכם)">${formatFileDate(latest)}</span>`;
     }
     if (key === '__location__'){
       const hasLoc = p.lat && p.lng;
