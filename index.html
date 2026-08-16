@@ -227,6 +227,30 @@
   }
   .colResizeHandle:hover,
   .colResizeHandle:active{background:var(--accent);opacity:.5;}
+  thead th.reorderableCol{cursor:grab;}
+  thead th.reorderableCol.colDragging{opacity:.35;}
+  /* RTL layout: a DOM-earlier ("before") column sits physically to the right of a
+     DOM-later one (see the physical-left note on .colResizeHandle above), so the
+     "insert before" indicator highlights the target's right edge and "after" the left. */
+  thead th.reorderableCol.colDropBefore{box-shadow:inset -3px 0 0 0 var(--accent);}
+  thead th.reorderableCol.colDropAfter{box-shadow:inset 3px 0 0 0 var(--accent);}
+  .colGhost{
+    position:fixed;
+    z-index:200;
+    pointer-events:none;
+    background:var(--panel-hover);
+    border:1px solid var(--accent);
+    border-radius:8px;
+    padding:8px 14px;
+    box-shadow:0 12px 30px rgba(0,0,0,.5), 0 0 0 1px rgba(232,163,61,.2);
+    font-size:.8rem;
+    font-weight:600;
+    color:var(--text);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:260px;
+  }
   .dragHandle{
     cursor:grab;
     color:var(--text-dim);
@@ -1388,6 +1412,27 @@ function createPanelTable(cfg){
     if (deleteIdx2 === -1) columns.push(locationCol);
     else columns.splice(deleteIdx2, 0, locationCol);
   }
+  // Column order is draggable (see renderHead below) and persisted per tab, so it has to
+  // be applied once, right after every auto-injected column above exists but before
+  // anything reads `columns` for rendering.
+  const colOrderKey = 'col-order:' + idPrefix;
+  function applySavedColOrder(){
+    let savedOrder = [];
+    try { savedOrder = JSON.parse(localStorage.getItem(colOrderKey) || '[]'); } catch(err){ savedOrder = []; }
+    if (!savedOrder.length) return;
+    const byKey = new Map(columns.map(c => [c.key, c]));
+    const ordered = [];
+    savedOrder.forEach(k => { if (byKey.has(k)){ ordered.push(byKey.get(k)); byKey.delete(k); } });
+    // Anything not in the saved order (a column added after the order was last saved)
+    // keeps its original relative position, appended at the end.
+    columns.forEach(c => { if (byKey.has(c.key)) ordered.push(c); });
+    columns.length = 0;
+    columns.push(...ordered);
+  }
+  function persistColOrder(){
+    try { localStorage.setItem(colOrderKey, JSON.stringify(columns.map(c => c.key))); } catch(err){ /* ignore */ }
+  }
+  applySavedColOrder();
   const editable = new Set(editableFields || []);
   // Matching (see matchPanelsToFiles) tries ils_num before code, so the clickable
   // file link belongs on whichever of those two columns is actually the real match
@@ -1465,7 +1510,11 @@ function createPanelTable(cfg){
   let panelFiles = new Map();
 
   function normDigits(s){ return (s || '').replace(/\D/g, ''); }
-  function normAlnum(s){ return (s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+  // Keeps Hebrew letters (֐-׿) alongside ASCII alphanumerics — codes like
+  // "211-041-1-2_מתח_גבוה_תחנה_מספר1__EB1" carry their identifying info in Hebrew
+  // words, not just the digits, so stripping them (as plain a-z0-9 would) collapses
+  // distinct codes down to the same digit sequence and breaks matching.
+  function normAlnum(s){ return (s || '').toLowerCase().replace(/[^a-z0-9֐-׿]/g, ''); }
   function leadingNum(filename){
     if (matchMode === 'alphanumeric'){
       let base = filename.replace(/\.[a-z0-9]+$/i, '');   // strip extension
@@ -1624,11 +1673,23 @@ function createPanelTable(cfg){
     const toCreate = [];
     const seenThisBatch = new Set();
     files.forEach(f => {
+      // Whether this file already belongs to an existing row has to be decided with the
+      // exact same key that real file-linking uses (leadingNum) — not the code/name split
+      // below, which can chop the "code" short right when a non-ASCII word (e.g. Hebrew)
+      // sits inside the identifier itself rather than being a separate trailing
+      // description (common in this tab's own folder-name-style codes, e.g.
+      // "211-041-1-2_מתח_גבוה_תחנה_מספר1__EB1"). Using the split's truncated key here
+      // made a file that already matched an existing row look unmatched, spawning a
+      // duplicate row instead of linking to the real one.
+      const fileKey = leadingNum(f.name);
+      if (!fileKey || existingCodes.has(fileKey) || seenThisBatch.has(fileKey)) return;
       const base = f.name.replace(/\.[a-z0-9]+$/i, '').trim();
-      const { code: raw, name } = splitFilenameIntoCodeAndName(base);
-      const norm = normCode(raw);
-      if (!norm || existingCodes.has(norm) || seenThisBatch.has(norm)) return;
-      seenThisBatch.add(norm);
+      let { code: raw, name } = splitFilenameIntoCodeAndName(base);
+      // If the split's code doesn't normalize back to the same fileKey, it lost part of
+      // the identifier — fall back to the untouched filename so the row this creates will
+      // actually self-match once matchPanelsToFiles runs right after this.
+      if (normCode(raw) !== fileKey){ raw = base; name = ''; }
+      seenThisBatch.add(fileKey);
       toCreate.push({ raw, name });
     });
     if (toCreate.length > AUTO_CREATE_CAP){
@@ -2032,10 +2093,22 @@ function createPanelTable(cfg){
         const handle = document.createElement('span');
         handle.className = 'colResizeHandle';
         handle.title = 'גררו לשינוי רוחב העמודה';
+        handle.draggable = false;
         handle.addEventListener('mousedown', (e) => startColResize(e, c.key, col, th));
         th.appendChild(handle);
       } else {
         th.textContent = c.label;
+      }
+      // Column order can be rearranged by grabbing a header and dragging it left/right —
+      // see the headRow-level mousedown/mousemove/mouseup wiring below (same mouse-driven
+      // approach as row drag-reorder, rather than native HTML5 drag/drop, so it behaves
+      // consistently on touch/mobile too). The row-number, row-drag-handle and delete
+      // columns stay pinned at their structural positions.
+      const reorderable = c.key !== '__rownum__' && c.key !== '__drag__' && c.key !== '__delete__';
+      if (reorderable){
+        th.classList.add('reorderableCol');
+        th.dataset.colKey = c.key;
+        th.title = (th.title ? th.title + ' — ' : '') + 'גררו את הכותרת כדי לשנות את סדר העמודות';
       }
       headRow.appendChild(th);
     });
@@ -2342,6 +2415,83 @@ function createPanelTable(cfg){
       fillDrag = null;
     });
   }
+
+  // Column reordering: grab a header (anywhere except the resize handle, which opts out
+  // via stopPropagation in startColResize) and drag it left/right to swap its position
+  // with another column. Mouse-driven, same as row drag-reorder below and the fill-handle
+  // drag, rather than native HTML5 drag/drop — behaves consistently on touch/mobile too.
+  // A small movement threshold keeps a plain click on a header free to still sort by it.
+  let colDrag = null;
+  headRow.addEventListener('mousedown', (e) => {
+    const th = e.target.closest('th.reorderableCol');
+    if (!th) return;
+    const rect = th.getBoundingClientRect();
+    colDrag = {
+      key: th.dataset.colKey,
+      startX: e.clientX,
+      startY: e.clientY,
+      baseTop: rect.top,
+      baseLeft: rect.left,
+      width: rect.width,
+      engaged: false,
+      ghost: null,
+      targetKey: null,
+      before: true,
+    };
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!colDrag) return;
+    const dx = e.clientX - colDrag.startX;
+    const dy = e.clientY - colDrag.startY;
+    if (!colDrag.engaged){
+      if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+      colDrag.engaged = true;
+      const draggedCol = columns.find(c => c.key === colDrag.key);
+      const ghost = document.createElement('div');
+      ghost.className = 'colGhost';
+      ghost.textContent = '⇔ ' + (draggedCol ? draggedCol.label : '');
+      ghost.style.top = colDrag.baseTop + 'px';
+      ghost.style.left = colDrag.baseLeft + 'px';
+      ghost.style.width = colDrag.width + 'px';
+      document.body.appendChild(ghost);
+      colDrag.ghost = ghost;
+      const draggedTh = headRow.querySelector(`th[data-col-key="${CSS.escape(colDrag.key)}"]`);
+      if (draggedTh) draggedTh.classList.add('colDragging');
+    }
+    colDrag.ghost.style.transform = `translate(${dx}px, ${dy}px)`;
+    headRow.querySelectorAll('th.colDropBefore, th.colDropAfter').forEach(t => t.classList.remove('colDropBefore', 'colDropAfter'));
+    const overTh = document.elementFromPoint(e.clientX, e.clientY)?.closest('th.reorderableCol');
+    if (!overTh || overTh.dataset.colKey === colDrag.key){
+      colDrag.targetKey = null;
+      return;
+    }
+    const overRect = overTh.getBoundingClientRect();
+    // RTL layout: the right half of a header is visually "earlier" (before) in reading order.
+    const before = e.clientX > overRect.left + overRect.width / 2;
+    overTh.classList.add(before ? 'colDropBefore' : 'colDropAfter');
+    colDrag.targetKey = overTh.dataset.colKey;
+    colDrag.before = before;
+  });
+  document.addEventListener('mouseup', () => {
+    if (!colDrag) return;
+    if (colDrag.ghost) colDrag.ghost.remove();
+    headRow.querySelectorAll('th.colDragging').forEach(t => t.classList.remove('colDragging'));
+    headRow.querySelectorAll('th.colDropBefore, th.colDropAfter').forEach(t => t.classList.remove('colDropBefore', 'colDropAfter'));
+    if (colDrag.engaged && colDrag.targetKey && colDrag.targetKey !== colDrag.key){
+      const fromIdx = columns.findIndex(c => c.key === colDrag.key);
+      let toIdx = columns.findIndex(c => c.key === colDrag.targetKey);
+      if (fromIdx !== -1 && toIdx !== -1){
+        const [moved] = columns.splice(fromIdx, 1);
+        if (fromIdx < toIdx) toIdx -= 1;
+        toIdx += colDrag.before ? 0 : 1;
+        columns.splice(toIdx, 0, moved);
+        persistColOrder();
+        renderHead();
+        applyFilters();
+      }
+    }
+    colDrag = null;
+  });
 
   // Row reordering: grab the ⠿ handle and drag up/down to move a row to a new position.
   // Works on every tab (not just the fully-editable ones) since it only changes the
@@ -2733,6 +2883,7 @@ createPanelTable({
     { key: 'building_num', label: "מס' מבנה",        required: true },
     { key: '__delete__',   label: '',                required: true },
   ],
+  matchMode: 'alphanumeric',
   defaultVisible: [],
   statusClassFn: statusClassNeutral,
   searchKeys: ['code','name','building_num'],
@@ -2751,6 +2902,7 @@ createPanelTable({
     { key: 'building_num', label: "מס' מבנה",        required: true },
     { key: '__delete__',   label: '',                required: true },
   ],
+  matchMode: 'alphanumeric',
   defaultVisible: [],
   statusClassFn: statusClassNeutral,
   searchKeys: ['code','name','building_num'],
