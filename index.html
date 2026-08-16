@@ -1159,6 +1159,15 @@ function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// Formats a File API lastModified timestamp (epoch ms) as DD/MM/YYYY — the file's own
+// last-save date on disk, not a table-edit timestamp.
+function formatFileDate(ms){
+  const d = new Date(ms);
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
+
 if (window.L){
   // Leaflet's default marker icon otherwise resolves to a relative path that 404s
   // outside a bundler setup — point it at the vendored copy explicitly.
@@ -1362,6 +1371,14 @@ function createPanelTable(cfg){
     const filetypeCol = { key: '__filetype__', label: 'סוג קובץ', required: true };
     if (deleteIdx === -1) columns.push(filetypeCol);
     else columns.splice(deleteIdx, 0, filetypeCol);
+  }
+  // ...and a "תאריך שמירה אחרונה" column right beside it, showing the linked file's own
+  // last-modified date (from the OS file, via the File API — not a table-edit timestamp).
+  if (columns.some(c => c.key === 'code') && !columns.some(c => c.key === '__filedate__')){
+    const deleteIdx3 = columns.findIndex(c => c.key === '__delete__');
+    const filedateCol = { key: '__filedate__', label: 'תאריך שמירה אחרונה', required: true };
+    if (deleteIdx3 === -1) columns.push(filedateCol);
+    else columns.splice(deleteIdx3, 0, filedateCol);
   }
   // Every tab gets a "מיקום" column with a map picker, so any row can be pinned to an
   // exact geographic spot (see the shared location modal / aggregate map wiring below).
@@ -2049,6 +2066,13 @@ function createPanelTable(cfg){
       const exts = [...new Set(files.map(f => (f.name.match(/\.([a-z0-9]+)$/i) || [])[1] || '?').map(e => e.toUpperCase()))];
       const cls = e => e === 'PDF' ? 'b-blue' : e === 'DWG' ? 'b-green' : 'b-gray';
       return exts.map(e => `<span class="badge ${cls(e)}">${e}</span>`).join(' ');
+    }
+    if (key === '__filedate__'){
+      const files = panelFiles.get(idx);
+      const stamps = (files || []).map(f => f.file && f.file.lastModified).filter(Boolean);
+      if (!stamps.length) return '<span class="bnum">—</span>';
+      const latest = Math.max(...stamps);
+      return `<span class="bnum" title="תאריך השינוי האחרון של הקובץ המקושר (מהמערכת שלכם)">${formatFileDate(latest)}</span>`;
     }
     if (key === '__location__'){
       const hasLoc = p.lat && p.lng;
