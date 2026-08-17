@@ -1669,7 +1669,18 @@ function createPanelTable(cfg){
   const AUTO_CREATE_CAP = 15;
 
   function autoCreateRowsForUnmatchedFiles(files){
-    const existingCodes = new Set(panels.map(p => normCode(p.code || '')));
+    // Existing-row lookup has to check every field real matching checks (ils_num before
+    // code — see matchPanelsToFiles), not just code — tabs like "לוחות ILS/חלומה" and
+    // "לוחות חממות" key their real matching off ils_num (linkKey below), so checking only
+    // code here missed rows that already represented a dropped file, same class of bug
+    // as the fileKey fix a few lines down.
+    const existingCodes = new Set();
+    panels.forEach(p => {
+      const ilsNorm = normCode(p.ils_num || '');
+      const codeNorm = normCode(p.code || '');
+      if (ilsNorm) existingCodes.add(ilsNorm);
+      if (codeNorm) existingCodes.add(codeNorm);
+    });
     const toCreate = [];
     const seenThisBatch = new Set();
     files.forEach(f => {
@@ -1696,7 +1707,14 @@ function createPanelTable(cfg){
       return { createdCount: 0, skippedCount: toCreate.length };
     }
     toCreate.forEach(({ raw, name }) => {
-      panels.push({ _id: uid(), code: raw, name, building_num: '' });
+      // The identifier goes into whichever field this tab actually links files through
+      // (linkKey — ils_num for tabs that track a manufacturer/ILS number, code
+      // otherwise). Putting it in "code" unconditionally left the real link column
+      // (ils_num, for ILS/חלומה and חממות) empty on auto-created rows: the file matched
+      // internally, but the visible clickable link sat on the wrong, blank cell.
+      const row = { _id: uid(), name, building_num: '' };
+      row[linkKey] = raw;
+      panels.push(row);
     });
     if (toCreate.length) persistFullTable();
     return { createdCount: toCreate.length, skippedCount: 0 };
