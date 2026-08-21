@@ -507,6 +507,21 @@
     white-space:nowrap;
   }
   #locationGoogleLink:hover{border-color:var(--accent);color:var(--accent);}
+  .importTextarea{
+    width:100%;
+    height:220px;
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--text);
+    font-family:var(--mono);
+    font-size:.8rem;
+    padding:10px;
+    resize:vertical;
+  }
+  .importTextarea:focus{outline:none;border-color:var(--accent);}
+  #importConfirmBtn{border-color:var(--green);color:var(--green);}
+  #importConfirmBtn:hover{background:rgba(63,174,106,.12);}
   .mapNamePinIcon{background:none;border:none;}
   .mapNamePinBadge{
     position:relative;
@@ -738,6 +753,7 @@
       <button type="button" class="addRowBtn" id="addRowBtn-panels">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-panels">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-panels">📋 העתק את הנתונים</button>
+      <button type="button" class="addRowBtn" id="importBtn-panels">📥 ייבוא נתונים</button>
     </div>
     <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
@@ -779,6 +795,7 @@
       <button type="button" class="addRowBtn" id="addRowBtn-planner">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-planner">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-planner">📋 העתק את הנתונים</button>
+      <button type="button" class="addRowBtn" id="importBtn-planner">📥 ייבוא נתונים</button>
     </div>
     <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
@@ -811,6 +828,7 @@
       <button type="button" class="addRowBtn" id="addRowBtn-greenhouses">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-greenhouses">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-greenhouses">📋 העתק את הנתונים</button>
+      <button type="button" class="addRowBtn" id="importBtn-greenhouses">📥 ייבוא נתונים</button>
     </div>
     <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
@@ -842,6 +860,7 @@
       <button type="button" class="addRowBtn" id="addRowBtn-hvac">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-hvac">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-hvac">📋 העתק את הנתונים</button>
+      <button type="button" class="addRowBtn" id="importBtn-hvac">📥 ייבוא נתונים</button>
     </div>
     <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
@@ -873,6 +892,7 @@
       <button type="button" class="addRowBtn" id="addRowBtn-hv">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-hv">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-hv">📋 העתק את הנתונים</button>
+      <button type="button" class="addRowBtn" id="importBtn-hv">📥 ייבוא נתונים</button>
     </div>
     <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
@@ -904,6 +924,7 @@
       <button type="button" class="addRowBtn" id="addRowBtn-mtsh-lv">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-mtsh-lv">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-mtsh-lv">📋 העתק את הנתונים</button>
+      <button type="button" class="addRowBtn" id="importBtn-mtsh-lv">📥 ייבוא נתונים</button>
     </div>
     <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <div class="folderBar">
@@ -955,6 +976,24 @@
         <button type="button" id="locationClearBtn">🗑️ נקה מיקום</button>
       </div>
       <div class="sub" id="locationHint"></div>
+    </div>
+  </div>
+</div>
+
+<!-- מודאל ייבוא נתונים — משותף לכל הטאבים, מאפשר להדביק JSON שהועתק ממכשיר אחר -->
+<div class="locationModalOverlay" id="importModal" style="display:none">
+  <div class="locationModalBox">
+    <div class="locationModalHeader">
+      <div class="locationModalTitle" id="importModalTitle">ייבוא נתונים</div>
+      <button type="button" class="locationModalClose" id="importModalClose">✕</button>
+    </div>
+    <div class="locationModalBody">
+      <div class="sub">הדביקו כאן את ה-JSON שהעתקתם (כפתור "📋 העתק את הנתונים") ממכשיר אחר. <b>פעולה זו מחליפה את כל הנתונים הקיימים בטאב הזה, במכשיר הנוכחי.</b></div>
+      <textarea id="importTextarea" class="importTextarea" placeholder='[{"code":"...","name":"...", ...}, ...]'></textarea>
+      <div class="locationModalActions">
+        <button type="button" id="importConfirmBtn">📥 ייבא (יחליף את הטבלה)</button>
+      </div>
+      <div class="sub" id="importHint" style="color:var(--red)"></div>
     </div>
   </div>
 </div>
@@ -1375,6 +1414,46 @@ window.renderAggregateMap = function renderAggregateMap(){
   if (countEl) countEl.textContent = aggregateMarkers.length + ' לוחות ממוקמים על המפה';
   if (bounds.length) aggregateMap.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
 };
+
+// ============ Shared import modal — paste the JSON from "📋 העתק את הנתונים" (on
+// another device/browser) back in, replacing this tab's table. This is the missing
+// other half of that export button: without it, the copied JSON had nowhere to go, so
+// there was no way to actually move edits between devices (everything lives in each
+// browser's own localStorage, with no server behind this static site). ============
+let importCtx = null; // { idPrefix }
+
+window.openImportModal = function openImportModal({ idPrefix, tableLabel }){
+  importCtx = { idPrefix };
+  document.getElementById('importModalTitle').textContent = 'ייבוא נתונים' + (tableLabel ? ' — ' + tableLabel : '');
+  document.getElementById('importTextarea').value = '';
+  document.getElementById('importHint').textContent = '';
+  document.getElementById('importModal').style.display = 'flex';
+  document.getElementById('importTextarea').focus();
+};
+
+function closeImportModal(){
+  document.getElementById('importModal').style.display = 'none';
+  importCtx = null;
+}
+document.getElementById('importModalClose').addEventListener('click', closeImportModal);
+document.getElementById('importModal').addEventListener('click', (e) => {
+  if (e.target.id === 'importModal') closeImportModal();
+});
+document.getElementById('importConfirmBtn').addEventListener('click', () => {
+  if (!importCtx) return;
+  const hint = document.getElementById('importHint');
+  const text = document.getElementById('importTextarea').value.trim();
+  if (!text){ hint.textContent = 'הדביקו קודם את הנתונים שהעתקתם.'; return; }
+  let data;
+  try { data = JSON.parse(text); }
+  catch(err){ hint.textContent = 'הטקסט שהודבק אינו JSON תקין — ודאו שהדבקתם את כל מה שהועתק, בלי לשנות אותו.'; return; }
+  if (!Array.isArray(data)){ hint.textContent = 'הנתונים חייבים להיות רשימה (מערך) של שורות.'; return; }
+  if (!confirm(`לייבא ${data.length} שורות? הפעולה הזו תחליף את כל הנתונים הקיימים בטאב הזה, במכשיר הנוכחי בלבד.`)) return;
+  if (window.__panelTableImport && window.__panelTableImport[importCtx.idPrefix]){
+    window.__panelTableImport[importCtx.idPrefix](data);
+  }
+  closeImportModal();
+});
 
 // ============ Generic reusable table module ============
 function createPanelTable(cfg){
@@ -2383,6 +2462,25 @@ function createPanelTable(cfg){
         setTimeout(() => { exportBtn.textContent = exportLabel; }, 3000);
       });
     }
+    const importBtn = document.getElementById('importBtn-' + idPrefix);
+    if (importBtn){
+      importBtn.addEventListener('click', () => {
+        if (locked){ alert('פתחו עריכה (סמל המנעול למעלה) לפני ייבוא נתונים.'); return; }
+        window.openImportModal({ idPrefix, tableLabel: tabLabel });
+      });
+    }
+    window.__panelTableImport = window.__panelTableImport || {};
+    window.__panelTableImport[idPrefix] = (data) => {
+      panels.length = 0;
+      data.forEach(p => {
+        if (!p._id) p._id = uid();
+        panels.push(p);
+      });
+      persistFullTable();
+      renderHead();
+      applyFilters();
+      if (window.renderAggregateMap) window.renderAggregateMap();
+    };
   }
 
   if (fullyEditable){
