@@ -81,6 +81,20 @@
   }
   #refreshAppBtn:hover{border-color:var(--accent);color:var(--accent);}
   #refreshAppBtn:disabled{opacity:.5;cursor:default;}
+  /* Only shown once a tab is open (see showHome/showTab in the script) — the dashboard
+     grid itself is hidden then, so this is the way back to the tab-picker home screen. */
+  #backToHomeBtn{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--text-dim);
+    cursor:pointer;
+    font-size:.82rem;
+    font-weight:600;
+    padding:8px 14px;
+    margin-bottom:12px;
+  }
+  #backToHomeBtn:hover{border-color:var(--accent);color:var(--accent);}
   h1{font-size:.92rem;margin:0;letter-spacing:.2px;}
   header .sub{display:none;}
   header .sub.appVersionLine{
@@ -732,38 +746,30 @@
     header img.logo{height:22px;}
     h1{font-size:.8rem;line-height:1.3;}
 
-    /* Dashboard: the big desktop cards would eat the whole screen before any table
-       row is visible, so on a phone it becomes one horizontally-scrollable strip of
-       small pills instead — same info (tap still switches tabs), a fraction of the
-       height. */
+    /* Dashboard = the home screen now (see showHome/showTab in the script): it's the
+       only thing on screen when no tab is open, since opening a tab hides it entirely,
+       so on a phone it gets a real tappable 2-column menu instead of the cramped
+       horizontal strip it used to need when it had to sit permanently above a table. */
     .dashboard{margin-bottom:8px;}
-    .dashTotal{font-size:.68rem;margin-bottom:4px;}
-    .dashTotal b{font-size:.8rem;}
+    .dashTotal{font-size:.78rem;margin-bottom:10px;}
+    .dashTotal b{font-size:.92rem;}
     .dashGrid{
-      display:flex;
-      flex-wrap:nowrap;
-      overflow-x:auto;
-      -webkit-overflow-scrolling:touch;
-      gap:6px;
-      padding-bottom:2px;
+      display:grid;
+      grid-template-columns:repeat(2, 1fr);
+      gap:8px;
     }
     .dashCard{
-      flex:0 0 auto;
-      display:flex;
-      align-items:center;
-      gap:5px;
-      padding:5px 10px;
-      border-radius:16px;
-      scroll-snap-align:start;
+      padding:14px 10px;
+      border-radius:12px;
+      text-align:center;
     }
-    .dashGrid{scroll-snap-type:x proximity;}
     .dashLabel{
-      font-size:.68rem;
-      margin-bottom:0;
-      max-width:90px;
+      font-size:.76rem;
+      margin-bottom:4px;
+      white-space:normal;
     }
-    .dashNum{font-size:.78rem;}
-    .dashSub{display:none;}
+    .dashNum{font-size:1.1rem;}
+    .dashSub{font-size:.68rem;}
 
     /* Filter row: three full-width stacked <select>s used to be a wall of taps to
        scroll past; two per row halves that. */
@@ -842,6 +848,7 @@
     <button type="button" id="refreshAppBtn" title="מנקה מטמון וטוען את הגרסה העדכנית מהשרת">🔄 בדוק עדכון</button>
   </header>
 
+  <button type="button" id="backToHomeBtn" style="display:none">🏠 לתפריט הראשי</button>
   <div id="dashboard" class="dashboard"></div>
 
   <div class="tabs">
@@ -856,7 +863,7 @@
   </div>
 
   <!-- TAB 1: לוחות חשמל -->
-  <div id="tab-panels" class="tabPanel active">
+  <div id="tab-panels" class="tabPanel">
     <div class="stickyControls" id="stickyControls-panels">
     <div class="topRow"><div class="sub matchStat" id="matchStat-panels"></div><div class="sub driveStat" id="driveStat-panels"></div><div class="sub" id="count-panels"></div><button type="button" class="lockToggleBtn" id="lockBtn-panels"></button></div>
     <div class="controls">
@@ -1158,8 +1165,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 7;
-const APP_UPDATED_AT = '22/08/2026 22:20';
+const APP_VERSION = 8;
+const APP_UPDATED_AT = '22/08/2026 22:35';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1379,7 +1386,7 @@ async function collectFilesFromDirHandle(dirHandle){
 
 // ============ Home dashboard: a live summary card per tab, doubling as the tab bar ============
 const tableRegistry = [];
-let currentActiveTab = 'tab-panels';
+let currentActiveTab = null; // null = home screen (the dashboard grid, no tab open)
 
 function renderDashboard(){
   const el = document.getElementById('dashboard');
@@ -3345,9 +3352,28 @@ function setupTableAvailableHeight(){
 }
 setupTableAvailableHeight();
 
-// ============ Tab switching (driven by the dashboard cards; the old tab bar is kept
-// in the markup but hidden — its click listeners still work, so a dashboard card just
-// clicks the matching hidden button instead of duplicating the switch logic) ============
+// ============ Home screen vs. tab view ============
+// The dashboard grid (all 7 tab cards) is the home screen — opening a tab hides that
+// whole grid instead of just leaving it sitting above the table, so the table gets a
+// clean full screen with only a small info strip (the tab's own topRow: count + lock)
+// and the search/toggles above it. The "🏠 לתפריט הראשי" button is the way back.
+const dashboardEl = document.getElementById('dashboard');
+const backToHomeBtn = document.getElementById('backToHomeBtn');
+
+function showHome(){
+  document.querySelectorAll('.tabBtn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tabPanel').forEach(p => p.classList.remove('active'));
+  currentActiveTab = null;
+  if (dashboardEl) dashboardEl.style.display = '';
+  if (backToHomeBtn) backToHomeBtn.style.display = 'none';
+  renderDashboard();
+  if (window.__updateTableAvailableHeight) requestAnimationFrame(window.__updateTableAvailableHeight);
+}
+if (backToHomeBtn) backToHomeBtn.addEventListener('click', showHome);
+
+// (driven by the dashboard cards; the old tab bar is kept in the markup but hidden —
+// its click listeners still work, so a dashboard card just clicks the matching hidden
+// button instead of duplicating the switch logic)
 document.querySelectorAll('.tabBtn').forEach(btn => {
   btn.addEventListener('click', () => {
     const wasAlreadyActive = currentActiveTab === btn.dataset.tab;
@@ -3356,6 +3382,8 @@ document.querySelectorAll('.tabBtn').forEach(btn => {
     btn.classList.add('active');
     document.getElementById(btn.dataset.tab).classList.add('active');
     currentActiveTab = btn.dataset.tab;
+    if (dashboardEl) dashboardEl.style.display = 'none';
+    if (backToHomeBtn) backToHomeBtn.style.display = '';
     // Every tab re-locks (view-only) each time it's freshly entered — see the lockBtn
     // wiring inside createPanelTable, which registers this relock hook per idPrefix.
     // Skipped when the click just re-selects the tab that was already open, so an
@@ -3371,8 +3399,10 @@ document.querySelectorAll('.tabBtn').forEach(btn => {
       setTimeout(() => { if (window.__aggregateMapInvalidate) window.__aggregateMapInvalidate(); }, 50);
     }
     renderDashboard();
+    if (window.__updateTableAvailableHeight) requestAnimationFrame(window.__updateTableAvailableHeight);
   });
 });
+showHome();
 
 // ============ Tab 1: לוחות חשמל ============
 function statusClassPanels(status){
