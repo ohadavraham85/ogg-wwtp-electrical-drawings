@@ -213,7 +213,10 @@
   .hasFileToggle input{accent-color:var(--accent);cursor:pointer;}
   .table-scroll{
     overflow:auto;
-    max-height:65vh;
+    /* Filled dynamically to whatever room is left below the header/filters/toggle on
+       the current screen — see setupTableAvailableHeight in the script. The 65vh
+       fallback only matters for the instant before that first measurement runs. */
+    max-height:var(--table-available-h, 65vh);
     border-radius:8px;
     border:1px solid var(--line);
     transition:box-shadow .15s, border-color .15s;
@@ -625,8 +628,43 @@
   .colToggleWrap .colToggle{margin-bottom:4px;}
   .colToggleCount{font-size:.74rem;color:var(--text-dim);padding:0 2px;}
   td.wrap-notes{white-space:normal;min-width:180px;max-width:280px;}
-  .mobileFoldersToggle{display:none;} /* mobile-only collapse trigger — see @media block */
-  .mobileScrollHint{display:none;} /* mobile-only horizontal-scroll hint — see @media block */
+  /* Folder-picker buttons + extra-columns checklist are used rarely once a tab is set
+     up, but they used to sit permanently between the search bar and the table on
+     every screen size — collapsed behind this toggle everywhere so the table starts
+     right after the filters, not after a wall of buttons. */
+  .mobileFoldersToggle{
+    display:block;
+    width:100%;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--text-dim);
+    cursor:pointer;
+    font-size:.8rem;
+    padding:9px 12px;
+    margin-bottom:8px;
+    text-align:center;
+  }
+  .mobileFoldersBody{display:none;}
+  .mobileFoldersBody.expanded{display:block;}
+
+  /* Every tab's table is wider than a typical screen (see min-width below), so it
+     always needs a horizontal scroll — this hint says so, and the row-number column
+     stays pinned as an anchor while scrolling sideways through the rest. */
+  .mobileScrollHint{
+    font-size:.72rem;
+    color:var(--text-dim);
+    text-align:center;
+    margin-bottom:6px;
+  }
+  td.rownum, th.rownum{
+    position:sticky;
+    right:0;
+    background:var(--panel);
+    z-index:4;
+  }
+  th.rownum{z-index:6;} /* sticky on both axes (top + right) while header-row scrolling */
+  tbody tr:hover td.rownum{background:var(--panel-hover);}
   .folderBar{
     display:flex;
     align-items:center;
@@ -744,49 +782,12 @@
     .colToggle{gap:8px 12px;}
     .colToggle label{font-size:.78rem;}
 
-    /* On a phone, the folder-picker buttons and the extra-columns checklist push the
-       actual table many screens down before a single row is visible. Collapsed by
-       default behind one small toggle so the table shows up right after the search
-       bar; desktop keeps these always-visible (no toggle button rendered there). */
-    .mobileFoldersToggle{
-      display:block;
-      width:100%;
-      background:var(--panel);
-      border:1px solid var(--line);
-      border-radius:6px;
-      color:var(--text-dim);
-      cursor:pointer;
-      font-size:.8rem;
-      padding:9px 12px;
-      margin-bottom:8px;
-      text-align:center;
-    }
-    .mobileFoldersBody{display:none;}
-    .mobileFoldersBody.expanded{display:block;}
+    /* Repeats the same how-to-edit reminder on every tab; worth the permanent space
+       on desktop but not on a phone screen where the table already has to fight for
+       room. */
+    .editHintNote{display:none;}
 
-    .mobileScrollHint{
-      display:block;
-      font-size:.72rem;
-      color:var(--text-dim);
-      text-align:center;
-      margin-bottom:6px;
-    }
-
-    /* A persistent anchor column so scrolling sideways through a wide table
-       (min-width:900px, needs horizontal scroll on any phone) doesn't lose the row
-       you were looking at. */
-    td.rownum, th.rownum{
-      position:sticky;
-      right:0;
-      background:var(--panel);
-      z-index:4;
-    }
-    th.rownum{z-index:6;} /* sticky on both axes (top + right) while header-row scrolling */
-    tbody tr:hover td.rownum{background:var(--panel-hover);}
-
-    /* More vertical room now that the folders/columns block above collapses by default. */
     .table-scroll{
-      max-height:72vh;
       -webkit-overflow-scrolling:touch;
       border-radius:6px;
     }
@@ -838,7 +839,7 @@
       <button type="button" class="addRowBtn" id="importBtn-panels">📥 ייבוא נתונים</button>
       <button type="button" class="addRowBtn" id="uploadDriveBtn-panels">☁️ העלה לגוגל דרייב</button>
     </div>
-    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
+    <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
     <div class="mobileFoldersBody">
     <div class="folderBar">
@@ -884,7 +885,7 @@
       <button type="button" class="addRowBtn" id="importBtn-planner">📥 ייבוא נתונים</button>
       <button type="button" class="addRowBtn" id="uploadDriveBtn-planner">☁️ העלה לגוגל דרייב</button>
     </div>
-    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
+    <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
     <div class="mobileFoldersBody">
     <div class="folderBar">
@@ -921,7 +922,7 @@
       <button type="button" class="addRowBtn" id="importBtn-greenhouses">📥 ייבוא נתונים</button>
       <button type="button" class="addRowBtn" id="uploadDriveBtn-greenhouses">☁️ העלה לגוגל דרייב</button>
     </div>
-    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
+    <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
     <div class="mobileFoldersBody">
     <div class="folderBar">
@@ -957,7 +958,7 @@
       <button type="button" class="addRowBtn" id="importBtn-hvac">📥 ייבוא נתונים</button>
       <button type="button" class="addRowBtn" id="uploadDriveBtn-hvac">☁️ העלה לגוגל דרייב</button>
     </div>
-    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
+    <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
     <div class="mobileFoldersBody">
     <div class="folderBar">
@@ -993,7 +994,7 @@
       <button type="button" class="addRowBtn" id="importBtn-hv">📥 ייבוא נתונים</button>
       <button type="button" class="addRowBtn" id="uploadDriveBtn-hv">☁️ העלה לגוגל דרייב</button>
     </div>
-    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
+    <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
     <div class="mobileFoldersBody">
     <div class="folderBar">
@@ -1029,7 +1030,7 @@
       <button type="button" class="addRowBtn" id="importBtn-mtsh-lv">📥 ייבוא נתונים</button>
       <button type="button" class="addRowBtn" id="uploadDriveBtn-mtsh-lv">☁️ העלה לגוגל דרייב</button>
     </div>
-    <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
+    <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
     <div class="mobileFoldersBody">
     <div class="folderBar">
@@ -1108,8 +1109,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 5;
-const APP_UPDATED_AT = '22/08/2026 21:55';
+const APP_VERSION = 6;
+const APP_UPDATED_AT = '22/08/2026 22:05';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -3229,27 +3230,54 @@ function setupGlobalStickyOffset(){
 }
 setupGlobalStickyOffset();
 
-// Mobile-only: the folder-picker/column-checklist block under each tab's search bar
-// starts collapsed (see .mobileFoldersBody CSS) so the table appears right away when
-// scrolling on a phone; tapping the toggle reveals it same as before.
+// The folder-picker buttons + extra-columns checklist under each tab's search bar
+// start collapsed (see .mobileFoldersBody CSS) on every screen size, so the table
+// starts right after the filters instead of after a wall of buttons; tapping the
+// toggle reveals it. Whatever the toggle changes also changes how much vertical room
+// is left for the table, so it re-runs the height measurement below.
 document.querySelectorAll('.mobileFoldersToggle').forEach(btn => {
   const body = btn.nextElementSibling;
   if (!body || !body.classList.contains('mobileFoldersBody')) return;
   btn.addEventListener('click', () => {
     const isOpen = body.classList.toggle('expanded');
     btn.textContent = isOpen ? '📁 תיקיות ועמודות נוספות ▴' : '📁 תיקיות ועמודות נוספות ▾';
+    if (window.__updateTableAvailableHeight) requestAnimationFrame(window.__updateTableAvailableHeight);
   });
 });
 
-// Mobile-only: the table is wider than any phone screen (min-width:900px, see the
-// @media block), so it always needs a horizontal swipe to see the later columns —
-// a hint that isn't obvious on a table with no visual scroll affordance otherwise.
+// Every tab's table is wider than any screen (900-1500px min-width, see the CSS),
+// so it always needs a horizontal scroll — a hint that isn't obvious on a table with
+// no visible scrollbar otherwise. The row-number column stays pinned as an anchor
+// (see td.rownum/th.rownum CSS) so scrolling sideways doesn't lose the row you're on.
 document.querySelectorAll('.table-scroll').forEach(el => {
   const hint = document.createElement('div');
   hint.className = 'mobileScrollHint';
   hint.textContent = '👉 גררו שמאלה כדי לראות עוד עמודות';
   el.parentNode.insertBefore(hint, el);
 });
+
+// Rather than guess a fixed fraction of the viewport (which left more than half the
+// screen unused on desktop and a cramped strip on mobile), the table fills whatever
+// room is actually left below the header/filters/toggle on the currently active tab.
+function setupTableAvailableHeight(){
+  const stickyTop = document.querySelector('.stickyTop');
+  if (!stickyTop) return;
+  function update(){
+    const activeTab = document.querySelector('.tabPanel.active');
+    const stickyControls = activeTab && activeTab.querySelector('.stickyControls');
+    if (!stickyControls) return;
+    const reserved = stickyTop.getBoundingClientRect().height + stickyControls.getBoundingClientRect().height;
+    const available = Math.max(240, window.innerHeight - reserved - 20);
+    document.documentElement.style.setProperty('--table-available-h', available + 'px');
+  }
+  window.__updateTableAvailableHeight = update;
+  update();
+  window.addEventListener('resize', update);
+  new ResizeObserver(update).observe(stickyTop);
+  document.querySelectorAll('.stickyControls').forEach(el => new ResizeObserver(update).observe(el));
+  document.querySelectorAll('.tabBtn').forEach(btn => btn.addEventListener('click', () => requestAnimationFrame(update)));
+}
+setupTableAvailableHeight();
 
 // ============ Tab switching (driven by the dashboard cards; the old tab bar is kept
 // in the markup but hidden — its click listeners still work, so a dashboard card just
