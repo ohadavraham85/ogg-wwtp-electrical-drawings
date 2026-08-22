@@ -625,6 +625,7 @@
   .colToggleWrap .colToggle{margin-bottom:4px;}
   .colToggleCount{font-size:.74rem;color:var(--text-dim);padding:0 2px;}
   td.wrap-notes{white-space:normal;min-width:180px;max-width:280px;}
+  .mobileFoldersToggle{display:none;} /* mobile-only collapse trigger — see @media block */
   .folderBar{
     display:flex;
     align-items:center;
@@ -742,6 +743,26 @@
     .colToggle{gap:8px 12px;}
     .colToggle label{font-size:.78rem;}
 
+    /* On a phone, the folder-picker buttons and the extra-columns checklist push the
+       actual table many screens down before a single row is visible. Collapsed by
+       default behind one small toggle so the table shows up right after the search
+       bar; desktop keeps these always-visible (no toggle button rendered there). */
+    .mobileFoldersToggle{
+      display:block;
+      width:100%;
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:6px;
+      color:var(--text-dim);
+      cursor:pointer;
+      font-size:.8rem;
+      padding:9px 12px;
+      margin-bottom:8px;
+      text-align:center;
+    }
+    .mobileFoldersBody{display:none;}
+    .mobileFoldersBody.expanded{display:block;}
+
     .table-scroll{
       max-height:58vh;
       -webkit-overflow-scrolling:touch;
@@ -796,6 +817,8 @@
       <button type="button" class="addRowBtn" id="uploadDriveBtn-panels">☁️ העלה לגוגל דרייב</button>
     </div>
     <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
+    <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
+    <div class="mobileFoldersBody">
     <div class="folderBar">
       <button type="button" id="pickBtn-panels">📁 בחרו את תיקיית התוכניות (OneDrive)</button>
       <button type="button" id="refreshBtn-panels" style="display:none">🔄 רענן קבצים</button>
@@ -812,6 +835,7 @@
     <div class="colToggleWrap">
       <div class="colToggle" id="colToggle-panels"></div>
       <div class="colToggleCount" id="colToggleCount-panels"></div>
+    </div>
     </div>
     </div>
     <div class="table-scroll">
@@ -839,6 +863,8 @@
       <button type="button" class="addRowBtn" id="uploadDriveBtn-planner">☁️ העלה לגוגל דרייב</button>
     </div>
     <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
+    <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
+    <div class="mobileFoldersBody">
     <div class="folderBar">
       <button type="button" id="pickBtn-planner">📁 בחרו את תיקיית תוכניות המתכנן</button>
       <button type="button" id="refreshBtn-planner" style="display:none">🔄 רענן קבצים</button>
@@ -849,6 +875,7 @@
     <div class="colToggleWrap">
       <div class="colToggle" id="colToggle-planner"></div>
       <div class="colToggleCount" id="colToggleCount-planner"></div>
+    </div>
     </div>
     </div>
     <div class="table-scroll">
@@ -873,6 +900,8 @@
       <button type="button" class="addRowBtn" id="uploadDriveBtn-greenhouses">☁️ העלה לגוגל דרייב</button>
     </div>
     <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
+    <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
+    <div class="mobileFoldersBody">
     <div class="folderBar">
       <button type="button" id="pickBtn-greenhouses">📁 בחרו את תיקיית לוחות החממות</button>
       <button type="button" id="refreshBtn-greenhouses" style="display:none">🔄 רענן קבצים</button>
@@ -883,6 +912,7 @@
     <div class="colToggleWrap">
       <div class="colToggle" id="colToggle-greenhouses"></div>
       <div class="colToggleCount" id="colToggleCount-greenhouses"></div>
+    </div>
     </div>
     </div>
     <div class="table-scroll">
@@ -906,6 +936,8 @@
       <button type="button" class="addRowBtn" id="uploadDriveBtn-hvac">☁️ העלה לגוגל דרייב</button>
     </div>
     <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
+    <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
+    <div class="mobileFoldersBody">
     <div class="folderBar">
       <button type="button" id="pickBtn-hvac">📁 בחרו את תיקיית לוחות מיזוג האוויר</button>
       <button type="button" id="refreshBtn-hvac" style="display:none">🔄 רענן קבצים</button>
@@ -916,6 +948,7 @@
     <div class="colToggleWrap">
       <div class="colToggle" id="colToggle-hvac"></div>
       <div class="colToggleCount" id="colToggleCount-hvac"></div>
+    </div>
     </div>
     </div>
     <div class="table-scroll">
@@ -939,6 +972,8 @@
       <button type="button" class="addRowBtn" id="uploadDriveBtn-hv">☁️ העלה לגוגל דרייב</button>
     </div>
     <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
+    <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
+    <div class="mobileFoldersBody">
     <div class="folderBar">
       <button type="button" id="pickBtn-hv">📁 בחרו את תיקיית לוחות מתח גבוה</button>
       <button type="button" id="refreshBtn-hv" style="display:none">🔄 רענן קבצים</button>
@@ -949,6 +984,7 @@
     <div class="colToggleWrap">
       <div class="colToggle" id="colToggle-hv"></div>
       <div class="colToggleCount" id="colToggleCount-hv"></div>
+    </div>
     </div>
     </div>
     <div class="table-scroll">
@@ -972,6 +1008,8 @@
       <button type="button" class="addRowBtn" id="uploadDriveBtn-mtsh-lv">☁️ העלה לגוגל דרייב</button>
     </div>
     <div class="sub" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
+    <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
+    <div class="mobileFoldersBody">
     <div class="folderBar">
       <button type="button" id="pickBtn-mtsh-lv">📁 בחרו את תיקיית מט"ש קיים - מתח נמוך</button>
       <button type="button" id="refreshBtn-mtsh-lv" style="display:none">🔄 רענן קבצים</button>
@@ -982,6 +1020,7 @@
     <div class="colToggleWrap">
       <div class="colToggle" id="colToggle-mtsh-lv"></div>
       <div class="colToggleCount" id="colToggleCount-mtsh-lv"></div>
+    </div>
     </div>
     </div>
     <div class="table-scroll">
@@ -1047,8 +1086,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 3;
-const APP_UPDATED_AT = '22/08/2026 21:30';
+const APP_VERSION = 4;
+const APP_UPDATED_AT = '22/08/2026 21:40';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -3166,6 +3205,18 @@ function setupGlobalStickyOffset(){
   new ResizeObserver(update).observe(stickyTop);
 }
 setupGlobalStickyOffset();
+
+// Mobile-only: the folder-picker/column-checklist block under each tab's search bar
+// starts collapsed (see .mobileFoldersBody CSS) so the table appears right away when
+// scrolling on a phone; tapping the toggle reveals it same as before.
+document.querySelectorAll('.mobileFoldersToggle').forEach(btn => {
+  const body = btn.nextElementSibling;
+  if (!body || !body.classList.contains('mobileFoldersBody')) return;
+  btn.addEventListener('click', () => {
+    const isOpen = body.classList.toggle('expanded');
+    btn.textContent = isOpen ? '📁 תיקיות ועמודות נוספות ▴' : '📁 תיקיות ועמודות נוספות ▾';
+  });
+});
 
 // ============ Tab switching (driven by the dashboard cards; the old tab bar is kept
 // in the markup but hidden — its click listeners still work, so a dashboard card just
