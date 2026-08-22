@@ -66,6 +66,19 @@
     flex-shrink:0;
   }
   header .titleBlock{flex:1;min-width:0;}
+  #refreshAppBtn{
+    flex-shrink:0;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--text-dim);
+    cursor:pointer;
+    font-size:.78rem;
+    padding:6px 12px;
+    white-space:nowrap;
+  }
+  #refreshAppBtn:hover{border-color:var(--accent);color:var(--accent);}
+  #refreshAppBtn:disabled{opacity:.5;cursor:default;}
   h1{font-size:.92rem;margin:0;letter-spacing:.2px;}
   header .sub{display:none;}
   header .sub.appVersionLine{
@@ -749,6 +762,7 @@
       <div class="sub">בחרו תיקייה בכל טאב, ואז לחיצה על מס' התוכנית תפתח את הקובץ</div>
       <div class="sub appVersionLine" id="appVersionLine"></div>
     </div>
+    <button type="button" id="refreshAppBtn" title="מנקה מטמון וטוען את הגרסה העדכנית מהשרת">🔄 בדוק עדכון</button>
   </header>
 
   <div id="dashboard" class="dashboard"></div>
@@ -1031,11 +1045,35 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 1;
-const APP_UPDATED_AT = '22/08/2026 23:19';
+const APP_VERSION = 2;
+const APP_UPDATED_AT = '22/08/2026 23:30';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
+})();
+
+// "🔄 בדוק עדכון" — unregisters the service worker and clears its cache before
+// reloading, so a stale cached copy (the reason a just-shipped change can seem
+// "missing" until a hard refresh) can't hide behind a plain reload.
+(function wireRefreshAppBtn(){
+  const btn = document.getElementById('refreshAppBtn');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    const originalLabel = btn.textContent;
+    btn.textContent = '🔄 מרענן...';
+    try {
+      if ('serviceWorker' in navigator){
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      }
+      if (window.caches && caches.keys){
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+    } catch(err){ console.warn('could not fully clear cache before refresh', err); }
+    location.reload();
+  });
 })();
 
 // ============ IndexedDB helper: persist directory handles across sessions ============
