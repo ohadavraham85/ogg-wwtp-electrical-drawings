@@ -191,6 +191,17 @@
     margin-bottom:16px;
     flex-wrap:wrap;
   }
+  /* Filter dropdowns + action buttons (add row, export, import, Drive upload, reset)
+     live in here so they can collapse behind .mobileControlsToggle on a phone — see
+     the @media block — while staying always-visible (flex:1 1 auto, no toggle
+     rendered) everywhere else. */
+  .controlsExtra{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    flex:1 1 auto;
+  }
+  .mobileControlsToggle{display:none;}
   .controls input, .controls select{
     padding:9px 12px;
     background:var(--panel);
@@ -758,14 +769,34 @@
        scroll past; two per row halves that. */
     .controls{display:flex;flex-wrap:wrap;}
     .controls input[type="text"]{flex:1 1 100%;}
-    .controls select{flex:1 1 calc(50% - 4px);min-width:0;}
+    .controlsExtra select{flex:1 1 calc(50% - 4px);min-width:0;}
     .hasFileToggle{flex:1 1 100%;}
 
     .topRow{gap:2px;}
-    .controls input[type="text"], .controls select{
+    .controls input[type="text"], .controlsExtra select{
       font-size:.9rem;
       padding:11px 12px;
     }
+
+    /* The filter dropdowns and every action button (add row, export, import, Drive
+       upload, reset) are used far less often than the search box above them — on a
+       phone they cost as much scrolling as the table itself, so they start collapsed
+       behind one toggle instead of always sitting between search and the table. */
+    .mobileControlsToggle{
+      display:block;
+      width:100%;
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:6px;
+      color:var(--text-dim);
+      cursor:pointer;
+      font-size:.8rem;
+      padding:9px 12px;
+      margin-bottom:6px;
+      text-align:center;
+    }
+    .controlsExtra{display:none;}
+    .controlsExtra.expanded{display:flex;}
 
     .folderBar{
       flex-direction:column;
@@ -830,6 +861,8 @@
     <div class="topRow"><div class="sub matchStat" id="matchStat-panels"></div><div class="sub driveStat" id="driveStat-panels"></div><div class="sub" id="count-panels"></div><button type="button" class="lockToggleBtn" id="lockBtn-panels"></button></div>
     <div class="controls">
       <input type="text" id="search-panels" placeholder="חיפוש לפי מס' תוכנית / שם לוח / מבנה...">
+      <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
+      <div class="controlsExtra">
       <select id="building-panels"><option value="">כל המבנים</option></select>
       <select id="status-panels"><option value="">כל הסטטוסים</option></select>
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-panels"> הצג רק לוחות עם תוכנית מקושרת</label>
@@ -838,6 +871,7 @@
       <button type="button" class="addRowBtn" id="exportBtn-panels">📋 העתק את הנתונים</button>
       <button type="button" class="addRowBtn" id="importBtn-panels">📥 ייבוא נתונים</button>
       <button type="button" class="addRowBtn" id="uploadDriveBtn-panels">☁️ העלה לגוגל דרייב</button>
+      </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
@@ -875,6 +909,8 @@
     <div class="topRow"><div class="sub matchStat" id="matchStat-planner"></div><div class="sub driveStat" id="driveStat-planner"></div><div class="sub" id="count-planner"></div><button type="button" class="lockToggleBtn" id="lockBtn-planner"></button></div>
     <div class="controls">
       <input type="text" id="search-planner" placeholder="חיפוש לפי מס' תוכנית / שם / מבנה...">
+      <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
+      <div class="controlsExtra">
       <select id="building-planner"><option value="">כל המבנים</option></select>
       <select id="status-planner"><option value="">כל הסטטוסים</option></select>
       <select id="sheet-planner"><option value="">כל הגיליונות</option></select>
@@ -884,6 +920,7 @@
       <button type="button" class="addRowBtn" id="exportBtn-planner">📋 העתק את הנתונים</button>
       <button type="button" class="addRowBtn" id="importBtn-planner">📥 ייבוא נתונים</button>
       <button type="button" class="addRowBtn" id="uploadDriveBtn-planner">☁️ העלה לגוגל דרייב</button>
+      </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
@@ -914,6 +951,8 @@
     <div class="topRow"><div class="sub matchStat" id="matchStat-greenhouses"></div><div class="sub driveStat" id="driveStat-greenhouses"></div><div class="sub" id="count-greenhouses"></div><button type="button" class="lockToggleBtn" id="lockBtn-greenhouses"></button></div>
     <div class="controls">
       <input type="text" id="search-greenhouses" placeholder="חיפוש לפי מספר תוכנית / שם / תגית ציוד...">
+      <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
+      <div class="controlsExtra">
       <select id="panel_type-greenhouses"><option value="">כל סוגי הלוח</option></select>
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-greenhouses"> הצג רק שורות עם קובץ מקושר</label>
       <button type="button" class="addRowBtn" id="addRowBtn-greenhouses">+ הוסף שורה</button>
@@ -921,6 +960,7 @@
       <button type="button" class="addRowBtn" id="exportBtn-greenhouses">📋 העתק את הנתונים</button>
       <button type="button" class="addRowBtn" id="importBtn-greenhouses">📥 ייבוא נתונים</button>
       <button type="button" class="addRowBtn" id="uploadDriveBtn-greenhouses">☁️ העלה לגוגל דרייב</button>
+      </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
@@ -951,12 +991,15 @@
     <div class="topRow"><div class="sub matchStat" id="matchStat-hvac"></div><div class="sub driveStat" id="driveStat-hvac"></div><div class="sub" id="count-hvac"></div><button type="button" class="lockToggleBtn" id="lockBtn-hvac"></button></div>
     <div class="controls">
       <input type="text" id="search-hvac" placeholder="חיפוש לפי מספר תוכנית / שם...">
+      <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
+      <div class="controlsExtra">
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-hvac"> הצג רק שורות עם קובץ מקושר</label>
       <button type="button" class="addRowBtn" id="addRowBtn-hvac">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-hvac">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-hvac">📋 העתק את הנתונים</button>
       <button type="button" class="addRowBtn" id="importBtn-hvac">📥 ייבוא נתונים</button>
       <button type="button" class="addRowBtn" id="uploadDriveBtn-hvac">☁️ העלה לגוגל דרייב</button>
+      </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
@@ -987,12 +1030,15 @@
     <div class="topRow"><div class="sub matchStat" id="matchStat-hv"></div><div class="sub driveStat" id="driveStat-hv"></div><div class="sub" id="count-hv"></div><button type="button" class="lockToggleBtn" id="lockBtn-hv"></button></div>
     <div class="controls">
       <input type="text" id="search-hv" placeholder="חיפוש לפי מספר תוכנית / שם...">
+      <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
+      <div class="controlsExtra">
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-hv"> הצג רק שורות עם קובץ מקושר</label>
       <button type="button" class="addRowBtn" id="addRowBtn-hv">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-hv">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-hv">📋 העתק את הנתונים</button>
       <button type="button" class="addRowBtn" id="importBtn-hv">📥 ייבוא נתונים</button>
       <button type="button" class="addRowBtn" id="uploadDriveBtn-hv">☁️ העלה לגוגל דרייב</button>
+      </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
@@ -1023,12 +1069,15 @@
     <div class="topRow"><div class="sub matchStat" id="matchStat-mtsh-lv"></div><div class="sub driveStat" id="driveStat-mtsh-lv"></div><div class="sub" id="count-mtsh-lv"></div><button type="button" class="lockToggleBtn" id="lockBtn-mtsh-lv"></button></div>
     <div class="controls">
       <input type="text" id="search-mtsh-lv" placeholder="חיפוש לפי מספר תוכנית / שם...">
+      <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
+      <div class="controlsExtra">
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-mtsh-lv"> הצג רק שורות עם קובץ מקושר</label>
       <button type="button" class="addRowBtn" id="addRowBtn-mtsh-lv">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-mtsh-lv">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-mtsh-lv">📋 העתק את הנתונים</button>
       <button type="button" class="addRowBtn" id="importBtn-mtsh-lv">📥 ייבוא נתונים</button>
       <button type="button" class="addRowBtn" id="uploadDriveBtn-mtsh-lv">☁️ העלה לגוגל דרייב</button>
+      </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
@@ -1109,8 +1158,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 6;
-const APP_UPDATED_AT = '22/08/2026 22:05';
+const APP_VERSION = 7;
+const APP_UPDATED_AT = '22/08/2026 22:20';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -2684,7 +2733,12 @@ function createPanelTable(cfg){
       const opt = document.createElement('option');
       opt.value = ''; opt.textContent = f.label ? `כל ${f.label}` : 'הכל';
       sel.appendChild(opt);
-      searchBox.insertAdjacentElement('afterend', sel);
+      // Goes inside .controlsExtra (not straight after the search box) so it collapses
+      // behind the same toggle as every other filter/action control — otherwise this
+      // auto-generated dropdown would land outside it and stay permanently visible.
+      const extraWrap = document.querySelector(`#tab-${idPrefix} .controlsExtra`);
+      if (extraWrap) extraWrap.prepend(sel);
+      else searchBox.insertAdjacentElement('afterend', sel);
     }
   });
 
@@ -3102,7 +3156,7 @@ function createPanelTable(cfg){
   // to "I need all these files collected in one organized folder" without needing
   // write access to some destination folder: just download the zip and unpack it
   // wherever they want.
-  const controlsEl = document.querySelector(`#tab-${idPrefix} .controls`);
+  const controlsEl = document.querySelector(`#tab-${idPrefix} .controlsExtra`);
   if (controlsEl && !document.getElementById('exportFilesBtn-' + idPrefix)){
     const exportFilesBtn = document.createElement('button');
     exportFilesBtn.type = 'button';
@@ -3241,6 +3295,18 @@ document.querySelectorAll('.mobileFoldersToggle').forEach(btn => {
   btn.addEventListener('click', () => {
     const isOpen = body.classList.toggle('expanded');
     btn.textContent = isOpen ? '📁 תיקיות ועמודות נוספות ▴' : '📁 תיקיות ועמודות נוספות ▾';
+    if (window.__updateTableAvailableHeight) requestAnimationFrame(window.__updateTableAvailableHeight);
+  });
+});
+
+// Mobile-only (see .controlsExtra/.mobileControlsToggle CSS): the filter dropdowns and
+// action buttons collapse behind this toggle, same pattern as the folders toggle above.
+document.querySelectorAll('.mobileControlsToggle').forEach(btn => {
+  const extra = btn.nextElementSibling;
+  if (!extra || !extra.classList.contains('controlsExtra')) return;
+  btn.addEventListener('click', () => {
+    const isOpen = extra.classList.toggle('expanded');
+    btn.textContent = isOpen ? '⚙️ סינון ופעולות ▴' : '⚙️ סינון ופעולות ▾';
     if (window.__updateTableAvailableHeight) requestAnimationFrame(window.__updateTableAvailableHeight);
   });
 });
