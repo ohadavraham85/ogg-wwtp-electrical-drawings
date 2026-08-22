@@ -14,6 +14,8 @@
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <script src="vendor/leaflet/leaflet.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="vendor/firebase/firebase-app-compat.js"></script>
+<script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <style>
   :root{
     --bg:#0f1720;
@@ -1045,8 +1047,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 2;
-const APP_UPDATED_AT = '22/08/2026 23:30';
+const APP_VERSION = 3;
+const APP_UPDATED_AT = '22/08/2026 21:30';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1075,6 +1077,29 @@ const APP_UPDATED_AT = '22/08/2026 23:30';
     location.reload();
   });
 })();
+
+// ============ Cross-device sync (Firestore) ============
+// Every tab's table mirrors to its own document in this project's Firestore, so an edit
+// on one device shows up on every other device on its own — no export/import step. Test
+// mode's rules (open read/write) came from Firestore setup; nothing sensitive lives here
+// (electrical drawing metadata for an internal tool), but this should still move to
+// scoped rules before the 30-day test-mode window closes.
+const firebaseConfig = {
+  apiKey: 'AIzaSyBF6l7-aHbLXaR9LubVQY0s2SaQaqYU6Ko',
+  authDomain: 'ogg-electrical-plans-81c33.firebaseapp.com',
+  projectId: 'ogg-electrical-plans-81c33',
+  storageBucket: 'ogg-electrical-plans-81c33.firebasestorage.app',
+  messagingSenderId: '211977745758',
+  appId: '1:211977745758:web:8ae476fb589c9c7b67cbcf',
+  measurementId: 'G-NE7HF6HY1Y',
+};
+let firestoreDb = null;
+try {
+  if (window.firebase){
+    firebase.initializeApp(firebaseConfig);
+    firestoreDb = firebase.firestore();
+  }
+} catch(err){ console.warn('Firebase init failed — falling back to localStorage-only (no cross-device sync)', err); }
 
 // ============ IndexedDB helper: persist directory handles across sessions ============
 const handleDB = {
@@ -1721,6 +1746,71 @@ function createPanelTable(cfg){
   function persistFullTable(){
     try { localStorage.setItem(fullTableKey, JSON.stringify(panels)); }
     catch(err){ console.warn('could not save table', err); }
+    pushToCloud();
+  }
+
+  // Cross-device sync: this tab's whole row-set mirrors to a single Firestore document
+  // (same idea as persistFullTable's localStorage write, just also reaching every other
+  // device). onSnapshot fires immediately with whatever's already in the cloud, then again
+  // on every future change from any device — that one listener covers both "catch up on
+  // open" and "live update while open". localStorage stays the instant, offline-first
+  // copy; Firestore is what actually carries it between devices.
+  const firestoreDocRef = firestoreDb ? firestoreDb.collection('panelTables').doc(idPrefix) : null;
+  // Tracks the newest updatedAt this tab has already pushed or applied. onSnapshot can
+  // fire more than once per write (initial catch-up, our own echo, cache-then-server
+  // reconciliation on flaky connections), so a single-shot "skip the next echo" flag
+  // isn't reliable — an extra fire would apply stale data over a fresh local edit.
+  // Comparing timestamps instead ignores anything at or older than what we already have.
+  let lastSyncedAt = 0;
+
+  function sanitizeForCloud(row){
+    // Firestore rejects field names that begin and end with "__"; strip any that ended
+    // up on a row anyway (e.g. rows created before blankRow excluded pseudo-columns).
+    const clean = {};
+    Object.keys(row).forEach(key => { if (!/^__.*__$/.test(key)) clean[key] = row[key]; });
+    return clean;
+  }
+
+  function pushToCloud(){
+    if (!firestoreDocRef) return;
+    const ts = Date.now();
+    lastSyncedAt = ts;
+    // Firestore's set() can throw synchronously on invalid data (not just reject its
+    // promise) — an uncaught throw here would abort whatever caller triggered this
+    // (e.g. the add-row click handler) before it finishes updating the DOM, so guard it.
+    try {
+      firestoreDocRef.set({ data: panels.map(sanitizeForCloud), updatedAt: ts })
+        .catch(err => console.warn('cloud sync (push) failed for', idPrefix, err));
+    } catch(err){ console.warn('cloud sync (push) failed for', idPrefix, err); }
+  }
+
+  function applyCloudData(remotePanels, remoteUpdatedAt){
+    panels.length = 0;
+    remotePanels.forEach(p => {
+      if (!p._id) p._id = uid();
+      panels.push(p);
+    });
+    lastSyncedAt = remoteUpdatedAt || Date.now();
+    try { localStorage.setItem(fullTableKey, JSON.stringify(panels)); } catch(err){ /* ignore */ }
+    renderHead();
+    applyFilters();
+    if (window.renderAggregateMap) window.renderAggregateMap();
+  }
+
+  if (firestoreDocRef){
+    firestoreDocRef.onSnapshot((snap) => {
+      const remote = snap.data();
+      if (remote && Array.isArray(remote.data)){
+        // Our own write echoing back, a stale cache snapshot, or a duplicate fire —
+        // only genuinely newer remote data (from another device) should be applied.
+        if ((remote.updatedAt || 0) <= lastSyncedAt) return;
+        applyCloudData(remote.data, remote.updatedAt);
+      } else if (!snap.metadata.hasPendingWrites && panels.length && lastSyncedAt === 0){
+        // Nothing saved in the cloud yet for this tab — seed it from whatever this
+        // device already has, so the next device to open this tab isn't starting empty.
+        pushToCloud();
+      }
+    }, (err) => console.warn('cloud sync (listen) failed for', idPrefix, err));
   }
 
   // Load any previously saved manual edits (persisted per browser via localStorage, keyed
@@ -2609,7 +2699,10 @@ function createPanelTable(cfg){
     function blankRow(){
       const row = { _id: uid() };
       columns.forEach(c => {
-        if (c.key !== '__rownum__' && c.key !== '__delete__') row[c.key] = '';
+        // Pseudo-columns (rownum, delete button, drag handle, filetype/filedate/location
+        // badges) are UI-only and never real data — Firestore also rejects field names
+        // that begin and end with "__", so keep them out of the row object entirely.
+        if (!/^__.*__$/.test(c.key)) row[c.key] = '';
       });
       return row;
     }
