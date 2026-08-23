@@ -813,11 +813,20 @@
     .controlsExtra select{flex:1 1 calc(50% - 4px);min-width:0;}
     .hasFileToggle{flex:1 1 100%;}
 
-    .topRow{gap:2px;}
+    /* Shorter labels (see updateLockUI / uploadDriveBtn wiring in the script) plus
+       smaller buttons here so the count, Drive-upload button and lock toggle have a
+       real chance of sharing one line instead of each claiming its own — and every
+       block below it (search, both toggles, the hint) sits noticeably closer together
+       too, since each one's own margin used to add up on top of the others'. */
+    .topRow{gap:4px 8px;margin-bottom:8px;}
+    .topRow .addRowBtn{font-size:.76rem;padding:5px 10px;}
+    .lockToggleBtn{font-size:.74rem;padding:4px 10px;}
+    .controls{margin-bottom:8px;}
     .controls input[type="text"], .controlsExtra select{
       font-size:.9rem;
       padding:11px 12px;
     }
+    .mobileScrollHint{margin-bottom:4px;}
 
     /* The filter dropdowns and every action button (add row, export, import, Drive
        upload, reset) are used far less often than the search box above them — on a
@@ -838,6 +847,7 @@
     }
     .controlsExtra{display:none;}
     .controlsExtra.expanded{display:flex;}
+    .mobileFoldersToggle{margin-bottom:6px;}
 
     .folderBar{
       flex-direction:column;
@@ -1188,8 +1198,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 12;
-const APP_UPDATED_AT = '23/08/2026 08:15';
+const APP_VERSION = 13;
+const APP_UPDATED_AT = '23/08/2026 08:25';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -2788,6 +2798,10 @@ function createPanelTable(cfg){
   if (fullyEditable){
     const uploadDriveBtn = document.getElementById('uploadDriveBtn-' + idPrefix);
     if (uploadDriveBtn){
+      // Shorter on mobile, same reasoning as the lock button label above — this sits
+      // right next to it in topRow and the full label alone was wide enough to force
+      // both buttons onto their own separate lines.
+      if (document.documentElement.classList.contains('mobile-layout')) uploadDriveBtn.textContent = '☁️ העלה לדרייב';
       const uploadLabel = uploadDriveBtn.textContent;
       uploadDriveBtn.addEventListener('click', async () => {
         if (locked){ alert('פתחו עריכה (סמל המנעול למעלה) לפני העלאה לגוגל דרייב.'); return; }
@@ -3105,7 +3119,13 @@ function createPanelTable(cfg){
   const addRows10Btn2 = document.getElementById('addRows10Btn-' + idPrefix);
   function updateLockUI(){
     if (lockBtn){
-      lockBtn.textContent = locked ? '🔒 נעול לתצוגה — לחצו לפתיחת עריכה' : '🔓 פתוח לעריכה — לחצו לנעילה';
+      // Shorter label on mobile — the full sentence was, by itself, wide enough to push
+      // every other item in topRow (the count, the Drive-upload button) onto its own
+      // line, costing far more vertical space than the button's own height.
+      const isMobile = document.documentElement.classList.contains('mobile-layout');
+      lockBtn.textContent = isMobile
+        ? (locked ? '🔒 נעול' : '🔓 פתוח לעריכה')
+        : (locked ? '🔒 נעול לתצוגה — לחצו לפתיחת עריכה' : '🔓 פתוח לעריכה — לחצו לנעילה');
       lockBtn.classList.toggle('isUnlocked', !locked);
       lockBtn.setAttribute('aria-pressed', String(!locked));
     }
