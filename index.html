@@ -911,7 +911,6 @@
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-panels"> הצג רק לוחות עם תוכנית מקושרת</label>
       <button type="button" class="addRowBtn" id="addRowBtn-panels">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-panels">+ 10 שורות</button>
-      <button type="button" class="addRowBtn" id="exportBtn-panels">📋 העתק את הנתונים</button>
       </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
@@ -958,7 +957,6 @@
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-planner"> הצג רק תוכניות עם קובץ מקושר</label>
       <button type="button" class="addRowBtn" id="addRowBtn-planner">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-planner">+ 10 שורות</button>
-      <button type="button" class="addRowBtn" id="exportBtn-planner">📋 העתק את הנתונים</button>
       </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
@@ -996,7 +994,6 @@
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-greenhouses"> הצג רק שורות עם קובץ מקושר</label>
       <button type="button" class="addRowBtn" id="addRowBtn-greenhouses">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-greenhouses">+ 10 שורות</button>
-      <button type="button" class="addRowBtn" id="exportBtn-greenhouses">📋 העתק את הנתונים</button>
       </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
@@ -1033,7 +1030,6 @@
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-hvac"> הצג רק שורות עם קובץ מקושר</label>
       <button type="button" class="addRowBtn" id="addRowBtn-hvac">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-hvac">+ 10 שורות</button>
-      <button type="button" class="addRowBtn" id="exportBtn-hvac">📋 העתק את הנתונים</button>
       </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
@@ -1070,7 +1066,6 @@
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-hv"> הצג רק שורות עם קובץ מקושר</label>
       <button type="button" class="addRowBtn" id="addRowBtn-hv">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-hv">+ 10 שורות</button>
-      <button type="button" class="addRowBtn" id="exportBtn-hv">📋 העתק את הנתונים</button>
       </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
@@ -1107,7 +1102,6 @@
       <label class="hasFileToggle"><input type="checkbox" id="hasFile-mtsh-lv"> הצג רק שורות עם קובץ מקושר</label>
       <button type="button" class="addRowBtn" id="addRowBtn-mtsh-lv">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-mtsh-lv">+ 10 שורות</button>
-      <button type="button" class="addRowBtn" id="exportBtn-mtsh-lv">📋 העתק את הנתונים</button>
       </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
@@ -1188,8 +1182,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 10;
-const APP_UPDATED_AT = '22/08/2026 23:05';
+const APP_VERSION = 11;
+const APP_UPDATED_AT = '22/08/2026 23:10';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -2770,35 +2764,6 @@ function createPanelTable(cfg){
   }
 
   if (fullyEditable){
-    const exportBtn = document.getElementById('exportBtn-' + idPrefix);
-    if (exportBtn){
-      const exportLabel = exportBtn.textContent;
-      exportBtn.addEventListener('click', async () => {
-        const text = JSON.stringify(panels);
-        let copied = false;
-        try {
-          if (navigator.clipboard && navigator.clipboard.writeText){
-            await navigator.clipboard.writeText(text);
-            copied = true;
-          }
-        } catch(err){ /* fall through to the manual-copy fallback below */ }
-        if (!copied){
-          try {
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            ta.style.position = 'fixed';
-            ta.style.opacity = '0';
-            document.body.appendChild(ta);
-            ta.focus();
-            ta.select();
-            copied = document.execCommand('copy');
-            document.body.removeChild(ta);
-          } catch(err){ copied = false; }
-        }
-        exportBtn.textContent = copied ? '✓ הועתק! הדביקו בהודעה' : '⚠️ ההעתקה נכשלה — נסו שוב';
-        setTimeout(() => { exportBtn.textContent = exportLabel; }, 3000);
-      });
-    }
     const uploadDriveBtn = document.getElementById('uploadDriveBtn-' + idPrefix);
     if (uploadDriveBtn){
       const uploadLabel = uploadDriveBtn.textContent;
