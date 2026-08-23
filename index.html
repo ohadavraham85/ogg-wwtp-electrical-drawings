@@ -297,8 +297,10 @@
     box-shadow:inset 0 0 0 2px var(--accent);
   }
   table{
-    width:100%;
-    min-width:1500px;
+    /* No explicit width and no forced min-width — auto table layout sizes columns to
+       their own content instead of stretching short values to fill leftover space.
+       A tab whose content genuinely needs more than the screen still scrolls
+       horizontally (see .table-scroll{overflow:auto}) at its natural content width. */
     border-collapse:collapse;
     background:var(--panel);
   }
@@ -308,7 +310,7 @@
     color:var(--text-dim);
     text-transform:uppercase;
     letter-spacing:.4px;
-    padding:11px 14px;
+    padding:8px 10px;
     border-bottom:1px solid var(--line);
     font-weight:600;
     position:sticky;
@@ -410,7 +412,7 @@
   tbody tr:last-child{border-bottom:none;}
   tbody tr:hover{background:var(--panel-hover);}
   td{
-    padding:11px 14px;
+    padding:8px 10px;
     font-size:.86rem;
     vertical-align:middle;
   }
@@ -462,7 +464,7 @@
     border-radius:4px;
     color:var(--text);
     font-size:.82rem;
-    padding:5px 8px;
+    padding:4px 7px;
   }
   input.editCell:focus{outline:none;border-color:var(--accent);}
   .editWrap{position:relative;}
@@ -873,10 +875,12 @@
       -webkit-overflow-scrolling:touch;
       border-radius:6px;
     }
-    table{min-width:900px;}
-    thead th{font-size:.68rem;padding:9px 10px;}
-    td{font-size:.8rem;padding:9px 10px;}
-    input.editCell{font-size:.85rem;padding:7px 8px;}
+    /* No forced min-width here either — same reasoning as the base table rule above,
+       just doubly important on a narrow screen where every unnecessary pixel of
+       column width is a pixel of horizontal scroll a thumb has to cover. */
+    thead th{font-size:.68rem;padding:6px 8px;}
+    td{font-size:.8rem;padding:6px 8px;}
+    input.editCell{font-size:.85rem;padding:4px 6px;}
   }
 </style>
 </head>
@@ -1198,8 +1202,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 13;
-const APP_UPDATED_AT = '23/08/2026 08:25';
+const APP_VERSION = 14;
+const APP_UPDATED_AT = '23/08/2026 08:40';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
