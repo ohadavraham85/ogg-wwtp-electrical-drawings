@@ -502,8 +502,6 @@
   .addRowBtn:hover{border-color:var(--accent);color:var(--accent);}
   .addRowBtn:disabled{opacity:.4;cursor:not-allowed;}
   .addRowBtn:disabled:hover{border-color:var(--line);color:var(--text);}
-  .resetBtn{color:var(--text-dim);}
-  .resetBtn:hover{border-color:var(--red);color:var(--red);}
   .lockToggleBtn{
     display:inline-flex;
     align-items:center;
@@ -616,21 +614,6 @@
     white-space:nowrap;
   }
   #locationGoogleLink:hover{border-color:var(--accent);color:var(--accent);}
-  .importTextarea{
-    width:100%;
-    height:220px;
-    background:var(--bg);
-    border:1px solid var(--line);
-    border-radius:6px;
-    color:var(--text);
-    font-family:var(--mono);
-    font-size:.8rem;
-    padding:10px;
-    resize:vertical;
-  }
-  .importTextarea:focus{outline:none;border-color:var(--accent);}
-  #importConfirmBtn{border-color:var(--green);color:var(--green);}
-  #importConfirmBtn:hover{background:rgba(63,174,106,.12);}
   .addRowBtn[id^="uploadDriveBtn-"]{border-color:var(--blue);color:var(--blue);}
   .addRowBtn[id^="uploadDriveBtn-"]:hover{background:rgba(61,132,196,.12);}
   .mapNamePinIcon{background:none;border:none;}
@@ -918,7 +901,7 @@
   <!-- TAB 1: לוחות חשמל -->
   <div id="tab-panels" class="tabPanel">
     <div class="stickyControls" id="stickyControls-panels">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-panels"></div><div class="sub driveStat" id="driveStat-panels"></div><div class="sub" id="count-panels"></div><button type="button" class="lockToggleBtn" id="lockBtn-panels"></button></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-panels"></div><div class="sub driveStat" id="driveStat-panels"></div><div class="sub" id="count-panels"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-panels">☁️ העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-panels"></button></div>
     <div class="controls">
       <input type="text" id="search-panels" placeholder="חיפוש לפי מס' תוכנית / שם לוח / מבנה...">
       <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
@@ -929,8 +912,6 @@
       <button type="button" class="addRowBtn" id="addRowBtn-panels">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-panels">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-panels">📋 העתק את הנתונים</button>
-      <button type="button" class="addRowBtn" id="importBtn-panels">📥 ייבוא נתונים</button>
-      <button type="button" class="addRowBtn" id="uploadDriveBtn-panels">☁️ העלה לגוגל דרייב</button>
       </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
@@ -966,7 +947,7 @@
   <!-- TAB 2: תוכניות מתכנן -->
   <div id="tab-planner" class="tabPanel">
     <div class="stickyControls" id="stickyControls-planner">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-planner"></div><div class="sub driveStat" id="driveStat-planner"></div><div class="sub" id="count-planner"></div><button type="button" class="lockToggleBtn" id="lockBtn-planner"></button></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-planner"></div><div class="sub driveStat" id="driveStat-planner"></div><div class="sub" id="count-planner"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-planner">☁️ העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-planner"></button></div>
     <div class="controls">
       <input type="text" id="search-planner" placeholder="חיפוש לפי מס' תוכנית / שם / מבנה...">
       <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
@@ -978,8 +959,6 @@
       <button type="button" class="addRowBtn" id="addRowBtn-planner">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-planner">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-planner">📋 העתק את הנתונים</button>
-      <button type="button" class="addRowBtn" id="importBtn-planner">📥 ייבוא נתונים</button>
-      <button type="button" class="addRowBtn" id="uploadDriveBtn-planner">☁️ העלה לגוגל דרייב</button>
       </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
@@ -1008,7 +987,7 @@
 
   <div id="tab-greenhouses" class="tabPanel">
     <div class="stickyControls" id="stickyControls-greenhouses">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-greenhouses"></div><div class="sub driveStat" id="driveStat-greenhouses"></div><div class="sub" id="count-greenhouses"></div><button type="button" class="lockToggleBtn" id="lockBtn-greenhouses"></button></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-greenhouses"></div><div class="sub driveStat" id="driveStat-greenhouses"></div><div class="sub" id="count-greenhouses"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-greenhouses">☁️ העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-greenhouses"></button></div>
     <div class="controls">
       <input type="text" id="search-greenhouses" placeholder="חיפוש לפי מספר תוכנית / שם / תגית ציוד...">
       <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
@@ -1018,8 +997,6 @@
       <button type="button" class="addRowBtn" id="addRowBtn-greenhouses">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-greenhouses">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-greenhouses">📋 העתק את הנתונים</button>
-      <button type="button" class="addRowBtn" id="importBtn-greenhouses">📥 ייבוא נתונים</button>
-      <button type="button" class="addRowBtn" id="uploadDriveBtn-greenhouses">☁️ העלה לגוגל דרייב</button>
       </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
@@ -1048,7 +1025,7 @@
 
   <div id="tab-hvac" class="tabPanel">
     <div class="stickyControls" id="stickyControls-hvac">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-hvac"></div><div class="sub driveStat" id="driveStat-hvac"></div><div class="sub" id="count-hvac"></div><button type="button" class="lockToggleBtn" id="lockBtn-hvac"></button></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-hvac"></div><div class="sub driveStat" id="driveStat-hvac"></div><div class="sub" id="count-hvac"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-hvac">☁️ העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-hvac"></button></div>
     <div class="controls">
       <input type="text" id="search-hvac" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
@@ -1057,8 +1034,6 @@
       <button type="button" class="addRowBtn" id="addRowBtn-hvac">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-hvac">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-hvac">📋 העתק את הנתונים</button>
-      <button type="button" class="addRowBtn" id="importBtn-hvac">📥 ייבוא נתונים</button>
-      <button type="button" class="addRowBtn" id="uploadDriveBtn-hvac">☁️ העלה לגוגל דרייב</button>
       </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
@@ -1087,7 +1062,7 @@
 
   <div id="tab-hv" class="tabPanel">
     <div class="stickyControls" id="stickyControls-hv">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-hv"></div><div class="sub driveStat" id="driveStat-hv"></div><div class="sub" id="count-hv"></div><button type="button" class="lockToggleBtn" id="lockBtn-hv"></button></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-hv"></div><div class="sub driveStat" id="driveStat-hv"></div><div class="sub" id="count-hv"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-hv">☁️ העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-hv"></button></div>
     <div class="controls">
       <input type="text" id="search-hv" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
@@ -1096,8 +1071,6 @@
       <button type="button" class="addRowBtn" id="addRowBtn-hv">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-hv">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-hv">📋 העתק את הנתונים</button>
-      <button type="button" class="addRowBtn" id="importBtn-hv">📥 ייבוא נתונים</button>
-      <button type="button" class="addRowBtn" id="uploadDriveBtn-hv">☁️ העלה לגוגל דרייב</button>
       </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
@@ -1126,7 +1099,7 @@
 
   <div id="tab-mtsh-lv" class="tabPanel">
     <div class="stickyControls" id="stickyControls-mtsh-lv">
-    <div class="topRow"><div class="sub matchStat" id="matchStat-mtsh-lv"></div><div class="sub driveStat" id="driveStat-mtsh-lv"></div><div class="sub" id="count-mtsh-lv"></div><button type="button" class="lockToggleBtn" id="lockBtn-mtsh-lv"></button></div>
+    <div class="topRow"><div class="sub matchStat" id="matchStat-mtsh-lv"></div><div class="sub driveStat" id="driveStat-mtsh-lv"></div><div class="sub" id="count-mtsh-lv"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-mtsh-lv">☁️ העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-mtsh-lv"></button></div>
     <div class="controls">
       <input type="text" id="search-mtsh-lv" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
@@ -1135,8 +1108,6 @@
       <button type="button" class="addRowBtn" id="addRowBtn-mtsh-lv">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-mtsh-lv">+ 10 שורות</button>
       <button type="button" class="addRowBtn" id="exportBtn-mtsh-lv">📋 העתק את הנתונים</button>
-      <button type="button" class="addRowBtn" id="importBtn-mtsh-lv">📥 ייבוא נתונים</button>
-      <button type="button" class="addRowBtn" id="uploadDriveBtn-mtsh-lv">☁️ העלה לגוגל דרייב</button>
       </div>
     </div>
     <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
@@ -1196,24 +1167,6 @@
   </div>
 </div>
 
-<!-- מודאל ייבוא נתונים — משותף לכל הטאבים, מאפשר להדביק JSON שהועתק ממכשיר אחר -->
-<div class="locationModalOverlay" id="importModal" style="display:none">
-  <div class="locationModalBox">
-    <div class="locationModalHeader">
-      <div class="locationModalTitle" id="importModalTitle">ייבוא נתונים</div>
-      <button type="button" class="locationModalClose" id="importModalClose">✕</button>
-    </div>
-    <div class="locationModalBody">
-      <div class="sub">הדביקו כאן את ה-JSON שהעתקתם (כפתור "📋 העתק את הנתונים") ממכשיר אחר. <b>פעולה זו מחליפה את כל הנתונים הקיימים בטאב הזה, במכשיר הנוכחי.</b></div>
-      <textarea id="importTextarea" class="importTextarea" placeholder='[{"code":"...","name":"...", ...}, ...]'></textarea>
-      <div class="locationModalActions">
-        <button type="button" id="importConfirmBtn">📥 ייבא (יחליף את הטבלה)</button>
-      </div>
-      <div class="sub" id="importHint" style="color:var(--red)"></div>
-    </div>
-  </div>
-</div>
-
 <div class="locationModalOverlay" id="layoutModal" style="display:none">
   <div class="locationModalBox">
     <div class="locationModalHeader">
@@ -1235,8 +1188,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 9;
-const APP_UPDATED_AT = '22/08/2026 22:50';
+const APP_VERSION = 10;
+const APP_UPDATED_AT = '22/08/2026 23:05';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1368,104 +1321,6 @@ const supportsFSAccess = typeof window.showDirectoryPicker === 'function';
 // stops the browser's default action, it doesn't swallow the event).
 window.addEventListener('dragover', (e) => e.preventDefault());
 window.addEventListener('drop', (e) => e.preventDefault());
-
-// ============ Minimal dependency-free ZIP writer (STORED, no compression) ============
-// Used by the "ייצוא קבצים" button — no CDN library, so it keeps working even if a
-// third-party script host is ever unreachable. Compression isn't worth the added code
-// here since PDFs/DWGs are already fairly dense; this only needs to bundle files, not
-// shrink them.
-const CRC32_TABLE = (() => {
-  const table = new Uint32Array(256);
-  for (let n = 0; n < 256; n++){
-    let c = n;
-    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-    table[n] = c >>> 0;
-  }
-  return table;
-})();
-function crc32(bytes){
-  let crc = 0xFFFFFFFF;
-  for (let i = 0; i < bytes.length; i++){
-    crc = CRC32_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
-  }
-  return (crc ^ 0xFFFFFFFF) >>> 0;
-}
-async function buildZip(entries){
-  const encoder = new TextEncoder();
-  const now = new Date();
-  const dosTime = (((now.getHours() & 0x1F) << 11) | ((now.getMinutes() & 0x3F) << 5) | ((now.getSeconds() / 2) & 0x1F)) & 0xFFFF;
-  const dosDate = ((((now.getFullYear() - 1980) & 0x7F) << 9) | (((now.getMonth() + 1) & 0xF) << 5) | (now.getDate() & 0x1F)) & 0xFFFF;
-  const fileParts = [];
-  const centralParts = [];
-  let offset = 0;
-  for (const entry of entries){
-    const nameBytes = encoder.encode(entry.name);
-    const buf = new Uint8Array(await entry.blob.arrayBuffer());
-    const crc = crc32(buf);
-    const size = buf.length;
-
-    const local = new DataView(new ArrayBuffer(30));
-    local.setUint32(0, 0x04034b50, true);
-    local.setUint16(4, 20, true);
-    local.setUint16(6, 0, true);
-    local.setUint16(8, 0, true);
-    local.setUint16(10, dosTime, true);
-    local.setUint16(12, dosDate, true);
-    local.setUint32(14, crc, true);
-    local.setUint32(18, size, true);
-    local.setUint32(22, size, true);
-    local.setUint16(26, nameBytes.length, true);
-    local.setUint16(28, 0, true);
-    fileParts.push(new Uint8Array(local.buffer), nameBytes, buf);
-
-    const central = new DataView(new ArrayBuffer(46));
-    central.setUint32(0, 0x02014b50, true);
-    central.setUint16(4, 20, true);
-    central.setUint16(6, 20, true);
-    central.setUint16(8, 0, true);
-    central.setUint16(10, 0, true);
-    central.setUint16(12, dosTime, true);
-    central.setUint16(14, dosDate, true);
-    central.setUint32(16, crc, true);
-    central.setUint32(20, size, true);
-    central.setUint32(24, size, true);
-    central.setUint16(28, nameBytes.length, true);
-    central.setUint16(30, 0, true);
-    central.setUint16(32, 0, true);
-    central.setUint16(34, 0, true);
-    central.setUint16(36, 0, true);
-    central.setUint32(38, 0, true);
-    central.setUint32(42, offset, true);
-    centralParts.push(new Uint8Array(central.buffer), nameBytes);
-
-    offset += 30 + nameBytes.length + size;
-  }
-  const centralStart = offset;
-  const centralSize = centralParts.reduce((n, p) => n + p.length, 0);
-
-  const end = new DataView(new ArrayBuffer(22));
-  end.setUint32(0, 0x06054b50, true);
-  end.setUint16(4, 0, true);
-  end.setUint16(6, 0, true);
-  end.setUint16(8, entries.length, true);
-  end.setUint16(10, entries.length, true);
-  end.setUint32(12, centralSize, true);
-  end.setUint32(16, centralStart, true);
-  end.setUint16(20, 0, true);
-
-  return new Blob([...fileParts, ...centralParts, new Uint8Array(end.buffer)], { type: 'application/zip' });
-}
-function uniqueZipName(name, used){
-  if (!used.has(name)){ used.add(name); return name; }
-  const dot = name.lastIndexOf('.');
-  const base = dot > 0 ? name.slice(0, dot) : name;
-  const ext = dot > 0 ? name.slice(dot) : '';
-  let i = 2;
-  let candidate = `${base} (${i})${ext}`;
-  while (used.has(candidate)){ i++; candidate = `${base} (${i})${ext}`; }
-  used.add(candidate);
-  return candidate;
-}
 
 async function collectFilesFromDirHandle(dirHandle){
   const out = [];
@@ -1742,46 +1597,6 @@ window.renderAggregateMap = function renderAggregateMap(){
   if (countEl) countEl.textContent = aggregateMarkers.length + ' לוחות ממוקמים על המפה';
   if (bounds.length) aggregateMap.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
 };
-
-// ============ Shared import modal — paste the JSON from "📋 העתק את הנתונים" (on
-// another device/browser) back in, replacing this tab's table. This is the missing
-// other half of that export button: without it, the copied JSON had nowhere to go, so
-// there was no way to actually move edits between devices (everything lives in each
-// browser's own localStorage, with no server behind this static site). ============
-let importCtx = null; // { idPrefix }
-
-window.openImportModal = function openImportModal({ idPrefix, tableLabel }){
-  importCtx = { idPrefix };
-  document.getElementById('importModalTitle').textContent = 'ייבוא נתונים' + (tableLabel ? ' — ' + tableLabel : '');
-  document.getElementById('importTextarea').value = '';
-  document.getElementById('importHint').textContent = '';
-  document.getElementById('importModal').style.display = 'flex';
-  document.getElementById('importTextarea').focus();
-};
-
-function closeImportModal(){
-  document.getElementById('importModal').style.display = 'none';
-  importCtx = null;
-}
-document.getElementById('importModalClose').addEventListener('click', closeImportModal);
-document.getElementById('importModal').addEventListener('click', (e) => {
-  if (e.target.id === 'importModal') closeImportModal();
-});
-document.getElementById('importConfirmBtn').addEventListener('click', () => {
-  if (!importCtx) return;
-  const hint = document.getElementById('importHint');
-  const text = document.getElementById('importTextarea').value.trim();
-  if (!text){ hint.textContent = 'הדביקו קודם את הנתונים שהעתקתם.'; return; }
-  let data;
-  try { data = JSON.parse(text); }
-  catch(err){ hint.textContent = 'הטקסט שהודבק אינו JSON תקין — ודאו שהדבקתם את כל מה שהועתק, בלי לשנות אותו.'; return; }
-  if (!Array.isArray(data)){ hint.textContent = 'הנתונים חייבים להיות רשימה (מערך) של שורות.'; return; }
-  if (!confirm(`לייבא ${data.length} שורות? הפעולה הזו תחליף את כל הנתונים הקיימים בטאב הזה, במכשיר הנוכחי בלבד.`)) return;
-  if (window.__panelTableImport && window.__panelTableImport[importCtx.idPrefix]){
-    window.__panelTableImport[importCtx.idPrefix](data);
-  }
-  closeImportModal();
-});
 
 // ============ Direct browser → Google Drive upload ============
 // Uses Google Identity Services (GIS) for a client-side-only OAuth token (the
@@ -2984,26 +2799,6 @@ function createPanelTable(cfg){
         setTimeout(() => { exportBtn.textContent = exportLabel; }, 3000);
       });
     }
-    const importBtn = document.getElementById('importBtn-' + idPrefix);
-    if (importBtn){
-      importBtn.addEventListener('click', () => {
-        if (locked){ alert('פתחו עריכה (סמל המנעול למעלה) לפני ייבוא נתונים.'); return; }
-        window.openImportModal({ idPrefix, tableLabel: tabLabel });
-      });
-    }
-    window.__panelTableImport = window.__panelTableImport || {};
-    window.__panelTableImport[idPrefix] = (data) => {
-      panels.length = 0;
-      data.forEach(p => {
-        if (!p._id) p._id = uid();
-        panels.push(p);
-      });
-      persistFullTable();
-      renderHead();
-      applyFilters();
-      if (window.renderAggregateMap) window.renderAggregateMap();
-    };
-
     const uploadDriveBtn = document.getElementById('uploadDriveBtn-' + idPrefix);
     if (uploadDriveBtn){
       const uploadLabel = uploadDriveBtn.textContent;
@@ -3266,74 +3061,6 @@ function createPanelTable(cfg){
   const tabBtnEl = document.querySelector(`.tabBtn[data-tab="tab-${idPrefix}"]`);
   const tabLabel = tabBtnEl ? tabBtnEl.textContent.trim() : idPrefix;
   tableRegistry.push({ idPrefix, label: tabLabel, panels, columns });
-
-  // Bundle every currently-linked file in this tab into one ZIP download — the answer
-  // to "I need all these files collected in one organized folder" without needing
-  // write access to some destination folder: just download the zip and unpack it
-  // wherever they want.
-  const controlsEl = document.querySelector(`#tab-${idPrefix} .controlsExtra`);
-  if (controlsEl && !document.getElementById('exportFilesBtn-' + idPrefix)){
-    const exportFilesBtn = document.createElement('button');
-    exportFilesBtn.type = 'button';
-    exportFilesBtn.id = 'exportFilesBtn-' + idPrefix;
-    exportFilesBtn.className = 'addRowBtn';
-    const exportFilesLabel = '📦 ייצוא קבצים (ZIP)';
-    exportFilesBtn.textContent = exportFilesLabel;
-    exportFilesBtn.addEventListener('click', async () => {
-      const entries = [];
-      const usedNames = new Set();
-      panels.forEach((p, idx) => {
-        const files = panelFiles.get(idx);
-        if (!files) return;
-        files.forEach(f => {
-          entries.push({ name: uniqueZipName(f.name, usedNames), blob: f.file });
-        });
-      });
-      if (!entries.length){
-        alert('אין עדיין קבצים מקושרים בטאב הזה לייצוא — בחרו תיקייה קודם כדי לקשר קבצים.');
-        return;
-      }
-      exportFilesBtn.disabled = true;
-      exportFilesBtn.textContent = `מכין ZIP... (${entries.length} קבצים)`;
-      try {
-        const zipBlob = await buildZip(entries);
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(zipBlob);
-        a.download = `${tableRegistry.find(t => t.idPrefix === idPrefix)?.label || idPrefix} - קבצים.zip`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-      } catch(err){
-        console.error(err);
-        alert('יצירת ה-ZIP נכשלה — נסו שוב.');
-      } finally {
-        exportFilesBtn.disabled = false;
-        exportFilesBtn.textContent = exportFilesLabel;
-      }
-    });
-    controlsEl.appendChild(exportFilesBtn);
-  }
-
-  // Every tab can be reset back to the data shipped in this page, discarding whatever
-  // got added/edited/deleted locally — the escape hatch for exactly the kind of mess a
-  // big folder scan full of unmatched files can make.
-  if (controlsEl && !document.getElementById('resetBtn-' + idPrefix)){
-    const resetBtn = document.createElement('button');
-    resetBtn.type = 'button';
-    resetBtn.id = 'resetBtn-' + idPrefix;
-    resetBtn.className = 'addRowBtn resetBtn';
-    resetBtn.textContent = '↺ אפס לנתונים המקוריים';
-    resetBtn.addEventListener('click', () => {
-      if (!confirm('לאפס את הטאב הזה לנתונים המקוריים? כל שינוי מקומי בטאב הזה (שורות שנוספו/נמחקו/נערכו) יימחק.')) return;
-      try {
-        localStorage.removeItem(fullTableKey);
-        editable.forEach(field => localStorage.removeItem(editStoreKey(field)));
-      } catch(err){ console.warn('could not clear saved data', err); }
-      location.reload();
-    });
-    controlsEl.appendChild(resetBtn);
-  }
 
   // Lock/edit toggle: every tab opens read-only (locked) and only becomes editable
   // (cell editing, drag-fill, row drag-reorder, add/delete rows) once this icon is
