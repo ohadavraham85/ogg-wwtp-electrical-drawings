@@ -16,6 +16,15 @@
   } catch(err) { /* localStorage unavailable — falls back to matchMedia's live viewport check instead */
     try { if (window.matchMedia('(max-width:680px)').matches) document.documentElement.classList.add('mobile-layout'); } catch(err2) {}
   }
+  try {
+    // The <meta name="theme-color"> tag isn't parsed yet at this point in <head>, so
+    // it's updated later instead, in applyThemePreference — this only needs to add the
+    // class before first paint to avoid a flash of the wrong palette.
+    if (localStorage.getItem('displayThemePreference') === 'light') document.documentElement.classList.add('light-theme');
+  } catch(err) { /* ignore — defaults to dark */ }
+  try {
+    if (localStorage.getItem('displayStripedRowsPreference') === 'on') document.documentElement.classList.add('striped-rows');
+  } catch(err) { /* ignore — defaults to off */ }
 })();
 </script>
 <title>רשימת תוכניות חשמל הרחבת מט"ש אוג מבט"י-אוהד אברהם</title>
@@ -36,6 +45,7 @@
     --bg:#0f1720;
     --panel:#16212c;
     --panel-hover:#1c2b38;
+    --row-stripe:#131c25;
     --line:#26384a;
     --accent:#e8a33d;
     --accent-dim:#8a611f;
@@ -45,7 +55,31 @@
     --red:#c0392b;
     --blue:#3d84c4;
     --gray:#5a6b7a;
+    --badge-red-text:#e07a6b;
+    --badge-blue-text:#6fb0e6;
     --mono: 'Consolas', 'Courier New', monospace;
+  }
+  /* ☀️ Light theme — opt-in via the display-settings picker (⚙️ תצוגה), applied as a
+     class on <html> the same way .mobile-layout is, so it can be forced independent of
+     the OS/browser color scheme. Every color in the app is driven off these variables
+     (a few badge tints below are semi-transparent overlays that work unchanged over
+     either palette), so redefining them here is enough to re-skin the whole page. */
+  html.light-theme{
+    --bg:#f3f5f7;
+    --panel:#ffffff;
+    --panel-hover:#eef1f5;
+    --row-stripe:#f5f7f9;
+    --line:#d8dfe6;
+    --accent:#b5720a;
+    --accent-dim:#9c7233;
+    --text:#1a2430;
+    --text-dim:#5c6b78;
+    --green:#1f7a44;
+    --red:#a52f22;
+    --blue:#1f5f96;
+    --gray:#6b7885;
+    --badge-red-text:#a52f22;
+    --badge-blue-text:#1f5f96;
   }
   *{box-sizing:border-box;}
   body{
@@ -321,10 +355,10 @@
   thead th.sortableCol{
     cursor:pointer;
     user-select:none;
-    white-space:nowrap;
     position:relative;
-    overflow:hidden;
-    text-overflow:ellipsis;
+    /* Header labels wrap onto a second line instead of forcing nowrap — a long label
+       (e.g. "תוכנית יצרן (ILS/חלומה)") would otherwise become the column's dominant
+       width driver even when the actual data underneath is short. */
   }
   thead th.sortableCol:hover{color:var(--accent);}
   .colResizeHandle{
@@ -411,6 +445,14 @@
   }
   tbody tr:last-child{border-bottom:none;}
   tbody tr:hover{background:var(--panel-hover);}
+  /* 📊 Striped rows — opt-in via the display-settings picker, same class-on-<html>
+     pattern as the layout/theme pickers. Hover is repeated after so it still wins
+     over the stripe on a striped, hovered row (equal selector specificity otherwise,
+     source order would let whichever comes last win — that has to be hover). */
+  html.striped-rows tbody tr:nth-child(even){background:var(--row-stripe);}
+  html.striped-rows tbody tr:nth-child(even) td.rownum{background:var(--row-stripe);}
+  html.striped-rows tbody tr:hover{background:var(--panel-hover);}
+  html.striped-rows tbody tr:hover td.rownum{background:var(--panel-hover);}
   td{
     padding:8px 10px;
     font-size:.86rem;
@@ -656,8 +698,8 @@
     white-space:nowrap;
   }
   .b-green{background:rgba(63,174,106,.15);color:var(--green);}
-  .b-red{background:rgba(192,57,43,.15);color:#e07a6b;}
-  .b-blue{background:rgba(61,132,196,.15);color:#6fb0e6;}
+  .b-red{background:rgba(192,57,43,.15);color:var(--badge-red-text);}
+  .b-blue{background:rgba(61,132,196,.15);color:var(--badge-blue-text);}
   .b-gray{background:rgba(90,107,122,.2);color:var(--text-dim);}
   .empty{text-align:center;color:var(--text-dim);padding:40px;font-size:.9rem;}
   .colToggle{
@@ -1194,6 +1236,16 @@
         <button type="button" class="layoutOption" data-layout="mobile">📱 תצוגת טלפון<span class="layoutOptionSub">תפריטים מתקפלים, טבלה ממוקדת</span></button>
         <button type="button" class="layoutOption" data-layout="auto">🔄 אוטומטי לפי גודל המסך<span class="layoutOptionSub">ברירת המחדל — מחליט לבד לפי המכשיר</span></button>
       </div>
+
+      <div class="sub" style="margin-top:6px">ערכת צבעים</div>
+      <div class="layoutOptions" id="themeOptions">
+        <button type="button" class="layoutOption" data-theme="dark">🌙 כהה<span class="layoutOptionSub">ברירת המחדל</span></button>
+        <button type="button" class="layoutOption" data-theme="light">☀️ בהיר</button>
+      </div>
+
+      <label class="hasFileToggle" style="margin-top:4px">
+        <input type="checkbox" id="stripedRowsToggle"> 📊 שורות מפוספסות בטבלה
+      </label>
     </div>
   </div>
 </div>
@@ -1202,49 +1254,92 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 14;
-const APP_UPDATED_AT = '23/08/2026 08:40';
+const APP_VERSION = 15;
+const APP_UPDATED_AT = '24/08/2026 08:20';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
 })();
 
-// ============ Display layout picker (⚙️ תצוגה) ============
-// "auto" (the default) mirrors whatever the CSS media query would have done on its
-// own — matchMedia against the same 680px breakpoint the .mobile-layout CSS uses.
-// "desktop"/"mobile" force that layout regardless of the actual screen width. The
-// class is applied once synchronously in <head> already (before first paint); this
-// re-applies it on every resize (so "auto" stays responsive) and whenever the choice
-// changes in the modal below.
+// ============ Display settings picker (⚙️ תצוגה) ============
+// Three independent choices, each persisted to its own localStorage key so they don't
+// interact: layout (desktop/mobile/auto), color theme (dark/light), and striped rows
+// (on/off). All applied as classes on <html> — same mechanism as .mobile-layout, so a
+// forced preference can't flash the old appearance for a moment on load (see the
+// inline <head> script, which applies all three synchronously before first paint).
 const LAYOUT_PREF_KEY = 'displayLayoutPreference';
+const THEME_PREF_KEY = 'displayThemePreference';
+const STRIPED_PREF_KEY = 'displayStripedRowsPreference';
+
 function applyLayoutPreference(){
   let pref = 'auto';
   try { pref = localStorage.getItem(LAYOUT_PREF_KEY) || 'auto'; } catch(err) { /* ignore */ }
   const isMobile = pref === 'mobile' ? true : pref === 'desktop' ? false : window.matchMedia('(max-width:680px)').matches;
   document.documentElement.classList.toggle('mobile-layout', isMobile);
-  document.querySelectorAll('.layoutOption').forEach(btn => {
+  document.querySelectorAll('#layoutOptions .layoutOption').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.layout === pref);
   });
   if (window.__updateTableAvailableHeight) requestAnimationFrame(window.__updateTableAvailableHeight);
 }
+
+function applyThemePreference(){
+  let pref = 'dark';
+  try { pref = localStorage.getItem(THEME_PREF_KEY) || 'dark'; } catch(err) { /* ignore */ }
+  const isLight = pref === 'light';
+  document.documentElement.classList.toggle('light-theme', isLight);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', isLight ? '#f3f5f7' : '#0f1720');
+  document.querySelectorAll('#themeOptions .layoutOption').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.theme === pref);
+  });
+}
+
+function applyStripedRowsPreference(){
+  let on = false;
+  try { on = localStorage.getItem(STRIPED_PREF_KEY) === 'on'; } catch(err) { /* ignore */ }
+  document.documentElement.classList.toggle('striped-rows', on);
+  const cb = document.getElementById('stripedRowsToggle');
+  if (cb) cb.checked = on;
+}
+
 applyLayoutPreference();
+applyThemePreference();
+applyStripedRowsPreference();
 window.addEventListener('resize', applyLayoutPreference);
 
 (function wireLayoutModal(){
   const openBtn = document.getElementById('layoutSettingsBtn');
   const modal = document.getElementById('layoutModal');
   const closeBtn = document.getElementById('layoutModalClose');
+  const stripedCb = document.getElementById('stripedRowsToggle');
   if (!openBtn || !modal || !closeBtn) return;
-  openBtn.addEventListener('click', () => { modal.style.display = 'flex'; applyLayoutPreference(); });
+  openBtn.addEventListener('click', () => {
+    modal.style.display = 'flex';
+    applyLayoutPreference();
+    applyThemePreference();
+    applyStripedRowsPreference();
+  });
   closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
   modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
-  document.querySelectorAll('.layoutOption').forEach(btn => {
+  document.querySelectorAll('#layoutOptions .layoutOption').forEach(btn => {
     btn.addEventListener('click', () => {
       try { localStorage.setItem(LAYOUT_PREF_KEY, btn.dataset.layout); } catch(err) { /* ignore */ }
       applyLayoutPreference();
       modal.style.display = 'none';
     });
   });
+  document.querySelectorAll('#themeOptions .layoutOption').forEach(btn => {
+    btn.addEventListener('click', () => {
+      try { localStorage.setItem(THEME_PREF_KEY, btn.dataset.theme); } catch(err) { /* ignore */ }
+      applyThemePreference();
+    });
+  });
+  if (stripedCb){
+    stripedCb.addEventListener('change', () => {
+      try { localStorage.setItem(STRIPED_PREF_KEY, stripedCb.checked ? 'on' : 'off'); } catch(err) { /* ignore */ }
+      applyStripedRowsPreference();
+    });
+  }
 })();
 
 // "🔄 בדוק עדכון" — unregisters the service worker and clears its cache before
