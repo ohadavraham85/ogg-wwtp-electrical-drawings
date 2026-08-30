@@ -1369,8 +1369,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 28;
-const APP_UPDATED_AT = '30/08/2026 19:30';
+const APP_VERSION = 29;
+const APP_UPDATED_AT = '30/08/2026 19:40';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1862,13 +1862,28 @@ window.renderAggregateMap = function renderAggregateMap(){
   aggregateMarkers.forEach(m => m.remove());
   aggregateMarkers = [];
   tableRegistry.forEach(t => {
-    t.panels.forEach(p => {
+    const panelFiles = t.getPanelFiles ? t.getPanelFiles() : null;
+    t.panels.forEach((p, idx) => {
       if (!p.lat || !p.lng) return;
       const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
       if (Number.isNaN(lat) || Number.isNaN(lng)) return;
       const label = p.name || p.code || 'לוח';
       const marker = L.marker([lat, lng], { icon: nameMarkerIcon(label) }).addTo(aggregateMap);
-      marker.bindPopup(`<b>${escapeHtml(label)}</b><br>${escapeHtml(t.label)}`);
+      // Clicking a pin opens its file directly (Drive preview if uploaded, else the first
+      // local file) instead of a popup — falls back to a name/tab popup only when the
+      // panel has no file attached yet, so the click still does something useful.
+      const files = panelFiles ? panelFiles.get(idx) : null;
+      let fileUrl = '';
+      if (p.drive_url){
+        fileUrl = p.drive_file_id ? `https://drive.google.com/file/d/${p.drive_file_id}/preview` : p.drive_url;
+      } else if (files && files.length){
+        fileUrl = files[0].url;
+      }
+      if (fileUrl){
+        marker.on('click', () => window.openFilePreview({ url: fileUrl, name: label }));
+      } else {
+        marker.bindPopup(`<b>${escapeHtml(label)}</b><br>${escapeHtml(t.label)}`);
+      }
       aggregateMarkers.push(marker);
     });
   });
