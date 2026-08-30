@@ -706,17 +706,6 @@
   #locationSaveBtn{border-color:var(--green);color:var(--green);}
   #locationSaveBtn:hover{background:rgba(63,174,106,.12);}
   #locationClearBtn:hover{border-color:var(--red);color:var(--red);}
-  #locationGoogleLink{
-    background:none;
-    border:1px solid var(--line);
-    border-radius:6px;
-    color:var(--text-dim);
-    cursor:pointer;
-    padding:8px 14px;
-    font-size:.82rem;
-    white-space:nowrap;
-  }
-  #locationGoogleLink:hover{border-color:var(--accent);color:var(--accent);}
   .addRowBtn[id^="uploadDriveBtn-"]{border-color:var(--blue);color:var(--blue);}
   .addRowBtn[id^="uploadDriveBtn-"]:hover{background:rgba(61,132,196,.12);}
   .mapNamePinIcon{background:none;border:none;}
@@ -1261,7 +1250,7 @@
     <div class="stickyControls" id="stickyControls-map">
       <div class="tabTitle">🗺️ מפה מרוכזת</div>
       <div class="topRow"><div class="sub" id="mapPinCount"></div></div>
-      <div class="sub" style="margin-bottom:10px">כל הלוחות שסומן להם מיקום, מכל 6 הטאבים, על מפת לוויין אחת. לחצו על סמן כדי לראות את שם הלוח ולפתוח אותו בגוגל מפות. כדי לסמן מיקום חדש — פתחו עריכה בטאב הרלוונטי ולחצו על עמודת "מיקום" בשורה.</div>
+      <div class="sub" style="margin-bottom:10px">כל הלוחות שסומן להם מיקום, מכל 6 הטאבים, על גבי תוכנית האתר של המט"ש. לחצו על סמן כדי לראות את שם הלוח. כדי לסמן מיקום חדש — פתחו עריכה בטאב הרלוונטי ולחצו על עמודת "מיקום" בשורה.</div>
     </div>
     <div id="aggregateMapContainer" style="height:70vh"></div>
   </div>
@@ -1278,8 +1267,7 @@
     <div class="locationModalBody">
       <div id="locationMapContainer" style="height:360px"></div>
       <div class="locationModalRow">
-        <label>קואורדינטות: <input type="text" id="locationCoordsInput" placeholder="32.123456, 34.987654"></label>
-        <button type="button" id="locationGoogleLink">🌐 פתח בגוגל מפות</button>
+        <label>מיקום בתוכנית: <input type="text" id="locationCoordsInput" placeholder="X, Y" readonly></label>
       </div>
       <div class="locationModalActions" id="locationModalActions">
         <button type="button" id="locationSaveBtn">💾 שמור מיקום</button>
@@ -1337,8 +1325,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 20;
-const APP_UPDATED_AT = '30/08/2026 13:05';
+const APP_VERSION = 21;
+const APP_UPDATED_AT = '30/08/2026 17:45';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1626,12 +1614,10 @@ function renderDashboard(){
 
 // ============ Shared location picker (modal) + aggregate map ============
 // One Leaflet-based picker, reused by every tab's "מיקום" column: click a row's location
-// button to view (locked) or set/drag a pin (unlocked). Uses Esri World Imagery — free,
-// keyless satellite tiles — for the interactive picker itself, since Google's own tiles
-// can't legally be pulled into a third-party map without their paid JS API. The "פתח
-// בגוגל מפות" link still hands off to the real Google Maps satellite view (best available
-// imagery, whatever Google currently has for that spot — there's no free API that
-// guarantees "last month" freshness for an arbitrary location).
+// button to view (locked) or set/drag a pin (unlocked). Both the picker and the aggregate
+// map render the plant's own site-plan drawing (assets/site-plan.jpg) as the map background
+// via L.CRS.Simple + L.imageOverlay, instead of real-world GPS tiles — there's no need for
+// geographic anchoring here, pins just mark a spot on the drawing itself.
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -1655,21 +1641,19 @@ if (window.L){
   });
 }
 
-const SATELLITE_TILE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-const SATELLITE_ATTRIBUTION = 'Imagery &copy; Esri, Maxar, Earthstar Geographics';
-// The site itself — every map (picker and aggregate) opens centered here by default,
-// instead of a generic country-wide view, whenever there's no pinned location yet to
-// center on.
-const DEFAULT_MAP_CENTER = [31.803804, 35.428483];
+const SITE_PLAN_URL = 'assets/site-plan.jpg';
+const SITE_PLAN_WIDTH = 1500;
+const SITE_PLAN_HEIGHT = 1056;
+// Non-geographic bounds ([y,x] pairs) matching the drawing's own pixel dimensions —
+// L.CRS.Simple treats these as plain plane coordinates, not lat/lng.
+const SITE_PLAN_BOUNDS = [[0, 0], [SITE_PLAN_HEIGHT, SITE_PLAN_WIDTH]];
+// Every map (picker and aggregate) opens centered here by default, whenever there's no
+// pinned location yet to center on — the middle of the site-plan drawing.
+const DEFAULT_MAP_CENTER = [SITE_PLAN_HEIGHT / 2, SITE_PLAN_WIDTH / 2];
 
 let pickerMap = null;
 let pickerMarker = null;
 let currentLocationCtx = null; // { p, idPrefix, editable, tableLabel }
-
-function googleMapsUrl(lat, lng, label){
-  const q = label ? `${lat},${lng}(${label})` : `${lat},${lng}`;
-  return `https://www.google.com/maps?q=${encodeURIComponent(q)}&t=k&z=18`;
-}
 
 // A labeled pin: shows the panel's name directly on the map instead of a generic
 // unlabeled marker icon. iconSize/iconAnchor are left at the origin because the badge
@@ -1686,8 +1670,10 @@ function nameMarkerIcon(label){
 
 function ensurePickerMap(){
   if (pickerMap) return pickerMap;
-  pickerMap = L.map('locationMapContainer');
-  L.tileLayer(SATELLITE_TILE_URL, { attribution: SATELLITE_ATTRIBUTION, maxZoom: 19 }).addTo(pickerMap);
+  pickerMap = L.map('locationMapContainer', { crs: L.CRS.Simple, minZoom: -3, maxZoom: 3, attributionControl: false });
+  L.imageOverlay(SITE_PLAN_URL, SITE_PLAN_BOUNDS).addTo(pickerMap);
+  pickerMap.setMaxBounds(SITE_PLAN_BOUNDS);
+  pickerMap.fitBounds(SITE_PLAN_BOUNDS);
   pickerMap.on('click', (e) => {
     if (!currentLocationCtx || !currentLocationCtx.editable) return;
     setPickerMarker(e.latlng.lat, e.latlng.lng);
@@ -1720,12 +1706,7 @@ function setPickerMarker(lat, lng){
 
 function updatePickerCoordsUI(lat, lng){
   const input = document.getElementById('locationCoordsInput');
-  if (input) input.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-  const link = document.getElementById('locationGoogleLink');
-  if (link){
-    const label = currentLocationCtx && currentLocationCtx.p ? (currentLocationCtx.p.name || currentLocationCtx.p.code || '') : '';
-    link.onclick = () => window.open(googleMapsUrl(lat, lng, label), '_blank', 'noopener');
-  }
+  if (input) input.value = `${lat.toFixed(0)}, ${lng.toFixed(0)}`;
 }
 
 window.openLocationModal = function openLocationModal({ p, idPrefix, editable, tableLabel }){
@@ -1736,7 +1717,7 @@ window.openLocationModal = function openLocationModal({ p, idPrefix, editable, t
   document.getElementById('locationModalActions').style.display = editable ? 'flex' : 'none';
   document.getElementById('locationCoordsInput').readOnly = !editable;
   document.getElementById('locationHint').textContent = editable
-    ? 'לחצו על המפה כדי למקם סמן, או גררו אותו לדיוק. אפשר גם להדביק קואורדינטות (מגוגל מפות) בשדה למעלה ולאשר עם Enter.'
+    ? 'לחצו על תוכנית האתר כדי למקם סמן, או גררו אותו לדיוק.'
     : 'תצוגה בלבד — כדי לשנות את המיקום, פתחו עריכה בטאב (סמל המנעול) ולחצו שוב על המיקום.';
 
   setTimeout(() => {
@@ -1745,14 +1726,12 @@ window.openLocationModal = function openLocationModal({ p, idPrefix, editable, t
     if (pickerMarker){ pickerMarker.remove(); pickerMarker = null; }
     if (p.lat && p.lng){
       const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
-      map.setView([lat, lng], 17);
+      map.setView([lat, lng], 0);
       setPickerMarker(lat, lng);
     } else {
-      map.setView(DEFAULT_MAP_CENTER, 16);
+      map.fitBounds(SITE_PLAN_BOUNDS);
       const input = document.getElementById('locationCoordsInput');
       if (input) input.value = '';
-      const link = document.getElementById('locationGoogleLink');
-      if (link) link.onclick = () => window.open(googleMapsUrl(DEFAULT_MAP_CENTER[0], DEFAULT_MAP_CENTER[1]), '_blank', 'noopener');
     }
   }, 30);
 };
@@ -1802,13 +1781,13 @@ window.__aggregateMapInvalidate = () => { if (aggregateMap) aggregateMap.invalid
 window.renderAggregateMap = function renderAggregateMap(){
   if (!document.getElementById('aggregateMapContainer')) return;
   if (!aggregateMap){
-    aggregateMap = L.map('aggregateMapContainer');
-    L.tileLayer(SATELLITE_TILE_URL, { attribution: SATELLITE_ATTRIBUTION, maxZoom: 19 }).addTo(aggregateMap);
-    aggregateMap.setView(DEFAULT_MAP_CENTER, 15);
+    aggregateMap = L.map('aggregateMapContainer', { crs: L.CRS.Simple, minZoom: -3, maxZoom: 3, attributionControl: false });
+    L.imageOverlay(SITE_PLAN_URL, SITE_PLAN_BOUNDS).addTo(aggregateMap);
+    aggregateMap.setMaxBounds(SITE_PLAN_BOUNDS);
+    aggregateMap.fitBounds(SITE_PLAN_BOUNDS);
   }
   aggregateMarkers.forEach(m => m.remove());
   aggregateMarkers = [];
-  const bounds = [];
   tableRegistry.forEach(t => {
     t.panels.forEach(p => {
       if (!p.lat || !p.lng) return;
@@ -1816,17 +1795,12 @@ window.renderAggregateMap = function renderAggregateMap(){
       if (Number.isNaN(lat) || Number.isNaN(lng)) return;
       const label = p.name || p.code || 'לוח';
       const marker = L.marker([lat, lng], { icon: nameMarkerIcon(label) }).addTo(aggregateMap);
-      marker.bindPopup(
-        `<b>${escapeHtml(label)}</b><br>${escapeHtml(t.label)}<br>` +
-        `<a href="${googleMapsUrl(lat, lng, label)}" target="_blank" rel="noopener">פתח בגוגל מפות 🌐</a>`
-      );
+      marker.bindPopup(`<b>${escapeHtml(label)}</b><br>${escapeHtml(t.label)}`);
       aggregateMarkers.push(marker);
-      bounds.push([lat, lng]);
     });
   });
   const countEl = document.getElementById('mapPinCount');
   if (countEl) countEl.textContent = aggregateMarkers.length + ' לוחות ממוקמים על המפה';
-  if (bounds.length) aggregateMap.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
 };
 
 // ============ Direct browser → Google Drive upload ============
