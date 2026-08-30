@@ -162,6 +162,37 @@
   .layoutOption:hover{border-color:var(--accent);}
   .layoutOption.active{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);}
   .layoutOptionSub{font-size:.76rem;font-weight:400;color:var(--text-dim);}
+  .filePreviewBox{width:min(900px, 95vw);}
+  .filePreviewFrame{
+    width:100%;
+    height:75vh;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fff;
+  }
+  #filePreviewOpenLink{
+    display:inline-block;
+    background:var(--panel-hover);
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--text);
+    padding:9px 16px;
+    text-decoration:none;
+  }
+  #filePreviewOpenLink:hover{border-color:var(--accent);color:var(--accent);}
+  .previewFileBtn{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:5px;
+    color:var(--text-dim);
+    cursor:pointer;
+    font-size:.78rem;
+    line-height:1;
+    padding:2px 5px;
+    margin-inline-start:3px;
+    vertical-align:middle;
+  }
+  .previewFileBtn:hover{border-color:var(--accent);color:var(--accent);}
   /* Only shown once a tab is open (see showHome/showTab in the script) — the dashboard
      grid itself is hidden then, so this is the way back to the tab-picker home screen. */
   #backToHomeBtn{
@@ -1286,12 +1317,28 @@
   </div>
 </div>
 
+<div class="locationModalOverlay" id="filePreviewModal" style="display:none">
+  <div class="locationModalBox filePreviewBox">
+    <div class="locationModalHeader">
+      <div class="locationModalTitle" id="filePreviewTitle">תצוגה מקדימה</div>
+      <button type="button" class="locationModalClose" id="filePreviewClose">✕</button>
+    </div>
+    <div class="locationModalBody">
+      <iframe id="filePreviewFrame" class="filePreviewFrame" src="about:blank"></iframe>
+      <div class="locationModalActions">
+        <a id="filePreviewOpenLink" href="#" target="_blank" rel="noopener">🔗 פתח בטאב חדש</a>
+      </div>
+      <div class="sub">אם הקובץ לא נטען כאן (למשל DWG או אקסל) — אפשר לפתוח אותו ישירות בקישור למעלה.</div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 19;
-const APP_UPDATED_AT = '30/08/2026 12:55';
+const APP_VERSION = 20;
+const APP_UPDATED_AT = '30/08/2026 13:05';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1376,6 +1423,43 @@ window.addEventListener('resize', applyLayoutPreference);
       applyStripedRowsPreference();
     });
   }
+})();
+
+// ============ File preview panel (👁) ============
+// Shared by every tab (event delegation, wired once here — not per-tab) since the
+// button HTML is generated the same way regardless of which table it's in. Loads the
+// file straight into an <iframe>: a local file's blob: URL renders natively (PDFs at
+// least — Chrome has a built-in viewer), and a Drive file uses Drive's dedicated embed
+// endpoint (.../preview, not the regular view link, which isn't meant for framing).
+// DWG/Excel won't render inside the frame either way; the "open in a new tab" link
+// underneath is the fallback for those.
+window.openFilePreview = function openFilePreview({ url, name }){
+  const titleEl = document.getElementById('filePreviewTitle');
+  const frame = document.getElementById('filePreviewFrame');
+  const openLink = document.getElementById('filePreviewOpenLink');
+  if (!frame || !openLink) return;
+  titleEl.textContent = name ? `תצוגה מקדימה — ${name}` : 'תצוגה מקדימה';
+  frame.src = url;
+  openLink.href = url;
+  document.getElementById('filePreviewModal').style.display = 'flex';
+};
+(function wireFilePreviewModal(){
+  const modal = document.getElementById('filePreviewModal');
+  const closeBtn = document.getElementById('filePreviewClose');
+  const frame = document.getElementById('filePreviewFrame');
+  if (!modal || !closeBtn || !frame) return;
+  function close(){
+    modal.style.display = 'none';
+    frame.src = 'about:blank'; // stop whatever was loading/playing once closed
+  }
+  closeBtn.addEventListener('click', close);
+  modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.previewFileBtn');
+    if (!btn) return;
+    e.preventDefault();
+    window.openFilePreview({ url: btn.dataset.previewUrl, name: btn.dataset.previewName || '' });
+  });
 })();
 
 // "🔄 בדוק עדכון" — unregisters the service worker and clears its cache before
@@ -1503,17 +1587,12 @@ function renderDashboard(){
   const cards = tableRegistry.map(t => {
     const total = t.panels.length;
     totalAll += total;
-    const hasBuilding = t.columns.some(c => c.key === 'building_num');
-    const withBuilding = hasBuilding ? t.panels.filter(p => (p.building_num || '').trim()).length : null;
     const hasCode = t.columns.some(c => c.key === 'code');
     const withCode = hasCode ? t.panels.filter(p => (p.code || '').trim()).length : null;
     const panelFiles = t.getPanelFiles ? t.getPanelFiles() : null;
     const withFiles = panelFiles ? t.panels.reduce((n, p, i) => n + (panelFiles.has(i) ? 1 : 0), 0) : null;
+    const withDrive = t.panels.reduce((n, p) => n + (p.drive_url ? 1 : 0), 0);
     let sub = '';
-    if (hasBuilding){
-      const warn = withBuilding < total ? ' warn' : '';
-      sub += `<div class="dashSub${warn}">מס' מבנה: ${withBuilding}/${total}</div>`;
-    }
     if (hasCode && withCode < total){
       sub += `<div class="dashSub warn">בלי מס' תוכנית: ${total - withCode}</div>`;
     }
@@ -1521,6 +1600,7 @@ function renderDashboard(){
       const warn = withFiles < total ? ' warn' : '';
       sub += `<div class="dashSub${warn}">עם קובץ: ${withFiles} / בלי קובץ: ${total - withFiles}</div>`;
     }
+    sub += `<div class="dashSub">הועלו לדרייב: ${withDrive}</div>`;
     const activeCls = ('tab-' + t.idPrefix) === currentActiveTab ? ' active' : '';
     return `<div class="dashCard${activeCls}" data-tab="tab-${t.idPrefix}">
       <div class="dashLabel">${t.label}</div>
@@ -2693,6 +2773,14 @@ function createPanelTable(cfg){
       `</div>`;
   }
 
+  // The 👁 preview button next to a file link — see window.openFilePreview and its
+  // delegated click handler near the top of the script for what it actually does.
+  function previewBtnHtml(url, name){
+    if (!url) return '';
+    const safeName = (name || '').replace(/"/g, '&quot;');
+    return `<button type="button" class="previewFileBtn" data-preview-url="${url}" data-preview-name="${safeName}" title="תצוגה מקדימה">👁</button>`;
+  }
+
   function cellContent(p, key, idx){
     if (key === '__drag__'){
       if (locked) return `<span class="dragHandleOff" title="פתחו עריכה כדי לשנות סדר שורות">⠿</span>`;
@@ -2737,11 +2825,12 @@ function createPanelTable(cfg){
       let linksHtml = '';
       if (files && files.length){
         linksHtml = `<div class="fileList">` +
-          files.map((f,i) => `<a href="${f.url}" target="_blank" rel="noopener">📄 קובץ ${i+1}</a>`).join(' · ') +
+          files.map((f,i) => `<a href="${f.url}" target="_blank" rel="noopener">📄 קובץ ${i+1}</a>${previewBtnHtml(f.url, f.name)}`).join(' · ') +
           `</div>`;
       }
       if (p.drive_url){
-        linksHtml += `<div class="fileList"><a class="driveBadge" href="${p.drive_url}" target="_blank" rel="noopener"><span class="driveIcon"></span>הועלה לדרייב</a></div>`;
+        const drivePreviewUrl = p.drive_file_id ? `https://drive.google.com/file/d/${p.drive_file_id}/preview` : '';
+        linksHtml += `<div class="fileList"><a class="driveBadge" href="${p.drive_url}" target="_blank" rel="noopener"><span class="driveIcon"></span>הועלה לדרייב</a>${previewBtnHtml(drivePreviewUrl, p[linkKey])}</div>`;
       }
       return editableCellHtml(p, linkKey, "מס' תוכנית...") + linksHtml;
     }
@@ -2755,15 +2844,16 @@ function createPanelTable(cfg){
       // when both happen to be available.
       const files = panelFiles.get(idx);
       const localLinksHtml = (files && files.length)
-        ? `<div class="fileList">` + files.map((f,i) => `<a href="${f.url}" target="_blank" rel="noopener">📄 קובץ מקומי ${i+1}</a>`).join(' · ') + `</div>`
+        ? `<div class="fileList">` + files.map((f,i) => `<a href="${f.url}" target="_blank" rel="noopener">📄 קובץ מקומי ${i+1}</a>${previewBtnHtml(f.url, f.name)}`).join(' · ') + `</div>`
         : '';
       if (p.drive_url){
-        return `<a class="code" href="${p.drive_url}" target="_blank" rel="noopener" title="פתח מגוגל דרייב">${p[key] || ''}</a>` +
+        const drivePreviewUrl = p.drive_file_id ? `https://drive.google.com/file/d/${p.drive_file_id}/preview` : '';
+        return `<a class="code" href="${p.drive_url}" target="_blank" rel="noopener" title="פתח מגוגל דרייב">${p[key] || ''}</a>${previewBtnHtml(drivePreviewUrl, p[key])}` +
           `<div class="fileList"><span class="driveBadge"><span class="driveIcon"></span>בדרייב</span></div>` + localLinksHtml;
       }
       if (files && files.length){
         if (files.length === 1){
-          return `<a class="code" href="${files[0].url}" target="_blank" rel="noopener">${p[key] || ''}</a>`;
+          return `<a class="code" href="${files[0].url}" target="_blank" rel="noopener">${p[key] || ''}</a>${previewBtnHtml(files[0].url, files[0].name)}`;
         }
         return `<span class="code multi">${p[key] || ''}</span>` + localLinksHtml;
       }
