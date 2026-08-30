@@ -1348,8 +1348,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 23;
-const APP_UPDATED_AT = '30/08/2026 18:20';
+const APP_VERSION = 24;
+const APP_UPDATED_AT = '30/08/2026 18:15';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1684,11 +1684,12 @@ if (window.L){
   });
 }
 
-// A vector (SVG) schematic of the plant, not a scanned/uploaded photo — stays perfectly
-// sharp at any zoom level, unlike a raster image capped by an upload's pixel resolution.
-const SITE_PLAN_URL = 'assets/site-plan.svg';
-const SITE_PLAN_WIDTH = 1600;
-const SITE_PLAN_HEIGHT = 1120;
+// The plant's own aerial rendering (from the official OGG WWTP expansion simulation deck),
+// extracted from the source PDF at its full embedded resolution rather than a chat-upload
+// copy, so it isn't capped by any image-pipeline resizing.
+const SITE_PLAN_URL = 'assets/site-plan.jpg';
+const SITE_PLAN_WIDTH = 1941;
+const SITE_PLAN_HEIGHT = 1102;
 // Non-geographic bounds ([y,x] pairs) matching the drawing's own pixel dimensions —
 // L.CRS.Simple treats these as plain plane coordinates, not lat/lng.
 const SITE_PLAN_BOUNDS = [[0, 0], [SITE_PLAN_HEIGHT, SITE_PLAN_WIDTH]];
