@@ -1273,8 +1273,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 17;
-const APP_UPDATED_AT = '24/08/2026 15:10';
+const APP_VERSION = 18;
+const APP_UPDATED_AT = '30/08/2026 12:50';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1490,6 +1490,8 @@ function renderDashboard(){
     const withBuilding = hasBuilding ? t.panels.filter(p => (p.building_num || '').trim()).length : null;
     const hasCode = t.columns.some(c => c.key === 'code');
     const withCode = hasCode ? t.panels.filter(p => (p.code || '').trim()).length : null;
+    const panelFiles = t.getPanelFiles ? t.getPanelFiles() : null;
+    const withFiles = panelFiles ? t.panels.reduce((n, p, i) => n + (panelFiles.has(i) ? 1 : 0), 0) : null;
     let sub = '';
     if (hasBuilding){
       const warn = withBuilding < total ? ' warn' : '';
@@ -1497,6 +1499,10 @@ function renderDashboard(){
     }
     if (hasCode && withCode < total){
       sub += `<div class="dashSub warn">בלי מס' תוכנית: ${total - withCode}</div>`;
+    }
+    if (withFiles !== null){
+      const warn = withFiles < total ? ' warn' : '';
+      sub += `<div class="dashSub${warn}">עם קובץ: ${withFiles} / בלי קובץ: ${total - withFiles}</div>`;
     }
     const activeCls = ('tab-' + t.idPrefix) === currentActiveTab ? ' active' : '';
     return `<div class="dashCard${activeCls}" data-tab="tab-${t.idPrefix}">
@@ -3226,7 +3232,11 @@ function createPanelTable(cfg){
 
   const tabBtnEl = document.querySelector(`.tabBtn[data-tab="tab-${idPrefix}"]`);
   const tabLabel = tabBtnEl ? tabBtnEl.textContent.trim() : idPrefix;
-  tableRegistry.push({ idPrefix, label: tabLabel, panels, columns });
+  // getPanelFiles is a function (not the Map itself) because panelFiles gets
+  // reassigned to a brand-new Map after every folder rescan — capturing it directly
+  // here would go stale after the first rescan, while this closure always reads
+  // whatever panelFiles currently is.
+  tableRegistry.push({ idPrefix, label: tabLabel, panels, columns, getPanelFiles: () => panelFiles });
 
   // Lock/edit toggle: every tab opens read-only (locked) and only becomes editable
   // (cell editing, drag-fill, row drag-reorder, add/delete rows) once this icon is
