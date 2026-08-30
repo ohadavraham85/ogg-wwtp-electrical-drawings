@@ -25,6 +25,10 @@
   try {
     if (localStorage.getItem('displayStripedRowsPreference') === 'on') document.documentElement.classList.add('striped-rows');
   } catch(err) { /* ignore — defaults to off */ }
+  try {
+    var accentPref = localStorage.getItem('displayAccentPreference');
+    if (accentPref === 'blue' || accentPref === 'green' || accentPref === 'white') document.documentElement.classList.add('accent-' + accentPref);
+  } catch(err) { /* ignore — defaults to the orange accent */ }
 })();
 </script>
 <title>רשימת תוכניות חשמל הרחבת מט"ש אוג מבט"י-אוהד אברהם</title>
@@ -81,6 +85,17 @@
     --badge-red-text:#a52f22;
     --badge-blue-text:#1f5f96;
   }
+  /* Accent-color schemes — opt-in via the display-settings picker, layered on top of
+     either the dark or light base palette (source order after html.light-theme makes
+     these win for --accent/--accent-dim regardless of which base is active). "לבן" is a
+     neutral/monochrome scheme rather than literal white-on-white, so it stays legible on
+     both backgrounds. */
+  html.accent-blue{--accent:#4a90d9; --accent-dim:#2c5d8a;}
+  html.light-theme.accent-blue{--accent:#1f5f96; --accent-dim:#3d84c4;}
+  html.accent-green{--accent:#4caf7d; --accent-dim:#2f7a52;}
+  html.light-theme.accent-green{--accent:#1f7a44; --accent-dim:#3fae6a;}
+  html.accent-white{--accent:#e7edf3; --accent-dim:#aab8c4;}
+  html.light-theme.accent-white{--accent:#3a4855; --accent-dim:#5c6b78;}
   *{box-sizing:border-box;}
   body{
     margin:0;
@@ -1298,6 +1313,14 @@
         <button type="button" class="layoutOption" data-theme="light">☀️ בהיר</button>
       </div>
 
+      <div class="sub" style="margin-top:6px">צבע הדגשה</div>
+      <div class="layoutOptions" id="accentOptions">
+        <button type="button" class="layoutOption" data-accent="default">🟠 כתום<span class="layoutOptionSub">ברירת המחדל</span></button>
+        <button type="button" class="layoutOption" data-accent="blue">🔵 כחול</button>
+        <button type="button" class="layoutOption" data-accent="green">🟢 ירוק</button>
+        <button type="button" class="layoutOption" data-accent="white">⚪ לבן</button>
+      </div>
+
       <label class="hasFileToggle" style="margin-top:4px">
         <input type="checkbox" id="stripedRowsToggle"> 📊 שורות מפוספסות בטבלה
       </label>
@@ -1325,8 +1348,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 21;
-const APP_UPDATED_AT = '30/08/2026 17:45';
+const APP_VERSION = 22;
+const APP_UPDATED_AT = '30/08/2026 18:05';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1341,6 +1364,8 @@ const APP_UPDATED_AT = '30/08/2026 17:45';
 const LAYOUT_PREF_KEY = 'displayLayoutPreference';
 const THEME_PREF_KEY = 'displayThemePreference';
 const STRIPED_PREF_KEY = 'displayStripedRowsPreference';
+const ACCENT_PREF_KEY = 'displayAccentPreference';
+const ACCENT_CLASSES = ['accent-blue', 'accent-green', 'accent-white'];
 
 function applyLayoutPreference(){
   let pref = 'auto';
@@ -1373,9 +1398,20 @@ function applyStripedRowsPreference(){
   if (cb) cb.checked = on;
 }
 
+function applyAccentPreference(){
+  let pref = 'default';
+  try { pref = localStorage.getItem(ACCENT_PREF_KEY) || 'default'; } catch(err) { /* ignore */ }
+  ACCENT_CLASSES.forEach(cls => document.documentElement.classList.remove(cls));
+  if (pref !== 'default') document.documentElement.classList.add('accent-' + pref);
+  document.querySelectorAll('#accentOptions .layoutOption').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.accent === pref);
+  });
+}
+
 applyLayoutPreference();
 applyThemePreference();
 applyStripedRowsPreference();
+applyAccentPreference();
 window.addEventListener('resize', applyLayoutPreference);
 
 (function wireLayoutModal(){
@@ -1389,6 +1425,7 @@ window.addEventListener('resize', applyLayoutPreference);
     applyLayoutPreference();
     applyThemePreference();
     applyStripedRowsPreference();
+    applyAccentPreference();
   });
   closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
   modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
@@ -1403,6 +1440,12 @@ window.addEventListener('resize', applyLayoutPreference);
     btn.addEventListener('click', () => {
       try { localStorage.setItem(THEME_PREF_KEY, btn.dataset.theme); } catch(err) { /* ignore */ }
       applyThemePreference();
+    });
+  });
+  document.querySelectorAll('#accentOptions .layoutOption').forEach(btn => {
+    btn.addEventListener('click', () => {
+      try { localStorage.setItem(ACCENT_PREF_KEY, btn.dataset.accent); } catch(err) { /* ignore */ }
+      applyAccentPreference();
     });
   });
   if (stripedCb){
