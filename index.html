@@ -307,6 +307,40 @@
     transition:border-color .15s;
   }
   .dashMapSection{margin-top:20px;}
+  .globalSearchWrap{position:relative; margin-bottom:14px;}
+  .globalSearchWrap input{
+    width:100%;
+    padding:10px 14px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--text);
+    font-size:.9rem;
+    font-family:inherit;
+  }
+  .globalSearchWrap input:focus{outline:none;border-color:var(--accent);}
+  .globalSearchResults{
+    position:absolute;
+    top:calc(100% + 4px);
+    left:0; right:0;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    max-height:360px;
+    overflow-y:auto;
+    z-index:40;
+    box-shadow:0 8px 20px rgba(0,0,0,.45);
+  }
+  .globalSearchResultItem{
+    padding:9px 14px;
+    cursor:pointer;
+    border-bottom:1px solid var(--line);
+    font-size:.85rem;
+  }
+  .globalSearchResultItem:last-child{border-bottom:none;}
+  .globalSearchResultItem:hover{background:var(--panel-hover);}
+  .globalSearchResultTab{color:var(--text-dim); font-size:.75rem; margin-inline-start:6px;}
+  .globalSearchEmpty{padding:12px 14px; color:var(--text-dim); font-size:.85rem;}
   .dashCard:hover{border-color:var(--accent);}
   .dashCard.active{
     border-color:var(--accent);
@@ -1029,6 +1063,10 @@
 
   <button type="button" id="backToHomeBtn" style="display:none">🏠 לתפריט הראשי</button>
   <div id="dashboard" class="dashboard">
+    <div class="globalSearchWrap">
+      <input type="text" id="globalSearchInput" placeholder="🔍 חיפוש כללי בכל הטאבים...">
+      <div id="globalSearchResults" class="globalSearchResults" style="display:none"></div>
+    </div>
     <div id="dashboardCards"></div>
     <div class="dashMapSection">
       <div class="tabTitle">🗺️ מפה מרוכזת</div>
@@ -1369,8 +1407,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 29;
-const APP_UPDATED_AT = '30/08/2026 19:40';
+const APP_VERSION = 30;
+const APP_UPDATED_AT = '30/08/2026 19:55';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1669,6 +1707,72 @@ function renderDashboard(){
   });
   if (window.renderAggregateMap) window.renderAggregateMap();
 }
+
+// ============ Home-screen global search ============
+// Searches every field of every panel across all 6 tabs (same substring-match logic each
+// tab's own search box uses), and jumps to the chosen tab with its own search box pre-
+// filled — reusing that tab's existing filtering instead of building separate scroll/
+// highlight logic to land on a specific row.
+(function wireGlobalSearch(){
+  const input = document.getElementById('globalSearchInput');
+  const results = document.getElementById('globalSearchResults');
+  if (!input || !results) return;
+
+  function findMatches(query){
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const matches = [];
+    for (const t of tableRegistry){
+      for (const p of t.panels){
+        const hit = Object.keys(p).some(k => k !== '_id' && String(p[k] || '').toLowerCase().includes(q));
+        if (!hit) continue;
+        matches.push({ idPrefix: t.idPrefix, tabLabel: t.label, label: p.name || p.code || 'שורה' });
+        if (matches.length >= 40) return matches;
+      }
+    }
+    return matches;
+  }
+
+  function render(){
+    const q = input.value;
+    if (!q.trim()){
+      results.style.display = 'none';
+      results.innerHTML = '';
+      return;
+    }
+    const matches = findMatches(q);
+    results.innerHTML = matches.length
+      ? matches.map(m => `<div class="globalSearchResultItem" data-tab="tab-${m.idPrefix}">${escapeHtml(m.label)}<span class="globalSearchResultTab">— ${escapeHtml(m.tabLabel)}</span></div>`).join('')
+      : `<div class="globalSearchEmpty">לא נמצאו תוצאות</div>`;
+    results.style.display = 'block';
+  }
+
+  input.addEventListener('input', render);
+  input.addEventListener('focus', () => { if (input.value.trim()) render(); });
+
+  results.addEventListener('click', (e) => {
+    const item = e.target.closest('.globalSearchResultItem');
+    if (!item) return;
+    const tabId = item.dataset.tab;
+    const query = input.value;
+    const btn = document.querySelector(`.tabBtn[data-tab="${tabId}"]`);
+    if (btn) btn.click();
+    setTimeout(() => {
+      const idPrefix = tabId.replace(/^tab-/, '');
+      const tabSearchBox = document.getElementById('search-' + idPrefix);
+      if (tabSearchBox){
+        tabSearchBox.value = query;
+        tabSearchBox.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }, 60);
+    results.style.display = 'none';
+    input.value = '';
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.globalSearchWrap')) results.style.display = 'none';
+  });
+})();
 
 // ============ Shared location picker (modal) + aggregate map ============
 // One Leaflet-based picker, reused by every tab's "מיקום" column: click a row's location
