@@ -306,6 +306,7 @@
     cursor:pointer;
     transition:border-color .15s;
   }
+  .dashMapSection{margin-top:20px;}
   .dashCard:hover{border-color:var(--accent);}
   .dashCard.active{
     border-color:var(--accent);
@@ -744,28 +745,35 @@
   .addRowBtn[id^="uploadDriveBtn-"]{border-color:var(--blue);color:var(--blue);}
   .addRowBtn[id^="uploadDriveBtn-"]:hover{background:rgba(61,132,196,.12);}
   .mapNamePinIcon{background:none;border:none;}
-  .mapNamePinBadge{
+  .mapNamePinWrap{
     position:relative;
     transform:translate(-50%, -100%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .mapNamePinLabel{
+    max-width:130px;
+    margin-bottom:2px;
     background:var(--panel);
     border:1.5px solid var(--accent);
     color:var(--text);
-    font-size:.78rem;
+    font-size:.72rem;
     font-weight:700;
-    padding:4px 9px;
-    border-radius:14px;
-    white-space:nowrap;
+    line-height:1.2;
+    padding:3px 6px;
+    border-radius:8px;
+    white-space:normal;
+    overflow-wrap:break-word;
+    text-align:center;
     box-shadow:0 3px 8px rgba(0,0,0,.45);
+    display:-webkit-box;
+    -webkit-line-clamp:3;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
-  .mapNamePinBadge::after{
-    content:'';
-    position:absolute;
-    left:50%;
-    bottom:-6px;
-    transform:translateX(-50%);
-    border:6px solid transparent;
-    border-top-color:var(--accent);
-  }
+  .mapNamePinDot{font-size:22px; line-height:1; filter:drop-shadow(0 2px 2px rgba(0,0,0,.5));}
   #aggregateMapContainer{width:100%;}
   .leaflet-popup-content-wrapper, .leaflet-popup-tip{
     background:var(--panel);
@@ -1025,7 +1033,15 @@
   </header>
 
   <button type="button" id="backToHomeBtn" style="display:none">🏠 לתפריט הראשי</button>
-  <div id="dashboard" class="dashboard"></div>
+  <div id="dashboard" class="dashboard">
+    <div id="dashboardCards"></div>
+    <div class="dashMapSection">
+      <div class="tabTitle">🗺️ מפה מרוכזת</div>
+      <div class="topRow"><div class="sub" id="mapPinCount"></div></div>
+      <div class="sub" style="margin-bottom:10px">כל הלוחות שסומן להם מיקום, מכל 6 הטאבים, על גבי תוכנית האתר של המט"ש. לחצו על סמן כדי לראות את שם הלוח. כדי לסמן מיקום חדש — פתחו עריכה בטאב הרלוונטי ולחצו על עמודת "מיקום" בשורה.</div>
+      <div id="aggregateMapContainer" style="height:60vh"></div>
+    </div>
+  </div>
 
   <div class="tabs">
     <button class="tabBtn active" data-tab="tab-panels">לוחות ILS /חלומה</button>
@@ -1034,7 +1050,6 @@
     <button class="tabBtn" data-tab="tab-hvac">לוחות מיזוג אוויר</button>
     <button class="tabBtn" data-tab="tab-hv">לוחות מתח גבוה</button>
     <button class="tabBtn" data-tab="tab-mtsh-lv">מט"ש קיים - מתח נמוך</button>
-    <button class="tabBtn" data-tab="tab-map">🗺️ מפה</button>
   </div>
   </div>
 
@@ -1280,15 +1295,6 @@
     </div>
   </div>
 
-  <!-- TAB 7: מפה מרוכזת — כל הלוחות שסומן להם מיקום, מכל 6 הטאבים, על מפת לוויין אחת -->
-  <div id="tab-map" class="tabPanel">
-    <div class="stickyControls" id="stickyControls-map">
-      <div class="tabTitle">🗺️ מפה מרוכזת</div>
-      <div class="topRow"><div class="sub" id="mapPinCount"></div></div>
-      <div class="sub" style="margin-bottom:10px">כל הלוחות שסומן להם מיקום, מכל 6 הטאבים, על גבי תוכנית האתר של המט"ש. לחצו על סמן כדי לראות את שם הלוח. כדי לסמן מיקום חדש — פתחו עריכה בטאב הרלוונטי ולחצו על עמודת "מיקום" בשורה.</div>
-    </div>
-    <div id="aggregateMapContainer" style="height:70vh"></div>
-  </div>
 
 </div>
 
@@ -1368,8 +1374,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 25;
-const APP_UPDATED_AT = '30/08/2026 18:40';
+const APP_VERSION = 27;
+const APP_UPDATED_AT = '30/08/2026 19:20';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1632,7 +1638,7 @@ const tableRegistry = [];
 let currentActiveTab = null; // null = home screen (the dashboard grid, no tab open)
 
 function renderDashboard(){
-  const el = document.getElementById('dashboard');
+  const el = document.getElementById('dashboardCards');
   if (!el || tableRegistry.length === 0) return;
   let totalAll = 0;
   const cards = tableRegistry.map(t => {
@@ -1659,20 +1665,14 @@ function renderDashboard(){
       ${sub}
     </div>`;
   }).join('');
-  const totalPinned = tableRegistry.reduce((n, t) => n + t.panels.filter(p => p.lat && p.lng).length, 0);
-  const mapActiveCls = currentActiveTab === 'tab-map' ? ' active' : '';
-  const mapCard = `<div class="dashCard${mapActiveCls}" data-tab="tab-map">
-      <div class="dashLabel">🗺️ מפה</div>
-      <div class="dashNum">${totalPinned}</div>
-      <div class="dashSub">לוחות ממוקמים על המפה</div>
-    </div>`;
-  el.innerHTML = `<div class="dashTotal">סה"כ <b>${totalAll}</b> שורות בכל הטאבים</div><div class="dashGrid">${cards}${mapCard}</div>`;
+  el.innerHTML = `<div class="dashTotal">סה"כ <b>${totalAll}</b> שורות בכל הטאבים</div><div class="dashGrid">${cards}</div>`;
   el.querySelectorAll('.dashCard').forEach(card => {
     card.addEventListener('click', () => {
       const btn = document.querySelector(`.tabBtn[data-tab="${card.dataset.tab}"]`);
       if (btn) btn.click();
     });
   });
+  if (window.renderAggregateMap) window.renderAggregateMap();
 }
 
 // ============ Shared location picker (modal) + aggregate map ============
@@ -1721,14 +1721,14 @@ let pickerMap = null;
 let pickerMarker = null;
 let currentLocationCtx = null; // { p, idPrefix, editable, tableLabel }
 
-// A labeled pin: shows the panel's name directly on the map instead of a generic
-// unlabeled marker icon. iconSize/iconAnchor are left at the origin because the badge
-// itself is positioned with a CSS transform (see .mapNamePinBadge) so its pointer tip
-// lands exactly on the marker's lat/lng regardless of how wide the name text is.
+// A labeled pin: a plain 📍 marker with the panel's name in a small wrapping label above
+// it, instead of one long single-line badge. iconSize/iconAnchor are left at the origin
+// because the wrapper itself is positioned with a CSS transform (see .mapNamePinWrap) so
+// the pin glyph — the last, bottom element — lands exactly on the marker's lat/lng.
 function nameMarkerIcon(label){
   return L.divIcon({
     className: 'mapNamePinIcon',
-    html: `<div class="mapNamePinBadge">📍 ${escapeHtml(label)}</div>`,
+    html: `<div class="mapNamePinWrap"><div class="mapNamePinLabel">${escapeHtml(label)}</div><div class="mapNamePinDot">📍</div></div>`,
     iconSize: [0, 0],
     iconAnchor: [0, 0],
   });
@@ -3543,6 +3543,10 @@ function showHome(){
   if (dashboardEl) dashboardEl.style.display = '';
   if (backToHomeBtn) backToHomeBtn.style.display = 'none';
   renderDashboard();
+  // The map's container sits inside the dashboard, so it was hidden (display:none) while
+  // a tab was open — Leaflet needs invalidateSize() once it's visible again to pick up
+  // the correct size, plus a fresh min-zoom lock in case the container's size changed.
+  setTimeout(() => { if (window.__aggregateMapInvalidate) window.__aggregateMapInvalidate(); }, 50);
   if (window.__updateTableAvailableHeight) requestAnimationFrame(window.__updateTableAvailableHeight);
 }
 if (backToHomeBtn) backToHomeBtn.addEventListener('click', showHome);
@@ -3569,10 +3573,6 @@ document.querySelectorAll('.tabBtn').forEach(btn => {
       if (window.__panelTableRelock && window.__panelTableRelock[enteredPrefix]){
         window.__panelTableRelock[enteredPrefix]();
       }
-    }
-    if (btn.dataset.tab === 'tab-map' && window.renderAggregateMap){
-      window.renderAggregateMap();
-      setTimeout(() => { if (window.__aggregateMapInvalidate) window.__aggregateMapInvalidate(); }, 50);
     }
     renderDashboard();
     if (window.__updateTableAvailableHeight) requestAnimationFrame(window.__updateTableAvailableHeight);
