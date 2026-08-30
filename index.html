@@ -87,15 +87,35 @@
   }
   /* Accent-color schemes — opt-in via the display-settings picker, layered on top of
      either the dark or light base palette (source order after html.light-theme makes
-     these win for --accent/--accent-dim regardless of which base is active). "לבן" is a
-     neutral/monochrome scheme rather than literal white-on-white, so it stays legible on
-     both backgrounds. */
-  html.accent-blue{--accent:#4a90d9; --accent-dim:#2c5d8a;}
-  html.light-theme.accent-blue{--accent:#1f5f96; --accent-dim:#3d84c4;}
-  html.accent-green{--accent:#4caf7d; --accent-dim:#2f7a52;}
-  html.light-theme.accent-green{--accent:#1f7a44; --accent-dim:#3fae6a;}
-  html.accent-white{--accent:#e7edf3; --accent-dim:#aab8c4;}
-  html.light-theme.accent-white{--accent:#3a4855; --accent-dim:#5c6b78;}
+     these win regardless of which base is active). Each scheme re-tints the backgrounds
+     too (--bg/--panel/--panel-hover/--row-stripe/--line), not just --accent, so it reads
+     as a real color theme rather than a single highlight color. "לבן" is a neutral/
+     monochrome scheme rather than literal white-on-white, so it stays legible on both
+     backgrounds. */
+  html.accent-blue{
+    --bg:#0c1520; --panel:#12202f; --panel-hover:#182b3d; --row-stripe:#0f1c29; --line:#2f5878;
+    --accent:#4a90d9; --accent-dim:#2c5d8a;
+  }
+  html.light-theme.accent-blue{
+    --bg:#eef3fa; --panel:#f8fbfe; --panel-hover:#e6eef9; --row-stripe:#eef4fb; --line:#a9c4e0;
+    --accent:#1f5f96; --accent-dim:#3d84c4;
+  }
+  html.accent-green{
+    --bg:#0d1912; --panel:#132a1e; --panel-hover:#193826; --row-stripe:#102015; --line:#2f6b47;
+    --accent:#4caf7d; --accent-dim:#2f7a52;
+  }
+  html.light-theme.accent-green{
+    --bg:#eef6ee; --panel:#f8fcf8; --panel-hover:#e7f3e6; --row-stripe:#eff7ee; --line:#a9d3ae;
+    --accent:#1f7a44; --accent-dim:#3fae6a;
+  }
+  html.accent-white{
+    --bg:#0d1114; --panel:#171c21; --panel-hover:#1f262c; --row-stripe:#131719; --line:#3d454c;
+    --accent:#e7edf3; --accent-dim:#aab8c4;
+  }
+  html.light-theme.accent-white{
+    --bg:#fbfbfb; --panel:#ffffff; --panel-hover:#f0f0f0; --row-stripe:#f6f6f6; --line:#c7c7c7;
+    --accent:#3a4855; --accent-dim:#5c6b78;
+  }
   *{box-sizing:border-box;}
   body{
     margin:0;
@@ -1348,8 +1368,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 24;
-const APP_UPDATED_AT = '30/08/2026 18:15';
+const APP_VERSION = 25;
+const APP_UPDATED_AT = '30/08/2026 18:40';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1714,12 +1734,20 @@ function nameMarkerIcon(label){
   });
 }
 
+// Fits the whole site-plan drawing in view, then pins that as the minimum zoom — without
+// this, L.CRS.Simple happily lets you zoom out well past the image, leaving it stranded as
+// a small island surrounded by empty gray space.
+function fitSitePlanAndLockMinZoom(map){
+  map.fitBounds(SITE_PLAN_BOUNDS);
+  map.setMinZoom(map.getBoundsZoom(SITE_PLAN_BOUNDS));
+}
+
 function ensurePickerMap(){
   if (pickerMap) return pickerMap;
-  pickerMap = L.map('locationMapContainer', { crs: L.CRS.Simple, minZoom: -3, maxZoom: 3, attributionControl: false });
+  pickerMap = L.map('locationMapContainer', { crs: L.CRS.Simple, minZoom: -3, maxZoom: 3, zoomSnap: 0, zoomDelta: 0.5, attributionControl: false });
   L.imageOverlay(SITE_PLAN_URL, SITE_PLAN_BOUNDS).addTo(pickerMap);
   pickerMap.setMaxBounds(SITE_PLAN_BOUNDS);
-  pickerMap.fitBounds(SITE_PLAN_BOUNDS);
+  fitSitePlanAndLockMinZoom(pickerMap);
   pickerMap.on('click', (e) => {
     if (!currentLocationCtx || !currentLocationCtx.editable) return;
     setPickerMarker(e.latlng.lat, e.latlng.lng);
@@ -1769,13 +1797,13 @@ window.openLocationModal = function openLocationModal({ p, idPrefix, editable, t
   setTimeout(() => {
     const map = ensurePickerMap();
     map.invalidateSize();
+    fitSitePlanAndLockMinZoom(map);
     if (pickerMarker){ pickerMarker.remove(); pickerMarker = null; }
     if (p.lat && p.lng){
       const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
       map.setView([lat, lng], 0);
       setPickerMarker(lat, lng);
     } else {
-      map.fitBounds(SITE_PLAN_BOUNDS);
       const input = document.getElementById('locationCoordsInput');
       if (input) input.value = '';
     }
@@ -1822,15 +1850,19 @@ document.getElementById('locationClearBtn').addEventListener('click', () => {
 // The aggregate "מפה" tab: one map, every pinned row from every tab, labeled by name.
 let aggregateMap = null;
 let aggregateMarkers = [];
-window.__aggregateMapInvalidate = () => { if (aggregateMap) aggregateMap.invalidateSize(); };
+window.__aggregateMapInvalidate = () => {
+  if (!aggregateMap) return;
+  aggregateMap.invalidateSize();
+  fitSitePlanAndLockMinZoom(aggregateMap);
+};
 
 window.renderAggregateMap = function renderAggregateMap(){
   if (!document.getElementById('aggregateMapContainer')) return;
   if (!aggregateMap){
-    aggregateMap = L.map('aggregateMapContainer', { crs: L.CRS.Simple, minZoom: -3, maxZoom: 3, attributionControl: false });
+    aggregateMap = L.map('aggregateMapContainer', { crs: L.CRS.Simple, minZoom: -3, maxZoom: 3, zoomSnap: 0, zoomDelta: 0.5, attributionControl: false });
     L.imageOverlay(SITE_PLAN_URL, SITE_PLAN_BOUNDS).addTo(aggregateMap);
     aggregateMap.setMaxBounds(SITE_PLAN_BOUNDS);
-    aggregateMap.fitBounds(SITE_PLAN_BOUNDS);
+    fitSitePlanAndLockMinZoom(aggregateMap);
   }
   aggregateMarkers.forEach(m => m.remove());
   aggregateMarkers = [];
