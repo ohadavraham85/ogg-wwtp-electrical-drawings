@@ -1127,8 +1127,9 @@
     </div>
     <div id="dashboardCards"></div>
     <div class="dashMapSection">
-      <div class="topRow"><div class="tabTitle" style="margin-bottom:0">🗺️ מפה מרוכזת</div><button type="button" class="lockToggleBtn" id="mapEditToggleBtn"></button></div>
+      <div class="topRow"><div class="tabTitle" style="margin-bottom:0">🗺️ מפה מרוכזת</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="lockToggleBtn" id="mapViewToggleBtn"></button><button type="button" class="lockToggleBtn" id="mapEditToggleBtn"></button></div></div>
       <div id="aggregateMapContainer" style="height:60vh;margin-top:8px"></div>
+      <div id="satelliteMapContainer" style="height:60vh;margin-top:8px;display:none"></div>
     </div>
   </div>
 
@@ -1463,8 +1464,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 49;
-const APP_UPDATED_AT = '31/08/2026 20:15';
+const APP_VERSION = 50;
+const APP_UPDATED_AT = '31/08/2026 21:00';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1532,6 +1533,7 @@ window.addEventListener('resize', applyLayoutPreference);
 // without necessarily leaving/re-entering the home screen — the aggregate map (if it
 // exists yet) needs the same invalidate+re-fit those transitions already get.
 window.addEventListener('resize', () => { if (window.__aggregateMapInvalidate) window.__aggregateMapInvalidate(); });
+window.addEventListener('resize', () => { if (window.__satelliteMapInvalidate) window.__satelliteMapInvalidate(); });
 
 (function wireLayoutModal(){
   const openBtn = document.getElementById('layoutSettingsBtn');
@@ -1883,6 +1885,11 @@ const SITE_PLAN_BOUNDS = [[0, 0], [SITE_PLAN_HEIGHT, SITE_PLAN_WIDTH]];
 // pinned location yet to center on — the middle of the site-plan drawing.
 const DEFAULT_MAP_CENTER = [SITE_PLAN_HEIGHT / 2, SITE_PLAN_WIDTH / 2];
 
+// The plant's real-world GPS location (decoded from the Plus Code provided for the site),
+// used only by the experimental live satellite view below — the site-plan image above uses
+// its own local pixel coordinates, unrelated to real-world lat/lng.
+const PLANT_REAL_LATLNG = [31.804938, 35.428063];
+
 // Every pin placement/drag (picker and aggregate map alike) snaps to this grid — like
 // graph paper — instead of landing on an arbitrary sub-pixel spot.
 const PIN_GRID_STEP = 6;
@@ -2179,6 +2186,53 @@ window.renderAggregateMap = function renderAggregateMap(){
     mapEditMode = !mapEditMode;
     updateUI();
     if (window.renderAggregateMap) window.renderAggregateMap();
+  });
+  updateUI();
+})();
+
+// Experimental alternative map view: a live, real-world satellite map (free Esri World
+// Imagery tiles, no API key/billing needed — unlike Google Maps, which requires a billing
+// account even on its free tier) centered on the plant's real GPS location, as a trial
+// alongside the original site-plan-image map. Since the panels' lat/lng values are local
+// pixel coordinates on the site-plan image, not real GPS, panel pins aren't placed on this
+// view yet — only a single marker showing the plant itself, to confirm the location.
+let satelliteMap = null;
+let mapViewMode = 'plan'; // 'plan' | 'satellite'
+window.__satelliteMapInvalidate = () => {
+  if (!satelliteMap || mapViewMode !== 'satellite') return;
+  satelliteMap.invalidateSize();
+};
+window.renderSatelliteMap = function renderSatelliteMap(){
+  const el = document.getElementById('satelliteMapContainer');
+  if (!el) return;
+  if (!satelliteMap){
+    satelliteMap = L.map('satelliteMapContainer', { attributionControl: true });
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 20,
+      attribution: 'Imagery &copy; Esri',
+    }).addTo(satelliteMap);
+    satelliteMap.setView(PLANT_REAL_LATLNG, 18);
+    L.marker(PLANT_REAL_LATLNG).addTo(satelliteMap).bindPopup('מט"ש אוג');
+  }
+  setTimeout(() => { if (satelliteMap) satelliteMap.invalidateSize(); }, 50);
+};
+
+(function wireMapViewToggle(){
+  const btn = document.getElementById('mapViewToggleBtn');
+  const planEl = document.getElementById('aggregateMapContainer');
+  const satEl = document.getElementById('satelliteMapContainer');
+  if (!btn || !planEl || !satEl) return;
+  function updateUI(){
+    const onSat = mapViewMode === 'satellite';
+    btn.textContent = onSat ? '🗺️ חזרה לתצוגת התוכנית' : '🛰️ נסו תצוגת לוויין (ניסיוני)';
+    planEl.style.display = onSat ? 'none' : '';
+    satEl.style.display = onSat ? '' : 'none';
+    if (onSat) window.renderSatelliteMap();
+    else if (window.__aggregateMapInvalidate) window.__aggregateMapInvalidate();
+  }
+  btn.addEventListener('click', () => {
+    mapViewMode = mapViewMode === 'satellite' ? 'plan' : 'satellite';
+    updateUI();
   });
   updateUI();
 })();
