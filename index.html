@@ -254,6 +254,14 @@
     margin-top:2px;
   }
   .sub{color:var(--text-dim);font-size:.82rem;}
+  .locationHintLocked{
+    color:var(--accent);
+    background:rgba(232,163,61,.12);
+    border:1.5px solid var(--accent);
+    border-radius:8px;
+    padding:9px 12px;
+    font-weight:700;
+  }
   .matchStat{color:var(--green);font-weight:600;}
   /* Google Drive triangle mark — every "☁️ ..." Drive-related label uses this instead
      of the cloud emoji, so it actually reads as "Drive" rather than "cloud storage in
@@ -1410,8 +1418,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 31;
-const APP_UPDATED_AT = '30/08/2026 20:15';
+const APP_VERSION = 32;
+const APP_UPDATED_AT = '30/08/2026 20:30';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1924,9 +1932,11 @@ window.openLocationModal = function openLocationModal({ p, idPrefix, editable, t
   document.getElementById('locationModalTitle').textContent = (p.name || p.code || 'לוח') + (tableLabel ? ' — ' + tableLabel : '');
   document.getElementById('locationModalActions').style.display = editable ? 'flex' : 'none';
   document.getElementById('locationCoordsInput').readOnly = !editable;
-  document.getElementById('locationHint').textContent = editable
+  const hintEl = document.getElementById('locationHint');
+  hintEl.textContent = editable
     ? 'לחצו על תוכנית האתר כדי למקם סמן, או גררו אותו לדיוק.'
-    : 'תצוגה בלבד — כדי לשנות את המיקום, פתחו עריכה בטאב (סמל המנעול) ולחצו שוב על המיקום.';
+    : '🔒 תצוגה בלבד — הטאב נעול. כדי לשנות את המיקום: סגרו כאן, לחצו על "נעול לתצוגה" למעלה בטאב כדי לפתוח עריכה, ואז לחצו שוב על כפתור המיקום של השורה.';
+  hintEl.classList.toggle('locationHintLocked', !editable);
 
   setTimeout(() => {
     const map = ensurePickerMap();
