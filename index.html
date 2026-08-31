@@ -61,7 +61,11 @@
     --gray:#5a6b7a;
     --badge-red-text:#e07a6b;
     --badge-blue-text:#6fb0e6;
-    --mono: 'Consolas', 'Courier New', monospace;
+    /* Same stack as body's own font — code/number cells used to be a real monospace
+       font, which (mixed with Hebrew in the same string) read as a different, smaller
+       typeface next to ordinary cells. Kept the variable name so every call site
+       doesn't need touching. */
+    --mono: 'Segoe UI', Arial, sans-serif;
   }
   /* ☀️ Light theme — opt-in via the display-settings picker (⚙️ תצוגה), applied as a
      class on <html> the same way .mobile-layout is, so it can be forced independent of
@@ -1431,8 +1435,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 40;
-const APP_UPDATED_AT = '31/08/2026 14:45';
+const APP_VERSION = 41;
+const APP_UPDATED_AT = '31/08/2026 14:50';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
