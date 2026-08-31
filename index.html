@@ -468,6 +468,17 @@
     border-color:var(--accent);
     box-shadow:inset 0 0 0 2px var(--accent);
   }
+  .fileTypeDropZone{
+    display:inline-block;
+    min-width:24px;
+    min-height:18px;
+    border-radius:6px;
+    padding:1px 3px;
+  }
+  .fileTypeDropZone.rowDragOver{
+    box-shadow:inset 0 0 0 2px var(--accent);
+    background:rgba(232,163,61,.15);
+  }
   table{
     /* No explicit width and no forced min-width — auto table layout sizes columns to
        their own content instead of stretching short values to fill leftover space.
@@ -1416,8 +1427,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 35;
-const APP_UPDATED_AT = '30/08/2026 21:15';
+const APP_VERSION = 36;
+const APP_UPDATED_AT = '30/08/2026 21:35';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -3055,10 +3066,16 @@ function createPanelTable(cfg){
     }
     if (key === '__filetype__'){
       const files = panelFiles.get(idx);
-      if (!files || !files.length) return '<span class="bnum">—</span>';
-      const exts = [...new Set(files.map(f => (f.name.match(/\.([a-z0-9]+)$/i) || [])[1] || '?').map(e => e.toUpperCase()))];
-      const cls = e => e === 'PDF' ? 'b-blue' : e === 'DWG' ? 'b-green' : 'b-gray';
-      return exts.map(e => `<span class="badge ${cls(e)}">${e}</span>`).join(' ');
+      const inner = (!files || !files.length)
+        ? '<span class="bnum">—</span>'
+        : [...new Set(files.map(f => (f.name.match(/\.([a-z0-9]+)$/i) || [])[1] || '?').map(e => e.toUpperCase()))]
+            .map(e => `<span class="badge ${e === 'PDF' ? 'b-blue' : e === 'DWG' ? 'b-green' : 'b-gray'}">${e}</span>`).join(' ');
+      // A per-row drop target: dragging a file straight from the OS onto this specific
+      // row's cell attaches it to THIS row directly, regardless of whether its filename
+      // would otherwise match here — separate from the whole-tab drop zone, which
+      // re-runs the code/ils_num filename matching across every row.
+      if (locked) return inner;
+      return `<span class="fileTypeDropZone" data-idx="${idx}" title="גררו קובץ לכאן כדי לצרף אותו לשורה הזו">${inner}</span>`;
     }
     if (key === '__filedate__'){
       const files = panelFiles.get(idx);
@@ -3249,6 +3266,54 @@ function createPanelTable(cfg){
     panels.splice(i, 1);
     persistFullTable();
     applyFilters();
+  });
+
+  // Attaches dropped file(s) straight to one specific row — same file-entry shape as the
+  // whole-tab folder scan (name/url/file), so every existing render path (סוג קובץ badge,
+  // preview button, code link) treats it identically. Replaces an existing entry with the
+  // same filename instead of duplicating it, so re-dropping an updated file just updates it.
+  function attachFilesToRow(idx, files){
+    if (!files.length) return;
+    const byName = new Map((panelFiles.get(idx) || []).map(f => [f.name, f]));
+    files.forEach(f => byName.set(f.name, { name: f.name, url: URL.createObjectURL(f), file: f }));
+    panelFiles.set(idx, [...byName.values()]);
+    applyFilters();
+  }
+
+  // Per-row drop target on the "סוג קובץ" cell — stops the event from bubbling to the
+  // whole-tab drop zone below, which would otherwise also re-run the filename-based
+  // matching across every row for the same drop.
+  tbody.addEventListener('dragover', (e) => {
+    const zone = e.target.closest('.fileTypeDropZone');
+    if (!zone) return;
+    e.preventDefault();
+    e.stopPropagation();
+  });
+  tbody.addEventListener('dragenter', (e) => {
+    const zone = e.target.closest('.fileTypeDropZone');
+    if (!zone) return;
+    e.preventDefault();
+    e.stopPropagation();
+    zone.classList.add('rowDragOver');
+  });
+  tbody.addEventListener('dragleave', (e) => {
+    const zone = e.target.closest('.fileTypeDropZone');
+    if (!zone) return;
+    zone.classList.remove('rowDragOver');
+  });
+  tbody.addEventListener('drop', async (e) => {
+    const zone = e.target.closest('.fileTypeDropZone');
+    if (!zone) return;
+    e.preventDefault();
+    e.stopPropagation();
+    zone.classList.remove('rowDragOver');
+    const idx = parseInt(zone.dataset.idx, 10);
+    const items = e.dataTransfer.items;
+    let files = items && items.length ? await walkDataTransferItems(Array.from(items)) : [];
+    if (!files.length && e.dataTransfer.files && e.dataTransfer.files.length){
+      files = Array.from(e.dataTransfer.files);
+    }
+    attachFilesToRow(idx, files);
   });
 
   tbody.addEventListener('click', (e) => {
