@@ -1456,8 +1456,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 44;
-const APP_UPDATED_AT = '31/08/2026 17:15';
+const APP_VERSION = 45;
+const APP_UPDATED_AT = '31/08/2026 17:40';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1521,6 +1521,10 @@ applyThemePreference();
 applyStripedRowsPreference();
 applyAccentPreference();
 window.addEventListener('resize', applyLayoutPreference);
+// A phone rotating, or its virtual keyboard opening/closing, changes the viewport size
+// without necessarily leaving/re-entering the home screen — the aggregate map (if it
+// exists yet) needs the same invalidate+re-fit those transitions already get.
+window.addEventListener('resize', () => { if (window.__aggregateMapInvalidate) window.__aggregateMapInvalidate(); });
 
 (function wireLayoutModal(){
   const openBtn = document.getElementById('layoutSettingsBtn');
@@ -2110,7 +2114,17 @@ window.renderAggregateMap = function renderAggregateMap(){
     aggregateMap = L.map('aggregateMapContainer', { crs: L.CRS.Simple, minZoom: -3, maxZoom: 3, zoomSnap: 0, zoomDelta: 0.5, attributionControl: false });
     L.imageOverlay(SITE_PLAN_URL, SITE_PLAN_BOUNDS).addTo(aggregateMap);
     aggregateMap.setMaxBounds(SITE_PLAN_BOUNDS);
-    fitSitePlanAndLockMinZoom(aggregateMap);
+    // Deferred, not immediate — on first load (especially on mobile, where viewport/font
+    // settling can still shift layout right after the page appears) the container may not
+    // have its final size yet. Fitting against a wrong/zero size here leaves the map
+    // blank until something else happens to invalidate it (a resize, leaving and
+    // re-entering a tab) — see also __aggregateMapInvalidate above for the same fix
+    // applied on every later re-show.
+    setTimeout(() => {
+      if (!aggregateMap) return;
+      aggregateMap.invalidateSize();
+      fitSitePlanAndLockMinZoom(aggregateMap);
+    }, 50);
   }
   aggregateMarkers.forEach(m => m.remove());
   aggregateMarkers = [];
