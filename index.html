@@ -1081,8 +1081,8 @@
     <div id="dashboardCards"></div>
     <div class="dashMapSection">
       <div class="tabTitle">🗺️ מפה מרוכזת</div>
-      <div class="topRow"><div class="sub" id="mapPinCount"></div></div>
-      <div class="sub" style="margin-bottom:10px">כל הלוחות שסומן להם מיקום, מכל 6 הטאבים, על גבי תוכנית האתר של המט"ש. לחצו על סמן כדי לראות את שם הלוח. כדי לסמן מיקום חדש — פתחו עריכה בטאב הרלוונטי ולחצו על עמודת "מיקום" בשורה.</div>
+      <div class="topRow"><div class="sub" id="mapPinCount"></div><button type="button" class="lockToggleBtn" id="mapEditToggleBtn"></button></div>
+      <div class="sub" style="margin-bottom:10px">כל הלוחות שסומן להם מיקום, מכל 6 הטאבים, על גבי תוכנית האתר של המט"ש. לחצו על סמן כדי לראות את שם הלוח. כדי לסמן מיקום חדש — פתחו עריכה בטאב הרלוונטי ולחצו על עמודת "מיקום" בשורה. לחצו "פתח לעריכה" כדי לגרור ולהזיז ישירות מכאן את כל הסמנים הקיימים.</div>
       <div id="aggregateMapContainer" style="height:60vh"></div>
     </div>
   </div>
@@ -1418,8 +1418,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 33;
-const APP_UPDATED_AT = '30/08/2026 20:45';
+const APP_VERSION = 34;
+const APP_UPDATED_AT = '30/08/2026 21:05';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1834,6 +1834,16 @@ const SITE_PLAN_BOUNDS = [[0, 0], [SITE_PLAN_HEIGHT, SITE_PLAN_WIDTH]];
 // pinned location yet to center on — the middle of the site-plan drawing.
 const DEFAULT_MAP_CENTER = [SITE_PLAN_HEIGHT / 2, SITE_PLAN_WIDTH / 2];
 
+// Every pin placement/drag (picker and aggregate map alike) snaps to this grid — like
+// graph paper — instead of landing on an arbitrary sub-pixel spot.
+const PIN_GRID_STEP = 20;
+function snapToGrid(latlng){
+  return L.latLng(
+    Math.round(latlng.lat / PIN_GRID_STEP) * PIN_GRID_STEP,
+    Math.round(latlng.lng / PIN_GRID_STEP) * PIN_GRID_STEP
+  );
+}
+
 let pickerMap = null;
 let pickerMarker = null;
 let pickerContextMarkers = [];
@@ -1899,7 +1909,8 @@ function ensurePickerMap(){
   fitSitePlanAndLockMinZoom(pickerMap);
   pickerMap.on('click', (e) => {
     if (!currentLocationCtx || !currentLocationCtx.editable) return;
-    setPickerMarker(e.latlng.lat, e.latlng.lng);
+    const snapped = snapToGrid(e.latlng);
+    setPickerMarker(snapped.lat, snapped.lng);
   });
   return pickerMap;
 }
@@ -1915,6 +1926,11 @@ function setPickerMarker(lat, lng){
       draggable: !!(currentLocationCtx && currentLocationCtx.editable),
       icon: nameMarkerIcon(label),
     }).addTo(map);
+    // Snapping live (on 'drag', not just at the end) is what makes the drag itself feel
+    // like it's moving in small grid jumps instead of gliding smoothly.
+    pickerMarker.on('drag', () => {
+      pickerMarker.setLatLng(snapToGrid(pickerMarker.getLatLng()));
+    });
     pickerMarker.on('dragend', () => {
       const ll = pickerMarker.getLatLng();
       updatePickerCoordsUI(ll.lat, ll.lng);
@@ -2002,6 +2018,7 @@ document.getElementById('locationClearBtn').addEventListener('click', () => {
 // The aggregate "מפה" tab: one map, every pinned row from every tab, labeled by name.
 let aggregateMap = null;
 let aggregateMarkers = [];
+let mapEditMode = false;
 window.__aggregateMapInvalidate = () => {
   if (!aggregateMap) return;
   aggregateMap.invalidateSize();
@@ -2025,10 +2042,23 @@ window.renderAggregateMap = function renderAggregateMap(){
       const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
       if (Number.isNaN(lat) || Number.isNaN(lng)) return;
       const label = p.name || p.code || 'לוח';
-      const marker = L.marker([lat, lng], { icon: nameMarkerIcon(label) }).addTo(aggregateMap);
+      const marker = L.marker([lat, lng], { icon: nameMarkerIcon(label), draggable: mapEditMode }).addTo(aggregateMap);
+      if (mapEditMode){
+        // Same live grid-snap as the per-row picker — dragging moves in small grid jumps
+        // instead of gliding smoothly to an arbitrary sub-pixel spot.
+        marker.on('drag', () => marker.setLatLng(snapToGrid(marker.getLatLng())));
+        marker.on('dragend', () => {
+          const ll = marker.getLatLng();
+          p.lat = String(ll.lat);
+          p.lng = String(ll.lng);
+          if (window.__panelTableSaveLocation && window.__panelTableSaveLocation[t.idPrefix]) window.__panelTableSaveLocation[t.idPrefix]();
+        });
+      }
       // Clicking a pin opens its file directly (Drive preview if uploaded, else the first
       // local file) instead of a popup — falls back to a name/tab popup only when the
-      // panel has no file attached yet, so the click still does something useful.
+      // panel has no file attached yet, so the click still does something useful. Leaflet
+      // only fires 'click' when the mouse didn't actually move, so this still works
+      // alongside dragging in edit mode.
       const files = panelFiles ? panelFiles.get(idx) : null;
       let fileUrl = '';
       if (p.drive_url){
@@ -2047,6 +2077,24 @@ window.renderAggregateMap = function renderAggregateMap(){
   const countEl = document.getElementById('mapPinCount');
   if (countEl) countEl.textContent = aggregateMarkers.length + ' לוחות ממוקמים על המפה';
 };
+
+// Lets every already-placed pin be dragged directly from the aggregate map, instead of
+// having to open each row's own location picker one at a time — same lock/unlock pattern
+// as every tab's own edit toggle.
+(function wireMapEditToggle(){
+  const btn = document.getElementById('mapEditToggleBtn');
+  if (!btn) return;
+  function updateUI(){
+    btn.textContent = mapEditMode ? '🔓 פתוח לעריכה — לחצו לנעילה' : '🔒 נעול לתצוגה — לחצו לעריכת מיקומים';
+    btn.classList.toggle('isUnlocked', mapEditMode);
+  }
+  btn.addEventListener('click', () => {
+    mapEditMode = !mapEditMode;
+    updateUI();
+    if (window.renderAggregateMap) window.renderAggregateMap();
+  });
+  updateUI();
+})();
 
 // ============ Direct browser → Google Drive upload ============
 // Uses Google Identity Services (GIS) for a client-side-only OAuth token (the
