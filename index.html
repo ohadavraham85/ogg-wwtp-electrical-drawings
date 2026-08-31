@@ -1463,8 +1463,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 48;
-const APP_UPDATED_AT = '31/08/2026 19:30';
+const APP_VERSION = 49;
+const APP_UPDATED_AT = '31/08/2026 20:15';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -3235,14 +3235,17 @@ function createPanelTable(cfg){
     if (key === linkKey && fullyEditable && !locked){
       const files = panelFiles.get(idx);
       let linksHtml = '';
-      if (files && files.length){
+      // Once a file is on Drive, that's the one link shown — a local blob: link only
+      // ever works for the rest of this browser tab's session (it can't survive a
+      // reload, let alone open on another device), so once there's a real, permanent
+      // Drive link there's no reason to keep showing the one that's about to go stale.
+      if (p.drive_url){
+        const drivePreviewUrl = p.drive_file_id ? `https://drive.google.com/file/d/${p.drive_file_id}/preview` : '';
+        linksHtml = `<div class="fileList"><a class="driveBadge" href="${p.drive_url}" target="_blank" rel="noopener"><span class="driveIcon"></span>הועלה לדרייב</a>${previewBtnHtml(drivePreviewUrl, p[linkKey])}</div>`;
+      } else if (files && files.length){
         linksHtml = `<div class="fileList">` +
           files.map((f,i) => `<a href="${f.url}" target="_blank" rel="noopener">📄 קובץ ${i+1}</a>${previewBtnHtml(f.url, f.name)}`).join(' · ') +
           `</div>`;
-      }
-      if (p.drive_url){
-        const drivePreviewUrl = p.drive_file_id ? `https://drive.google.com/file/d/${p.drive_file_id}/preview` : '';
-        linksHtml += `<div class="fileList"><a class="driveBadge" href="${p.drive_url}" target="_blank" rel="noopener"><span class="driveIcon"></span>הועלה לדרייב</a>${previewBtnHtml(drivePreviewUrl, p[linkKey])}</div>`;
       }
       return editableCellHtml(p, linkKey, "מס' תוכנית...") + linksHtml;
     }
@@ -3252,21 +3255,23 @@ function createPanelTable(cfg){
     if (key === linkKey){
       // A Drive link (uploaded once via "☁️ העלה לגוגל דרייב") works from any device,
       // regardless of whether this browser has the local folder picked right now — so it
-      // takes priority as the code's own link, with the local file(s) offered alongside
-      // when both happen to be available.
+      // takes priority as the code's own link. The local file, if any, is NOT also shown
+      // once Drive has it: a local blob: link only survives this browser tab's current
+      // session, so once there's a permanent Drive link, the local one is already stale
+      // or about to be.
       const files = panelFiles.get(idx);
-      const localLinksHtml = (files && files.length)
-        ? `<div class="fileList">` + files.map((f,i) => `<a href="${f.url}" target="_blank" rel="noopener">📄 קובץ מקומי ${i+1}</a>${previewBtnHtml(f.url, f.name)}`).join(' · ') + `</div>`
-        : '';
       if (p.drive_url){
         const drivePreviewUrl = p.drive_file_id ? `https://drive.google.com/file/d/${p.drive_file_id}/preview` : '';
         return `<a class="code" href="${p.drive_url}" target="_blank" rel="noopener" title="פתח מגוגל דרייב">${p[key] || ''}</a>${previewBtnHtml(drivePreviewUrl, p[key])}` +
-          `<div class="fileList"><span class="driveBadge"><span class="driveIcon"></span>בדרייב</span></div>` + localLinksHtml;
+          `<div class="fileList"><span class="driveBadge"><span class="driveIcon"></span>בדרייב</span></div>`;
       }
       if (files && files.length){
         if (files.length === 1){
           return `<a class="code" href="${files[0].url}" target="_blank" rel="noopener">${p[key] || ''}</a>${previewBtnHtml(files[0].url, files[0].name)}`;
         }
+        const localLinksHtml = `<div class="fileList">` +
+          files.map((f,i) => `<a href="${f.url}" target="_blank" rel="noopener">📄 קובץ ${i+1}</a>${previewBtnHtml(f.url, f.name)}`).join(' · ') +
+          `</div>`;
         return `<span class="code multi">${p[key] || ''}</span>` + localLinksHtml;
       }
       return `<span class="code code-disabled">${p[key] || ''}</span>`;
