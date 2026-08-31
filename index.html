@@ -1434,8 +1434,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 38;
-const APP_UPDATED_AT = '30/08/2026 22:05';
+const APP_VERSION = 39;
+const APP_UPDATED_AT = '30/08/2026 22:25';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -2520,9 +2520,59 @@ function createPanelTable(cfg){
     return files;
   }
 
+  // Automatically pushes newly-matched files straight to Drive, no manual button click
+  // needed — called right after matching finds row(s) that have local files but haven't
+  // been backed up there yet (already-backed-up rows are skipped, so this never
+  // re-uploads and duplicates a file already on Drive). Silently no-ops if Drive access
+  // needs a fresh user consent (only the very first use each session) — the manual
+  // "העלה לגוגל דרייב" button still works for that first-time grant or a manual retry.
+  async function runDriveBackup(idxsToUpload, { auto } = {}){
+    const targets = idxsToUpload.filter(idx => {
+      const files = panelFiles.get(idx);
+      return files && files.length && panels[idx] && !panels[idx].drive_url;
+    });
+    if (!targets.length) return;
+    try {
+      if (auto && folderStatus) folderStatus.textContent = `מגבה אוטומטית ${targets.length} קבצים לדרייב...`;
+      await requestGoogleAccessToken();
+      const rootId = await getOrCreateAppRootFolder();
+      const tabFolderId = await getOrCreateTabFolder(idPrefix, tabLabel, rootId);
+      let done = 0, failed = 0;
+      for (const idx of targets){
+        const files = panelFiles.get(idx);
+        const p = panels[idx];
+        if (!files || !files.length || !p) continue;
+        try {
+          const uploaded = await driveUploadFile(pickPrimaryFile(files).file, tabFolderId);
+          p.drive_file_id = uploaded.id;
+          p.drive_url = uploaded.webViewLink || `https://drive.google.com/file/d/${uploaded.id}/view`;
+          done++;
+        } catch(err){
+          console.error('Drive auto-backup failed for row', p, err);
+          failed++;
+        }
+      }
+      persistFullTable();
+      applyFilters();
+      if (auto && folderStatus){
+        folderStatus.textContent = failed
+          ? `✓ גובו אוטומטית ${done} קבצים לדרייב, ⚠️ נכשלו ${failed}`
+          : `✓ גובו אוטומטית ${done} קבצים לדרייב`;
+        folderStatus.classList.add('ok');
+      }
+    } catch(err){
+      console.error('Drive auto-backup skipped:', err);
+      if (auto && folderStatus){
+        folderStatus.textContent = '⚠️ גיבוי אוטומטי לדרייב דורש חיבור לגוגל — לחצו פעם אחת על "העלה לגוגל דרייב" כדי לאשר, ואז זה יעבוד לבד בפעם הבאה';
+        folderStatus.classList.remove('ok');
+      }
+    }
+  }
+
   function matchPanelsToFiles(){
     panelFiles = new Map();
     let matchedCount = 0;
+    const newlyMatchedIdxs = [];
     panels.forEach((p, idx) => {
       let matches = [];
       for (const key of ['ils_num','code']){
@@ -2543,8 +2593,10 @@ function createPanelTable(cfg){
       if (uniq.length){
         matchedCount++;
         panelFiles.set(idx, uniq.map(f => ({ name: f.name, url: URL.createObjectURL(f), file: f })));
+        if (!p.drive_url) newlyMatchedIdxs.push(idx);
       }
     });
+    if (newlyMatchedIdxs.length) runDriveBackup(newlyMatchedIdxs, { auto: true });
     return matchedCount;
   }
 
@@ -3315,6 +3367,7 @@ function createPanelTable(cfg){
     files.forEach(f => byName.set(f.name, { name: f.name, url: URL.createObjectURL(f), file: f }));
     panelFiles.set(idx, [...byName.values()]);
     applyFilters();
+    runDriveBackup([idx], { auto: true });
   }
 
   // Per-row drop target on the "סוג קובץ" cell — stops the event from bubbling to the
@@ -3401,9 +3454,13 @@ function createPanelTable(cfg){
       const uploadLabel = uploadDriveBtn.textContent;
       uploadDriveBtn.addEventListener('click', async () => {
         if (locked){ alert('פתחו עריכה (סמל המנעול למעלה) לפני העלאה לגוגל דרייב.'); return; }
-        const matchedIdxs = [...panelFiles.keys()];
+        // Only rows not already backed up — קבצים שכבר יש להם drive_url מתעדכנים אוטומטית
+        // (ראו runDriveBackup), ולחיצה חוזרת כאן לא אמורה להעלות אותם שוב ולשכפל אותם בדרייב.
+        const matchedIdxs = [...panelFiles.keys()].filter(idx => panels[idx] && !panels[idx].drive_url);
         if (!matchedIdxs.length){
-          alert('אין קבצים מקושרים בטאב הזה כרגע — בחרו קודם את התיקייה המקומית (הכפתור "בחרו תיקייה"), כדי שלאתר יהיה מה להעלות.');
+          alert(panelFiles.size
+            ? 'כל הקבצים המקושרים בטאב הזה כבר גובו לדרייב אוטומטית ✓'
+            : 'אין קבצים מקושרים בטאב הזה כרגע — בחרו קודם את התיקייה המקומית (הכפתור "בחרו תיקייה"), כדי שלאתר יהיה מה להעלות.');
           return;
         }
         uploadDriveBtn.disabled = true;
