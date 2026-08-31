@@ -413,6 +413,16 @@
     color:var(--accent);
     margin-bottom:8px;
   }
+  /* .mapNamePinSvg.tabColorPin (not just .tabColorPin) — .mapNamePinSvg{display:block}
+     is defined later in the stylesheet and would otherwise win at equal specificity. */
+  .mapNamePinSvg.tabColorPin{
+    display:inline-block;
+    width:14px;
+    height:19px;
+    vertical-align:-4px;
+    margin-inline-end:6px;
+    filter:none;
+  }
   .topRow{
     display:flex;
     align-items:baseline;
@@ -1446,8 +1456,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 43;
-const APP_UPDATED_AT = '31/08/2026 17:00';
+const APP_VERSION = 44;
+const APP_UPDATED_AT = '31/08/2026 17:15';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1904,6 +1914,17 @@ function pinSvg(color, extraClass){
     `<path d="M11 0C4.9 0 0 4.9 0 11c0 8.25 11 19 11 19s11-10.75 11-19C22 4.9 17.1 0 11 0z" fill="currentColor" stroke="#fff" stroke-width="1.2"/>` +
     `<circle cx="11" cy="11" r="4.3" fill="#fff"/></svg>`;
 }
+
+// Stamps each tab's own heading with a small pin in that tab's map color — the same
+// association the map already makes (color -> tab), just visible from inside the tab
+// itself too, without needing to go look at the map to remember which color is which.
+(function addTabColorPinsToTitles(){
+  Object.keys(TAB_PIN_COLORS).forEach(idPrefix => {
+    const titleEl = document.querySelector(`#tab-${idPrefix} .tabTitle`);
+    if (!titleEl || titleEl.querySelector('.tabColorPin')) return;
+    titleEl.insertAdjacentHTML('afterbegin', pinSvg(TAB_PIN_COLORS[idPrefix], 'tabColorPin'));
+  });
+})();
 
 // A labeled pin: the colored teardrop above, with the panel's name in a small wrapping
 // label above that, instead of one long single-line badge. iconSize/iconAnchor are left
