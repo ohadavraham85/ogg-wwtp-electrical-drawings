@@ -822,9 +822,33 @@
     text-align:center;
     box-shadow:0 3px 8px rgba(0,0,0,.45);
   }
-  .mapNamePinDot{font-size:22px; line-height:1; filter:drop-shadow(0 2px 2px rgba(0,0,0,.5));}
+  /* Color comes from the inline `color` style set per-tab (see getTabPinColor) —
+     background/border-top both read currentColor so one inline style paints the whole pin. */
+  .mapNamePinDot{
+    position:relative;
+    width:15px;
+    height:15px;
+    margin:0 auto;
+    background:currentColor;
+    border-radius:50%;
+    border:2.5px solid #fff;
+    box-shadow:0 2px 4px rgba(0,0,0,.5);
+    color:#e8a33d;
+  }
+  .mapNamePinDot::after{
+    content:'';
+    position:absolute;
+    left:50%;
+    top:100%;
+    transform:translateX(-50%);
+    width:0;
+    height:0;
+    border-left:4px solid transparent;
+    border-right:4px solid transparent;
+    border-top:6px solid currentColor;
+  }
   .mapNamePinLabelContext{opacity:.6; border-color:var(--gray); font-weight:600;}
-  .mapNamePinDotContext{opacity:.55; filter:grayscale(1) drop-shadow(0 2px 2px rgba(0,0,0,.4));}
+  .mapNamePinDotContext{opacity:.6;}
   #aggregateMapContainer{width:100%;}
   .leaflet-popup-content-wrapper, .leaflet-popup-tip{
     background:var(--panel);
@@ -1427,8 +1451,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 36;
-const APP_UPDATED_AT = '30/08/2026 21:35';
+const APP_VERSION = 37;
+const APP_UPDATED_AT = '30/08/2026 21:50';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1858,26 +1882,43 @@ let pickerMarker = null;
 let pickerContextMarkers = [];
 let currentLocationCtx = null; // { p, idPrefix, editable, tableLabel }
 
-// A labeled pin: a plain 📍 marker with the panel's name in a small wrapping label above
-// it, instead of one long single-line badge. iconSize/iconAnchor are left at the origin
-// because the wrapper itself is positioned with a CSS transform (see .mapNamePinWrap) so
-// the pin glyph — the last, bottom element — lands exactly on the marker's lat/lng.
-function nameMarkerIcon(label){
+// Each tab gets its own pin color, so a glance at the map (aggregate or per-row picker)
+// says which tab a panel belongs to without opening a popup.
+const TAB_PIN_COLORS = {
+  panels: '#4a90d9',       // לוחות ILS / חלומה — כחול
+  planner: '#9b59b6',      // תוכניות מתכנן — סגול
+  greenhouses: '#e8c93d',  // לוחות חממות — צהוב
+  hvac: '#2fb6c4',         // לוחות מיזוג אוויר — טורקיז
+  hv: '#e74c3c',           // לוחות מתח גבוה — אדום
+  'mtsh-lv': '#3fae6a',    // מט"ש קיים - מתח נמוך — ירוק
+};
+function getTabPinColor(idPrefix){
+  return TAB_PIN_COLORS[idPrefix] || '#e8a33d';
+}
+
+// A labeled pin: a plain colored dot with the panel's name in a small wrapping label
+// above it, instead of one long single-line badge. iconSize/iconAnchor are left at the
+// origin because the wrapper itself is positioned with a CSS transform (see
+// .mapNamePinWrap) so the dot — the last, bottom element — lands exactly on the marker's
+// lat/lng.
+function nameMarkerIcon(label, color){
+  const style = color ? ` style="color:${color}"` : '';
   return L.divIcon({
     className: 'mapNamePinIcon',
-    html: `<div class="mapNamePinWrap"><div class="mapNamePinLabel">${escapeHtml(label)}</div><div class="mapNamePinDot">📍</div></div>`,
+    html: `<div class="mapNamePinWrap"><div class="mapNamePinLabel">${escapeHtml(label)}</div><div class="mapNamePinDot"${style}></div></div>`,
     iconSize: [0, 0],
     iconAnchor: [0, 0],
   });
 }
 
-// A dimmed, non-interactive variant of the same pin — shows where every OTHER already-
-// placed panel sits while picking a location for the current one, so you don't drop two
-// panels on top of each other by accident.
-function contextMarkerIcon(label){
+// A dimmed, non-interactive variant of the same pin (still tab-colored, just faded via
+// opacity) — shows where every OTHER already-placed panel sits while picking a location
+// for the current one, so you don't drop two panels on top of each other by accident.
+function contextMarkerIcon(label, color){
+  const style = color ? ` style="color:${color}"` : '';
   return L.divIcon({
     className: 'mapNamePinIcon',
-    html: `<div class="mapNamePinWrap mapNamePinContext"><div class="mapNamePinLabel mapNamePinLabelContext">${escapeHtml(label)}</div><div class="mapNamePinDot mapNamePinDotContext">📍</div></div>`,
+    html: `<div class="mapNamePinWrap mapNamePinContext"><div class="mapNamePinLabel mapNamePinLabelContext">${escapeHtml(label)}</div><div class="mapNamePinDot mapNamePinDotContext"${style}></div></div>`,
     iconSize: [0, 0],
     iconAnchor: [0, 0],
   });
@@ -1896,7 +1937,7 @@ function renderPickerContextMarkers(excludePanel){
       const lat = parseFloat(pp.lat), lng = parseFloat(pp.lng);
       if (Number.isNaN(lat) || Number.isNaN(lng)) return;
       const label = pp.name || pp.code || 'לוח';
-      const marker = L.marker([lat, lng], { icon: contextMarkerIcon(label), interactive: false }).addTo(map);
+      const marker = L.marker([lat, lng], { icon: contextMarkerIcon(label, getTabPinColor(t.idPrefix)), interactive: false }).addTo(map);
       pickerContextMarkers.push(marker);
     });
   });
@@ -1927,13 +1968,14 @@ function ensurePickerMap(){
 function setPickerMarker(lat, lng){
   const map = ensurePickerMap();
   const label = (currentLocationCtx && currentLocationCtx.p) ? (currentLocationCtx.p.name || currentLocationCtx.p.code || 'לוח') : 'לוח';
+  const color = currentLocationCtx ? getTabPinColor(currentLocationCtx.idPrefix) : null;
   if (pickerMarker){
     pickerMarker.setLatLng([lat, lng]);
-    pickerMarker.setIcon(nameMarkerIcon(label));
+    pickerMarker.setIcon(nameMarkerIcon(label, color));
   } else {
     pickerMarker = L.marker([lat, lng], {
       draggable: !!(currentLocationCtx && currentLocationCtx.editable),
-      icon: nameMarkerIcon(label),
+      icon: nameMarkerIcon(label, color),
     }).addTo(map);
     // Snapping live (on 'drag', not just at the end) is what makes the drag itself feel
     // like it's moving in small grid jumps instead of gliding smoothly.
@@ -2051,7 +2093,7 @@ window.renderAggregateMap = function renderAggregateMap(){
       const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
       if (Number.isNaN(lat) || Number.isNaN(lng)) return;
       const label = p.name || p.code || 'לוח';
-      const marker = L.marker([lat, lng], { icon: nameMarkerIcon(label), draggable: mapEditMode }).addTo(aggregateMap);
+      const marker = L.marker([lat, lng], { icon: nameMarkerIcon(label, getTabPinColor(t.idPrefix)), draggable: mapEditMode }).addTo(aggregateMap);
       if (mapEditMode){
         // Same live grid-snap as the per-row picker — dragging moves in small grid jumps
         // instead of gliding smoothly to an arbitrary sub-pixel spot.
