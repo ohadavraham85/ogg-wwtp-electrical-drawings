@@ -830,10 +830,11 @@
   }
   /* Fixed px, not rem — this sits on a map pin, not in the document flow, so it should
      stay small and elegant regardless of the app's own base font-size. */
+  /* A fixed width (not max-content) — that made a short name sit on one wide line, which
+     wasn't wanted either; a fixed width forces every label to wrap into a few lines
+     regardless of how short or long the name is. */
   .mapNamePinLabel{
-    max-width:150px;
-    min-width:70px;
-    width:max-content;
+    width:95px;
     margin-bottom:2px;
     background:var(--panel);
     border:1px solid var(--accent);
@@ -1462,8 +1463,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 47;
-const APP_UPDATED_AT = '31/08/2026 19:20';
+const APP_VERSION = 48;
+const APP_UPDATED_AT = '31/08/2026 19:30';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
