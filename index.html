@@ -472,12 +472,19 @@
     border-color:var(--accent);
     box-shadow:inset 0 0 0 2px var(--accent);
   }
+  /* Fills the ENTIRE cell (absolutely positioned against the td, which is the nearest
+     positioned ancestor — see td{position:relative}) instead of just wrapping the
+     badge/dash text. A percentage/min-height on a plain block child of a <td> doesn't
+     reliably stretch to the row's real height in table layout; inset:0 does. A real
+     mouse drag easily overshoots a target sized to a single "—" character. */
   .fileTypeDropZone{
-    display:inline-block;
-    min-width:24px;
-    min-height:18px;
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    box-sizing:border-box;
+    padding:8px 10px;
     border-radius:6px;
-    padding:1px 3px;
   }
   .fileTypeDropZone.rowDragOver{
     box-shadow:inset 0 0 0 2px var(--accent);
@@ -607,6 +614,7 @@
   html.striped-rows tbody tr:hover{background:var(--panel-hover);}
   html.striped-rows tbody tr:hover td.rownum{background:var(--panel-hover);}
   td{
+    position:relative;
     padding:8px 10px;
     font-size:.86rem;
     vertical-align:middle;
@@ -1073,6 +1081,7 @@
        column width is a pixel of horizontal scroll a thumb has to cover. */
     thead th{font-size:.68rem;padding:6px 8px;}
     td{font-size:.8rem;padding:6px 8px;}
+    .fileTypeDropZone{padding:6px 8px;}
     input.editCell{font-size:.85rem;padding:4px 6px;}
   }
 </style>
@@ -1435,8 +1444,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 41;
-const APP_UPDATED_AT = '31/08/2026 14:50';
+const APP_VERSION = 42;
+const APP_UPDATED_AT = '31/08/2026 15:05';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
