@@ -831,7 +831,9 @@
   /* Fixed px, not rem — this sits on a map pin, not in the document flow, so it should
      stay small and elegant regardless of the app's own base font-size. */
   .mapNamePinLabel{
-    max-width:120px;
+    max-width:150px;
+    min-width:70px;
+    width:max-content;
     margin-bottom:2px;
     background:var(--panel);
     border:1px solid var(--accent);
@@ -844,6 +846,7 @@
     white-space:normal;
     overflow-wrap:break-word;
     text-align:center;
+    text-wrap:balance;
     box-shadow:0 2px 5px rgba(0,0,0,.4);
   }
   /* Same classic teardrop-pin silhouette as before, just recolorable — the fill reads
@@ -1459,8 +1462,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 46;
-const APP_UPDATED_AT = '31/08/2026 19:05';
+const APP_VERSION = 47;
+const APP_UPDATED_AT = '31/08/2026 19:20';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
