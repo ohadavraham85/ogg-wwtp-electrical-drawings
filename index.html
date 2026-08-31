@@ -116,13 +116,14 @@
     --bg:#fbfbfb; --panel:#ffffff; --panel-hover:#f0f0f0; --row-stripe:#f6f6f6; --line:#c7c7c7;
     --accent:#3a4855; --accent-dim:#5c6b78;
   }
+  html{font-size:113%;}
   *{box-sizing:border-box;}
   body{
     margin:0;
     background:var(--bg);
     color:var(--text);
     font-family: 'Segoe UI', Arial, sans-serif;
-    font-weight:500;
+    font-weight:600;
     padding:10px 20px 40px;
   }
   .wrap{max-width:1500px;margin:0 auto;}
@@ -140,7 +141,7 @@
     padding-bottom:4px;
   }
   header{
-    border-bottom:1px solid var(--line);
+    border-bottom:1.5px solid var(--line);
     padding-bottom:6px;
     margin-bottom:6px;
     display:flex;
@@ -156,7 +157,7 @@
   #refreshAppBtn{
     flex-shrink:0;
     background:var(--panel);
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:6px;
     color:var(--text-dim);
     cursor:pointer;
@@ -169,7 +170,7 @@
   #layoutSettingsBtn{
     flex-shrink:0;
     background:var(--panel);
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:6px;
     color:var(--text-dim);
     cursor:pointer;
@@ -185,7 +186,7 @@
     align-items:flex-start;
     gap:3px;
     background:var(--panel-hover);
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:8px;
     color:var(--text);
     cursor:pointer;
@@ -201,14 +202,14 @@
   .filePreviewFrame{
     width:100%;
     height:75vh;
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:8px;
     background:#fff;
   }
   #filePreviewOpenLink{
     display:inline-block;
     background:var(--panel-hover);
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:6px;
     color:var(--text);
     padding:9px 16px;
@@ -217,7 +218,7 @@
   #filePreviewOpenLink:hover{border-color:var(--accent);color:var(--accent);}
   .previewFileBtn{
     background:none;
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:5px;
     color:var(--text-dim);
     cursor:pointer;
@@ -232,7 +233,7 @@
      grid itself is hidden then, so this is the way back to the tab-picker home screen. */
   #backToHomeBtn{
     background:var(--panel);
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:6px;
     color:var(--text-dim);
     cursor:pointer;
@@ -300,7 +301,7 @@
   }
   .dashCard{
     background:var(--panel);
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:8px;
     padding:12px 14px;
     cursor:pointer;
@@ -312,7 +313,7 @@
     width:100%;
     padding:10px 14px;
     border-radius:8px;
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     background:var(--panel);
     color:var(--text);
     font-size:.9rem;
@@ -324,7 +325,7 @@
     top:calc(100% + 4px);
     left:0; right:0;
     background:var(--panel);
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:8px;
     max-height:360px;
     overflow-y:auto;
@@ -334,7 +335,7 @@
   .globalSearchResultItem{
     padding:9px 14px;
     cursor:pointer;
-    border-bottom:1px solid var(--line);
+    border-bottom:1.5px solid var(--line);
     font-size:.85rem;
   }
   .globalSearchResultItem:last-child{border-bottom:none;}
@@ -428,7 +429,7 @@
   .controls input, .controls select{
     padding:9px 12px;
     background:var(--panel);
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:6px;
     color:var(--text);
     font-size:.88rem;
@@ -452,7 +453,7 @@
        fallback only matters for the instant before that first measurement runs. */
     max-height:var(--table-available-h, 65vh);
     border-radius:8px;
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     transition:box-shadow .15s, border-color .15s;
   }
   .table-scroll.dragOver{
@@ -474,7 +475,7 @@
     text-transform:uppercase;
     letter-spacing:.4px;
     padding:8px 10px;
-    border-bottom:1px solid var(--line);
+    border-bottom:1.5px solid var(--line);
     font-weight:600;
     position:sticky;
     top:0;
@@ -513,7 +514,7 @@
     z-index:200;
     pointer-events:none;
     background:var(--panel-hover);
-    border:1px solid var(--accent);
+    border:1.5px solid var(--accent);
     border-radius:8px;
     padding:8px 14px;
     box-shadow:0 12px 30px rgba(0,0,0,.5), 0 0 0 1px rgba(232,163,61,.2);
@@ -557,7 +558,7 @@
     z-index:200;
     pointer-events:none;
     background:var(--panel-hover);
-    border:1px solid var(--accent);
+    border:1.5px solid var(--accent);
     border-radius:8px;
     padding:10px 16px;
     box-shadow:0 12px 30px rgba(0,0,0,.5), 0 0 0 1px rgba(232,163,61,.2);
@@ -569,7 +570,7 @@
     text-overflow:ellipsis;
   }
   tbody tr{
-    border-bottom:1px solid var(--line);
+    border-bottom:1.5px solid var(--line);
     transition:background .12s ease;
   }
   tbody tr:last-child{border-bottom:none;}
@@ -631,7 +632,7 @@
     width:100%;
     min-width:70px;
     background:var(--bg);
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:4px;
     color:var(--text);
     font-size:.82rem;
@@ -654,7 +655,7 @@
   td.fillPreview{outline:1.5px dashed var(--accent); outline-offset:-1px;}
   .delRowBtn{
     background:none;
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:4px;
     color:var(--text-dim);
     cursor:pointer;
@@ -665,7 +666,7 @@
   .delRowBtn:hover{color:var(--red);border-color:var(--red);}
   .addRowBtn{
     background:var(--panel);
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:6px;
     color:var(--text);
     cursor:pointer;
@@ -681,7 +682,7 @@
     gap:6px;
     padding:6px 14px;
     border-radius:20px;
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     background:var(--panel);
     color:var(--text-dim);
     font-size:.82rem;
@@ -695,7 +696,7 @@
 
   .locBtn{
     background:none;
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:6px;
     color:var(--text-dim);
     cursor:pointer;
@@ -719,7 +720,7 @@
   }
   .locationModalBox{
     background:var(--panel);
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:10px;
     width:min(720px, 100%);
     max-height:90vh;
@@ -731,12 +732,12 @@
     align-items:center;
     justify-content:space-between;
     padding:14px 16px;
-    border-bottom:1px solid var(--line);
+    border-bottom:1.5px solid var(--line);
   }
   .locationModalTitle{font-weight:700;font-size:.95rem;}
   .locationModalClose{
     background:none;
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:6px;
     color:var(--text-dim);
     cursor:pointer;
@@ -748,7 +749,7 @@
   #locationMapContainer{
     width:100%;
     border-radius:8px;
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     background:var(--bg);
   }
   .locationModalRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
@@ -757,7 +758,7 @@
     flex:1;
     padding:8px 10px;
     background:var(--bg);
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:6px;
     color:var(--text);
     font-family:var(--mono);
@@ -766,7 +767,7 @@
   .locationModalActions{display:flex;gap:10px;}
   .locationModalActions button{
     background:var(--panel-hover);
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:6px;
     color:var(--text);
     cursor:pointer;
@@ -803,6 +804,8 @@
     box-shadow:0 3px 8px rgba(0,0,0,.45);
   }
   .mapNamePinDot{font-size:22px; line-height:1; filter:drop-shadow(0 2px 2px rgba(0,0,0,.5));}
+  .mapNamePinLabelContext{opacity:.6; border-color:var(--gray); font-weight:600;}
+  .mapNamePinDotContext{opacity:.55; filter:grayscale(1) drop-shadow(0 2px 2px rgba(0,0,0,.4));}
   #aggregateMapContainer{width:100%;}
   .leaflet-popup-content-wrapper, .leaflet-popup-tip{
     background:var(--panel);
@@ -829,7 +832,7 @@
     margin-bottom:12px;
     padding:10px 14px;
     background:var(--panel);
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:6px;
   }
   .colToggle label{
@@ -854,7 +857,7 @@
     display:block;
     width:100%;
     background:var(--panel);
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:6px;
     color:var(--text-dim);
     cursor:pointer;
@@ -890,7 +893,7 @@
     margin-bottom:6px;
     padding:5px 10px;
     background:var(--panel);
-    border:1px solid var(--line);
+    border:1.5px solid var(--line);
     border-radius:6px;
     flex-wrap:wrap;
   }
@@ -926,7 +929,7 @@
   .copyright{
     margin-top:24px;
     padding-top:14px;
-    border-top:1px solid var(--line);
+    border-top:1.5px solid var(--line);
     text-align:center;
     color:var(--text-dim);
     font-size:.75rem;
@@ -1001,7 +1004,7 @@
       display:block;
       width:100%;
       background:var(--panel);
-      border:1px solid var(--line);
+      border:1.5px solid var(--line);
       border-radius:6px;
       color:var(--text-dim);
       cursor:pointer;
@@ -1407,8 +1410,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 30;
-const APP_UPDATED_AT = '30/08/2026 19:55';
+const APP_VERSION = 31;
+const APP_UPDATED_AT = '30/08/2026 20:15';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1818,6 +1821,7 @@ const DEFAULT_MAP_CENTER = [SITE_PLAN_HEIGHT / 2, SITE_PLAN_WIDTH / 2];
 
 let pickerMap = null;
 let pickerMarker = null;
+let pickerContextMarkers = [];
 let currentLocationCtx = null; // { p, idPrefix, editable, tableLabel }
 
 // A labeled pin: a plain 📍 marker with the panel's name in a small wrapping label above
@@ -1830,6 +1834,37 @@ function nameMarkerIcon(label){
     html: `<div class="mapNamePinWrap"><div class="mapNamePinLabel">${escapeHtml(label)}</div><div class="mapNamePinDot">📍</div></div>`,
     iconSize: [0, 0],
     iconAnchor: [0, 0],
+  });
+}
+
+// A dimmed, non-interactive variant of the same pin — shows where every OTHER already-
+// placed panel sits while picking a location for the current one, so you don't drop two
+// panels on top of each other by accident.
+function contextMarkerIcon(label){
+  return L.divIcon({
+    className: 'mapNamePinIcon',
+    html: `<div class="mapNamePinWrap mapNamePinContext"><div class="mapNamePinLabel mapNamePinLabelContext">${escapeHtml(label)}</div><div class="mapNamePinDot mapNamePinDotContext">📍</div></div>`,
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+  });
+}
+
+// Renders every already-pinned panel except the one currently being placed, as dimmed
+// reference pins on the picker map.
+function renderPickerContextMarkers(excludePanel){
+  pickerContextMarkers.forEach(m => m.remove());
+  pickerContextMarkers = [];
+  const map = ensurePickerMap();
+  tableRegistry.forEach(t => {
+    t.panels.forEach(pp => {
+      if (pp === excludePanel) return;
+      if (!pp.lat || !pp.lng) return;
+      const lat = parseFloat(pp.lat), lng = parseFloat(pp.lng);
+      if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+      const label = pp.name || pp.code || 'לוח';
+      const marker = L.marker([lat, lng], { icon: contextMarkerIcon(label), interactive: false }).addTo(map);
+      pickerContextMarkers.push(marker);
+    });
   });
 }
 
@@ -1897,6 +1932,7 @@ window.openLocationModal = function openLocationModal({ p, idPrefix, editable, t
     const map = ensurePickerMap();
     map.invalidateSize();
     fitSitePlanAndLockMinZoom(map);
+    renderPickerContextMarkers(p);
     if (pickerMarker){ pickerMarker.remove(); pickerMarker = null; }
     if (p.lat && p.lng){
       const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
