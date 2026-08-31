@@ -822,30 +822,13 @@
     text-align:center;
     box-shadow:0 3px 8px rgba(0,0,0,.45);
   }
-  /* Color comes from the inline `color` style set per-tab (see getTabPinColor) —
-     background/border-top both read currentColor so one inline style paints the whole pin. */
-  .mapNamePinDot{
-    position:relative;
-    width:15px;
-    height:15px;
-    margin:0 auto;
-    background:currentColor;
-    border-radius:50%;
-    border:2.5px solid #fff;
-    box-shadow:0 2px 4px rgba(0,0,0,.5);
+  /* Same classic teardrop-pin silhouette as before, just recolorable — the fill reads
+     currentColor from the inline `color` style set per-tab (see getTabPinColor). An emoji
+     glyph can't be recolored via CSS, hence the inline SVG instead of the 📍 character. */
+  .mapNamePinSvg{
+    display:block;
     color:#e8a33d;
-  }
-  .mapNamePinDot::after{
-    content:'';
-    position:absolute;
-    left:50%;
-    top:100%;
-    transform:translateX(-50%);
-    width:0;
-    height:0;
-    border-left:4px solid transparent;
-    border-right:4px solid transparent;
-    border-top:6px solid currentColor;
+    filter:drop-shadow(0 2px 2px rgba(0,0,0,.5));
   }
   .mapNamePinLabelContext{opacity:.6; border-color:var(--gray); font-weight:600;}
   .mapNamePinDotContext{opacity:.6;}
@@ -1451,8 +1434,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 37;
-const APP_UPDATED_AT = '30/08/2026 21:50';
+const APP_VERSION = 38;
+const APP_UPDATED_AT = '30/08/2026 22:05';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1896,16 +1879,29 @@ function getTabPinColor(idPrefix){
   return TAB_PIN_COLORS[idPrefix] || '#e8a33d';
 }
 
-// A labeled pin: a plain colored dot with the panel's name in a small wrapping label
-// above it, instead of one long single-line badge. iconSize/iconAnchor are left at the
-// origin because the wrapper itself is positioned with a CSS transform (see
-// .mapNamePinWrap) so the dot — the last, bottom element — lands exactly on the marker's
+// The classic teardrop map-pin silhouette (rounded top, pointed bottom), as an inline SVG
+// instead of the 📍 emoji so it can actually be recolored per tab — fill="currentColor"
+// reads whatever `color` is set on the element. The viewBox's bottom-center (11, 30) is
+// the pin's tip, and since the SVG renders at exactly its own width/height with no extra
+// inline-baseline gap (display:block), that tip lands exactly on the wrapper's anchor
+// point the same way the old emoji/dot did.
+function pinSvg(color, extraClass){
+  const style = ` style="color:${color || '#e8a33d'}"`;
+  const cls = extraClass ? ` ${extraClass}` : '';
+  return `<svg class="mapNamePinSvg${cls}" width="22" height="30" viewBox="0 0 22 30"${style}>` +
+    `<path d="M11 0C4.9 0 0 4.9 0 11c0 8.25 11 19 11 19s11-10.75 11-19C22 4.9 17.1 0 11 0z" fill="currentColor" stroke="#fff" stroke-width="1.2"/>` +
+    `<circle cx="11" cy="11" r="4.3" fill="#fff"/></svg>`;
+}
+
+// A labeled pin: the colored teardrop above, with the panel's name in a small wrapping
+// label above that, instead of one long single-line badge. iconSize/iconAnchor are left
+// at the origin because the wrapper itself is positioned with a CSS transform (see
+// .mapNamePinWrap) so the pin — the last, bottom element — lands exactly on the marker's
 // lat/lng.
 function nameMarkerIcon(label, color){
-  const style = color ? ` style="color:${color}"` : '';
   return L.divIcon({
     className: 'mapNamePinIcon',
-    html: `<div class="mapNamePinWrap"><div class="mapNamePinLabel">${escapeHtml(label)}</div><div class="mapNamePinDot"${style}></div></div>`,
+    html: `<div class="mapNamePinWrap"><div class="mapNamePinLabel">${escapeHtml(label)}</div>${pinSvg(color)}</div>`,
     iconSize: [0, 0],
     iconAnchor: [0, 0],
   });
@@ -1915,10 +1911,9 @@ function nameMarkerIcon(label, color){
 // opacity) — shows where every OTHER already-placed panel sits while picking a location
 // for the current one, so you don't drop two panels on top of each other by accident.
 function contextMarkerIcon(label, color){
-  const style = color ? ` style="color:${color}"` : '';
   return L.divIcon({
     className: 'mapNamePinIcon',
-    html: `<div class="mapNamePinWrap mapNamePinContext"><div class="mapNamePinLabel mapNamePinLabelContext">${escapeHtml(label)}</div><div class="mapNamePinDot mapNamePinDotContext"${style}></div></div>`,
+    html: `<div class="mapNamePinWrap mapNamePinContext"><div class="mapNamePinLabel mapNamePinLabelContext">${escapeHtml(label)}</div>${pinSvg(color, 'mapNamePinDotContext')}</div>`,
     iconSize: [0, 0],
     iconAnchor: [0, 0],
   });
