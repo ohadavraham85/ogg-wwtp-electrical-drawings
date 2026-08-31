@@ -1418,8 +1418,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 32;
-const APP_UPDATED_AT = '30/08/2026 20:30';
+const APP_VERSION = 33;
+const APP_UPDATED_AT = '30/08/2026 20:45';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1795,6 +1795,13 @@ function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// When a row matches several local files (e.g. both a PDF and a DWG of the same drawing),
+// the PDF is the one worth treating as "the" file — DWG/DXF/CAD formats can't render in an
+// iframe preview anyway. Falls back to whichever file matched first if there's no PDF.
+function pickPrimaryFile(files){
+  return files.find(f => /\.pdf$/i.test(f.name || '')) || files[0];
+}
+
 // Formats a File API lastModified timestamp (epoch ms) as DD/MM/YYYY — the file's own
 // last-save date on disk, not a table-edit timestamp.
 function formatFileDate(ms){
@@ -2027,7 +2034,7 @@ window.renderAggregateMap = function renderAggregateMap(){
       if (p.drive_url){
         fileUrl = p.drive_file_id ? `https://drive.google.com/file/d/${p.drive_file_id}/preview` : p.drive_url;
       } else if (files && files.length){
-        fileUrl = files[0].url;
+        fileUrl = pickPrimaryFile(files).url;
       }
       if (fileUrl){
         marker.on('click', () => window.openFilePreview({ url: fileUrl, name: label }));
@@ -3268,7 +3275,7 @@ function createPanelTable(cfg){
             if (!files || !files.length || !p) continue;
             uploadDriveBtn.textContent = `מעלה קובץ ${done + failed + 1} מתוך ${matchedIdxs.length}...`;
             try {
-              const uploaded = await driveUploadFile(files[0].file, tabFolderId);
+              const uploaded = await driveUploadFile(pickPrimaryFile(files).file, tabFolderId);
               p.drive_file_id = uploaded.id;
               p.drive_url = uploaded.webViewLink || `https://drive.google.com/file/d/${uploaded.id}/view`;
               done++;
