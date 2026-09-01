@@ -1512,8 +1512,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 54;
-const APP_UPDATED_AT = '01/09/2026 17:30';
+const APP_VERSION = 55;
+const APP_UPDATED_AT = '01/09/2026 17:45';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -2668,6 +2668,15 @@ function createPanelTable(cfg){
       const td = tbody.querySelector(`tr[data-id="${CSS.escape(id)}"] td[data-col="code"]`);
       if (td) td.innerHTML = cellContent(panels[idx], 'code', idx);
     });
+    // Recolor the status dropdown itself the instant a new value is picked, matching the
+    // read-only badge's color — otherwise it'd keep showing the PREVIOUS status's color
+    // until some unrelated re-render happened to redraw the row.
+    tbody.addEventListener('change', (e) => {
+      if (!e.target.classList.contains('editCell') || e.target.dataset.field !== 'status') return;
+      const color = statusOptionColor(e.target.value);
+      e.target.style.color = color;
+      e.target.style.fontWeight = color ? '600' : '';
+    });
   }
 
   function buildFileIndex(fileList, merge){
@@ -3311,16 +3320,24 @@ function createPanelTable(cfg){
   // supplies a fixed list of statuses (statusOptions) — a row whose stored status is some
   // older/free-typed value not in that list still keeps it selected via an extra option,
   // rather than silently blanking it out.
+  function statusOptionColor(value){
+    return value ? (STATUS_COLOR_BY_CLASS[statusClassFn(value)] || '') : '';
+  }
   function statusSelectHtml(p, key, options){
     const idAttr = p._id ? ` data-id="${p._id}"` : '';
     const codeAttr = ` data-code="${(p.code||'').replace(/"/g,'&quot;')}"`;
     const current = (p[key] || '').trim();
     const list = current && !options.includes(current) ? [current, ...options] : options;
     const opts = [`<option value=""${current ? '' : ' selected'}>— בחרו —</option>`]
-      .concat(list.map(o => `<option value="${o.replace(/"/g,'&quot;')}"${o === current ? ' selected' : ''}>${o}</option>`))
+      .concat(list.map(o => {
+        const color = statusOptionColor(o);
+        return `<option value="${o.replace(/"/g,'&quot;')}"${color ? ` style="color:${color}"` : ''}${o === current ? ' selected' : ''}>${o}</option>`;
+      }))
       .join('');
+    const currentColor = statusOptionColor(current);
+    const selectStyle = currentColor ? ` style="color:${currentColor};font-weight:600"` : '';
     return `<div class="editWrap">` +
-      `<select class="editCell" data-field="${key}"${idAttr}${codeAttr}>${opts}</select>` +
+      `<select class="editCell" data-field="${key}"${idAttr}${codeAttr}${selectStyle}>${opts}</select>` +
       (fullyEditable ? `<span class="fillHandle" data-field="${key}"></span>` : '') +
       `</div>`;
   }
@@ -4230,7 +4247,7 @@ showHome();
 // ============ Tab 1: לוחות חשמל ============
 function statusClassPanels(status){
   const s = (status||'').trim();
-  if (s === 'סופק' || s === 'מוכן לאספקה') return 'b-green';
+  if (s === 'סופק' || s === 'מוכן לאספקה' || s === 'קיים') return 'b-green';
   if (s === 'HOLD' || s === 'בוטל' || s === 'מבוטל' || s === 'לא לביצוע') return 'b-red';
   if (s === 'בייצור' || s === 'למכרז' || s === 'לאישור') return 'b-blue';
   return 'b-gray';
@@ -4238,7 +4255,11 @@ function statusClassPanels(status){
 // Shared canonical status choices for the "status" column's dropdown — used by every tab
 // that tracks a physical panel's documentation/production status (panels itself, and the
 // simpler scanned tabs that didn't have a status column before).
-const PANEL_STATUS_OPTIONS = ['לאישור', 'למכרז', 'בייצור', 'מוכן לאספקה', 'סופק', 'HOLD', 'בוטל'];
+const PANEL_STATUS_OPTIONS = ['לאישור', 'למכרז', 'בייצור', 'מוכן לאספקה', 'סופק', 'קיים', 'HOLD', 'בוטל'];
+// Maps a status badge's existing color class to the plain text color it uses, so the
+// dropdown itself (both the closed select and its open option list) can be colored the
+// same way as the read-only badge, instead of every status looking the same until picked.
+const STATUS_COLOR_BY_CLASS = { 'b-green': 'var(--green)', 'b-red': 'var(--badge-red-text)', 'b-blue': 'var(--badge-blue-text)', 'b-gray': 'var(--text-dim)' };
 
 createPanelTable({
   idPrefix: 'panels',
