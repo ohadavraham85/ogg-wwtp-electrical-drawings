@@ -233,6 +233,30 @@
     vertical-align:middle;
   }
   .previewFileBtn:hover{border-color:var(--accent);color:var(--accent);}
+  .fileRemoveBtn{
+    background:none;
+    border:1.5px solid var(--line);
+    border-radius:5px;
+    color:var(--text-dim);
+    cursor:pointer;
+    font-size:.78rem;
+    line-height:1;
+    padding:2px 5px;
+    margin-inline-start:3px;
+    vertical-align:middle;
+  }
+  .fileRemoveBtn:hover{border-color:var(--red);color:var(--red);}
+  .fileMoveHandle{
+    display:inline-block;
+    cursor:grab;
+    color:var(--text-dim);
+    font-size:.82rem;
+    padding:1px 3px;
+    margin-inline-end:3px;
+    vertical-align:middle;
+  }
+  .fileMoveHandle:hover{color:var(--accent);}
+  .fileMoveHandle:active{cursor:grabbing;}
   /* Only shown once a tab is open (see showHome/showTab in the script) — the dashboard
      grid itself is hidden then, so this is the way back to the tab-picker home screen. */
   #backToHomeBtn{
@@ -1488,8 +1512,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 52;
-const APP_UPDATED_AT = '31/08/2026 22:15';
+const APP_VERSION = 53;
+const APP_UPDATED_AT = '31/08/2026 22:50';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -3291,6 +3315,49 @@ function createPanelTable(cfg){
     return `<button type="button" class="previewFileBtn" data-preview-url="${url}" data-preview-name="${safeName}" title="תצוגה מקדימה">👁</button>`;
   }
 
+  // Detaches whichever file(s)/Drive link a row has WITHOUT deleting the row itself —
+  // separate from delRowBtn, which removes the whole row (code, name, everything).
+  function removeFileBtnHtml(idx){
+    return `<button type="button" class="fileRemoveBtn" data-idx="${idx}" title="הסר את הקובץ מהשורה הזו (השורה עצמה נשארת)">🗑️</button>`;
+  }
+  function removeFileFromRow(idx){
+    const p = panels[idx];
+    if (!p) return;
+    if (!confirm('להסיר את הקובץ המקושר משורה זו? השורה עצמה תישאר.')) return;
+    panelFiles.delete(idx);
+    delete p.drive_url; delete p.drive_file_id; delete p.drive_modified_at; delete p.drive_modified_by;
+    persistFullTable();
+    applyFilters();
+  }
+
+  // A small drag handle that moves an already-attached file (local and/or the Drive link)
+  // from one row to another — separate from the OS-file drop targets above, which are for
+  // dragging a NEW file in from outside the browser. Uses a custom dataTransfer type so it
+  // never gets mistaken for an external file drop.
+  const FILE_MOVE_MIME = 'application/x-panel-file-move';
+  function moveFileHandleHtml(idx){
+    return `<span class="fileMoveHandle" draggable="true" data-move-idx="${idx}" title="גררו לשורה אחרת כדי להעביר אליה את הקובץ">⇄</span>`;
+  }
+  function moveFileToRow(sourceIdx, targetIdx){
+    if (Number.isNaN(sourceIdx) || Number.isNaN(targetIdx) || sourceIdx === targetIdx) return;
+    const sourceP = panels[sourceIdx], targetP = panels[targetIdx];
+    if (!sourceP || !targetP) return;
+    const sourceFiles = panelFiles.get(sourceIdx);
+    if (sourceFiles && sourceFiles.length){
+      panelFiles.set(targetIdx, sourceFiles);
+      panelFiles.delete(sourceIdx);
+    }
+    if (sourceP.drive_url){
+      targetP.drive_url = sourceP.drive_url;
+      targetP.drive_file_id = sourceP.drive_file_id;
+      targetP.drive_modified_at = sourceP.drive_modified_at;
+      targetP.drive_modified_by = sourceP.drive_modified_by;
+      delete sourceP.drive_url; delete sourceP.drive_file_id; delete sourceP.drive_modified_at; delete sourceP.drive_modified_by;
+    }
+    persistFullTable();
+    applyFilters();
+  }
+
   function cellContent(p, key, idx){
     if (key === '__drag__'){
       if (locked) return `<span class="dragHandleOff" title="פתחו עריכה כדי לשנות סדר שורות">⠿</span>`;
@@ -3350,11 +3417,11 @@ function createPanelTable(cfg){
       // Drive link there's no reason to keep showing the one that's about to go stale.
       if (p.drive_url){
         const drivePreviewUrl = p.drive_file_id ? `https://drive.google.com/file/d/${p.drive_file_id}/preview` : '';
-        linksHtml = `<div class="fileList"><a class="driveBadge" href="${p.drive_url}" target="_blank" rel="noopener"><span class="driveIcon"></span>הועלה לדרייב</a>${previewBtnHtml(drivePreviewUrl, p[linkKey])}</div>`;
+        linksHtml = `<div class="fileList">${moveFileHandleHtml(idx)}<a class="driveBadge" href="${p.drive_url}" target="_blank" rel="noopener"><span class="driveIcon"></span>הועלה לדרייב</a>${previewBtnHtml(drivePreviewUrl, p[linkKey])}${removeFileBtnHtml(idx)}</div>`;
       } else if (files && files.length){
-        linksHtml = `<div class="fileList">` +
+        linksHtml = `<div class="fileList">${moveFileHandleHtml(idx)}` +
           files.map((f,i) => `<a href="${f.url}" target="_blank" rel="noopener">📄 קובץ ${i+1}</a>${previewBtnHtml(f.url, f.name)}`).join(' · ') +
-          `</div>`;
+          `${removeFileBtnHtml(idx)}</div>`;
       }
       return editableCellHtml(p, linkKey, "מס' תוכנית...") + linksHtml;
     }
@@ -3372,15 +3439,15 @@ function createPanelTable(cfg){
       if (p.drive_url){
         const drivePreviewUrl = p.drive_file_id ? `https://drive.google.com/file/d/${p.drive_file_id}/preview` : '';
         return `<a class="code" href="${p.drive_url}" target="_blank" rel="noopener" title="פתח מגוגל דרייב">${p[key] || ''}</a>${previewBtnHtml(drivePreviewUrl, p[key])}` +
-          `<div class="fileList"><span class="driveBadge"><span class="driveIcon"></span>בדרייב</span></div>`;
+          `<div class="fileList">${moveFileHandleHtml(idx)}<span class="driveBadge"><span class="driveIcon"></span>בדרייב</span>${removeFileBtnHtml(idx)}</div>`;
       }
       if (files && files.length){
         if (files.length === 1){
-          return `<a class="code" href="${files[0].url}" target="_blank" rel="noopener">${p[key] || ''}</a>${previewBtnHtml(files[0].url, files[0].name)}`;
+          return `<a class="code" href="${files[0].url}" target="_blank" rel="noopener">${p[key] || ''}</a>${previewBtnHtml(files[0].url, files[0].name)}${moveFileHandleHtml(idx)}${removeFileBtnHtml(idx)}`;
         }
-        const localLinksHtml = `<div class="fileList">` +
+        const localLinksHtml = `<div class="fileList">${moveFileHandleHtml(idx)}` +
           files.map((f,i) => `<a href="${f.url}" target="_blank" rel="noopener">📄 קובץ ${i+1}</a>${previewBtnHtml(f.url, f.name)}`).join(' · ') +
-          `</div>`;
+          `${removeFileBtnHtml(idx)}</div>`;
         return `<span class="code multi">${p[key] || ''}</span>` + localLinksHtml;
       }
       return `<span class="code code-disabled">${p[key] || ''}</span>`;
@@ -3515,6 +3582,19 @@ function createPanelTable(cfg){
     applyFilters();
   });
 
+  tbody.addEventListener('click', (e) => {
+    const btn = e.target.closest('.fileRemoveBtn');
+    if (!btn) return;
+    removeFileFromRow(parseInt(btn.dataset.idx, 10));
+  });
+
+  tbody.addEventListener('dragstart', (e) => {
+    const handle = e.target.closest('.fileMoveHandle');
+    if (!handle) return;
+    e.dataTransfer.setData(FILE_MOVE_MIME, handle.dataset.moveIdx);
+    e.dataTransfer.effectAllowed = 'move';
+  });
+
   // Attaches dropped file(s) straight to one specific row — same file-entry shape as the
   // whole-tab folder scan (name/url/file), so every existing render path (סוג קובץ badge,
   // preview button, code link) treats it identically. Replaces an existing entry with the
@@ -3566,6 +3646,14 @@ function createPanelTable(cfg){
     e.stopPropagation();
     zone.classList.remove('rowDragOver');
     const idx = parseInt(zone.dataset.idx, 10);
+    // An internal drag (the ⇄ move handle on an already-attached file) carries our own
+    // custom MIME type instead of real OS files — move the file between rows instead of
+    // treating it as a new attachment.
+    const moveSourceRaw = e.dataTransfer.getData(FILE_MOVE_MIME);
+    if (moveSourceRaw !== ''){
+      moveFileToRow(parseInt(moveSourceRaw, 10), idx);
+      return;
+    }
     const items = e.dataTransfer.items;
     let files = items && items.length ? await walkDataTransferItems(Array.from(items)) : [];
     if (!files.length && e.dataTransfer.files && e.dataTransfer.files.length){
