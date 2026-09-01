@@ -1512,8 +1512,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 53;
-const APP_UPDATED_AT = '31/08/2026 22:50';
+const APP_VERSION = 54;
+const APP_UPDATED_AT = '01/09/2026 17:30';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -2417,7 +2417,7 @@ function createPanelTable(cfg){
   const {
     idPrefix, panels, columns, defaultVisible,
     statusClassFn, searchKeys, extraFilters, editableFields, matchMode,
-    fullyEditable, allowAddRows
+    fullyEditable, allowAddRows, statusOptions
   } = cfg;
   // Every tab gets a drag handle as its very first column, so rows can be manually
   // reordered by grabbing and dragging — independent of whatever sort/filter is active.
@@ -3307,6 +3307,24 @@ function createPanelTable(cfg){
       `</div>`;
   }
 
+  // A dropdown instead of free text for the "status" column, wherever a tab's config
+  // supplies a fixed list of statuses (statusOptions) — a row whose stored status is some
+  // older/free-typed value not in that list still keeps it selected via an extra option,
+  // rather than silently blanking it out.
+  function statusSelectHtml(p, key, options){
+    const idAttr = p._id ? ` data-id="${p._id}"` : '';
+    const codeAttr = ` data-code="${(p.code||'').replace(/"/g,'&quot;')}"`;
+    const current = (p[key] || '').trim();
+    const list = current && !options.includes(current) ? [current, ...options] : options;
+    const opts = [`<option value=""${current ? '' : ' selected'}>— בחרו —</option>`]
+      .concat(list.map(o => `<option value="${o.replace(/"/g,'&quot;')}"${o === current ? ' selected' : ''}>${o}</option>`))
+      .join('');
+    return `<div class="editWrap">` +
+      `<select class="editCell" data-field="${key}"${idAttr}${codeAttr}>${opts}</select>` +
+      (fullyEditable ? `<span class="fillHandle" data-field="${key}"></span>` : '') +
+      `</div>`;
+  }
+
   // The 👁 preview button next to a file link — see window.openFilePreview and its
   // delegated click handler near the top of the script for what it actually does.
   function previewBtnHtml(url, name){
@@ -3424,6 +3442,9 @@ function createPanelTable(cfg){
           `${removeFileBtnHtml(idx)}</div>`;
       }
       return editableCellHtml(p, linkKey, "מס' תוכנית...") + linksHtml;
+    }
+    if (key === 'status' && !locked && editable.has(key) && statusOptions){
+      return statusSelectHtml(p, key, statusOptions);
     }
     if (!locked && editable.has(key)){
       return editableCellHtml(p, key);
@@ -4214,6 +4235,10 @@ function statusClassPanels(status){
   if (s === 'בייצור' || s === 'למכרז' || s === 'לאישור') return 'b-blue';
   return 'b-gray';
 }
+// Shared canonical status choices for the "status" column's dropdown — used by every tab
+// that tracks a physical panel's documentation/production status (panels itself, and the
+// simpler scanned tabs that didn't have a status column before).
+const PANEL_STATUS_OPTIONS = ['לאישור', 'למכרז', 'בייצור', 'מוכן לאספקה', 'סופק', 'HOLD', 'בוטל'];
 
 createPanelTable({
   idPrefix: 'panels',
@@ -4239,6 +4264,7 @@ createPanelTable({
   ],
   defaultVisible: [],
   statusClassFn: statusClassPanels,
+  statusOptions: PANEL_STATUS_OPTIONS,
   searchKeys: ['code','name','building','building_num'],
   extraFilters: [
     { id: 'building', key: 'building' },
@@ -4257,6 +4283,7 @@ function statusClassPlanner(status){
   if (s === 'לעיון') return 'b-gray';
   return 'b-gray';
 }
+const PLANNER_STATUS_OPTIONS = ['לעיון', 'למכרז', 'לביצוע'];
 
 createPanelTable({
   idPrefix: 'planner',
@@ -4277,6 +4304,7 @@ createPanelTable({
   ],
   defaultVisible: [],
   statusClassFn: statusClassPlanner,
+  statusOptions: PLANNER_STATUS_OPTIONS,
   searchKeys: ['code','name','building','building_num'],
   extraFilters: [
     { id: 'building', key: 'building' },
@@ -4289,8 +4317,6 @@ createPanelTable({
 });
 
 // ============ Simple scanned-only tabs: built purely from folder scans, no data sheet ============
-function statusClassNeutral(){ return 'b-gray'; }
-
 function makeScannedTab(idPrefix, data){
   createPanelTable({
     idPrefix,
@@ -4301,13 +4327,17 @@ function makeScannedTab(idPrefix, data){
       { key: 'name',         label: 'תיאור (משם הקובץ)', required: true },
       { key: 'building_num', label: 'מס\' מבנה (למילוי ידני)', required: true },
       { key: 'file_count',   label: 'מס\' קבצים',      required: false },
+      { key: 'status',       label: 'סטטוס',           required: true },
       { key: '__delete__',   label: '',                required: true },
     ],
     defaultVisible: [],
-    statusClassFn: statusClassNeutral,
+    statusClassFn: statusClassPanels,
+    statusOptions: PANEL_STATUS_OPTIONS,
     searchKeys: ['code','name','building_num'],
-    extraFilters: [],
-    editableFields: ['code','name','building_num','file_count'],
+    extraFilters: [
+      { id: 'status', key: 'status' },
+    ],
+    editableFields: ['code','name','building_num','file_count','status'],
     fullyEditable: true,
     allowAddRows: true,
   });
@@ -4325,15 +4355,18 @@ createPanelTable({
     { key: 'equip_tag',    label: 'תגית ציוד',             required: true },
     { key: 'panel_type',   label: 'סוג לוח',              required: true },
     { key: 'building_num', label: 'מס\' מבנה (למילוי ידני)', required: true },
+    { key: 'status',       label: 'סטטוס',                required: true },
     { key: '__delete__',   label: '',                       required: true },
   ],
   defaultVisible: [],
-  statusClassFn: statusClassNeutral,
+  statusClassFn: statusClassPanels,
+  statusOptions: PANEL_STATUS_OPTIONS,
   searchKeys: ['code','ils_num','name','equip_tag','panel_type'],
   extraFilters: [
     { id: 'panel_type', key: 'panel_type' },
+    { id: 'status', key: 'status' },
   ],
-  editableFields: ['code','ils_num','name','equip_tag','panel_type','building_num'],
+  editableFields: ['code','ils_num','name','equip_tag','panel_type','building_num','status'],
   fullyEditable: true,
   allowAddRows: true,
 });
@@ -4346,14 +4379,18 @@ createPanelTable({
     { key: 'code',         label: "מס' תוכנית",      required: true },
     { key: 'name',         label: 'תיאור',           required: true },
     { key: 'building_num', label: "מס' מבנה",        required: true },
+    { key: 'status',       label: 'סטטוס',           required: true },
     { key: '__delete__',   label: '',                required: true },
   ],
   matchMode: 'alphanumeric',
   defaultVisible: [],
-  statusClassFn: statusClassNeutral,
+  statusClassFn: statusClassPanels,
+  statusOptions: PANEL_STATUS_OPTIONS,
   searchKeys: ['code','name','building_num'],
-  extraFilters: [],
-  editableFields: ['code','name','building_num'],
+  extraFilters: [
+    { id: 'status', key: 'status' },
+  ],
+  editableFields: ['code','name','building_num','status'],
   fullyEditable: true,
   allowAddRows: true,
 });
@@ -4365,14 +4402,18 @@ createPanelTable({
     { key: 'code',         label: "מס' תוכנית",      required: true },
     { key: 'name',         label: 'תיאור',           required: true },
     { key: 'building_num', label: "מס' מבנה",        required: true },
+    { key: 'status',       label: 'סטטוס',           required: true },
     { key: '__delete__',   label: '',                required: true },
   ],
   matchMode: 'alphanumeric',
   defaultVisible: [],
-  statusClassFn: statusClassNeutral,
+  statusClassFn: statusClassPanels,
+  statusOptions: PANEL_STATUS_OPTIONS,
   searchKeys: ['code','name','building_num'],
-  extraFilters: [],
-  editableFields: ['code','name','building_num'],
+  extraFilters: [
+    { id: 'status', key: 'status' },
+  ],
+  editableFields: ['code','name','building_num','status'],
   fullyEditable: true,
   allowAddRows: true,
 });
