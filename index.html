@@ -471,6 +471,23 @@
     white-space:nowrap;
   }
   .hasFileToggle input{accent-color:var(--accent);cursor:pointer;}
+  .mapTabFilters{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 14px;
+    margin-top:10px;
+  }
+  .mapTabFilterItem{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-size:.82rem;
+    color:var(--text-dim);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .mapTabFilterItem input{accent-color:var(--accent);cursor:pointer;}
+  .mapTabFilterItem .mapNamePinSvg{width:11px;height:15px;filter:none;}
   .table-scroll{
     overflow:auto;
     /* Filled dynamically to whatever room is left below the header/filters/toggle on
@@ -1134,6 +1151,7 @@
     <div id="dashboardCards"></div>
     <div class="dashMapSection">
       <div class="topRow"><div class="tabTitle" style="margin-bottom:0">🗺️ מפה מרוכזת</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="lockToggleBtn" id="mapViewToggleBtn"></button><button type="button" class="lockToggleBtn" id="mapEditToggleBtn"></button></div></div>
+      <div id="mapTabFilters" class="mapTabFilters"></div>
       <div id="aggregateMapContainer" style="height:60vh;margin-top:8px"></div>
       <div id="satelliteMapContainer" style="height:60vh;margin-top:8px;display:none"></div>
     </div>
@@ -1470,8 +1488,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 51;
-const APP_UPDATED_AT = '31/08/2026 21:45';
+const APP_VERSION = 52;
+const APP_UPDATED_AT = '31/08/2026 22:15';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1738,6 +1756,30 @@ async function collectFilesFromDirHandle(dirHandle){
 const tableRegistry = [];
 let currentActiveTab = null; // null = home screen (the dashboard grid, no tab open)
 
+// Per-viewer checkbox filter for which tabs' pins show on the aggregate map — a display
+// preference, not shared data, so it lives in localStorage (like the layout preference)
+// rather than syncing through Firestore.
+const MAP_VISIBLE_TABS_KEY = 'map-visible-tabs';
+let mapVisibleTabs = {};
+try { mapVisibleTabs = JSON.parse(localStorage.getItem(MAP_VISIBLE_TABS_KEY)) || {}; } catch(e){ mapVisibleTabs = {}; }
+function isTabVisibleOnMap(idPrefix){ return mapVisibleTabs[idPrefix] !== false; }
+
+function renderMapTabFilters(){
+  const el = document.getElementById('mapTabFilters');
+  if (!el || !tableRegistry.length) return;
+  el.innerHTML = tableRegistry.map(t => {
+    const checked = isTabVisibleOnMap(t.idPrefix) ? ' checked' : '';
+    return `<label class="mapTabFilterItem"><input type="checkbox" data-tab-filter="${t.idPrefix}"${checked}>${pinSvg(getTabPinColor(t.idPrefix))}${t.label}</label>`;
+  }).join('');
+  el.querySelectorAll('input[data-tab-filter]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      mapVisibleTabs[cb.dataset.tabFilter] = cb.checked;
+      localStorage.setItem(MAP_VISIBLE_TABS_KEY, JSON.stringify(mapVisibleTabs));
+      if (window.renderAggregateMap) window.renderAggregateMap();
+    });
+  });
+}
+
 function renderDashboard(){
   const el = document.getElementById('dashboardCards');
   if (!el || tableRegistry.length === 0) return;
@@ -1773,6 +1815,7 @@ function renderDashboard(){
       if (btn) btn.click();
     });
   });
+  renderMapTabFilters();
   if (window.renderAggregateMap) window.renderAggregateMap();
 }
 
@@ -2138,6 +2181,7 @@ window.renderAggregateMap = function renderAggregateMap(){
   aggregateMarkers.forEach(m => m.remove());
   aggregateMarkers = [];
   tableRegistry.forEach(t => {
+    if (!isTabVisibleOnMap(t.idPrefix)) return;
     const panelFiles = t.getPanelFiles ? t.getPanelFiles() : null;
     t.panels.forEach((p, idx) => {
       if (!p.lat || !p.lng) return;
