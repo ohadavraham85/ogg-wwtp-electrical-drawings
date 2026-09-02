@@ -499,6 +499,12 @@
   }
   .controls input{flex:1 1 260px;min-width:200px;max-width:420px;}
   .controls input:focus, .controls select:focus{outline:none;border-color:var(--accent);}
+  /* A <select> otherwise sizes itself to its single widest <option> — with a building
+     name or long status string as an option, that alone could run 250-300px, which is
+     most of the reason the whole filter row didn't fit on one line at ordinary desktop
+     widths (not just extra-wide monitors). Capped width + ellipsis keeps the row compact;
+     the full option text still shows once opened or on hover via its native tooltip. */
+  .controlsExtra select{max-width:170px;text-overflow:ellipsis;}
   .hasFileToggle{
     display:flex;
     align-items:center;
@@ -1233,10 +1239,10 @@
       <div class="controlsExtra">
       <select id="building-panels"><option value="">כל המבנים</option></select>
       <select id="status-panels"><option value="">כל הסטטוסים</option></select>
-      <label class="hasFileToggle"><input type="checkbox" id="hasFile-panels"> הצג רק לוחות עם תוכנית מקושרת</label>
+      <label class="hasFileToggle"><input type="checkbox" id="hasFile-panels"> רק לוחות עם תוכנית מקושרת</label>
       <button type="button" class="addRowBtn" id="addRowBtn-panels">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-panels">+ 10 שורות</button>
-      <button type="button" class="addRowBtn" id="checkDriveBtn-panels">🔄 בדוק עדכונים בדרייב</button>
+      <button type="button" class="addRowBtn" id="checkDriveBtn-panels">🔄 עדכוני דרייב</button>
       </div>
     </div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
@@ -1279,10 +1285,10 @@
       <select id="building-planner"><option value="">כל המבנים</option></select>
       <select id="status-planner"><option value="">כל הסטטוסים</option></select>
       <select id="sheet-planner"><option value="">כל הגיליונות</option></select>
-      <label class="hasFileToggle"><input type="checkbox" id="hasFile-planner"> הצג רק תוכניות עם קובץ מקושר</label>
+      <label class="hasFileToggle"><input type="checkbox" id="hasFile-planner"> רק תוכניות עם קובץ מקושר</label>
       <button type="button" class="addRowBtn" id="addRowBtn-planner">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-planner">+ 10 שורות</button>
-      <button type="button" class="addRowBtn" id="checkDriveBtn-planner">🔄 בדוק עדכונים בדרייב</button>
+      <button type="button" class="addRowBtn" id="checkDriveBtn-planner">🔄 עדכוני דרייב</button>
       </div>
     </div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
@@ -1316,10 +1322,10 @@
       <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
       <div class="controlsExtra">
       <select id="panel_type-greenhouses"><option value="">כל סוגי הלוח</option></select>
-      <label class="hasFileToggle"><input type="checkbox" id="hasFile-greenhouses"> הצג רק שורות עם קובץ מקושר</label>
+      <label class="hasFileToggle"><input type="checkbox" id="hasFile-greenhouses"> רק שורות עם קובץ מקושר</label>
       <button type="button" class="addRowBtn" id="addRowBtn-greenhouses">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-greenhouses">+ 10 שורות</button>
-      <button type="button" class="addRowBtn" id="checkDriveBtn-greenhouses">🔄 בדוק עדכונים בדרייב</button>
+      <button type="button" class="addRowBtn" id="checkDriveBtn-greenhouses">🔄 עדכוני דרייב</button>
       </div>
     </div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
@@ -1352,10 +1358,10 @@
       <input type="text" id="search-hvac" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
       <div class="controlsExtra">
-      <label class="hasFileToggle"><input type="checkbox" id="hasFile-hvac"> הצג רק שורות עם קובץ מקושר</label>
+      <label class="hasFileToggle"><input type="checkbox" id="hasFile-hvac"> רק שורות עם קובץ מקושר</label>
       <button type="button" class="addRowBtn" id="addRowBtn-hvac">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-hvac">+ 10 שורות</button>
-      <button type="button" class="addRowBtn" id="checkDriveBtn-hvac">🔄 בדוק עדכונים בדרייב</button>
+      <button type="button" class="addRowBtn" id="checkDriveBtn-hvac">🔄 עדכוני דרייב</button>
       </div>
     </div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
@@ -1388,10 +1394,10 @@
       <input type="text" id="search-hv" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
       <div class="controlsExtra">
-      <label class="hasFileToggle"><input type="checkbox" id="hasFile-hv"> הצג רק שורות עם קובץ מקושר</label>
+      <label class="hasFileToggle"><input type="checkbox" id="hasFile-hv"> רק שורות עם קובץ מקושר</label>
       <button type="button" class="addRowBtn" id="addRowBtn-hv">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-hv">+ 10 שורות</button>
-      <button type="button" class="addRowBtn" id="checkDriveBtn-hv">🔄 בדוק עדכונים בדרייב</button>
+      <button type="button" class="addRowBtn" id="checkDriveBtn-hv">🔄 עדכוני דרייב</button>
       </div>
     </div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
@@ -1424,10 +1430,10 @@
       <input type="text" id="search-mtsh-lv" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
       <div class="controlsExtra">
-      <label class="hasFileToggle"><input type="checkbox" id="hasFile-mtsh-lv"> הצג רק שורות עם קובץ מקושר</label>
+      <label class="hasFileToggle"><input type="checkbox" id="hasFile-mtsh-lv"> רק שורות עם קובץ מקושר</label>
       <button type="button" class="addRowBtn" id="addRowBtn-mtsh-lv">+ הוסף שורה</button>
       <button type="button" class="addRowBtn" id="addRows10Btn-mtsh-lv">+ 10 שורות</button>
-      <button type="button" class="addRowBtn" id="checkDriveBtn-mtsh-lv">🔄 בדוק עדכונים בדרייב</button>
+      <button type="button" class="addRowBtn" id="checkDriveBtn-mtsh-lv">🔄 עדכוני דרייב</button>
       </div>
     </div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
@@ -1532,8 +1538,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 58;
-const APP_UPDATED_AT = '01/09/2026 19:00';
+const APP_VERSION = 59;
+const APP_UPDATED_AT = '01/09/2026 19:30';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -2550,7 +2556,7 @@ function createPanelTable(cfg){
   // ...and a "עודכן בדרייב" column for rows that were uploaded to Drive, showing when
   // the Drive copy was last modified (not the same as the upload date — someone could
   // have replaced/edited the file directly in Drive afterward) and by whom. Filled in
-  // by the "🔄 בדוק עדכונים בדרייב" button (see driveCheckBtn wiring below), not live.
+  // by the "🔄 עדכוני דרייב" button (see driveCheckBtn wiring below), not live.
   if (columns.some(c => c.key === 'code') && !columns.some(c => c.key === '__driveupdated__')){
     const deleteIdx4 = columns.findIndex(c => c.key === '__delete__');
     const driveUpdatedCol = { key: '__driveupdated__', label: 'עודכן בדרייב', required: true };
@@ -3536,7 +3542,7 @@ function createPanelTable(cfg){
     }
     if (key === '__driveupdated__'){
       if (!p.drive_file_id) return '<span class="bnum">—</span>';
-      if (!p.drive_modified_at) return '<span class="bnum" title="לחצו על &quot;בדוק עדכונים בדרייב&quot; למעלה כדי לבדוק">טרם נבדק</span>';
+      if (!p.drive_modified_at) return '<span class="bnum" title="לחצו על &quot;עדכוני דרייב&quot; למעלה כדי לבדוק">טרם נבדק</span>';
       const who = p.drive_modified_by ? ` · ${p.drive_modified_by}` : '';
       return `<span class="bnum" title="עודכן לאחרונה בדרייב${who}">${formatFileDate(p.drive_modified_at)}${who}</span>`;
     }
