@@ -1512,8 +1512,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 55;
-const APP_UPDATED_AT = '01/09/2026 17:45';
+const APP_VERSION = 56;
+const APP_UPDATED_AT = '01/09/2026 18:05';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -3473,19 +3473,22 @@ function createPanelTable(cfg){
       // once Drive has it: a local blob: link only survives this browser tab's current
       // session, so once there's a permanent Drive link, the local one is already stale
       // or about to be.
+      // Locked = view-only, same as every other row control (delete row, edit fields):
+      // moving/removing a file is destructive/data-altering, so it needs editing opened
+      // first, just like everything else — no move handle or 🗑️ button here.
       const files = panelFiles.get(idx);
       if (p.drive_url){
         const drivePreviewUrl = p.drive_file_id ? `https://drive.google.com/file/d/${p.drive_file_id}/preview` : '';
         return `<a class="code" href="${p.drive_url}" target="_blank" rel="noopener" title="פתח מגוגל דרייב">${p[key] || ''}</a>${previewBtnHtml(drivePreviewUrl, p[key])}` +
-          `<div class="fileList">${moveFileHandleHtml(idx)}<span class="driveBadge"><span class="driveIcon"></span>בדרייב</span>${removeFileBtnHtml(idx)}</div>`;
+          `<div class="fileList"><span class="driveBadge"><span class="driveIcon"></span>בדרייב</span></div>`;
       }
       if (files && files.length){
         if (files.length === 1){
-          return `<a class="code" href="${files[0].url}" target="_blank" rel="noopener">${p[key] || ''}</a>${previewBtnHtml(files[0].url, files[0].name)}${moveFileHandleHtml(idx)}${removeFileBtnHtml(idx)}`;
+          return `<a class="code" href="${files[0].url}" target="_blank" rel="noopener">${p[key] || ''}</a>${previewBtnHtml(files[0].url, files[0].name)}`;
         }
-        const localLinksHtml = `<div class="fileList">${moveFileHandleHtml(idx)}` +
+        const localLinksHtml = `<div class="fileList">` +
           files.map((f,i) => `<a href="${f.url}" target="_blank" rel="noopener">📄 קובץ ${i+1}</a>${previewBtnHtml(f.url, f.name)}`).join(' · ') +
-          `${removeFileBtnHtml(idx)}</div>`;
+          `</div>`;
         return `<span class="code multi">${p[key] || ''}</span>` + localLinksHtml;
       }
       return `<span class="code code-disabled">${p[key] || ''}</span>`;
