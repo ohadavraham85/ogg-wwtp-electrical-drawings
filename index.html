@@ -1567,8 +1567,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 65;
-const APP_UPDATED_AT = '02/09/2026 01:00';
+const APP_VERSION = 66;
+const APP_UPDATED_AT = '02/09/2026 02:00';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -2527,14 +2527,21 @@ function findSatelliteAssignMatches(query){
       }
       closeSatelliteAssignModal();
       const latBeforeRender = String(pendingSatelliteLatLng ? pendingSatelliteLatLng.lat : '');
+      const assignedTabLabel = m.kind === 'panel' ? m.tabLabel : null;
+      const assignedTabHidden = m.kind === 'panel' && !isTabVisibleOnMap(m.idPrefix);
       if (window.renderSatelliteMap) window.renderSatelliteMap();
       // renderSatelliteMap() runs synchronously (it only defers invalidateSize), so by
       // here the new marker should already be in satelliteMarkers. If it isn't, the
-      // assignment itself succeeded but rendering it silently failed (e.g. the try/catch
-      // added around each marker swallowed something) — surface that instead of leaving
-      // the modal simply closed with nothing to show for it.
+      // assignment itself succeeded but rendering it silently failed — surface that
+      // instead of leaving the modal simply closed with nothing to show for it. The most
+      // likely cause: the checkbox row above the map hides that panel's own tab, a
+      // per-device setting (localStorage) that can differ between a phone and a computer
+      // that both open the same site, so "it works on my phone but not my computer" is
+      // exactly what that looks like.
       const stillMissing = !satelliteMarkers.some(mk => mk.getLatLng && String(mk.getLatLng().lat) === latBeforeRender);
-      if (stillMissing){
+      if (stillMissing && assignedTabHidden){
+        alert('השיוך נשמר, אבל הסיכה לא מוצגת כי הלשונית "' + assignedTabLabel + '" מכובה בתיבות הסימון מעל המפה, במחשב הזה (זו הגדרה נפרדת לכל מכשיר). סמנו את התיבה של "' + assignedTabLabel + '" למעלה כדי לראות אותה.');
+      } else if (stillMissing){
         alert('השיוך נשמר, אבל הסיכה לא הופיעה על המפה. אפשר לנסות "🔄 בדוק עדכון" ולחזור לנסות, ולדווח לי אם זה חוזר.');
       }
     } catch(err){
