@@ -1496,6 +1496,22 @@
   </div>
 </div>
 
+<div class="locationModalOverlay" id="satelliteAssignModal" style="display:none">
+  <div class="locationModalBox">
+    <div class="locationModalHeader">
+      <div class="locationModalTitle">שייכו את הסיכה ל...</div>
+      <button type="button" class="locationModalClose" id="satelliteAssignClose">✕</button>
+    </div>
+    <div class="locationModalBody">
+      <div class="sub">בחרו לוח, תוכנית או מספר מבנה כדי לשייך אליו את המיקום שסימנתם על מפת הלוויין.</div>
+      <div class="locationModalRow">
+        <input type="text" id="satelliteAssignSearch" placeholder="חיפוש..." style="flex:1;min-width:220px;padding:9px 12px;background:var(--panel);border:1.5px solid var(--line);border-radius:6px;color:var(--text);">
+      </div>
+      <div id="satelliteAssignResults" style="max-height:320px;overflow-y:auto;border:1.5px solid var(--line);border-radius:8px;"></div>
+    </div>
+  </div>
+</div>
+
 <div class="locationModalOverlay" id="layoutModal" style="display:none">
   <div class="locationModalBox">
     <div class="locationModalHeader">
@@ -1551,8 +1567,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 61;
-const APP_UPDATED_AT = '01/09/2026 20:05';
+const APP_VERSION = 62;
+const APP_UPDATED_AT = '01/09/2026 20:35';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -2366,12 +2382,17 @@ window.renderAggregateMap = function renderAggregateMap(){
   function updateUI(){
     btn.textContent = mapEditMode ? '🔓 פתוח לעריכה — לחצו לנעילה' : '🔒 נעול לתצוגה — לחצו לעריכת מיקומים';
     btn.classList.toggle('isUnlocked', mapEditMode);
+    btn.title = mapEditMode ? 'בתצוגת לוויין: לחצו על המפה כדי לנעוץ סיכה ולשייך אותה ללוח או למספר מבנה' : '';
     if (addBtn) addBtn.style.display = mapEditMode ? '' : 'none';
   }
   btn.addEventListener('click', () => {
     mapEditMode = !mapEditMode;
     updateUI();
     if (window.renderAggregateMap) window.renderAggregateMap();
+    // Only if the satellite view has actually been opened at least once this session —
+    // no reason to instantiate it (and start fetching tiles) just because edit mode
+    // toggled while still on the site-plan view.
+    if (satelliteMap && window.renderSatelliteMap) window.renderSatelliteMap();
   });
   // Drops a new red-circle building-number marker at the map's current center — since
   // edit mode is already on at this point, it's immediately draggable into place, same
@@ -2393,15 +2414,90 @@ window.renderAggregateMap = function renderAggregateMap(){
 // Experimental alternative map view: a live, real-world satellite map (free Esri World
 // Imagery tiles, no API key/billing needed — unlike Google Maps, which requires a billing
 // account even on its free tier) centered on the plant's real GPS location, as a trial
-// alongside the original site-plan-image map. Since the panels' lat/lng values are local
-// pixel coordinates on the site-plan image, not real GPS, panel pins aren't placed on this
-// view yet — only a single marker showing the plant itself, to confirm the location.
+// alongside the original site-plan-image map. Panels and building markers each carry a
+// SEPARATE real_lat/real_lng pair from their site-plan lat/lng — the two maps use
+// unrelated coordinate systems (real GPS vs. the site-plan image's own pixel space), so a
+// spot placed on one map has no meaningful position on the other until placed there too.
 let satelliteMap = null;
+let satelliteMarkers = [];
 let mapViewMode = 'plan'; // 'plan' | 'satellite'
+let pendingSatelliteLatLng = null;
 window.__satelliteMapInvalidate = () => {
   if (!satelliteMap || mapViewMode !== 'satellite') return;
   satelliteMap.invalidateSize();
 };
+
+function openSatelliteAssignModal(latlng){
+  pendingSatelliteLatLng = latlng;
+  document.getElementById('satelliteAssignModal').style.display = 'flex';
+  const searchInput = document.getElementById('satelliteAssignSearch');
+  searchInput.value = '';
+  document.getElementById('satelliteAssignResults').innerHTML = '';
+  setTimeout(() => searchInput.focus(), 30);
+}
+function closeSatelliteAssignModal(){
+  document.getElementById('satelliteAssignModal').style.display = 'none';
+  pendingSatelliteLatLng = null;
+}
+// Searches every panel across all 6 tabs (same substring match as the home-screen global
+// search) plus every building-number marker, so one search box can target either kind.
+function findSatelliteAssignMatches(query){
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const matches = [];
+  for (const t of tableRegistry){
+    t.panels.forEach((p, idx) => {
+      const hit = Object.keys(p).some(k => k !== '_id' && String(p[k] || '').toLowerCase().includes(q));
+      if (!hit) return;
+      matches.push({ kind: 'panel', idPrefix: t.idPrefix, tabLabel: t.label, idx, label: p.name || p.code || 'שורה' });
+    });
+  }
+  buildingMarkers.forEach(bm => {
+    if (String(bm.number || '').toLowerCase().includes(q)){
+      matches.push({ kind: 'building', id: bm._id, label: 'מספר מבנה ' + bm.number });
+    }
+  });
+  return matches.slice(0, 40);
+}
+(function wireSatelliteAssignModal(){
+  const closeBtn = document.getElementById('satelliteAssignClose');
+  const overlay = document.getElementById('satelliteAssignModal');
+  const searchInput = document.getElementById('satelliteAssignSearch');
+  const resultsEl = document.getElementById('satelliteAssignResults');
+  if (!closeBtn || !overlay || !searchInput || !resultsEl) return;
+  closeBtn.addEventListener('click', closeSatelliteAssignModal);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeSatelliteAssignModal(); });
+  searchInput.addEventListener('input', () => {
+    const matches = findSatelliteAssignMatches(searchInput.value);
+    resultsEl._matches = matches;
+    resultsEl.innerHTML = matches.length
+      ? matches.map((m, i) => `<div class="globalSearchResultItem" data-idx="${i}">${escapeHtml(m.label)}${m.kind === 'panel' ? `<span class="globalSearchResultTab">— ${escapeHtml(m.tabLabel)}</span>` : ''}</div>`).join('')
+      : `<div class="globalSearchEmpty">לא נמצאו תוצאות</div>`;
+  });
+  resultsEl.addEventListener('click', (e) => {
+    const item = e.target.closest('.globalSearchResultItem');
+    if (!item || !pendingSatelliteLatLng) return;
+    const m = (resultsEl._matches || [])[parseInt(item.dataset.idx, 10)];
+    if (!m) return;
+    if (m.kind === 'panel'){
+      const t = tableRegistry.find(x => x.idPrefix === m.idPrefix);
+      const p = t && t.panels[m.idx];
+      if (!p) return;
+      p.real_lat = String(pendingSatelliteLatLng.lat);
+      p.real_lng = String(pendingSatelliteLatLng.lng);
+      if (window.__panelTableSaveLocation && window.__panelTableSaveLocation[m.idPrefix]) window.__panelTableSaveLocation[m.idPrefix]();
+    } else if (m.kind === 'building'){
+      const bm = buildingMarkers.find(x => x._id === m.id);
+      if (!bm) return;
+      bm.real_lat = String(pendingSatelliteLatLng.lat);
+      bm.real_lng = String(pendingSatelliteLatLng.lng);
+      persistBuildingMarkers();
+    }
+    closeSatelliteAssignModal();
+    if (window.renderSatelliteMap) window.renderSatelliteMap();
+  });
+})();
+
 window.renderSatelliteMap = function renderSatelliteMap(){
   const el = document.getElementById('satelliteMapContainer');
   if (!el) return;
@@ -2413,7 +2509,75 @@ window.renderSatelliteMap = function renderSatelliteMap(){
     }).addTo(satelliteMap);
     satelliteMap.setView(PLANT_REAL_LATLNG, 18);
     L.marker(PLANT_REAL_LATLNG).addTo(satelliteMap).bindPopup('מט"ש אוג');
+    // A click on empty map space (not on a marker — Leaflet markers don't propagate their
+    // own clicks up to the map) opens the assign picker only while the map is in the same
+    // edit mode the site-plan map already uses, so a stray tap while just viewing doesn't
+    // pop up a modal.
+    satelliteMap.on('click', (e) => {
+      if (!mapEditMode) return;
+      openSatelliteAssignModal(e.latlng);
+    });
   }
+  satelliteMarkers.forEach(m => m.remove());
+  satelliteMarkers = [];
+  tableRegistry.forEach(t => {
+    if (!isTabVisibleOnMap(t.idPrefix)) return;
+    const panelFiles = t.getPanelFiles ? t.getPanelFiles() : null;
+    t.panels.forEach((p, idx) => {
+      if (!p.real_lat || !p.real_lng) return;
+      const lat = parseFloat(p.real_lat), lng = parseFloat(p.real_lng);
+      if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+      const label = p.name || p.code || 'לוח';
+      const marker = L.marker([lat, lng], { icon: nameMarkerIcon(label, getTabPinColor(t.idPrefix)), draggable: mapEditMode }).addTo(satelliteMap);
+      if (mapEditMode){
+        // No grid-snap here (unlike the site-plan map) — real GPS coordinates don't have
+        // a meaningful grid to snap to, so dragging just follows the cursor freely.
+        marker.on('dragend', () => {
+          const ll = marker.getLatLng();
+          p.real_lat = String(ll.lat);
+          p.real_lng = String(ll.lng);
+          if (window.__panelTableSaveLocation && window.__panelTableSaveLocation[t.idPrefix]) window.__panelTableSaveLocation[t.idPrefix]();
+        });
+      }
+      const files = panelFiles ? panelFiles.get(idx) : null;
+      let fileUrl = '';
+      if (p.drive_url){
+        fileUrl = p.drive_file_id ? `https://drive.google.com/file/d/${p.drive_file_id}/preview` : p.drive_url;
+      } else if (files && files.length){
+        fileUrl = pickPrimaryFile(files).url;
+      }
+      if (fileUrl){
+        marker.on('click', () => window.openFilePreview({ url: fileUrl, name: label }));
+      } else {
+        marker.bindPopup(`<b>${escapeHtml(label)}</b><br>${escapeHtml(t.label)}`);
+      }
+      satelliteMarkers.push(marker);
+    });
+  });
+  buildingMarkers.forEach(bm => {
+    if (!bm.real_lat || !bm.real_lng) return;
+    const lat = parseFloat(bm.real_lat), lng = parseFloat(bm.real_lng);
+    if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+    const marker = L.marker([lat, lng], { icon: buildingMarkerIcon(bm.number), draggable: mapEditMode, zIndexOffset: 1000 }).addTo(satelliteMap);
+    if (mapEditMode){
+      marker.on('dragend', () => {
+        const ll = marker.getLatLng();
+        bm.real_lat = String(ll.lat);
+        bm.real_lng = String(ll.lng);
+        persistBuildingMarkers();
+      });
+      // Unassigns this building number's real-GPS spot only (not the marker itself —
+      // that still exists on the site-plan map) so it can be re-placed elsewhere.
+      marker.on('click', () => {
+        if (!confirm(`להסיר את המיקום של מבנה "${bm.number}" ממפת הלוויין?`)) return;
+        delete bm.real_lat;
+        delete bm.real_lng;
+        persistBuildingMarkers();
+        if (window.renderSatelliteMap) window.renderSatelliteMap();
+      });
+    }
+    satelliteMarkers.push(marker);
+  });
   setTimeout(() => { if (satelliteMap) satelliteMap.invalidateSize(); }, 50);
 };
 
