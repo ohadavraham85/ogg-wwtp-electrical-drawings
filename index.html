@@ -383,6 +383,8 @@
   .globalSearchResultTab{color:var(--text-dim); font-size:.75rem; margin-inline-start:6px;}
   .globalSearchEmpty{padding:12px 14px; color:var(--text-dim); font-size:.85rem;}
   .dashCard:hover{border-color:var(--accent);}
+  .dashCardExternal{border-style:dashed;}
+  .dashCardExternal .dashNum{color:var(--text-dim);}
   .dashCard.active{
     border-color:var(--accent);
     background:linear-gradient(var(--panel-hover), var(--panel-hover)), var(--panel);
@@ -1567,8 +1569,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 66;
-const APP_UPDATED_AT = '02/09/2026 02:00';
+const APP_VERSION = 67;
+const APP_UPDATED_AT = '02/09/2026 03:00';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1887,9 +1889,18 @@ function renderDashboard(){
       ${sub}
     </div>`;
   }).join('');
-  el.innerHTML = `<div class="dashTotal">סה"כ <b>${totalAll}</b> שורות בכל הטאבים</div><div class="dashGrid">${cards}</div>`;
+  // A standalone tool (maintenance.html — electrical maintenance report forms), not part
+  // of this app's own tab/panel data, so it's a plain link card that opens its own page
+  // instead of switching to an in-app tab like every other card here.
+  const externalCard = `<div class="dashCard dashCardExternal" data-external="maintenance.html">
+      <div class="dashLabel">📋 טפסי אחזקת חשמל</div>
+      <div class="dashNum">↗</div>
+      <div class="dashSub">נפתח בעמוד נפרד</div>
+    </div>`;
+  el.innerHTML = `<div class="dashTotal">סה"כ <b>${totalAll}</b> שורות בכל הטאבים</div><div class="dashGrid">${cards}${externalCard}</div>`;
   el.querySelectorAll('.dashCard').forEach(card => {
     card.addEventListener('click', () => {
+      if (card.dataset.external){ window.open(card.dataset.external, '_blank'); return; }
       const btn = document.querySelector(`.tabBtn[data-tab="${card.dataset.tab}"]`);
       if (btn) btn.click();
     });
