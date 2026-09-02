@@ -1567,8 +1567,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 64;
-const APP_UPDATED_AT = '02/09/2026 00:00';
+const APP_VERSION = 65;
+const APP_UPDATED_AT = '02/09/2026 01:00';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -2485,26 +2485,62 @@ function findSatelliteAssignMatches(query){
       : `<div class="globalSearchEmpty">לא נמצאו תוצאות</div>`;
   });
   resultsEl.addEventListener('click', (e) => {
-    const item = e.target.closest('.globalSearchResultItem');
-    if (!item || !pendingSatelliteLatLng) return;
-    const m = (resultsEl._matches || [])[parseInt(item.dataset.idx, 10)];
-    if (!m) return;
-    if (m.kind === 'panel'){
-      const t = tableRegistry.find(x => x.idPrefix === m.idPrefix);
-      const p = t && t.panels.find(x => x._id === m.id);
-      if (!p) return;
-      p.real_lat = String(pendingSatelliteLatLng.lat);
-      p.real_lng = String(pendingSatelliteLatLng.lng);
-      if (window.__panelTableSaveLocation && window.__panelTableSaveLocation[m.idPrefix]) window.__panelTableSaveLocation[m.idPrefix]();
-    } else if (m.kind === 'building'){
-      const bm = buildingMarkers.find(x => x._id === m.id);
-      if (!bm) return;
-      bm.real_lat = String(pendingSatelliteLatLng.lat);
-      bm.real_lng = String(pendingSatelliteLatLng.lng);
-      persistBuildingMarkers();
+    // Every early-exit below used to fail completely silently — indistinguishable from
+    // the feature being broken. They now explain themselves via alert, and any genuinely
+    // unexpected error is caught and shown too, instead of vanishing into the console
+    // where it's invisible to whoever is actually clicking.
+    try {
+      const item = e.target.closest('.globalSearchResultItem');
+      if (!item) return;
+      if (!pendingSatelliteLatLng){
+        alert('שגיאה: המיקום שנלחץ על המפה אבד לפני שנבחרה תוצאה. סגרו את החלון ונסו שוב — לחצו על המפה, ואז מיד בחרו תוצאה.');
+        return;
+      }
+      const m = (resultsEl._matches || [])[parseInt(item.dataset.idx, 10)];
+      if (!m){
+        alert('שגיאה: לא נמצאה התאמה לתוצאה שנבחרה. נסו לחפש שוב.');
+        return;
+      }
+      if (m.kind === 'panel'){
+        const t = tableRegistry.find(x => x.idPrefix === m.idPrefix);
+        if (!t){
+          alert('שגיאה: לא נמצא הלשונית "' + m.tabLabel + '" עבור התוצאה שנבחרה.');
+          return;
+        }
+        const p = t.panels.find(x => x._id === m.id);
+        if (!p){
+          alert('שגיאה: השורה שנבחרה כבר לא קיימת בטבלה (יתכן שנמחקה או השתנתה ברגע האחרון). נסו לחפש ולבחור שוב.');
+          return;
+        }
+        p.real_lat = String(pendingSatelliteLatLng.lat);
+        p.real_lng = String(pendingSatelliteLatLng.lng);
+        if (window.__panelTableSaveLocation && window.__panelTableSaveLocation[m.idPrefix]) window.__panelTableSaveLocation[m.idPrefix]();
+      } else if (m.kind === 'building'){
+        const bm = buildingMarkers.find(x => x._id === m.id);
+        if (!bm){
+          alert('שגיאה: מספר המבנה שנבחר כבר לא קיים. נסו לחפש ולבחור שוב.');
+          return;
+        }
+        bm.real_lat = String(pendingSatelliteLatLng.lat);
+        bm.real_lng = String(pendingSatelliteLatLng.lng);
+        persistBuildingMarkers();
+      }
+      closeSatelliteAssignModal();
+      const latBeforeRender = String(pendingSatelliteLatLng ? pendingSatelliteLatLng.lat : '');
+      if (window.renderSatelliteMap) window.renderSatelliteMap();
+      // renderSatelliteMap() runs synchronously (it only defers invalidateSize), so by
+      // here the new marker should already be in satelliteMarkers. If it isn't, the
+      // assignment itself succeeded but rendering it silently failed (e.g. the try/catch
+      // added around each marker swallowed something) — surface that instead of leaving
+      // the modal simply closed with nothing to show for it.
+      const stillMissing = !satelliteMarkers.some(mk => mk.getLatLng && String(mk.getLatLng().lat) === latBeforeRender);
+      if (stillMissing){
+        alert('השיוך נשמר, אבל הסיכה לא הופיעה על המפה. אפשר לנסות "🔄 בדוק עדכון" ולחזור לנסות, ולדווח לי אם זה חוזר.');
+      }
+    } catch(err){
+      console.error('satellite assign click failed', err);
+      alert('קרתה שגיאה בלתי צפויה בעת שיוך המיקום: ' + (err && err.message ? err.message : err) + '\n\nאפשר לצלם מסך של ההודעה הזו ולשלוח.');
     }
-    closeSatelliteAssignModal();
-    if (window.renderSatelliteMap) window.renderSatelliteMap();
   });
 })();
 
