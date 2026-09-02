@@ -882,6 +882,29 @@
   .addRowBtn[id^="uploadDriveBtn-"]{border-color:var(--blue);color:var(--blue);}
   .addRowBtn[id^="uploadDriveBtn-"]:hover{background:rgba(61,132,196,.12);}
   .mapNamePinIcon{background:none;border:none;}
+  .buildingMarkerIconWrap{background:none;border:none;}
+  /* A standalone building-number marker on the aggregate map — not tied to any panel's
+     own pin, just a plain red circle so it reads as a location label at a glance. A
+     min-width/height keeps short numbers ("50") a true circle, while padding lets a
+     longer alphanumeric code ("EB62") stretch into a rounded pill instead of clipping. */
+  .buildingMarkerCircle{
+    transform:translate(-50%, -50%);
+    min-width:26px;
+    height:26px;
+    padding:0 6px;
+    border-radius:13px;
+    background:#e74c3c;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:.72rem;
+    font-weight:700;
+    border:2px solid #fff;
+    box-shadow:0 2px 6px rgba(0,0,0,.45);
+    white-space:nowrap;
+    cursor:pointer;
+  }
   .mapNamePinWrap{
     position:relative;
     transform:translate(-50%, -100%);
@@ -1183,7 +1206,7 @@
     </div>
     <div id="dashboardCards"></div>
     <div class="dashMapSection">
-      <div class="topRow"><div class="tabTitle" style="margin-bottom:0">🗺️ מפה מרוכזת</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="lockToggleBtn" id="mapViewToggleBtn"></button><button type="button" class="lockToggleBtn" id="mapEditToggleBtn"></button></div></div>
+      <div class="topRow"><div class="tabTitle" style="margin-bottom:0">🗺️ מפה מרוכזת</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="lockToggleBtn" id="mapViewToggleBtn"></button><button type="button" class="lockToggleBtn" id="mapEditToggleBtn"></button><button type="button" class="addRowBtn" id="addBuildingMarkerBtn" style="display:none">➕ הוסף מספר מבנה</button></div></div>
       <div id="mapTabFilters" class="mapTabFilters"></div>
       <div id="aggregateMapContainer" style="height:60vh;margin-top:8px"></div>
       <div id="satelliteMapContainer" style="height:60vh;margin-top:8px;display:none"></div>
@@ -1509,8 +1532,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 57;
-const APP_UPDATED_AT = '01/09/2026 18:30';
+const APP_VERSION = 58;
+const APP_UPDATED_AT = '01/09/2026 19:00';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -2181,6 +2204,52 @@ window.__aggregateMapInvalidate = () => {
   fitSitePlanAndLockMinZoom(aggregateMap);
 };
 
+// Standalone building-number markers on the aggregate map (red circle + number) — not
+// tied to any single panel/row, so they get their own small store instead of piggy-
+// backing on a tab's panel list. Synced the same way each tab's own table is: instant
+// localStorage write, mirrored to one shared Firestore document for other devices.
+const BUILDING_MARKERS_KEY = 'map-building-markers';
+let buildingMarkers = [];
+try {
+  const savedBuildingMarkers = JSON.parse(localStorage.getItem(BUILDING_MARKERS_KEY) || 'null');
+  if (Array.isArray(savedBuildingMarkers)) buildingMarkers = savedBuildingMarkers;
+} catch(err){ buildingMarkers = []; }
+function uidBuildingMarker(){ return 'bm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+buildingMarkers.forEach(m => { if (!m._id) m._id = uidBuildingMarker(); });
+let buildingMarkersLastSyncedAt = 0;
+const buildingMarkersDocRef = firestoreDb ? firestoreDb.collection('mapData').doc('buildingMarkers') : null;
+function persistBuildingMarkers(){
+  try { localStorage.setItem(BUILDING_MARKERS_KEY, JSON.stringify(buildingMarkers)); }
+  catch(err){ console.warn('could not save building markers', err); }
+  if (!buildingMarkersDocRef) return;
+  const ts = Date.now();
+  buildingMarkersLastSyncedAt = ts;
+  try {
+    buildingMarkersDocRef.set({ data: buildingMarkers, updatedAt: ts })
+      .catch(err => console.warn('cloud sync (push) failed for building markers', err));
+  } catch(err){ console.warn('cloud sync (push) failed for building markers', err); }
+}
+if (buildingMarkersDocRef){
+  buildingMarkersDocRef.onSnapshot((snap) => {
+    const remote = snap.data();
+    if (!remote || !Array.isArray(remote.data)) return;
+    if ((remote.updatedAt || 0) <= buildingMarkersLastSyncedAt) return;
+    buildingMarkers = remote.data;
+    buildingMarkers.forEach(m => { if (!m._id) m._id = uidBuildingMarker(); });
+    buildingMarkersLastSyncedAt = remote.updatedAt || Date.now();
+    try { localStorage.setItem(BUILDING_MARKERS_KEY, JSON.stringify(buildingMarkers)); } catch(err){ /* ignore */ }
+    if (window.renderAggregateMap) window.renderAggregateMap();
+  });
+}
+function buildingMarkerIcon(number){
+  return L.divIcon({
+    className: 'buildingMarkerIconWrap',
+    html: `<div class="buildingMarkerCircle">${escapeHtml(number)}</div>`,
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+  });
+}
+
 window.renderAggregateMap = function renderAggregateMap(){
   if (!document.getElementById('aggregateMapContainer')) return;
   if (!aggregateMap){
@@ -2241,6 +2310,31 @@ window.renderAggregateMap = function renderAggregateMap(){
       aggregateMarkers.push(marker);
     });
   });
+  buildingMarkers.forEach(bm => {
+    if (!bm.lat || !bm.lng) return;
+    const lat = parseFloat(bm.lat), lng = parseFloat(bm.lng);
+    if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+    const marker = L.marker([lat, lng], { icon: buildingMarkerIcon(bm.number), draggable: mapEditMode, zIndexOffset: 1000 }).addTo(aggregateMap);
+    if (mapEditMode){
+      marker.on('drag', () => marker.setLatLng(snapToGrid(marker.getLatLng())));
+      marker.on('dragend', () => {
+        const ll = marker.getLatLng();
+        bm.lat = String(ll.lat);
+        bm.lng = String(ll.lng);
+        persistBuildingMarkers();
+      });
+      // Leaflet only fires 'click' when the mouse didn't actually move, so this still
+      // works alongside dragging — same pattern as the panel pins' click-to-open-file.
+      marker.on('click', () => {
+        if (!confirm(`למחוק את סימון מבנה "${bm.number}"?`)) return;
+        const idx = buildingMarkers.indexOf(bm);
+        if (idx !== -1) buildingMarkers.splice(idx, 1);
+        persistBuildingMarkers();
+        if (window.renderAggregateMap) window.renderAggregateMap();
+      });
+    }
+    aggregateMarkers.push(marker);
+  });
 };
 
 // Lets every already-placed pin be dragged directly from the aggregate map, instead of
@@ -2249,15 +2343,31 @@ window.renderAggregateMap = function renderAggregateMap(){
 (function wireMapEditToggle(){
   const btn = document.getElementById('mapEditToggleBtn');
   if (!btn) return;
+  const addBtn = document.getElementById('addBuildingMarkerBtn');
   function updateUI(){
     btn.textContent = mapEditMode ? '🔓 פתוח לעריכה — לחצו לנעילה' : '🔒 נעול לתצוגה — לחצו לעריכת מיקומים';
     btn.classList.toggle('isUnlocked', mapEditMode);
+    if (addBtn) addBtn.style.display = mapEditMode ? '' : 'none';
   }
   btn.addEventListener('click', () => {
     mapEditMode = !mapEditMode;
     updateUI();
     if (window.renderAggregateMap) window.renderAggregateMap();
   });
+  // Drops a new red-circle building-number marker at the map's current center — since
+  // edit mode is already on at this point, it's immediately draggable into place, same
+  // as any freshly-placed panel pin.
+  if (addBtn){
+    addBtn.addEventListener('click', () => {
+      const number = prompt('מספר מבנה:');
+      if (!number || !number.trim()) return;
+      if (!aggregateMap) return;
+      const center = aggregateMap.getCenter();
+      buildingMarkers.push({ _id: uidBuildingMarker(), number: number.trim(), lat: String(center.lat), lng: String(center.lng) });
+      persistBuildingMarkers();
+      if (window.renderAggregateMap) window.renderAggregateMap();
+    });
+  }
   updateUI();
 })();
 
