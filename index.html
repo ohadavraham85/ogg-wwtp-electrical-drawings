@@ -1567,8 +1567,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 62;
-const APP_UPDATED_AT = '01/09/2026 20:35';
+const APP_VERSION = 63;
+const APP_UPDATED_AT = '01/09/2026 20:50';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -2427,8 +2427,13 @@ window.__satelliteMapInvalidate = () => {
   satelliteMap.invalidateSize();
 };
 
+let pendingSatelliteMarker = null;
 function openSatelliteAssignModal(latlng){
   pendingSatelliteLatLng = latlng;
+  // Visible confirmation of exactly where the click landed, right away — before the pin
+  // is actually assigned to anything, so it's still just a temporary marker.
+  if (pendingSatelliteMarker) pendingSatelliteMarker.remove();
+  pendingSatelliteMarker = L.marker(latlng, { icon: buildingMarkerIcon('?'), zIndexOffset: 2000 }).addTo(satelliteMap);
   document.getElementById('satelliteAssignModal').style.display = 'flex';
   const searchInput = document.getElementById('satelliteAssignSearch');
   searchInput.value = '';
@@ -2438,6 +2443,7 @@ function openSatelliteAssignModal(latlng){
 function closeSatelliteAssignModal(){
   document.getElementById('satelliteAssignModal').style.display = 'none';
   pendingSatelliteLatLng = null;
+  if (pendingSatelliteMarker){ pendingSatelliteMarker.remove(); pendingSatelliteMarker = null; }
 }
 // Searches every panel across all 6 tabs (same substring match as the home-screen global
 // search) plus every building-number marker, so one search box can target either kind.
@@ -2512,9 +2518,13 @@ window.renderSatelliteMap = function renderSatelliteMap(){
     // A click on empty map space (not on a marker — Leaflet markers don't propagate their
     // own clicks up to the map) opens the assign picker only while the map is in the same
     // edit mode the site-plan map already uses, so a stray tap while just viewing doesn't
-    // pop up a modal.
+    // pop up a modal. Locked clicks still get an explicit message instead of silently
+    // doing nothing, which otherwise looks exactly like the feature being broken.
     satelliteMap.on('click', (e) => {
-      if (!mapEditMode) return;
+      if (!mapEditMode){
+        alert('כדי לנעוץ סיכה על מפת הלוויין: לחצו קודם על "🔒 נעול לתצוגה — לחצו לעריכת מיקומים" למעלה כדי לפתוח עריכה, ואז לחצו שוב על המפה.');
+        return;
+      }
       openSatelliteAssignModal(e.latlng);
     });
   }
