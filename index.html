@@ -130,7 +130,11 @@
     font-weight:600;
     padding:10px 20px 40px;
   }
-  .wrap{max-width:1500px;margin:0 auto;}
+  /* Was a flat 1500px — on a wide desktop monitor that left the filter row too narrow to
+     fit its own controls (two selects, a checkbox label, three buttons) on one line, so
+     it wrapped onto an extra row for no reason; the search box then sat alone on its own
+     full-width row above it too. 1800px gives that row enough room to combine. */
+  .wrap{max-width:1800px;margin:0 auto;}
   .stickyTop{
     position:sticky;
     top:0;
@@ -456,12 +460,22 @@
     justify-content:space-between;
     flex-wrap:wrap;
     gap:8px;
-    margin-bottom:14px;
+    margin-bottom:10px;
+  }
+  /* Groups the stats/buttons that used to be topRow's only children, now that the tab
+     title itself also lives in topRow (see the map section's own topRow, which already
+     used this exact split) — keeps them visually together as one cluster on the side
+     opposite the title, instead of six items all spread out individually. */
+  .topRowGroup{
+    display:flex;
+    align-items:baseline;
+    flex-wrap:wrap;
+    gap:8px 14px;
   }
   .controls{
     display:flex;
     gap:10px;
-    margin-bottom:16px;
+    margin-bottom:10px;
     flex-wrap:wrap;
   }
   /* Filter dropdowns + action buttons (add row, export, import, Drive upload, reset)
@@ -483,7 +497,7 @@
     color:var(--text);
     font-size:.88rem;
   }
-  .controls input{flex:1;min-width:200px;}
+  .controls input{flex:1 1 260px;min-width:200px;max-width:420px;}
   .controls input:focus, .controls select:focus{outline:none;border-color:var(--accent);}
   .hasFileToggle{
     display:flex;
@@ -1133,11 +1147,6 @@
     .colToggle{gap:8px 12px;}
     .colToggle label{font-size:.78rem;}
 
-    /* Repeats the same how-to-edit reminder on every tab; worth the permanent space
-       on desktop but not on a phone screen where the table already has to fight for
-       room. */
-    .editHintNote{display:none;}
-
     .table-scroll{
       -webkit-overflow-scrolling:touch;
       border-radius:6px;
@@ -1194,8 +1203,7 @@
   <!-- TAB 1: לוחות חשמל -->
   <div id="tab-panels" class="tabPanel">
     <div class="stickyControls" id="stickyControls-panels">
-    <div class="tabTitle">לוחות ILS / חלומה</div>
-    <div class="topRow"><div class="sub matchStat" id="matchStat-panels"></div><div class="sub driveStat" id="driveStat-panels"></div><div class="sub" id="count-panels"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-panels">העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-panels"></button></div>
+    <div class="topRow"><div class="tabTitle" style="margin-bottom:0">לוחות ILS / חלומה</div><div class="topRowGroup"><div class="sub matchStat" id="matchStat-panels"></div><div class="sub driveStat" id="driveStat-panels"></div><div class="sub" id="count-panels"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-panels">העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-panels"></button></div></div>
     <div class="controls">
       <input type="text" id="search-panels" placeholder="חיפוש לפי מס' תוכנית / שם לוח / מבנה...">
       <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
@@ -1208,7 +1216,6 @@
       <button type="button" class="addRowBtn" id="checkDriveBtn-panels">🔄 בדוק עדכונים בדרייב</button>
       </div>
     </div>
-    <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
     <div class="mobileFoldersBody">
     <div class="folderBar">
@@ -1241,8 +1248,7 @@
   <!-- TAB 2: תוכניות מתכנן -->
   <div id="tab-planner" class="tabPanel">
     <div class="stickyControls" id="stickyControls-planner">
-    <div class="tabTitle">תוכניות מתכנן</div>
-    <div class="topRow"><div class="sub matchStat" id="matchStat-planner"></div><div class="sub driveStat" id="driveStat-planner"></div><div class="sub" id="count-planner"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-planner">העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-planner"></button></div>
+    <div class="topRow"><div class="tabTitle" style="margin-bottom:0">תוכניות מתכנן</div><div class="topRowGroup"><div class="sub matchStat" id="matchStat-planner"></div><div class="sub driveStat" id="driveStat-planner"></div><div class="sub" id="count-planner"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-planner">העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-planner"></button></div></div>
     <div class="controls">
       <input type="text" id="search-planner" placeholder="חיפוש לפי מס' תוכנית / שם / מבנה...">
       <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
@@ -1256,7 +1262,6 @@
       <button type="button" class="addRowBtn" id="checkDriveBtn-planner">🔄 בדוק עדכונים בדרייב</button>
       </div>
     </div>
-    <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
     <div class="mobileFoldersBody">
     <div class="folderBar">
@@ -1282,8 +1287,7 @@
 
   <div id="tab-greenhouses" class="tabPanel">
     <div class="stickyControls" id="stickyControls-greenhouses">
-    <div class="tabTitle">לוחות חממות</div>
-    <div class="topRow"><div class="sub matchStat" id="matchStat-greenhouses"></div><div class="sub driveStat" id="driveStat-greenhouses"></div><div class="sub" id="count-greenhouses"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-greenhouses">העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-greenhouses"></button></div>
+    <div class="topRow"><div class="tabTitle" style="margin-bottom:0">לוחות חממות</div><div class="topRowGroup"><div class="sub matchStat" id="matchStat-greenhouses"></div><div class="sub driveStat" id="driveStat-greenhouses"></div><div class="sub" id="count-greenhouses"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-greenhouses">העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-greenhouses"></button></div></div>
     <div class="controls">
       <input type="text" id="search-greenhouses" placeholder="חיפוש לפי מספר תוכנית / שם / תגית ציוד...">
       <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
@@ -1295,7 +1299,6 @@
       <button type="button" class="addRowBtn" id="checkDriveBtn-greenhouses">🔄 בדוק עדכונים בדרייב</button>
       </div>
     </div>
-    <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
     <div class="mobileFoldersBody">
     <div class="folderBar">
@@ -1321,8 +1324,7 @@
 
   <div id="tab-hvac" class="tabPanel">
     <div class="stickyControls" id="stickyControls-hvac">
-    <div class="tabTitle">לוחות מיזוג אוויר</div>
-    <div class="topRow"><div class="sub matchStat" id="matchStat-hvac"></div><div class="sub driveStat" id="driveStat-hvac"></div><div class="sub" id="count-hvac"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-hvac">העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-hvac"></button></div>
+    <div class="topRow"><div class="tabTitle" style="margin-bottom:0">לוחות מיזוג אוויר</div><div class="topRowGroup"><div class="sub matchStat" id="matchStat-hvac"></div><div class="sub driveStat" id="driveStat-hvac"></div><div class="sub" id="count-hvac"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-hvac">העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-hvac"></button></div></div>
     <div class="controls">
       <input type="text" id="search-hvac" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
@@ -1333,7 +1335,6 @@
       <button type="button" class="addRowBtn" id="checkDriveBtn-hvac">🔄 בדוק עדכונים בדרייב</button>
       </div>
     </div>
-    <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
     <div class="mobileFoldersBody">
     <div class="folderBar">
@@ -1359,8 +1360,7 @@
 
   <div id="tab-hv" class="tabPanel">
     <div class="stickyControls" id="stickyControls-hv">
-    <div class="tabTitle">לוחות מתח גבוה</div>
-    <div class="topRow"><div class="sub matchStat" id="matchStat-hv"></div><div class="sub driveStat" id="driveStat-hv"></div><div class="sub" id="count-hv"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-hv">העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-hv"></button></div>
+    <div class="topRow"><div class="tabTitle" style="margin-bottom:0">לוחות מתח גבוה</div><div class="topRowGroup"><div class="sub matchStat" id="matchStat-hv"></div><div class="sub driveStat" id="driveStat-hv"></div><div class="sub" id="count-hv"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-hv">העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-hv"></button></div></div>
     <div class="controls">
       <input type="text" id="search-hv" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
@@ -1371,7 +1371,6 @@
       <button type="button" class="addRowBtn" id="checkDriveBtn-hv">🔄 בדוק עדכונים בדרייב</button>
       </div>
     </div>
-    <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
     <div class="mobileFoldersBody">
     <div class="folderBar">
@@ -1397,8 +1396,7 @@
 
   <div id="tab-mtsh-lv" class="tabPanel">
     <div class="stickyControls" id="stickyControls-mtsh-lv">
-    <div class="tabTitle">מט"ש קיים - מתח נמוך</div>
-    <div class="topRow"><div class="sub matchStat" id="matchStat-mtsh-lv"></div><div class="sub driveStat" id="driveStat-mtsh-lv"></div><div class="sub" id="count-mtsh-lv"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-mtsh-lv">העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-mtsh-lv"></button></div>
+    <div class="topRow"><div class="tabTitle" style="margin-bottom:0">מט"ש קיים - מתח נמוך</div><div class="topRowGroup"><div class="sub matchStat" id="matchStat-mtsh-lv"></div><div class="sub driveStat" id="driveStat-mtsh-lv"></div><div class="sub" id="count-mtsh-lv"></div><button type="button" class="addRowBtn" id="uploadDriveBtn-mtsh-lv">העלה לגוגל דרייב</button><button type="button" class="lockToggleBtn" id="lockBtn-mtsh-lv"></button></div></div>
     <div class="controls">
       <input type="text" id="search-mtsh-lv" placeholder="חיפוש לפי מספר תוכנית / שם...">
       <button type="button" class="mobileControlsToggle">⚙️ סינון ופעולות ▾</button>
@@ -1409,7 +1407,6 @@
       <button type="button" class="addRowBtn" id="checkDriveBtn-mtsh-lv">🔄 בדוק עדכונים בדרייב</button>
       </div>
     </div>
-    <div class="sub editHintNote" style="margin-bottom:10px">כשהעריכה פתוחה: כל התאים ניתנים לעריכה — אפשר גם לגרור מהריבוע הקטן בפינת התא כדי למלא עמודה שלמה (כמו באקסל), ולהוסיף/למחוק שורות.</div>
     <button type="button" class="mobileFoldersToggle">📁 תיקיות ועמודות נוספות ▾</button>
     <div class="mobileFoldersBody">
     <div class="folderBar">
@@ -1512,8 +1509,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 56;
-const APP_UPDATED_AT = '01/09/2026 18:05';
+const APP_VERSION = 57;
+const APP_UPDATED_AT = '01/09/2026 18:30';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
