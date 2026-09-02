@@ -420,6 +420,7 @@ function letterheadHtml(){
     <div class="lh-nav">
       <a class="pill-btn" href="index.html">📐 תוכניות ולוחות חשמל</a>
       <button class="pill-btn" data-action="go-home">⌂ ראשי</button>
+      <button class="pill-btn" data-action="share-link">🔗 שיתוף הדף</button>
       <button class="pill-btn pill-btn-feedback" data-action="send-feedback">🐞 דיווח על באג</button>
     </div>
   `;
@@ -1844,6 +1845,25 @@ document.addEventListener('click', async (e)=>{
   const action = el.getAttribute('data-action');
 
   if(action==='go-home'){ state.route = {view:'home'}; render(); return; }
+
+  if(action==='share-link'){
+    const shareUrl = location.origin + location.pathname;
+    const shareData = { title: document.title, text: 'טפסי אחזקת חשמל — מט"ש אוג', url: shareUrl };
+    // navigator.share opens the phone's own share sheet (WhatsApp, email, etc.) straight
+    // to this page's link — the natural way to hand this to a teammate on mobile. Desktop
+    // browsers mostly don't support it, so there the link is just copied to the clipboard
+    // instead, with a toast confirming it's ready to paste.
+    if(navigator.share){
+      try{ await navigator.share(shareData); return; }catch(e){ /* user cancelled the share sheet — fall through to copy */ }
+    }
+    try{
+      await navigator.clipboard.writeText(shareUrl);
+      showToast('הקישור הועתק — אפשר להדביק ולשלוח 🔗');
+    }catch(e){
+      prompt('העתיקו את הקישור לשיתוף:', shareUrl);
+    }
+    return;
+  }
 
   if(action==='send-feedback'){
     const routeLabel = state.route.view==='report' ? (getReport(state.route.id)||{}).title || state.route.id : state.route.view;
