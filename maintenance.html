@@ -1618,6 +1618,24 @@ function requireCompleteOrWarn(reportId){
 /* PDF export — assembled block-by-block (not one giant screenshot) so    */
 /* pages have real margins and tables/sections never get sliced mid-row.  */
 /* ---------------------------------------------------------------------- */
+// A checklist/log/panels-table section is usually taller than one page — that used
+// to be handled by screenshotting the whole section and cutting the image at a fixed
+// pixel height, which sliced straight through rows and read exactly like a raw
+// screenshot dropped onto pages rather than a formatted document. The header and
+// each row are now rendered as their own small flow blocks instead, so a page break
+// only ever falls between rows, with the header redrawn at the top of every
+// continuation page. Each is rendered directly off the LIVE table (never cloned or
+// moved) — html2canvas renders any element in place at its own natural size, which
+// keeps every column's width identical between the header and every row for free,
+// and keeps whatever the person actually typed/selected without a manual copy step.
+function withActionsHidden(el, fn){
+  const hidden = Array.from(el.querySelectorAll('[data-action]'));
+  hidden.forEach(b => { b.dataset.pdfHidden = b.style.visibility; b.style.visibility = 'hidden'; });
+  return Promise.resolve(fn()).finally(() => {
+    hidden.forEach(b => { b.style.visibility = b.dataset.pdfHidden; delete b.dataset.pdfHidden; });
+  });
+}
+
 async function buildPdfBlob(reportId){
   const report = getReport(reportId);
   const root = document.getElementById('report-print-area');
@@ -1632,8 +1650,58 @@ async function buildPdfBlob(reportId){
   let cursorY = marginTop;
   let firstBlockOnPage = true;
 
+  // Renders one detached element as a high-res image at the current page cursor,
+  // starting a new page first if it doesn't fit — shared by every block below so
+  // page-break behavior (and never a blank leading page) stays identical everywhere.
+  async function placeElement(el, gap, onNewPage){
+    const canvas = await html2canvas(el, {scale:2, backgroundColor:'#ffffff', useCORS:true});
+    const imgH = canvas.height * contentW / canvas.width;
+    if(!firstBlockOnPage && (cursorY + imgH) > maxY){
+      pdf.addPage();
+      cursorY = marginTop;
+      firstBlockOnPage = true;
+      if(onNewPage) await onNewPage();
+    }
+    pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', marginX, cursorY, contentW, imgH);
+    cursorY += imgH + gap;
+    firstBlockOnPage = false;
+  }
+
   for(const el of blocks){
-    // Render this block alone, at high resolution, on a plain white background.
+    const tableScroll = el.querySelector(':scope > .table-scroll');
+    const table = tableScroll ? tableScroll.querySelector('table.rep-table') : null;
+
+    if(table){
+      const before = document.createElement('div');
+      Array.from(el.childNodes).forEach(n => {
+        if(n === tableScroll) return;
+        if(n.nodeType === 1 && n.classList.contains('row-actions-bar')) return; // "+ הוספת שורה" — not for print
+        before.appendChild(n.cloneNode(true));
+      });
+      if(before.childNodes.length) await placeElement(before, 4);
+
+      const thead = table.querySelector('thead');
+      const rows = Array.from(table.querySelectorAll('tbody > tr'));
+
+      async function renderHeaderStandalone(){
+        if(thead) await placeElement(thead, 0);
+      }
+      if(thead && rows.length) await renderHeaderStandalone();
+
+      for(const row of rows){
+        // The ✕ delete-row button is meaningless on a printed page — hidden for
+        // just this one render, then restored, rather than built as a fresh
+        // element without it (this row is rendered live, in place, not cloned).
+        await withActionsHidden(row, () => placeElement(row, 0, thead ? renderHeaderStandalone : null));
+      }
+      cursorY += 5;
+      continue;
+    }
+
+    // Not a table section (a field grid, notes/photos, or the signoff block) —
+    // one screenshot of the whole block, same as before. Still falls back to a
+    // raw pixel slice if it alone is taller than a full page (e.g. many photos),
+    // since there's no row-like boundary to break at here.
     const canvas = await html2canvas(el, {scale:2, backgroundColor:'#ffffff', useCORS:true});
     const imgH = canvas.height * contentW / canvas.width;
 
@@ -1644,8 +1712,6 @@ async function buildPdfBlob(reportId){
     }
 
     if(imgH > (maxY - marginTop)){
-      // Block alone is taller than one page (e.g. a very long checklist) —
-      // slice just this block across as many pages as it needs.
       const pxPerMm = canvas.width / contentW;
       const pageContentPx = (maxY - marginTop) * pxPerMm;
       let sy = 0;
