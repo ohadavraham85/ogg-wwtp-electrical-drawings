@@ -1968,7 +1968,7 @@ document.addEventListener('click', async (e)=>{
     if(!requireCompleteOrWarn(reportId)) return;
     el.disabled = true;
     try{ const fn = await exportPdf(reportId); showToast(`הקובץ "${fn}" הורד בהצלחה`); }
-    catch(err){ showToast('שגיאה בייצוא ה-PDF, נסו שוב'); console.error(err); }
+    catch(err){ console.error(err); alert('שגיאה בייצוא ה-PDF: ' + (err && err.message ? err.message : err) + '\n\nאפשר לצלם מסך של ההודעה הזו ולשלוח.'); }
     el.disabled = false;
     return;
   }
@@ -1978,7 +1978,7 @@ document.addEventListener('click', async (e)=>{
     if(!requireCompleteOrWarn(reportId)) return;
     el.disabled = true;
     try{ await shareOrEmailPdf(reportId); }
-    catch(err){ showToast('שגיאה בייצוא, נסו שוב'); console.error(err); }
+    catch(err){ console.error(err); alert('שגיאה בייצוא: ' + (err && err.message ? err.message : err) + '\n\nאפשר לצלם מסך של ההודעה הזו ולשלוח.'); }
     el.disabled = false;
     return;
   }
