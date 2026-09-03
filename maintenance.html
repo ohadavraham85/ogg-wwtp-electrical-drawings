@@ -1621,13 +1621,20 @@ function requireCompleteOrWarn(reportId){
 // A checklist/log/panels-table section is usually taller than one page — that used
 // to be handled by screenshotting the whole section and cutting the image at a fixed
 // pixel height, which sliced straight through rows and read exactly like a raw
-// screenshot dropped onto pages rather than a formatted document. The header and
-// each row are now rendered as their own small flow blocks instead, so a page break
-// only ever falls between rows, with the header redrawn at the top of every
-// continuation page. Each is rendered directly off the LIVE table (never cloned or
-// moved) — html2canvas renders any element in place at its own natural size, which
-// keeps every column's width identical between the header and every row for free,
-// and keeps whatever the person actually typed/selected without a manual copy step.
+// screenshot dropped onto pages rather than a formatted document.
+//
+// An earlier version of this fix rendered the header and every single row as their
+// own separate html2canvas call, which fixed the visual bug but, on a checklist with
+// many rows, called html2canvas dozens of times in one export — and html2canvas
+// itself (an inherently fragile library: it clones the whole document into a hidden
+// iframe and then re-locates the target element inside that clone) starts throwing
+// "Unable to find element in cloned iframe" once called that many times in a tight
+// loop, on real devices as well as here. So the header is still rendered separately
+// (repeated at the top of every continuation page), but the row data goes back to a
+// SINGLE screenshot of the whole table body — call count back down near the original
+// — and only the SLICING is now row-aware: each row's own pixel boundary is measured
+// from the live layout beforehand, and a page break only ever lands on one of those
+// boundaries, never through the middle of a row.
 function withActionsHidden(el, fn){
   const hidden = Array.from(el.querySelectorAll('[data-action]'));
   hidden.forEach(b => { b.dataset.pdfHidden = b.style.visibility; b.style.visibility = 'hidden'; });
@@ -1681,20 +1688,58 @@ async function buildPdfBlob(reportId){
       if(before.childNodes.length) await placeElement(before, 4);
 
       const thead = table.querySelector('thead');
-      const rows = Array.from(table.querySelectorAll('tbody > tr'));
+      const tbody = table.querySelector('tbody');
+      const rows = tbody ? Array.from(tbody.children) : [];
 
       async function renderHeaderStandalone(){
         if(thead) await placeElement(thead, 0);
       }
       if(thead && rows.length) await renderHeaderStandalone();
 
-      for(const row of rows){
-        // The ✕ delete-row button is meaningless on a printed page — hidden for
-        // just this one render, then restored, rather than built as a fresh
-        // element without it (this row is rendered live, in place, not cloned).
-        await withActionsHidden(row, () => placeElement(row, 0, thead ? renderHeaderStandalone : null));
+      if(rows.length){
+        const tbodyRect = tbody.getBoundingClientRect();
+        // Each row's own bottom edge, in CSS px relative to the tbody's top — the
+        // only y-positions a page break is ever allowed to land on.
+        const rowBoundaries = rows.map(r => r.getBoundingClientRect().bottom - tbodyRect.top);
+
+        const canvas = await withActionsHidden(tbody, () => html2canvas(tbody, {scale:2, backgroundColor:'#ffffff', useCORS:true}));
+        const pxPerCssPx = canvas.width / tbodyRect.width;
+        const mmPerCssPx = contentW / tbodyRect.width;
+        const totalCssH = tbodyRect.height;
+
+        let sliceStartCss = 0;
+        while(sliceStartCss < totalCssH - 0.5){
+          const availCssH = (maxY - cursorY) / mmPerCssPx;
+          let cutCss = rowBoundaries.filter(b => b > sliceStartCss + 0.5 && b - sliceStartCss <= availCssH).pop();
+          if(cutCss === undefined){
+            if(firstBlockOnPage){
+              // Even a fresh page can't fit this row (an extreme edge case) — hard-cut
+              // it rather than loop forever; the rest of the row continues next page.
+              cutCss = Math.min(totalCssH, sliceStartCss + Math.max(availCssH, 1));
+            } else {
+              pdf.addPage();
+              cursorY = marginTop;
+              firstBlockOnPage = true;
+              await renderHeaderStandalone();
+              continue;
+            }
+          }
+          const sliceCssH = cutCss - sliceStartCss;
+          const sliceCanvas = document.createElement('canvas');
+          sliceCanvas.width = canvas.width;
+          sliceCanvas.height = Math.max(1, Math.round(sliceCssH * pxPerCssPx));
+          const ctx = sliceCanvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+          ctx.drawImage(canvas, 0, Math.round(sliceStartCss * pxPerCssPx), canvas.width, sliceCanvas.height, 0, 0, canvas.width, sliceCanvas.height);
+          const sliceImgH = sliceCssH * mmPerCssPx;
+          pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.92), 'JPEG', marginX, cursorY, contentW, sliceImgH);
+          cursorY += sliceImgH;
+          firstBlockOnPage = false;
+          sliceStartCss = cutCss;
+        }
+        cursorY += 5;
       }
-      cursorY += 5;
       continue;
     }
 
