@@ -1569,8 +1569,8 @@
 // ============ App version — bump APP_VERSION and set APP_UPDATED_AT to the current
 // date/time (Israel time) on every future change shipped to this file. Shown in the
 // header so anyone can tell at a glance whether they're on the latest deploy. ============
-const APP_VERSION = 67;
-const APP_UPDATED_AT = '02/09/2026 03:00';
+const APP_VERSION = 68;
+const APP_UPDATED_AT = '07/09/2026 19:30';
 (function renderAppVersionLine(){
   const el = document.getElementById('appVersionLine');
   if (el) el.textContent = `גרסה ${APP_VERSION} — עודכן לאחרונה ${APP_UPDATED_AT}`;
@@ -1808,6 +1808,12 @@ const supportsFSAccess = typeof window.showDirectoryPicker === 'function';
 window.addEventListener('dragover', (e) => e.preventDefault());
 window.addEventListener('drop', (e) => e.preventDefault());
 
+// Collects EVERY file in the tree (not just .pdf/.dwg/.xlsx) — callers run this through
+// buildFileIndex, whose own extension filter is what actually decides relevance. Doing
+// the filtering here too used to mean a scan silently never even saw a Word doc, image,
+// or DXF file sitting right there in the folder — nothing to distinguish "this file
+// isn't linked to any row" from "this file was never looked at", so a scan that missed
+// files gave no way to tell the two apart.
 async function collectFilesFromDirHandle(dirHandle){
   const out = [];
   async function walk(handle){
@@ -1815,9 +1821,7 @@ async function collectFilesFromDirHandle(dirHandle){
       for await (const [name, entry] of handle.entries()){
         try {
           if (entry.kind === 'file'){
-            if (/\.(pdf|dwg|xlsx)$/i.test(name)){
-              out.push(await entry.getFile());
-            }
+            out.push(await entry.getFile());
           } else if (entry.kind === 'directory'){
             await walk(entry);
           }
@@ -3379,14 +3383,19 @@ function createPanelTable(cfg){
     try {
       const files = await collectFilesFromDirHandle(dirHandle);
       const relevant = buildFileIndex(files);
+      // Files the scan silently never even looked at, so a file that seems to be
+      // "missing" after a scan can be explained instead of just guessed at — the
+      // scanner only ever recognizes .pdf/.dwg/.xlsx (see buildFileIndex).
+      const skippedExt = files.length - relevant.length;
       const createResult = autoCreateRowsForUnmatchedFiles(relevant);
       const matched = matchPanelsToFiles();
+      const extSuffix = skippedExt ? ` · ⚠️ ${skippedExt} קבצים לא מסוג PDF/DWG/XLSX לא נסרקו כלל` : '';
       if (relevant.length === 0){
-        folderStatus.textContent = `⚠️ ${dirHandle.name} — לא נמצאו קבצי PDF/DWG/XLSX בתיקייה הזו (או בתתי-התיקיות שלה)`;
+        folderStatus.textContent = `⚠️ ${dirHandle.name} — לא נמצאו קבצי PDF/DWG/XLSX בתיקייה הזו (או בתתי-התיקיות שלה)${extSuffix}`;
         folderStatus.classList.remove('ok');
       } else {
         const extra = autoCreateStatusSuffix(createResult);
-        folderStatus.textContent = `📂 ${dirHandle.name} — נטענו ${relevant.length} קבצים, שויכו ${matched} מתוך ${panels.length} רשומות${extra}`;
+        folderStatus.textContent = `📂 ${dirHandle.name} — נטענו ${relevant.length} קבצים, שויכו ${matched} מתוך ${panels.length} רשומות${extra}${extSuffix}`;
         folderStatus.classList.add('ok');
       }
       if (refreshBtn) refreshBtn.style.display = 'inline-block';
@@ -3429,13 +3438,15 @@ function createPanelTable(cfg){
       try {
         const files = await collectFilesFromDirHandle(dirHandle);
         const relevant = buildFileIndex(files, true);
+        const skippedExt = files.length - relevant.length;
         const createResult = autoCreateRowsForUnmatchedFiles(relevant);
         const matched = matchPanelsToFiles();
         if (folderStatus2){
           const extra = autoCreateStatusSuffix(createResult);
+          const extSuffix = skippedExt ? ` · ⚠️ ${skippedExt} קבצים לא מסוג PDF/DWG/XLSX לא נסרקו כלל` : '';
           folderStatus2.textContent = relevant.length === 0
-            ? `⚠️ ${dirHandle.name} — לא נמצאו קבצי PDF/DWG/XLSX בתיקייה הזו`
-            : `📂 ${dirHandle.name} — נוספו ${relevant.length} קבצים, שויכו ${matched} מתוך ${panels.length} רשומות בסה"כ${extra}`;
+            ? `⚠️ ${dirHandle.name} — לא נמצאו קבצי PDF/DWG/XLSX בתיקייה הזו${extSuffix}`
+            : `📂 ${dirHandle.name} — נוספו ${relevant.length} קבצים, שויכו ${matched} מתוך ${panels.length} רשומות בסה"כ${extra}${extSuffix}`;
           folderStatus2.classList.add('ok');
         }
         if (refreshBtn2) refreshBtn2.style.display = 'inline-block';
@@ -3944,7 +3955,33 @@ function createPanelTable(cfg){
       });
     if (sortState.key){
       const k = sortState.key;
-      filtered.sort((a, b) => sortState.dir * String(a.p[k]||'').localeCompare(String(b.p[k]||''), 'he', { numeric: true, sensitivity: 'base' }));
+      if (k === '__filedate__' || k === '__driveupdated__'){
+        // Both are computed/displayed values, not plain fields on p — __filedate__ isn't
+        // stored on the row at all (it comes from panelFiles, keyed by row index), so
+        // sorting by it silently did nothing (every row read back the same empty p[k]).
+        // Real timestamps also sort correctly as NUMBERS, not as the DD/MM/YYYY display
+        // string a plain localeCompare would've been comparing day-first.
+        const sortValue = ({p, idx}) => {
+          if (k === '__filedate__'){
+            const files = panelFiles.get(idx);
+            const stamps = (files || []).map(f => f.file && f.file.lastModified).filter(Boolean);
+            return stamps.length ? Math.max(...stamps) : null;
+          }
+          return p.drive_modified_at ? new Date(p.drive_modified_at).getTime() : null;
+        };
+        filtered.sort((a, b) => {
+          const va = sortValue(a), vb = sortValue(b);
+          // Rows with no date always sort last regardless of direction, so "latest
+          // first" doesn't bury real dates under every blank row, and "oldest first"
+          // doesn't lead with them either.
+          if (va == null && vb == null) return 0;
+          if (va == null) return 1;
+          if (vb == null) return -1;
+          return sortState.dir * (va - vb);
+        });
+      } else {
+        filtered.sort((a, b) => sortState.dir * String(a.p[k]||'').localeCompare(String(b.p[k]||''), 'he', { numeric: true, sensitivity: 'base' }));
+      }
     }
     render(filtered);
     renderDashboard();
