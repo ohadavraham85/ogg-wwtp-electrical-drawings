@@ -19,7 +19,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="OhadCad">
 <style>
-:root{--bg:#1b1f24;--card:#2c333c;--card2:#3c4654;--line:#454f5c;--line-acc:rgba(245,165,36,.35);--txt:#e6eaf0;--mut:#aab6c4;--amber:#f5a524;--amber-light:#ffc35c;--amber-dark:#b86e00;--ink:#14181d;--grid:#232931;--blue:#5bb8ff}
+:root{--bg:#0b0b0c;--card:#141416;--card2:#232326;--line:#3d3d42;--line-acc:rgba(255,140,0,.65);--txt:#ffffff;--mut:#cfcfd4;--amber:#ff8c00;--amber-light:#ffb340;--amber-dark:#a35a00;--ink:#000;--grid:#18181a;--blue:#5bb8ff}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:Heebo,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
 button{font:inherit;cursor:pointer}
@@ -77,6 +77,22 @@ button{font:inherit;cursor:pointer}
 .empty{color:#5a636f;font-size:13.5px;padding:6px 2px}
 .foot{display:flex;justify-content:flex-start;margin-top:18px}
 #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:30;background:var(--ink);border:1px solid var(--line);color:var(--txt);padding:10px 16px;border-radius:4px;font-size:14.5px;max-width:calc(100% - 32px);box-shadow:0 6px 20px rgba(0,0,0,.5)}
+/* ---- high-contrast orange/black theme ---- */
+#topbar{border-bottom:2px solid var(--amber)!important}
+.panel,.dlg{border:1.5px solid var(--amber)}
+.btn,.sb{border:1px solid #4a4a50;border-bottom:2px solid #000;background:linear-gradient(180deg,#2c2c30,#17171a);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 2px 4px rgba(0,0,0,.6)}
+.btn.pri{background:linear-gradient(180deg,var(--amber-light),var(--amber));color:#000;font-weight:700;border:1px solid var(--amber-light);border-bottom:2px solid var(--amber-dark);box-shadow:0 0 14px rgba(255,140,0,.45)}
+.btn.g{background:#fff;color:#000;border:1px solid #fff;border-bottom:2px solid #999}
+.btn.link{background:none;border:0;box-shadow:none;color:var(--amber-light)}
+.sb.ok{background:linear-gradient(180deg,#16a34a,#14532d);border-color:#22c55e}
+.sb.no{background:linear-gradient(180deg,#dc2626,#7f1d1d);border-color:#ef4444}
+@media (hover:hover){.btn:not(.link):hover,.sb:hover{border-color:var(--amber)}}
+.btn:active,.sb:active{transform:translateY(1px)}
+.add input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px rgba(255,140,0,.3)}
+button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.row{border-color:#4a4a50}
+.dlg h2{color:var(--amber-light)}
+#toast{border:1.5px solid var(--amber)}
 </style>
 </head>
 <body>
@@ -128,11 +144,11 @@ button{font:inherit;cursor:pointer}
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 14;
+const VERSION = 15;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'יותר ניגודיות וצבע כתום: כרטיסים, כותרת וקואורדינטות בולטים יותר על הרקע הכהה';
+const WHATS_NEW = 'עיצוב שחור-כתום בניגודיות גבוהה: כפתורים בולטים עם מסגרת וצל, ומצב פעיל בכתום חזק';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
