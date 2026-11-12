@@ -12,7 +12,11 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
 #stage{position:fixed;inset:0;background-color:#262626;touch-action:none}
 #svg{width:100%;height:100%;display:block;touch-action:none;direction:ltr;user-select:none;-webkit-user-select:none}
 .card{background:var(--card);border:1px solid #3c3c3c;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
-#top{position:fixed;top:calc(env(safe-area-inset-top) + 10px);left:10px;right:10px;height:var(--toph);display:flex;align-items:center;gap:6px;padding:0 6px;z-index:6}
+#top{position:fixed;top:calc(env(safe-area-inset-top) + 10px);left:10px;width:max-content;max-width:calc(100vw - 20px);height:var(--toph);display:flex;align-items:center;gap:6px;padding:0 6px;z-index:6}
+.grip{touch-action:none;cursor:grab;flex:none;width:22px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:8px}
+.grip:active{cursor:grabbing;background:#2a2a2a}
+.grip.v{width:40px;height:22px}
+#topGrip{order:-1}
 #selInfo{display:flex;align-items:center;gap:10px;min-width:70px;flex:1 1 70px}
 #selThumb{width:38px;height:44px;flex:none;display:flex;align-items:center;justify-content:center}
 #selThumb svg{max-width:100%;max-height:100%}
@@ -35,9 +39,9 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
 #rail{display:flex;flex-direction:row;align-items:center;gap:2px;flex:0 1 auto;min-width:0;height:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;direction:rtl}
 #rail::-webkit-scrollbar{display:none}
 @media (max-width:700px){:root{--toph:118px}
- #top{flex-wrap:wrap;align-content:center;row-gap:0;padding:2px 6px}
+ #top{flex-wrap:wrap;align-content:center;row-gap:0;padding:2px 6px;width:auto;max-width:none;right:10px}
  #top>.sep{display:none}
- #bMenu{order:1}#selInfo{order:2}#top>.tbtns{order:3}
+ #topGrip{order:0}#bMenu{order:1}#selInfo{order:2}#top>.tbtns{order:3}
  #rail{order:4;flex:1 0 100%;height:58px;justify-content:space-between;border-top:1px solid #333}
  #rail .rb{width:auto;min-width:40px;flex:1 0 auto;height:54px;padding:0 1px}
  #rail .rb span{font-size:10px}#rail .rb svg{width:22px;height:22px}
@@ -122,7 +126,7 @@ td,th{border-bottom:1px solid #3a3a3a;padding:8px 4px;text-align:right}
 #rulX .cur,#rulY .cur{background:#f43f5e}
 #coord{position:fixed;left:28px;bottom:28px;z-index:3;background:rgba(14,14,14,.88);border:1px solid #3a3a3a;border-radius:10px;padding:4px 9px;font:600 12px Arial;color:#e5e5e5;direction:ltr;pointer-events:none}
 body.noaxes #rulX,body.noaxes #rulY,body.noaxes #coord{display:none}
-#docTabs{position:fixed;left:28px;top:calc(env(safe-area-inset-top) + var(--toph) + 18px);z-index:5;display:flex;background:#0b0b0b;border:1px solid #333;border-radius:14px;padding:3px;gap:2px;box-shadow:0 3px 12px rgba(0,0,0,.5)}
+#docTabs{position:fixed;left:28px;top:calc(env(safe-area-inset-top) + var(--toph) + 18px);z-index:5;display:flex;align-items:center;background:#0b0b0b;border:1px solid #333;border-radius:14px;padding:3px;gap:2px;box-shadow:0 3px 12px rgba(0,0,0,.5)}
 #docTabs button{padding:8px 12px;border-radius:11px;font-size:14px;color:#cfcfcf;white-space:nowrap}#docTabs button.on{background:var(--acc);color:#fff}#docTabs #bDark,#docTabs #bLayout{padding:8px 9px}#docTabs #bLayout.on{background:#3a3a3a;box-shadow:inset 0 0 0 1.5px var(--acc)}#saveSt{align-self:center;padding:0 8px;font-size:12.5px;color:#9ca3af;white-space:nowrap}#saveSt[data-k=saved]{color:#4ade80}#saveSt[data-k=error]{color:#f87171}#docTabs #bDark.on{background:#3a3a3a}
 body.sld #stage{background-color:#efefeb}
 .item .th.lt{background:#f7f7f3;border-radius:8px}
@@ -151,8 +155,9 @@ body.sld #stage{background-color:#efefeb}
 <div id="stage"><svg id="svg"><g id="world"></g></svg></div>
 
 <div id="rulX"></div><div id="rulY"></div><div id="coord"></div>
-<div id="docTabs"><button data-doc="panel">🗄 חזית לוח</button><button data-doc="sld">⚡ חד קווי</button><button data-doc="both">◧ משולב</button><button id="bDark" title="חד קווי: רקע שחור / דף לבן">🌙</button><button id="bLayout" title="הצג / הסתר את דף הייצור (Layout)">📄</button><span id="saveSt"></span></div>
+<div id="docTabs"><button class="grip v" id="docTabsGrip" title="גרירה (אנכית)"><svg viewBox="0 0 24 24"><circle cx="7" cy="10" r="1.6" fill="#aaa"/><circle cx="7" cy="14" r="1.6" fill="#aaa"/><circle cx="12" cy="10" r="1.6" fill="#aaa"/><circle cx="12" cy="14" r="1.6" fill="#aaa"/><circle cx="17" cy="10" r="1.6" fill="#aaa"/><circle cx="17" cy="14" r="1.6" fill="#aaa"/></svg></button><button data-doc="panel">🗄 חזית לוח</button><button data-doc="sld">⚡ חד קווי</button><button data-doc="both">◧ משולב</button><button id="bDark" title="חד קווי: רקע שחור / דף לבן">🌙</button><button id="bLayout" title="הצג / הסתר את דף הייצור (Layout)">📄</button><span id="saveSt"></span></div>
 <div id="top" class="card">
+  <button class="grip" id="topGrip" title="גרירה (אופקית)"><svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.6" fill="#aaa"/><circle cx="15" cy="6" r="1.6" fill="#aaa"/><circle cx="9" cy="12" r="1.6" fill="#aaa"/><circle cx="15" cy="12" r="1.6" fill="#aaa"/><circle cx="9" cy="18" r="1.6" fill="#aaa"/><circle cx="15" cy="18" r="1.6" fill="#aaa"/></svg></button>
   <button class="tb" id="bMenu" title="תפריט"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
   <div id="selInfo" title="מאפיינים"><div id="selThumb"></div><div id="selName"></div></div>
   <div id="rail">
@@ -1260,6 +1265,30 @@ function switchDoc(d){const cur=state.tab==='sld'?'sld':state.tab==='both'?'both
  if(d==='both')toast('משולב: חזית הלוח משמאל, החד קווי מימין — אפשר לערוך את שניהם');}
 function toggleDark(){const v=curView();themes[v]=isLight()?'dark':'light';try{localStorage.setItem('epd.themes',JSON.stringify(themes));}catch(e){}syncDoc();renderNow();toast((isLight()?'תצוגה בהירה':'תצוגה כהה')+' — '+{panel:'חזית לוח',sld:'חד קווי',both:'משולב'}[v]);}
 $('docTabs').addEventListener('click',e=>{if(e.target.closest('#bDark')){toggleDark();return;}if(e.target.closest('#bLayout')){toggleLayout();return;}const b=e.target.closest('[data-doc]');if(b)switchDoc(b.dataset.doc);});
+
+// Floating toolbars you drag by their grip, AutoCAD-style: #top only along x (stays
+// docked to the top edge), #docTabs only along y (stays docked to the left edge). The
+// position is remembered per device in localStorage.
+function makeDragBar(el,grip,axis,key){
+ let sx=0,sy=0,ol=0,ot=0,dragging=false;
+ const clamp=(v,mn,mx)=>Math.max(mn,Math.min(mx,v));
+ grip.addEventListener('pointerdown',e=>{
+  dragging=true;try{grip.setPointerCapture(e.pointerId);}catch(err){}
+  const r=el.getBoundingClientRect();sx=e.clientX;sy=e.clientY;ol=r.left;ot=r.top;e.preventDefault();
+ });
+ grip.addEventListener('pointermove',e=>{
+  if(!dragging)return;
+  const r=el.getBoundingClientRect();
+  if(axis==='x')el.style.left=clamp(ol+(e.clientX-sx),4,window.innerWidth-r.width-4)+'px';
+  else el.style.top=clamp(ot+(e.clientY-sy),4,window.innerHeight-r.height-4)+'px';
+ });
+ const end=()=>{if(!dragging)return;dragging=false;const r=el.getBoundingClientRect();try{localStorage.setItem(key,String(axis==='x'?r.left:r.top));}catch(e){}};
+ grip.addEventListener('pointerup',end);grip.addEventListener('pointercancel',end);
+ let saved=null;try{saved=localStorage.getItem(key);}catch(e){}
+ if(saved!=null){if(axis==='x')el.style.left=saved+'px';else el.style.top=saved+'px';}
+}
+makeDragBar($('top'),$('topGrip'),'x','ohadcad-topbar-x');
+makeDragBar($('docTabs'),$('docTabsGrip'),'y','ohadcad-doctabs-y');
 /* The panel's parts, whichever document is showing. */
 function panelObjs(){return state.tab==='sld'?(state.alt||[]):state.tab==='both'?state.objs.filter(o=>!isSldObj(o)):state.objs;}
 function withPanel(fn){if(state.tab==='panel'||!state.tab)return fn();const a=state.objs,b=state.alt;state.objs=panelObjs();try{return fn();}finally{state.objs=a;state.alt=b;}}
