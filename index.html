@@ -128,11 +128,11 @@ button{font:inherit;cursor:pointer}
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 12;
+const VERSION = 13;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'מיתוג חדש: לוגו, אייקונים ועיצוב כהה בסגנון CAD עם צבע ענבר; וספריית הרכיבים עברה לצד שמאל';
+const WHATS_NEW = 'ספריית הרכיבים חזרה לצד ימין עם רצועה קבועה שנפתחת בלחיצה; ולוגו ענק ברקע כל PDF/PNG שמיוצא';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
