@@ -34,7 +34,7 @@ Firestore collections:
   - Deletion is soft (`deleted: true`), and only the creator or the owner may do it.
 
 ## Releasing
-1. Bump `VERSION` in `index.html` and `CACHE` in `sw.js`.
+1. Bump `VERSION` and `WHATS_NEW` in `index.html` (a one-line Hebrew summary of this release, shown at the bottom of the sign-in screen), and `CACHE` in `sw.js`.
 2. Commit, push the working branch, then push it to `main`.
 3. Check the "pages build and deployment" run via the GitHub MCP actions tools. github.io itself is not reachable from the sandbox.
 
