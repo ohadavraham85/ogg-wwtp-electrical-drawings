@@ -20,11 +20,13 @@
 html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
 button{font:inherit;cursor:pointer}
 [hidden]{display:none!important}
-:root{--topbar-h:42px}
-#topbar{position:fixed;top:0;left:0;right:0;z-index:5;height:calc(var(--topbar-h) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:10px;padding-inline:14px;background:#1c1c1c;border-bottom:1px solid var(--line);font-size:13px;color:var(--mut);overflow:hidden}
+:root{--topbar-h:52px}
+#topbar{position:fixed;top:0;left:0;right:0;z-index:5;height:calc(var(--topbar-h) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:16px;padding-inline:20px;background:#1c1c1c;border-bottom:1px solid var(--line);overflow:hidden}
 #topbar b{color:var(--txt);font-weight:700}
-#topbar .tbGreet{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-#topbar .tbRight{display:flex;align-items:center;gap:10px;flex:none;white-space:nowrap}
+#topbar .tbGreet{font-size:17px;font-weight:600;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+#topbar .tbGreet b{color:var(--amber)}
+#topbar .tbRight{display:flex;align-items:center;gap:10px;flex:none;white-space:nowrap;font-size:14.5px;color:var(--mut)}
+#topbar .tbRight .sep{color:#555}
 #cad{position:fixed;inset:calc(var(--topbar-h) + env(safe-area-inset-top)) 0 0 0;width:100%;height:calc(100% - var(--topbar-h) - env(safe-area-inset-top));border:0;background:#1e1e1e}
 #gate{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px 16px;
   background:radial-gradient(120% 70% at 50% 0%,rgba(249,115,22,.22),transparent 60%),var(--bg)}
@@ -111,7 +113,7 @@ button{font:inherit;cursor:pointer}
 </div>
 <div id="topbar" hidden>
   <span class="tbGreet">שלום, <b id="tbName"></b></span>
-  <span class="tbRight"><span id="tbClock"></span><span>·</span><span>גרסה <b id="tbVer"></b></span></span>
+  <span class="tbRight"><span id="tbClock"></span><span class="sep">·</span><span>גרסה <b id="tbVer"></b></span></span>
 </div>
 <div id="dlg" hidden></div>
 <div id="toast" hidden></div>
@@ -121,19 +123,21 @@ button{font:inherit;cursor:pointer}
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 3;
-// Shown at the bottom of the sign-in screen on every version — update this string
-// whenever VERSION is bumped, to a short line describing what changed.
-const WHATS_NEW = 'חדש בגרסה זו: כותרת קבועה למעלה עם שם, שעה ותאריך וגרסה';
+const VERSION = 4;
+// Shown at the bottom of the sign-in screen, and as a popup the first time this
+// version runs on a device — update this string whenever VERSION is bumped, to a
+// short line describing what changed.
+const WHATS_NEW = 'כותרת גדולה וברורה עם יום, תאריך, שעה עם שניות, וגרסה — ומופיעה הודעה כשיש עדכון חדש';
+const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 
 let toastT = 0;
-function toast(msg) {
+function toast(msg, ms) {
   const t = $('toast');
   t.textContent = msg; t.hidden = false;
-  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3200);
+  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, ms || 3200);
 }
 
 // ---------- Firebase ----------
@@ -146,7 +150,7 @@ firebase.initializeApp({
   appId: '1:493494621823:web:a69e5a4f9bb1f31da3514a',
 });
 $('ver').textContent = 'OhadCad · גרסה ' + VERSION + ' · ' + firebase.app().options.projectId;
-$('verNote').textContent = '🆕 ' + WHATS_NEW;
+$('verNote').textContent = '🆕 גרסה ' + VERSION + ': ' + WHATS_NEW;
 const auth = firebase.auth();
 const db = firebase.firestore();
 // Keeps a copy of everything on the device, so drawings open and save offline
@@ -320,7 +324,9 @@ window.panelDesignsBridge = bridge;
 let clockT = 0;
 function tickClock() {
   const now = new Date();
-  $('tbClock').textContent = now.toLocaleDateString('he-IL') + ' ' + now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+  const day = now.toLocaleDateString('he-IL', { weekday: 'long' });
+  const time = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  $('tbClock').textContent = day + ' ' + now.toLocaleDateString('he-IL') + ' ' + time;
 }
 
 function start() {
@@ -328,8 +334,13 @@ function start() {
   $('tbName').textContent = me.label;
   $('tbVer').textContent = VERSION;
   tickClock();
-  clearInterval(clockT); clockT = setInterval(tickClock, 1000 * 30);
+  clearInterval(clockT); clockT = setInterval(tickClock, 1000);
   $('topbar').hidden = false;
+  // Pops up only when the version actually changed since the last time this device
+  // opened the app — not on every load, and not on the very first install.
+  const lastSeen = localStorage.getItem(LAST_VER_KEY);
+  if (lastSeen && Number(lastSeen) !== VERSION) toast('🆕 עודכן לגרסה ' + VERSION + ': ' + WHATS_NEW, 7000);
+  localStorage.setItem(LAST_VER_KEY, String(VERSION));
   ready = new Promise((res) => {
     unsubs.push(DESIGNS.where('deleted', '==', false).onSnapshot((snap) => {
       const m = new Map();
