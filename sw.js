@@ -1,7 +1,7 @@
 // OhadCad service worker: keeps the app on the device so it opens offline.
 // Pages are network-first (an update you push shows up on the next open);
 // everything else is served from the cache and refreshed in the background.
-const CACHE = 'ohadcad-v12';
+const CACHE = 'ohadcad-v13';
 const CORE = [
   './', './index.html', './cad.html', './manifest.webmanifest',
   './vendor/firebase/firebase-app-compat.js',
@@ -9,7 +9,8 @@ const CORE = [
   './vendor/firebase/firebase-firestore-compat.js',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
   './icons/maskable-192.png', './icons/maskable-512.png',
-  './icons/apple-touch-icon.png', './icons/favicon-32.png',
+  './icons/apple-touch-icon.png', './icons/favicon-32.png', './favicon.ico',
+  './icons/wordmark-dark.svg', './icons/wordmark-light.svg',
 ];
 
 self.addEventListener('install', (event) => {

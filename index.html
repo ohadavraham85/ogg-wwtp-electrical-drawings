@@ -6,81 +6,84 @@
 <title>OhadCad</title>
 <meta name="description" content="OhadCad — תכנון לוחות חשמל ותרשימים חד-קוויים">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#121212">
+<meta name="theme-color" content="#1b1f24">
+<link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="OhadCad">
 <style>
-:root{--bg:#121212;--card:#1c1c1c;--line:#333;--txt:#f5f5f4;--mut:#a8a29e;--y:#fde047;--o:#f97316;--amber:#fbbf24}
+:root{--bg:#1b1f24;--card:#24292f;--card2:#2e3540;--line:#343b44;--txt:#e6eaf0;--mut:#9aa5b4;--amber:#f5a524;--amber-light:#ffc35c;--amber-dark:#b86e00;--ink:#14181d;--grid:#232931;--blue:#5bb8ff}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:Heebo,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
 button{font:inherit;cursor:pointer}
 [hidden]{display:none!important}
+.wordmark,#topbar .tbBrand img,.brand img.wm{font-family:Inter,system-ui,sans-serif}
+.mono,.tbClock,.ver,.verNote{font-family:"JetBrains Mono",ui-monospace,monospace}
 :root{--topbar-h:60px}
-#topbar{position:fixed;top:0;left:0;right:0;z-index:5;height:calc(var(--topbar-h) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:14px;padding-inline:20px;background:#1c1c1c;border-bottom:1px solid var(--line);overflow:hidden}
+#topbar{position:fixed;top:0;left:0;right:0;z-index:5;height:calc(var(--topbar-h) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:14px;padding-inline:20px;background:var(--card);border-bottom:1px solid var(--line);overflow:hidden}
 #topbar b{color:var(--txt);font-weight:700}
-#topbar .tbClock{flex:none;font-size:14.5px;color:var(--mut);white-space:nowrap}
-#topbar .tbBrand{flex:1;min-width:0;text-align:center;font:800 28px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;letter-spacing:-1px;direction:ltr;color:var(--txt)}
-#topbar .tbBrand b{color:var(--amber);font-weight:800}
-#topbar .tbWho{flex:none;display:flex;align-items:center;gap:8px;max-width:60%;font-size:14px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#topbar .tbClock{flex:none;font-size:14px;color:var(--mut);white-space:nowrap}
+#topbar .tbBrand{flex:1;min-width:0;display:flex;align-items:center;justify-content:center}
+#topbar .tbBrand img{height:22px;width:auto;display:block}
+#topbar .tbWho{flex:none;display:flex;align-items:center;gap:8px;max-width:60%;font-size:14px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:Heebo,system-ui,sans-serif}
 #topbar .tbWho b{color:var(--txt);font-weight:700}
-#topbar .sep{color:#555}
-#cad{position:fixed;inset:calc(var(--topbar-h) + env(safe-area-inset-top)) 0 0 0;width:100%;height:calc(100% - var(--topbar-h) - env(safe-area-inset-top));border:0;background:#1e1e1e}
+#topbar .sep{color:var(--line)}
+#cad{position:fixed;inset:calc(var(--topbar-h) + env(safe-area-inset-top)) 0 0 0;width:100%;height:calc(100% - var(--topbar-h) - env(safe-area-inset-top));border:0;background:var(--bg)}
 #gate{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px 16px;
-  background:radial-gradient(120% 70% at 50% 0%,rgba(249,115,22,.22),transparent 60%),var(--bg)}
+  background:radial-gradient(120% 70% at 50% 0%,rgba(245,165,36,.16),transparent 60%),repeating-linear-gradient(0deg,var(--grid) 0 1px,transparent 1px 20px),repeating-linear-gradient(90deg,var(--grid) 0 1px,transparent 1px 20px),var(--bg)}
 .box{width:100%;max-width:400px;text-align:center}
-.brand{display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:26px}
-.brand img{width:104px;height:104px;filter:drop-shadow(0 10px 30px rgba(249,115,22,.35))}
-.wm{font:800 44px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;letter-spacing:-1.5px;direction:ltr}
-.wm b{color:var(--amber);font-weight:800}
+.brand{display:flex;flex-direction:column;align-items:center;gap:16px;margin-bottom:26px}
+.brand img.wm{width:min(280px,80vw);height:auto;filter:drop-shadow(0 10px 30px rgba(245,165,36,.3))}
 .tag{color:var(--mut);font-size:15px;margin-top:-4px}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 20px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:22px 20px}
 .panel h2{margin:0 0 8px;font-size:19px}
 .panel p{margin:0 0 16px;color:var(--mut);font-size:14.5px;line-height:1.55}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:50px;border-radius:12px;border:1px solid var(--line);background:#262626;color:var(--txt);font-size:16px;font-weight:600;padding:0 16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:50px;border-radius:4px;border:1px solid var(--line);background:var(--card2);color:var(--txt);font-size:16px;font-weight:600;padding:0 16px}
 .btn.g{background:#fff;color:#1f1f1f;border-color:#fff}
-.btn.pri{background:linear-gradient(135deg,var(--y),var(--o));color:#1c1917;border:0}
+.btn.pri{background:linear-gradient(135deg,var(--amber-light),var(--amber));color:var(--ink);border:0}
 .btn+.btn{margin-top:10px}
 .btn.link{background:none;border:0;color:var(--mut);min-height:40px;font-weight:500;font-size:14px}
-.err{margin-top:14px;padding:10px 12px;border-radius:10px;background:#3b1212;border:1px solid #7f1d1d;color:#fecaca;font-size:13.5px;line-height:1.5;text-align:right}
-.spin{width:38px;height:38px;border-radius:50%;border:4px solid #333;border-top-color:var(--o);animation:sp 0.9s linear infinite;margin:6px auto 0}
+.err{margin-top:14px;padding:10px 12px;border-radius:4px;background:#3b1212;border:1px solid #7f1d1d;color:#fecaca;font-size:13.5px;line-height:1.5;text-align:right}
+.spin{width:38px;height:38px;border-radius:50%;border:4px solid var(--line);border-top-color:var(--amber);animation:sp 0.9s linear infinite;margin:6px auto 0}
 @keyframes sp{to{transform:rotate(360deg)}}
 .who{direction:ltr;color:var(--txt);font-weight:600}
 .verBox{position:fixed;bottom:10px;left:0;right:0;text-align:center;font-size:12px;padding:0 16px}
-.verNote{color:#78716c;margin-bottom:3px}
-.ver{color:#57534e}
+.verNote{color:var(--mut)}
+.ver{color:#5a636f}
 
 /* dialogs over the drawing */
 #dlg{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.6);display:flex;align-items:flex-start;justify-content:center;padding:max(24px,env(safe-area-inset-top)) 12px 24px;overflow:auto}
-.dlg{width:100%;max-width:520px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.dlg{width:100%;max-width:520px;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .dlg h2{margin:0 0 4px;font-size:20px;display:flex;align-items:center;gap:8px}
 .dlg h3{margin:18px 0 8px;font-size:14px;color:var(--mut);font-weight:600}
 .dlg .hint{color:var(--mut);font-size:13.5px;line-height:1.5}
-.row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#222}
+.row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--card2)}
 .row+.row{margin-top:8px}
 .row .nm{flex:1;min-width:0}
 .row .nm div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .em{direction:ltr;text-align:right;color:var(--mut);font-size:13px}
-.sb{min-height:36px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:#2b2b2b;color:var(--txt);font-size:14px;flex:none}
+.sb{min-height:36px;padding:0 12px;border-radius:4px;border:1px solid var(--line);background:var(--card2);color:var(--txt);font-size:14px;flex:none}
 .sb.ok{background:#14532d;border-color:#166534}
 .sb.no{background:#3b1212;border-color:#7f1d1d}
 .add{display:flex;gap:8px;margin-top:8px}
-.add input{flex:1;min-width:0;min-height:42px;border-radius:10px;border:1px solid var(--line);background:#121212;color:var(--txt);padding:0 12px;font-size:15px;direction:ltr;text-align:left}
-.empty{color:#78716c;font-size:13.5px;padding:6px 2px}
+.add input{flex:1;min-width:0;min-height:42px;border-radius:4px;border:1px solid var(--line);background:var(--ink);color:var(--txt);padding:0 12px;font-size:15px;direction:ltr;text-align:left}
+.empty{color:#5a636f;font-size:13.5px;padding:6px 2px}
 .foot{display:flex;justify-content:flex-start;margin-top:18px}
-#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:30;background:#0b0b0b;border:1px solid #3a3a3a;color:#fff;padding:10px 16px;border-radius:12px;font-size:14.5px;max-width:calc(100% - 32px);box-shadow:0 6px 20px rgba(0,0,0,.5)}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:30;background:var(--ink);border:1px solid var(--line);color:var(--txt);padding:10px 16px;border-radius:4px;font-size:14.5px;max-width:calc(100% - 32px);box-shadow:0 6px 20px rgba(0,0,0,.5)}
 </style>
 </head>
 <body>
 <div id="gate">
   <div class="box">
     <div class="brand">
-      <img src="icons/icon.svg" alt="">
-      <div class="wm">Ohad<b>Cad</b></div>
+      <img class="wm" src="icons/wordmark-dark.svg" alt="OhadCad">
       <div class="tag">תכנון לוחות חשמל ותרשימים חד-קוויים</div>
     </div>
     <div class="panel" id="st-loading"><div class="spin"></div></div>
@@ -115,7 +118,7 @@ button{font:inherit;cursor:pointer}
 </div>
 <div id="topbar" hidden>
   <span class="tbWho"><span>שלום, <b id="tbName"></b></span><span class="sep">·</span><span id="tbClock"></span><span class="sep">·</span><span>גרסה <b id="tbVer"></b></span></span>
-  <span class="tbBrand">Ohad<b>Cad</b></span>
+  <span class="tbBrand"><img src="icons/wordmark-dark.svg" alt="OhadCad"></span>
 </div>
 <div id="dlg" hidden></div>
 <div id="toast" hidden></div>
@@ -125,11 +128,11 @@ button{font:inherit;cursor:pointer}
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 11;
+const VERSION = 12;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'בכלי הציור: ציוד שמותקן על הדלת (לחצנים, נוריות) נשאר רואים עליה גם כשהיא נפתחת';
+const WHATS_NEW = 'מיתוג חדש: לוגו, אייקונים ועיצוב כהה בסגנון CAD עם צבע ענבר; וספריית הרכיבים עברה לצד שמאל';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
