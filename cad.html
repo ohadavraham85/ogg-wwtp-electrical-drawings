@@ -945,13 +945,24 @@ function objSVG(o,isSel){const D=DEF[o.type];if(!D)return '';const {w,h}=sizeOf(
  if(o.locked)s+=`<circle cx="${w/2-2}" cy="${-h/2+2}" r="2.6" fill="#f59e0b" stroke="#000" stroke-width=".4"/>`;
  if(isSel)s+=`<rect x="${-w/2-2.5}" y="${-h/2-2.5}" width="${w+5}" height="${h+5}" rx="2" fill="rgba(59,130,246,.08)" stroke="#3b82f6" stroke-width="1.6" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"/>`;
  return s+'</g>';}
-/* Parts mounted on a door (buttons, lights, e-stop…) are out of sight while the
-   inside of their cabinet or board is shown, and so are their text boxes. A CI
-   box is always seen from the front. */
+/* Parts mounted on a door (buttons, lights, e-stop…) ride along with it when it
+   swings open — see doorRideOffset — instead of vanishing, except on a bolted
+   cover (nothing to swing) or a CI box, whose lid just lifts off entirely. */
+function doorRideOffset(o){if(o.type==='label'&&o.p.of){const h=get(o.p.of);return h?doorRideOffset(h):null;}if(!DEF[o.type]?.front)return null;
+ for(const c of state.objs){if(c.type!=='cabinet'||isFrontV(c)||!inCab(c,o.x,o.y))continue;
+  const g=cabG(c),sc=g.S.find(z=>o.x>z.x0&&o.x<z.x1);if(!sc)return null;
+  const face=secFace(c,sc);if(face!=='door'&&face!=='double')return null;
+  const fx0=sc.x0+3,fx1=sc.x1-3;
+  if(face==='double'){const mid=fx0+(fx1-fx0)/2;return o.x<mid?-(mid-2-fx0):fx1-(mid+2);}
+  return sc.hinge==='R'?fx1-fx0:-(fx1-fx0);}
+ for(const b of state.objs){if(b.type!=='enclosure'||!hasDoor(b)||b.p.closed==='1')continue;
+  if(Math.abs(o.x-b.x)<sizeOf(b).w/2&&Math.abs(o.y-b.y)<sizeOf(b).h/2)return hingeX(b)*b.p.w;}
+ return null;}
 function hiddenFront(o){if(o.type==='label'&&o.p.of){const h=get(o.p.of);return !!h&&hiddenFront(h);}if(!DEF[o.type]?.front)return false;
  const inn=b=>Math.abs(o.x-b.x)<sizeOf(b).w/2&&Math.abs(o.y-b.y)<sizeOf(b).h/2;{const cb=state.objs.find(b=>b.type==='cibox'&&inn(b));if(cb)return !ciLidOn(cb);}
  if(DEF[o.type].cut&&state.objs.some(c=>c.type==='cabinet'&&c.p.view==='door'&&inCab(c,o.x,o.y)&&cabG(c).S.some(sc=>o.x>sc.x0&&o.x<sc.x1&&secFace(c,sc)==='door'&&sc.f==='cover')))return true;
- return state.objs.some(c=>c.type==='cabinet'&&!isFrontV(c)&&inCab(c,o.x,o.y))||state.objs.some(b=>b.type==='enclosure'&&hasDoor(b)&&b.p.closed!=='1'&&inn(b));}
+ const onDoor=state.objs.some(c=>c.type==='cabinet'&&!isFrontV(c)&&inCab(c,o.x,o.y))||state.objs.some(b=>b.type==='enclosure'&&hasDoor(b)&&b.p.closed!=='1'&&inn(b));
+ return onDoor&&doorRideOffset(o)==null;}
 /* On screen the diagram can be shown white on black: its parts drawn through an
    inverting filter. Printed and exported it's always black on white. */
 const INV='<filter id="sldInv" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0"/><feColorMatrix type="hueRotate" values="180"/></filter>';
@@ -962,7 +973,7 @@ function content(opt={}){const s0=content0(opt);if(!opt.sel||state.tab==='panel'
  if(x0>x1)return pn;if(sldDark)return pn+INV+`<g filter="url(#sldInv)">${sd}</g>`;
  return pn+`<rect x="${x0-40}" y="${y0-40}" width="${x1-x0+80}" height="${y1-y0+80}" rx="6" fill="#fbfbf8" stroke="#9ca3af" stroke-width="1" pointer-events="none"/>`+sd;}
 function content0(opt={},pick){const list=state.objs.filter(o=>!hiddenFront(o)&&(!pick||pick(o)));state.objs.forEach(o=>{if(pick&&!pick(o))return;if(o.type==='cabinet'&&isFrontV(o))list.push({__cab:o});if(o.type==='cabinet'&&!isFrontV(o))list.push({__cabGhost:o});if(o.type==='enclosure'&&hasDoor(o)&&o.p.closed==='1')list.push({__door:o});if(o.type==='enclosure'&&hasDoor(o)&&o.p.closed!=='1')list.push({__doorGhost:o});if(o.type==='cibox'&&ciLidOn(o))list.push({__lid:o});});list.sort((a,b)=>rank(a)-rank(b));let s='';
- for(const o of list)s+=o.__cab?(()=>{const c=o.__cab,m=holesMask(c.id,c.x,c.y,q=>inCab(c,q.x,q.y));return `<g data-id="${c.id}" transform="translate(${c.x} ${c.y})">${m?m.svg+`<g mask="url(#${m.id})">`:''}${cabFront(c)}${m?'</g>':''}${opt.sel&&isSelId(c.id)?selBox(c):''}</g>`;})():o.__cabGhost?(()=>{const c=o.__cabGhost;return `<g transform="translate(${c.x} ${c.y})" style="pointer-events:none">${cabFrontOpen(c)}</g>`;})():o.__doorGhost?`<g style="pointer-events:none">${doorSVGOpen(o.__doorGhost)}</g>`:o.__lid?ciLidSVG(o.__lid,opt.sel&&isSelId(o.__lid.id)):o.__door?doorSVG(o.__door,opt.sel&&isSelId(o.__door.id)):o.type==='wire'?drawWire(o,opt.sel&&isSelId(o.id)):objSVG(o,opt.sel&&isSelId(o.id));
+ for(const o of list)s+=o.__cab?(()=>{const c=o.__cab,m=holesMask(c.id,c.x,c.y,q=>inCab(c,q.x,q.y));return `<g data-id="${c.id}" transform="translate(${c.x} ${c.y})">${m?m.svg+`<g mask="url(#${m.id})">`:''}${cabFront(c)}${m?'</g>':''}${opt.sel&&isSelId(c.id)?selBox(c):''}</g>`;})():o.__cabGhost?(()=>{const c=o.__cabGhost;return `<g transform="translate(${c.x} ${c.y})" style="pointer-events:none">${cabFrontOpen(c)}</g>`;})():o.__doorGhost?`<g style="pointer-events:none">${doorSVGOpen(o.__doorGhost)}</g>`:o.__lid?ciLidSVG(o.__lid,opt.sel&&isSelId(o.__lid.id)):o.__door?doorSVG(o.__door,opt.sel&&isSelId(o.__door.id)):o.type==='wire'?drawWire(o,opt.sel&&isSelId(o.id)):(()=>{const dx=doorRideOffset(o);return dx?`<g transform="translate(${dx} 0)">${objSVG(o,opt.sel&&isSelId(o.id))}</g>`:objSVG(o,opt.sel&&isSelId(o.id));})();
  return s;}
 function selBox(o){const {w,h}=sizeOf(o);return `<rect x="${-w/2-2.5}" y="${-h/2-2.5}" width="${w+5}" height="${h+5}" rx="2" fill="none" stroke="#3b82f6" stroke-width="1.6" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"/>`;}
 const rank=o=>o.__door||o.__cab||o.__lid||o.__cabGhost||o.__doorGhost?6.5:o.type==='wire'?6:DEF[o.type].layer;
