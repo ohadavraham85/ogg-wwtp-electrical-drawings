@@ -83,6 +83,12 @@ button{font:inherit;cursor:pointer}
       <p>נשלחה בקשת גישה עבור <span class="who" id="pendWho"></span>. ברגע שהבעלים יאשר — OhadCad ייפתח כאן מעצמו.</p>
       <button class="btn link" data-out>התנתקות / החלפת חשבון</button>
     </div>
+    <div class="panel" id="st-error" hidden>
+      <h2>משהו לא הסתדר</h2>
+      <p>מחובר כ-<span class="who" id="errWho"></span>. הפרטים מופיעים למטה.</p>
+      <button class="btn pri" id="bRetry">נסה שוב</button>
+      <button class="btn link" data-out>התנתקות / החלפת חשבון</button>
+    </div>
     <div class="panel" id="st-claim" hidden>
       <h2>הפעלה ראשונה</h2>
       <p>ל-OhadCad עדיין אין בעלים. מי שלוחץ כאן הופך לבעלים, ורק הוא יוכל לאשר משתמשים אחרים.<br>מחובר כ-<span class="who" id="claimWho"></span>.</p>
@@ -101,10 +107,10 @@ button{font:inherit;cursor:pointer}
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 1;
+const VERSION = 2;
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-$('ver').textContent = 'OhadCad · גרסה ' + VERSION;
+
 
 let toastT = 0;
 function toast(msg) {
@@ -122,6 +128,7 @@ firebase.initializeApp({
   messagingSenderId: '493494621823',
   appId: '1:493494621823:web:a69e5a4f9bb1f31da3514a',
 });
+$('ver').textContent = 'OhadCad · גרסה ' + VERSION + ' · ' + firebase.app().options.projectId;
 const auth = firebase.auth();
 const db = firebase.firestore();
 // Keeps a copy of everything on the device, so drawings open and save offline
@@ -140,7 +147,7 @@ let started = false;
 const unsubs = [];
 
 function show(state) {
-  for (const s of ['loading', 'login', 'pending', 'claim']) $('st-' + s).hidden = s !== state;
+  for (const s of ['loading', 'login', 'pending', 'claim', 'error']) $('st-' + s).hidden = s !== state;
   $('gate').hidden = false;
 }
 function gateError(msg) {
@@ -155,7 +162,7 @@ function explain(err) {
     'auth/configuration-not-found': 'כניסה עם Google עוד לא הופעלה. ב-Firebase Console ← Authentication ← Sign-in method צריך להפעיל את Google.',
     'auth/popup-closed-by-user': 'חלון הכניסה נסגר לפני שהכניסה הסתיימה.',
     'auth/network-request-failed': 'אין חיבור לאינטרנט. הכניסה הראשונה דורשת חיבור.',
-    'permission-denied': 'אין הרשאה לקרוא מהשרת. כנראה שכללי האבטחה (firestore.rules) עוד לא פורסמו ב-Firebase Console ← Firestore ← Rules.',
+    'permission-denied': 'השרת סירב לבקשה (פרויקט <b dir="ltr">' + esc(firebase.app().options.projectId) + '</b>). בדוק ב-Firebase Console ← Firestore Database ← Rules שהכללים של OhadCad מודבקים ושנלחץ Publish.',
     'unavailable': 'אין חיבור לשרת כרגע. נסה שוב כשיש אינטרנט.',
   };
   return map[code] || ('שגיאה: ' + esc((err && (err.message || err.code)) || err));
@@ -221,10 +228,12 @@ auth.onAuthStateChanged(async (u) => {
   } catch (e) {
     // Offline after an earlier approved sign-in on this device: open from the local copy.
     if (localStorage.getItem(OK_KEY) === u.uid && (e.code === 'unavailable' || /offline/i.test(e.message || ''))) { start(); return; }
-    show('login');
+    $('errWho').textContent = email;
+    show('error');
     gateError(explain(e));
   }
 });
+$('bRetry').addEventListener('click', () => location.reload());
 
 // ---------- the shared folder of drawings ----------
 let designs = new Map();
