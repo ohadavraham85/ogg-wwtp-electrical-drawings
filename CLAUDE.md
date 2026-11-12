@@ -20,7 +20,7 @@ Live at https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/ (GitHub Pa
   - Autosave: `scheduleSave` / `doAutoSave`.
   - Drawer menu: `openDrawer`.
 - `sw.js`: offline cache. Pages are network-first with `cache: 'no-cache'`; other assets are stale-while-revalidate.
-- `manifest.webmanifest`, `icons/`: logo option "ה2" (O ring with CAD crosshair ticks, white C, yellow bolt).
+- `manifest.webmanifest`, `icons/`, `favicon.ico`: the official OhadCad brand kit (amber "O" ring + crosshair icon, white/amber wordmark for dark backgrounds, amber/dark wordmark for light ones). Colors, fonts (Heebo/Inter/JetBrains Mono) and style are in `icons/wordmark-dark.svg` / `icons/wordmark-light.svg` and documented in the brand kit's own README (not kept in this repo) — the live palette is in both `index.html`'s and `cad.html`'s `:root` CSS variables.
 - `vendor/firebase/`: firebase 12.19 compat bundles (app, auth, firestore).
 - `firestore.rules`: the source of truth for the rules. There is no CLI access. After changing it, the owner must paste it into Firebase Console → Firestore Database → Rules → Publish.
 - `archive/`: the old "אינדקס תוכניות חשמל G-WWTP" app. It is read-only and still points at its old Firebase project.
