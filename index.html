@@ -26,7 +26,7 @@ button{font:inherit;cursor:pointer}
 #topbar .tbClock{flex:none;font-size:14.5px;color:var(--mut);white-space:nowrap}
 #topbar .tbBrand{flex:1;min-width:0;text-align:center;font:800 28px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;letter-spacing:-1px;direction:ltr;color:var(--txt)}
 #topbar .tbBrand b{color:var(--amber);font-weight:800}
-#topbar .tbWho{flex:none;display:flex;align-items:center;gap:8px;max-width:38%;font-size:14px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#topbar .tbWho{flex:none;display:flex;align-items:center;gap:8px;max-width:60%;font-size:14px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #topbar .tbWho b{color:var(--txt);font-weight:700}
 #topbar .sep{color:#555}
 #cad{position:fixed;inset:calc(var(--topbar-h) + env(safe-area-inset-top)) 0 0 0;width:100%;height:calc(100% - var(--topbar-h) - env(safe-area-inset-top));border:0;background:#1e1e1e}
@@ -114,9 +114,8 @@ button{font:inherit;cursor:pointer}
   </div>
 </div>
 <div id="topbar" hidden>
-  <span class="tbClock" id="tbClock"></span>
+  <span class="tbWho"><span>שלום, <b id="tbName"></b></span><span class="sep">·</span><span id="tbClock"></span><span class="sep">·</span><span>גרסה <b id="tbVer"></b></span></span>
   <span class="tbBrand">Ohad<b>Cad</b></span>
-  <span class="tbWho"><span>שלום, <b id="tbName"></b></span><span class="sep">·</span><span>גרסה <b id="tbVer"></b></span></span>
 </div>
 <div id="dlg" hidden></div>
 <div id="toast" hidden></div>
@@ -126,11 +125,11 @@ button{font:inherit;cursor:pointer}
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 5;
+const VERSION = 6;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'שם האפליקציה גדול יותר באמצע הכותרת, והשעון עבר לימין';
+const WHATS_NEW = 'בצד ימין הכל ביחד: שלום, שעה ותאריך וגרסה';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
