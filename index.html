@@ -19,7 +19,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="OhadCad">
 <style>
-:root{--bg:#1b1f24;--card:#24292f;--card2:#2e3540;--line:#343b44;--txt:#e6eaf0;--mut:#9aa5b4;--amber:#f5a524;--amber-light:#ffc35c;--amber-dark:#b86e00;--ink:#14181d;--grid:#232931;--blue:#5bb8ff}
+:root{--bg:#1b1f24;--card:#2c333c;--card2:#3c4654;--line:#454f5c;--line-acc:rgba(245,165,36,.35);--txt:#e6eaf0;--mut:#aab6c4;--amber:#f5a524;--amber-light:#ffc35c;--amber-dark:#b86e00;--ink:#14181d;--grid:#232931;--blue:#5bb8ff}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:Heebo,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
 button{font:inherit;cursor:pointer}
@@ -27,7 +27,7 @@ button{font:inherit;cursor:pointer}
 .wordmark,#topbar .tbBrand img,.brand img.wm{font-family:Inter,system-ui,sans-serif}
 .mono,.tbClock,.ver,.verNote{font-family:"JetBrains Mono",ui-monospace,monospace}
 :root{--topbar-h:60px}
-#topbar{position:fixed;top:0;left:0;right:0;z-index:5;height:calc(var(--topbar-h) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:14px;padding-inline:20px;background:var(--card);border-bottom:1px solid var(--line);overflow:hidden}
+#topbar{position:fixed;top:0;left:0;right:0;z-index:5;height:calc(var(--topbar-h) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:14px;padding-inline:20px;background:var(--card);border-bottom:1px solid var(--line-acc);overflow:hidden}
 #topbar b{color:var(--txt);font-weight:700}
 #topbar .tbClock{flex:none;font-size:14px;color:var(--mut);white-space:nowrap}
 #topbar .tbBrand{flex:1;min-width:0;display:flex;align-items:center;justify-content:center}
@@ -128,11 +128,11 @@ button{font:inherit;cursor:pointer}
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 13;
+const VERSION = 14;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'ספריית הרכיבים חזרה לצד ימין עם רצועה קבועה שנפתחת בלחיצה; ולוגו ענק ברקע כל PDF/PNG שמיוצא';
+const WHATS_NEW = 'יותר ניגודיות וצבע כתום: כרטיסים, כותרת וקואורדינטות בולטים יותר על הרקע הכהה';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
