@@ -1,0 +1,49 @@
+rules_version = '2';
+// OhadCad — Firestore security rules.
+// Paste this whole file in Firebase Console → Firestore Database → Rules → Publish.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null && request.auth.token.email != null; }
+    function myEmail() { return request.auth.token.email.lower(); }
+    function ownerPath() { return /databases/$(database)/documents/ohadcad_meta/owner; }
+    function isOwner() { return signedIn() && exists(ownerPath()) && get(ownerPath()).data.uid == request.auth.uid; }
+    function userPath() { return /databases/$(database)/documents/ohadcad_users/$(myEmail()); }
+    function isApproved() {
+      return isOwner() || (signedIn() && exists(userPath()) && get(userPath()).data.approved == true);
+    }
+
+    // Who owns OhadCad: set once, by the first person to open it, and never changed from the app.
+    match /ohadcad_meta/owner {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+    }
+
+    // Approved users (document id = email). Only the owner manages them.
+    match /ohadcad_users/{email} {
+      allow read: if isOwner() || (signedIn() && email == myEmail());
+      allow write: if isOwner();
+    }
+
+    // Access requests: anyone signed in can ask for themselves; the owner answers.
+    match /ohadcad_requests/{email} {
+      allow read: if isOwner() || (signedIn() && email == myEmail());
+      allow create, update: if signedIn() && email == myEmail();
+      allow delete: if isOwner();
+    }
+
+    // The shared folder of drawings. Deleting marks deleted=true, and only
+    // the drawing's creator or the owner may do that.
+    match /ohadcad_designs/{id} {
+      allow read: if isApproved();
+      allow create: if isApproved() && request.resource.data.createdByEmail == myEmail();
+      allow update: if isApproved()
+        && request.resource.data.createdByEmail == resource.data.createdByEmail
+        && (request.resource.data.deleted == false || resource.data.deleted == true
+            || isOwner() || resource.data.createdByEmail == myEmail());
+    }
+
+    // Archive of the old "electrical drawings index" app: read-only.
+    match /mapData/{doc} { allow read: if true; }
+    match /panelTables/{doc} { allow read: if true; }
+  }
+}

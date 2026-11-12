@@ -1,33 +1,49 @@
-const CACHE_NAME = 'panels-page-v1';
-const CORE_ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+// OhadCad service worker: keeps the app on the device so it opens offline.
+// Pages are network-first (an update you push shows up on the next open);
+// everything else is served from the cache and refreshed in the background.
+const CACHE = 'ohadcad-v1';
+const CORE = [
+  './', './index.html', './cad.html', './manifest.webmanifest',
+  './vendor/firebase/firebase-app-compat.js',
+  './vendor/firebase/firebase-auth-compat.js',
+  './vendor/firebase/firebase-firestore-compat.js',
+  './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
+  './icons/maskable-192.png', './icons/maskable-512.png',
+  './icons/apple-touch-icon.png', './icons/favicon-32.png',
+];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
-  );
+  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)));
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
-  );
+  // Also clears the old "panels-page-v1" cache of the app that used to live here.
+  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))));
   self.clients.claim();
 });
 
-// Network-first for the page itself (so updates you push are picked up),
-// falling back to the cached copy when offline.
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.origin !== location.origin) return;
+  const isPage = req.mode === 'navigate' || url.pathname.endsWith('.html');
+  if (isPage) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); return res; })
+        .catch(() => caches.match(req, { ignoreSearch: true }).then((r) => r || caches.match('./index.html')))
+    );
+    return;
+  }
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-        return response;
-      })
-      .catch(() => caches.match(event.request))
+    caches.match(req).then((hit) => {
+      const net = fetch(req).then((res) => {
+        if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
+        return res;
+      });
+      return hit || net;
+    })
   );
 });
