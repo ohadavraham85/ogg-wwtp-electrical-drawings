@@ -5,9 +5,9 @@
 - `index.html` — כניסה עם Google, אישור משתמשים ע״י הבעלים, והתיקייה המשותפת (Firestore).
 - `cad.html` — כלי השרטוט עצמו.
 - `firestore.rules` — כללי האבטחה; מפרסמים אותם ב-Firebase Console ← Firestore ← Rules.
-- `archive/` — האפליקציה הקודמת "אינדקס תוכניות חשמל G-WWTP", לקריאה בלבד.
+- `archive/` — האפליקציה הקודמת "אינדקס תוכניות חשמל G-WWTP" (נשארת על פרויקט Firebase הישן שלה).
 
-הגדרה חד-פעמית ב-Firebase Console (פרויקט `ogg-electrical-plans-81c33`):
+הגדרה חד-פעמית ב-Firebase Console (פרויקט `ohadcad`):
 1. Authentication ← Sign-in method ← Google ← הפעלה.
 2. Authentication ← Settings ← Authorized domains ← הוספת `ohadavraham85.github.io`.
 3. Firestore Database ← Rules ← הדבקת `firestore.rules` ← Publish.

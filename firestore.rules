@@ -41,9 +41,5 @@ service cloud.firestore {
         && (request.resource.data.deleted == false || resource.data.deleted == true
             || isOwner() || resource.data.createdByEmail == myEmail());
     }
-
-    // Archive of the old "electrical drawings index" app: read-only.
-    match /mapData/{doc} { allow read: if true; }
-    match /panelTables/{doc} { allow read: if true; }
   }
 }
