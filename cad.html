@@ -51,8 +51,12 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
 .rb span{font-size:11px;color:#d4d4d4;line-height:1}.rb b{font-size:15px;height:25px;display:flex;align-items:center}
 .rb.on{background:var(--acc)}.rb.on span{color:#fff}.rb:disabled{opacity:.28}.rb.dng svg{stroke:#f87171}
 .sep{width:1px;height:34px;background:var(--line);margin:0 4px;flex:none}
-#panel{position:fixed;left:10px;top:calc(env(safe-area-inset-top) + var(--toph) + var(--toph2) + 18px);bottom:10px;width:min(360px,calc(100vw - 20px));background:var(--bg);border:1px solid var(--line);border-radius:4px;z-index:7;display:flex;flex-direction:column;box-shadow:0 10px 34px rgba(0,0,0,.65);transition:transform .2s,opacity .2s}
-#panel.hidden{transform:translateX(-24px);opacity:0;pointer-events:none}
+#panel{position:fixed;right:10px;top:calc(env(safe-area-inset-top) + var(--toph) + var(--toph2) + 18px);bottom:10px;width:min(360px,calc(100vw - 20px));background:var(--bg);border:1px solid var(--line);border-radius:4px;z-index:7;display:flex;flex-direction:column;box-shadow:0 10px 34px rgba(0,0,0,.65);transition:transform .2s,opacity .2s}
+#panel.hidden{transform:translateX(24px);opacity:0;pointer-events:none}
+#libStrip{position:fixed;right:10px;top:50%;transform:translateY(-50%);z-index:8;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:var(--card);border:1px solid var(--line);border-radius:4px;box-shadow:0 10px 24px rgba(0,0,0,.5);cursor:pointer}
+#libStrip.on{display:none}
+#libStrip svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#libStrip span{writing-mode:vertical-rl;font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap}
 .phead{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 8px;flex:none}.phead b{font-size:18px}
 #pClose{width:40px;height:40px;border-radius:4px;background:var(--card2);font-size:17px}
 #libWrap{display:flex;flex-direction:column;min-height:0;flex:1}
@@ -123,7 +127,7 @@ td,th{border-bottom:1px solid var(--line);padding:8px 4px;text-align:right}
 #rulY{position:fixed;left:0;top:0;bottom:20px;width:20px;background:rgba(20,24,29,.88);border-right:1px solid var(--line);z-index:3;overflow:hidden;pointer-events:none;direction:ltr}
 #rulX i,#rulY i{position:absolute;background:var(--mut);display:block}#rulX b,#rulY b{position:absolute;font:600 10px "JetBrains Mono",Arial;color:#c9c9c9;white-space:nowrap}
 #rulX .cur,#rulY .cur{background:#f43f5e}
-#coord{position:fixed;right:28px;bottom:28px;z-index:3;background:rgba(20,24,29,.88);border:1px solid var(--line);border-radius:4px;padding:4px 9px;font:600 12px "JetBrains Mono",Arial;color:#e5e5e5;direction:ltr;pointer-events:none}
+#coord{position:fixed;left:28px;bottom:28px;z-index:3;background:rgba(20,24,29,.88);border:1px solid var(--line);border-radius:4px;padding:4px 9px;font:600 12px "JetBrains Mono",Arial;color:#e5e5e5;direction:ltr;pointer-events:none}
 body.noaxes #rulX,body.noaxes #rulY,body.noaxes #coord{display:none}
 #docTabs{position:fixed;left:10px;right:10px;top:calc(env(safe-area-inset-top) + var(--toph) + 10px);height:var(--toph2);z-index:5;display:flex;align-items:center;background:var(--ink);border:1px solid var(--line);border-radius:4px;padding:3px 8px;gap:2px;box-shadow:0 3px 12px rgba(0,0,0,.5);overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
 #docTabs::-webkit-scrollbar{display:none}
@@ -186,6 +190,7 @@ body.sld #stage{background-color:#efefeb}
 </div>
 
 
+<button id="libStrip" title="הוספת רכיב"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>הוסף רכיב</span></button>
 <div id="panel" class="hidden">
   <div class="phead"><b id="pTitle"></b><button id="pClose">✕</button></div>
   <div id="libWrap"><input id="search" placeholder="🔍 חיפוש רכיב…" autocomplete="off"><div id="libBody"><div id="tabs"></div><div id="sheetBody"></div></div></div>
@@ -1385,7 +1390,7 @@ function loadProjects(){try{return JSON.parse(localStorage.getItem('epd.projects
 function saveProjects(p){try{localStorage.setItem('epd.projects',JSON.stringify(p));return true;}catch(e){return false;}}
 
 /* ================= UI: top bar ================= */
-function updateBar(){const o=sel&&get(sel);{const df=doorsFront();$('bDoor').disabled=df===null;$('bDoor').classList.toggle('on',df===true);$('bDoor').title=df?'הצג את פנים הלוח':'הצג את חזית הלוח (דלת סגורה)';}$('bLockAll').classList.toggle('on',globalLock);$('bText').disabled=wireMode||globalLock;{const o2=sel&&get(sel);$('bText').title=o2&&o2.type!=='wire'&&o2.type!=='label'?'הוסף תיבת טקסט ל'+o2.p.name:'הוסף תיבת טקסט';}$('bLockAll').title=globalLock?'פתח עריכה':'נעל עריכה (צפייה בלבד)';['bDel','bLock','bRot','bDup'].forEach(b=>$(b).disabled=!o||wireMode);$('rWire').classList.toggle('on',wireMode);$('rAdd').classList.toggle('on',pMode==='lib');$('rProps').classList.toggle('on',pMode==='props');
+function updateBar(){const o=sel&&get(sel);{const df=doorsFront();$('bDoor').disabled=df===null;$('bDoor').classList.toggle('on',df===true);$('bDoor').title=df?'הצג את פנים הלוח':'הצג את חזית הלוח (דלת סגורה)';}$('bLockAll').classList.toggle('on',globalLock);$('bText').disabled=wireMode||globalLock;{const o2=sel&&get(sel);$('bText').title=o2&&o2.type!=='wire'&&o2.type!=='label'?'הוסף תיבת טקסט ל'+o2.p.name:'הוסף תיבת טקסט';}$('bLockAll').title=globalLock?'פתח עריכה':'נעל עריכה (צפייה בלבד)';['bDel','bLock','bRot','bDup'].forEach(b=>$(b).disabled=!o||wireMode);$('rWire').classList.toggle('on',wireMode);$('rAdd').classList.toggle('on',pMode==='lib');$('rProps').classList.toggle('on',pMode==='props');$('libStrip').classList.toggle('on',pMode==='lib');
  if(o)$('lockLbl').textContent=o.locked?'שחרור':'נעילה';
  if(o){$('selName').textContent=o.type==='wire'?`חוט ${WCOL[o.p.color]?.n||''} ${o.p.sec} ממ"ר`:(o.p.name+(o.p.tag&&o.type!=='label'?' · '+o.p.tag:''));
   $('selThumb').innerHTML=o.type==='wire'?`<svg viewBox="0 0 24 24"><path d="M3 18C9 18 9 6 21 6" stroke="${WCOL[o.p.color]?.base}" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>`:thumbSVG(Object.assign({},o,{p:Object.assign({},o.p,THUMBP[o.type]||{})}));
@@ -1427,7 +1432,7 @@ function itemBtn(ti,gi,ii,e){return `<button class="item" data-t="${ti}" data-g=
 function openPanel(m,title){pMode=m;$('panel').classList.remove('hidden');$('panel').classList.toggle('lib',m==='lib');$('panel').classList.toggle('half',m==='props'&&innerWidth<600);$('libWrap').style.display=m==='lib'?'':'none';$('propsBody').style.display=m==='props'?'':'none';$('pTitle').textContent=title||'';if(m==='lib')buildSheet();updateBar();}
 function closePanel(){pMode=null;$('panel').classList.add('hidden');updateBar();}
 $('pClose').onclick=closePanel;
-$('rAdd').onclick=()=>{if(pMode==='lib')closePanel();else{if(wireMode)setWire(false);openPanel('lib','הוספת רכיב');}};
+$('rAdd').onclick=$('libStrip').onclick=()=>{if(pMode==='lib')closePanel();else{if(wireMode)setWire(false);openPanel('lib','הוספת רכיב');}};
 $('rProps').onclick=()=>{if(pMode==='props')closePanel();else{if(wireMode)setWire(false);editDialog();}};
 $('rWire').onclick=()=>setWire(!wireMode);
 $('search').addEventListener('input',e=>{libQ=e.target.value;buildSheet();});
@@ -1897,7 +1902,11 @@ function tbSVG(t,W,H,pageNo,pages,scaleLbl){const L0=25,R=W-15,B=H-15,iw=R-L0,na
    lines.slice(0,5).forEach((l,i)=>s+=T(x-1.5,y0+8+i*4.2,l,3));}}
  else if(t.notes)s+=`<rect x="${L0}" y="${y0-10}" width="${iw}" height="10" fill="#fff" stroke="#000" stroke-width=".35"/>`+T(R-1.5,y0-6.8,'הערות',2.1,400,'#555')+T(R-1.5,y0-2,t.notes,2.8);
  return {s,x0:L0,y0:(x-L0>12||!t.notes)?y0:y0-10};}
-function pageFrame(W,H){const X0=20,Y0=10,X1=W-10,Y1=H-10,b=5;let s=`<rect x="0" y="0" width="${W}" height="${H}" fill="#fff"/><rect x="${X0}" y="${Y0}" width="${X1-X0}" height="${Y1-Y0}" fill="none" stroke="#000" stroke-width=".35"/><rect x="${X0+b}" y="${Y0+b}" width="${X1-X0-2*b}" height="${Y1-Y0-2*b}" fill="none" stroke="#000" stroke-width=".7"/>`;
+// The OhadCad mark (two interlocking rings, simplified from icons/icon.svg) as a huge,
+// faint background watermark — every exported PDF page and PNG image carries it.
+function watermark(cx,cy,r){const d=r*1.78,sw=r*.62;
+ return `<g transform="translate(${cx} ${cy})" fill="none" stroke="#F5A524" stroke-width="${sw}" opacity=".08"><circle cx="${-d/2}" cy="0" r="${r}"/><circle cx="${d/2}" cy="0" r="${r}"/></g>`;}
+function pageFrame(W,H){const X0=20,Y0=10,X1=W-10,Y1=H-10,b=5;let s=`<rect x="0" y="0" width="${W}" height="${H}" fill="#fff"/>${watermark(W/2,H/2,Math.min(W,H)*.22)}<rect x="${X0}" y="${Y0}" width="${X1-X0}" height="${Y1-Y0}" fill="none" stroke="#000" stroke-width=".35"/><rect x="${X0+b}" y="${Y0+b}" width="${X1-X0-2*b}" height="${Y1-Y0-2*b}" fill="none" stroke="#000" stroke-width=".7"/>`;
  const nc=Math.max(4,Math.round((X1-X0)/50)),nr=Math.max(3,Math.round((Y1-Y0)/50)),cw=(X1-X0)/nc,rh=(Y1-Y0)/nr;const Tz=(x,y,t)=>`<text x="${x}" y="${y+1.2}" font-size="3" font-family="Arial" text-anchor="middle">${t}</text>`;
  for(let i=0;i<nc;i++){const xa=X0+i*cw,xm=xa+cw/2;if(i)s+=`<line x1="${xa}" y1="${Y0}" x2="${xa}" y2="${Y0+b}" stroke="#000" stroke-width=".3"/><line x1="${xa}" y1="${Y1-b}" x2="${xa}" y2="${Y1}" stroke="#000" stroke-width=".3"/>`;const lbl=String(nc-i);s+=Tz(xm,Y0+b/2,lbl)+Tz(xm,Y1-b/2,lbl);}
  for(let j=0;j<nr;j++){const ya=Y0+j*rh,ym=ya+rh/2;if(j)s+=`<line x1="${X0}" y1="${ya}" x2="${X0+b}" y2="${ya}" stroke="#000" stroke-width=".3"/><line x1="${X1-b}" y1="${ya}" x2="${X1}" y2="${ya}" stroke="#000" stroke-width=".3"/>`;const lbl=String.fromCharCode(65+j);s+=Tz(X0+b/2,ym,lbl)+Tz(X1-b/2,ym,lbl);}
@@ -1938,7 +1947,7 @@ async function makePdf(t){toast('יוצר PDF…');const LY=layoutRect();if(LY){
    [...(pdfBlob?[{t:'⬇ הורד PDF',cls:'pri',fn:()=>{saveFile(fname,pdfBlob);return false;}}]:[]),{t:'סגור'}]);}
  catch(e){toast('יצירת ה-PDF נכשלה');}}
 function exportImage(){if(!state.objs.length){toast('הלוח ריק');return;}const b=boundsAll(),pad=12;const x=b.x-pad,y=b.y-pad,w=b.w+2*pad,h=b.h+2*pad;const k=Math.min(5,4200/Math.max(w,h));
- const s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${h}" width="${Math.round(w*k)}" height="${Math.round(h*k)}"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#ffffff"/>${content({sel:false})}</svg>`;
+ const s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${h}" width="${Math.round(w*k)}" height="${Math.round(h*k)}"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#ffffff"/>${watermark(x+w/2,y+h/2,Math.min(w,h)*.22)}${content({sel:false})}</svg>`;
  const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);const g=c.getContext('2d');g.drawImage(img,0,0,c.width,c.height);let url;try{url=c.toDataURL('image/png');}catch(e){url='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);}
   modal('תמונת הלוח',`<img src="${url}" style="width:100%;border-radius:8px;background:#fff">`,[{t:'⬇ הורד PNG',cls:'pri',fn:()=>{saveFile(safeName(state.name)+'.png',dataUrlToBlob(url));return false;}},{t:'סגור'}]);};
  img.onerror=()=>toast('יצירת התמונה נכשלה');img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);}
