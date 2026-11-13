@@ -767,6 +767,21 @@ function sSwitch(mark){let s=sL(0,-30,0,-12)+sL(0,12,0,30)+sL(0,12,-11,-13);
  if(mark==='arc')s+=`<path d="M-5 -12a5 5 0 0 0 10 0" fill="none" stroke="${SK}" stroke-width="2"/>`;
  if(mark==='circ')s+=sC(0,-12,3);
  return s;}
+// Control circuit pieces (IEC 60617): a contact drawn on the 60-tall line, and the
+// way it is worked, drawn to its left on a dashed link from the blade.
+const cNO=()=>sL(0,-30,0,-12)+sL(0,12,0,30)+sL(0,12,-11,-13),cNC=()=>sL(0,-30,0,-12)+sL(0,-12,8,-12)+sL(0,12,0,30)+sL(0,12,10,-15);
+function cAct(kind,mx,my){const d=`<line x1="${mx}" y1="${my}" x2="-18" y2="${my}" stroke="${SK}" stroke-width="1.4" stroke-dasharray="3 2"/>`,P=(dd,f='none')=>`<path d="${dd}" fill="${f}" stroke="${SK}" stroke-width="1.8" stroke-linejoin="round"/>`;
+ if(kind==='push')return d+P(`M-18 ${my-6}V${my+6}M-18 ${my-6}h-4M-18 ${my+6}h-4`);
+ if(kind==='turn')return d+P(`M-18 ${my}h-3v-6h-5v12h-3`);
+ if(kind==='mush')return d+P(`M-18 ${my-8}V${my+8}`)+P(`M-18 ${my-8}a8 8 0 0 0 0 16z`,SK);
+ if(kind==='key')return d+P(`M-18 ${my}h-5`)+sC(-26,my,3,'#fff',1.8);
+ if(kind==='float')return d+P(`M-18 ${my}h-2`)+sC(-25,my,5,'#fff',1.8)+P(`M-31 ${my+8}h12`);
+ if(kind==='press')return d+sR(-31,my-6,13,12,'#fff',1.8)+sT(-24.5,my+3.5,'p',9);
+ if(kind==='temp')return d+sR(-31,my-6,13,12,'#fff',1.8)+sT(-24.5,my+3.5,'θ',9);
+ if(kind==='limit')return d+P(`M-18 ${my-6}l-8 6l8 6z`);
+ if(kind==='delay')return d+P(`M-11 ${my-5}a5 5 0 0 0 0 10`);
+ return '';}
+const sCoil=inner=>sL(0,-30,0,-7)+sR(-11,-7,22,14)+sL(0,7,0,30)+(inner||'');
 const SDEF={
  sgrid:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'',rating:'22kV',desc:'רשת חח"י'},size:()=>({w:40,h:60}),terms:()=>[[0,30,'']],
   draw:o=>sC(0,-6,16)+`<path d="M-9 -6c3-6 6-6 9 0s6 6 9 0" fill="none" stroke="${SK}" stroke-width="2"/>`+sL(0,10,0,30)+sLbl(o,40)},
@@ -792,6 +807,36 @@ const SDEF={
   draw:o=>sSwitch('bar')+sLbl(o,40)},
  slbs:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Q1',rating:'630A',desc:'מנתק עומס'},size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sSwitch('circ')+sLbl(o,40)},
+ /* ---- control & signalling ---- */
+ sno:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'K1',rating:'13-14',desc:'מגע פתוח (NO)'},size:()=>({w:40,h:60}),terms:IO,draw:o=>cNO()+sLbl(o,40)},
+ snc:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'K1',rating:'21-22',desc:'מגע סגור (NC)'},size:()=>({w:40,h:60}),terms:IO,draw:o=>cNC()+sLbl(o,40)},
+ spbno:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'S1',rating:'',desc:'לחצן הפעלה'},size:()=>({w:60,h:60}),terms:IO,draw:o=>cNO()+cAct('push',-5.5,0)+sLbl(o,40)},
+ spbnc:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'S0',rating:'',desc:'לחצן הפסקה'},size:()=>({w:60,h:60}),terms:IO,draw:o=>cNC()+cAct('push',5,-1.5)+sLbl(o,40)},
+ sestop:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'S00',rating:'',desc:'לחצן חירום'},size:()=>({w:60,h:60}),terms:IO,draw:o=>cNC()+cAct('mush',5,-1.5)+sLbl(o,40)},
+ ssel:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'S2',rating:'0-1',desc:'בורר'},ratings:['0-1','1-0-2','ידני-0-אוטו','מקומי-רחוק'],size:()=>({w:60,h:60}),terms:IO,draw:o=>cNO()+cAct('turn',-5.5,0)+sLbl(o,40)},
+ skeysw:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'S3',rating:'',desc:'בורר מפתח'},size:()=>({w:60,h:60}),terms:IO,draw:o=>cNO()+cAct('key',-5.5,0)+sLbl(o,40)},
+ slimit:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'B1',rating:'',desc:'גבול'},size:()=>({w:60,h:60}),terms:IO,draw:o=>cNO()+cAct('limit',-5.5,0)+sLbl(o,40)},
+ sfloat:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'B2',rating:'',desc:'מצוף'},size:()=>({w:60,h:60}),terms:IO,draw:o=>cNO()+cAct('float',-5.5,0)+sLbl(o,40)},
+ spress:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'B3',rating:'',desc:'מפסק לחץ'},size:()=>({w:60,h:60}),terms:IO,draw:o=>cNO()+cAct('press',-5.5,0)+sLbl(o,40)},
+ sthermo:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'B4',rating:'',desc:'תרמוסטט'},size:()=>({w:60,h:60}),terms:IO,draw:o=>cNC()+cAct('temp',5,-1.5)+sLbl(o,40)},
+ scoil:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'K1',rating:'A1-A2 230VAC',desc:'סליל מגען / ממסר'},ratings:['A1-A2 24VDC','A1-A2 24VAC','A1-A2 230VAC'],size:()=>({w:40,h:60}),terms:IO,draw:o=>sCoil()+sLbl(o,40)},
+ stcoil:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'KT1',rating:'0.1s-10s',desc:'טיימר השהיה בהפעלה'},ratings:['0.1s-10s','1s-100s','1s-10h'],size:()=>({w:40,h:60}),terms:IO,
+  draw:o=>sCoil(sR(-11,-7,7,14,SK)+sC(4,0,4.2,'#fff',1.3)+sL(4,0,4,-2.8,1.2)+sL(4,0,6.3,0,1.2))+sLbl(o,40)},
+ stcoiloff:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'KT2',rating:'0.1s-10s',desc:'טיימר השהיה בניתוק'},size:()=>({w:40,h:60}),terms:IO,
+  draw:o=>sCoil(sR(-11,-7,7,14,'#fff')+sL(-11,-7,-4,7,1.3)+sL(-11,7,-4,-7,1.3)+sC(4,0,4.2,'#fff',1.3)+sL(4,0,4,-2.8,1.2)+sL(4,0,6.3,0,1.2))+sLbl(o,40)},
+ stno:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'KT1',rating:'17-18',desc:'מגע טיימר NO'},size:()=>({w:40,h:60}),terms:IO,draw:o=>cNO()+cAct('delay',-5.5,0)+sLbl(o,40)},
+ stnc:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'KT1',rating:'15-16',desc:'מגע טיימר NC'},size:()=>({w:40,h:60}),terms:IO,draw:o=>cNC()+cAct('delay',5,-1.5)+sLbl(o,40)},
+ sclock:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'KT3',rating:'',desc:'שעון שבת / שעון זמן'},size:()=>({w:40,h:60}),terms:IO,
+  draw:o=>sL(0,-30,0,-11)+sL(0,11,0,30)+sC(0,0,11)+sL(0,0,0,-7,1.8)+sL(0,0,5,2,1.8)+sC(0,0,1.4,SK,1)+sLbl(o,40)},
+ sclockc:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'KT3',rating:'',desc:'מגע שעון'},size:()=>({w:60,h:60}),terms:IO,
+  draw:o=>cNO()+`<line x1="-5.5" y1="0" x2="-17" y2="0" stroke="${SK}" stroke-width="1.4" stroke-dasharray="3 2"/>`+sC(-24,0,7,'#fff',1.6)+sL(-24,0,-24,-4.5,1.4)+sL(-24,0,-21,1,1.4)+sLbl(o,40)},
+ sauxq:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Q1',rating:'13-14',desc:'מגע עזר מפסק'},size:()=>({w:40,h:60}),terms:IO,draw:o=>cNO()+sL(-4,-16,4,-8,1.6)+sL(-4,-8,4,-16,1.6)+sLbl(o,40)},
+ slamp:{layer:4,sld:true,edit:['tag','rating','desc','color'],def:{tag:'H1',rating:'230V',desc:'נורית סימון',color:'green'},size:()=>({w:40,h:60}),terms:IO,
+  draw:o=>sL(0,-30,0,-9)+sL(0,9,0,30)+sC(0,0,9,o.p.color&&o.p.color!=='white'?COLORS[o.p.color]+'55':'#fff')+sL(-6.4,-6.4,6.4,6.4)+sL(-6.4,6.4,6.4,-6.4)+sLbl(o,40)},
+ shorn:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'H5',rating:'230V',desc:'צופר / זמזם'},size:()=>({w:40,h:60}),terms:IO,
+  draw:o=>sL(0,-30,0,-6)+sL(0,8,0,30)+`<path d="M-10 -6h20a10 12 0 0 1 -20 0z" fill="#fff" stroke="${SK}" stroke-width="2"/>`+sL(-10,8,10,8)+sLbl(o,40)},
+ splc:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'A1',rating:'PLC',desc:'כניסה / יציאה PLC'},size:()=>({w:40,h:60}),terms:IO,
+  draw:o=>sL(0,-30,0,-10)+sL(0,10,0,30)+sR(-14,-10,28,20)+sT(0,4,o.p.rating||'PLC',7.5)+sLbl(o,40)},
  scont:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'K1',rating:'LC1D 25A',desc:''},ratings:['LC1D 9A','LC1D 12A','LC1D 18A','LC1D 25A','LC1D 32A','LC1D 40A','LC1D 65A','LC1D 95A'],size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sSwitch('arc')+sLbl(o,40)},
  sol:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'F2',rating:'LRD 4-6A',desc:''},size:()=>({w:40,h:60}),terms:IO,
@@ -1038,6 +1083,14 @@ const LIB=[
   {g:'נתיכים',items:[{t:'sfuse',n:'נתיך'},{t:'sfsd',n:'מנתק נתיכים'}]},
   {g:'מיתוג והתנעה',items:[{t:'scont',n:'מגען'},{t:'sol',n:'ממסר טרמי'},{t:'svfd',n:'ווסת מהירות (VFD)'},{t:'sss',n:'מתנע רך'},{t:'sats',n:'מחליף אוטומטי (ATS)'}]},
   {g:'הגנות',items:[{t:'sspd',n:'מגן ברקים (SPD)'}]}]},
+ {tab:'פיקוד ובקרה',sld:true,icon:'🎛',hint:'סמלי פיקוד (IEC): מגעים, לחצנים, בוררים, סלילים, טיימרים ושעונים. מחברים ביניהם ב"חיווט". הסימון (למשל K1) והמספרים (13-14) נערכים במאפיינים.',groups:[
+  {g:'לחצנים',items:[{t:'spbno',n:'לחצן הפעלה (NO)'},{t:'spbnc',n:'לחצן הפסקה (NC)'},{t:'sestop',n:'לחצן חירום'}]},
+  {g:'בוררים',items:[{t:'ssel',n:'בורר 0-1'},{t:'ssel',n:'בורר 1-0-2',p:{tag:'S3',rating:'1-0-2'}},{t:'ssel',n:'בורר ידני-0-אוטו',p:{tag:'S4',rating:'ידני-0-אוטו'}},{t:'skeysw',n:'בורר מפתח'}]},
+  {g:'מגעים',items:[{t:'sno',n:'מגע פתוח (NO)'},{t:'snc',n:'מגע סגור (NC)'},{t:'sauxq',n:'מגע עזר מפסק'}]},
+  {g:'סלילים וממסרים',items:[{t:'scoil',n:'סליל מגען / ממסר'},{t:'splc',n:'כניסה / יציאה PLC'}]},
+  {g:'טיימרים ושעונים',items:[{t:'stcoil',n:'טיימר השהיה בהפעלה'},{t:'stcoiloff',n:'טיימר השהיה בניתוק'},{t:'stno',n:'מגע טיימר NO'},{t:'stnc',n:'מגע טיימר NC'},{t:'sclock',n:'שעון שבת / שעון זמן'},{t:'sclockc',n:'מגע שעון'}]},
+  {g:'חיישנים ומפסקי תהליך',items:[{t:'sfloat',n:'מצוף'},{t:'spress',n:'מפסק לחץ'},{t:'sthermo',n:'תרמוסטט'},{t:'slimit',n:'מפסק גבול'}]},
+  {g:'סימון',items:[{t:'slamp',n:'נורית ירוקה',p:{color:'green',tag:'H1'}},{t:'slamp',n:'נורית אדומה',p:{color:'red',tag:'H2'}},{t:'slamp',n:'נורית כתומה',p:{color:'orange',tag:'H3'}},{t:'shorn',n:'צופר / זמזם'}]}]},
  {tab:'מדידה וצרכנים',sld:true,groups:[
   {g:'מדידה',items:[{t:'sct',n:'משנה זרם (CT)'},{t:'svt',n:'משנה מתח (VT)'},{t:'skwh',n:'מונה kWh'},{t:'spm',n:'רב-מודד'},{t:'samm',n:'מד זרם'},{t:'svm',n:'מד מתח'}]},
   {g:'צרכנים',items:[{t:'smot',n:'מנוע'},{t:'slight',n:'תאורה'},{t:'ssock',n:'שקעים'},{t:'sheat',n:'גוף חימום'},{t:'scap',n:'סוללת קבלים'},{t:'sload',n:'לוח משנה / עומס'}]},
@@ -1131,7 +1184,7 @@ const LIB=[
    {g:'קווים וחצים',items:[{t:'shline',n:'קו'},{t:'shline',n:'קו מקווקו',p:{dash:'dash'}},{t:'shline',n:'חץ',p:{head:'end'}},{t:'shline',n:'חץ כפול',p:{head:'both'}},{t:'shline',n:'קו אנכי',rot:90}]},
    {g:'צורות',items:[{t:'shrect',n:'ריבוע / מלבן'},{t:'shrect',n:'מלבן מקווקו (אזור)',p:{dash:'dash',fill:'light'}},{t:'shellipse',n:'עיגול'},{t:'shellipse',n:'אליפסה',p:{w:300,h:180}}]},
    {g:'בניין וקנה מידה',items:[{t:'wall',n:'קיר אופקי'},{t:'wall',n:'קיר אנכי',p:{w:200,h:2000}},{t:'person',n:'אדם (קנה מידה)'}]}]}];
- const keep=LIB.filter(T=>T.sld);keep.forEach((T,i)=>T.icon=T.icon||['⚡','⏻','◎'][i]);const di=NEW.findIndex(T=>T.draw);if(di>1)NEW.splice(1,0,...NEW.splice(di,1));LIB.length=0;LIB.push(...keep,...NEW);})();
+ const keep=LIB.filter(T=>T.sld);keep.forEach((T,i)=>T.icon=T.icon||['⚡','⏻','🎛','◎'][i]);const di=NEW.findIndex(T=>T.draw);if(di>1)NEW.splice(1,0,...NEW.splice(di,1));LIB.length=0;LIB.push(...keep,...NEW);})();
 const DUCTW=[25,40,60,80,100,120];
 const THUMBP={wall:{w:600,h:200},shline:{len:120,lw:6},shrect:{w:160,h:110,lw:6},shellipse:{w:140,h:140,lw:6},callout:{text:'הערה',fs:20,tip:{x:-40,y:-40}},wsbox:{tag:''},floor:{len:900,tag:''},traysh:{len:500},traymesh:{len:500},rail:{len:110},partition:{len:110},duct:{len:110},busbar:{len:110},comb:{mods:4},enclosure:{w:120,h:150},cabinet:{view:'front'}};
 
@@ -1468,7 +1521,7 @@ function inCab(c,x,y){const g=cabG(c);return x>g.x0&&x<g.x0+g.W&&y>g.y0&&y<g.y0+
 /* Designations by IEC 81346 letter, numbered as parts are added: the next free
    number for that letter in this document (H1, H2… lamps; Q1, Q2… breakers…). A
    designation typed by hand stays as it is. */
-const SERIAL={wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
+const SERIAL={spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
  sbrk:'Q',smpcb:'Q',siso:'Q',slbs:'Q',sfsd:'Q',sats:'Q',srcd:'F',sfuse:'F',sol:'F',sspd:'F',scont:'K',svfd:'U',sss:'U',sups:'U',sgen:'G',sbatt:'G',strafo:'T',sct:'T',svt:'T',skwh:'P',spm:'P',samm:'P',svm:'P',scap:'C',smot:'M',stb:'X',scable:'W'};
 function autoTag(o){const pre=SERIAL[o.type];if(!pre||!o.p||!DEF[o.type].edit?.includes('tag'))return;const re=new RegExp('^'+pre+'(\\d+)$');if(o.p.tag&&!re.test(o.p.tag))return;
  const mine=isSldObj(o),used=new Set();state.objs.forEach(q=>{if(q===o||isSldObj(q)!==mine)return;const m=re.exec(q.p?.tag||'');if(m)used.add(+m[1]);});let n=1;while(used.has(n))n++;o.p.tag=pre+n;}
