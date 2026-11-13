@@ -37,7 +37,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
 .pb.dng svg{stroke:#f87171}.pb.on{background:#7c2d12}
 #rail{display:flex;flex-direction:row;align-items:center;gap:2px;flex:0 1 auto;min-width:0;height:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;direction:rtl}
 #rail::-webkit-scrollbar{display:none}
-@media (max-width:700px){:root{--toph:118px}
+@media (max-width:1000px) and (min-height:501px){:root{--toph:118px}
  #top{flex-wrap:wrap;align-content:center;row-gap:0;padding:2px 6px}
  #top>.sep{display:none}
  #bMenu{order:1}#selInfo{order:2}#top>.tbtns{order:3}
@@ -205,6 +205,35 @@ button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 #docTabs .rb{width:auto;height:40px;flex-direction:row;gap:6px;padding:0 10px}#docTabs .rb svg{width:20px;height:20px}#docTabs .rb span{font-size:13.5px}#docTabs .rb b{height:auto;font-size:14px}
 #rail>button:not(.rb){height:50px;padding:0 10px;font-size:14px;flex:none;white-space:nowrap;border-radius:4px;background:var(--ctl);border:1px solid var(--ctl-bd);border-bottom:2px solid #000;box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 2px 4px rgba(0,0,0,.6)}
 #rail>button.on:not(.rb){background:linear-gradient(180deg,var(--acc-light),var(--acc));color:#000;font-weight:700}
+/* ---- fit to phone (Samsung etc.) and computer ---- */
+/* the side "add part" tab never covers an open panel */
+body:has(#panel:not(.hidden)) #libStrip{display:none}
+/* phone held sideways: low screen, so slimmer bars and a side panel over them */
+@media (max-height:500px){
+ :root{--toph:50px;--toph2:40px}
+ #top{top:calc(env(safe-area-inset-top) + 4px);left:max(6px,env(safe-area-inset-left));right:max(6px,env(safe-area-inset-right))}
+ #docTabs{top:calc(env(safe-area-inset-top) + var(--toph) + 6px);left:max(6px,env(safe-area-inset-left));right:max(6px,env(safe-area-inset-right));padding:2px 6px}
+ #docTabs button{padding:4px 9px;font-size:13px}#docTabs .rb{height:32px}
+ .tb{width:40px;height:40px}.tb svg{width:24px;height:24px}#bMenu{width:42px;height:42px}#bMenu svg{width:26px;height:26px}
+ .rb{width:50px;height:44px;gap:2px}.rb svg{width:21px;height:21px}.rb span{font-size:10px}.rb b{height:21px;font-size:14px}
+ #rail>button:not(.rb){height:42px}
+ #selThumb{display:none}#selName{font-size:15px}#selInfo{min-width:50px}
+ #panel{top:calc(env(safe-area-inset-top) + 6px);bottom:6px;right:max(6px,env(safe-area-inset-right));width:min(360px,52vw);z-index:9}
+ #panel.half{top:calc(env(safe-area-inset-top) + 6px)}
+ .phead{padding:6px 10px 4px}#pClose{width:34px;height:34px}
+ #libStrip{padding:8px 5px}#libStrip span{font-size:12px}
+ #coord{bottom:26px;padding:3px 8px;font-size:12px}
+ .mbox{max-height:94vh}.mbox h3{padding:10px 14px 4px;font-size:17px}.mbtns{padding:8px 14px 10px}.mbtns button{padding:9px}
+ #drawer .dbox{padding-top:calc(env(safe-area-inset-top) + 8px)}#drawer .dbox button{padding:8px 12px}}
+/* phones: comfortable touch, nothing under the notch or the gesture bar */
+@media (max-width:1000px) and (min-height:501px){
+ #top{left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right))}
+ #docTabs{left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right))}
+ #panel{bottom:calc(8px + env(safe-area-inset-bottom))}}
+@media (max-width:420px){#libStrip{padding:10px 5px;gap:4px}#libStrip span{font-size:12px}#coord{left:24px;bottom:24px}}
+/* computer: hover help and a wider library */
+@media (hover:hover) and (pointer:fine){.tb,.rb,#docTabs button{cursor:pointer}}
+@media (min-width:1400px){#panel{width:400px}#panel.lib{width:min(680px,calc(100vw - 20px))}}
 </style>
 </head>
 <body>

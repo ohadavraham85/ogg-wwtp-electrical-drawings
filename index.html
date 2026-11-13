@@ -98,6 +98,7 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 #topbar .tbSave[data-k=saving]{border-color:var(--amber);color:var(--amber-light)}
 #topbar .tbSave[data-k=error]{border-color:#ef4444;color:#f87171}
 @media (max-width:520px){#topbar{padding-inline:10px;gap:8px}#topbar .tbSave{font-size:12px;padding:4px 7px}#topbar .tbWho>.sep,#tbClock,#topbar .tbWho>span:last-child{display:none}#topbar .tbBrand img{height:18px}}
+@media (max-height:500px){:root{--topbar-h:40px}#topbar .tbBrand img{height:16px}#topbar .tbWho{font-size:12.5px}}
 </style>
 </head>
 <body>
@@ -150,11 +151,11 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 19;
+const VERSION = 20;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'סימון השמירה (נשמר / שומר / לא נשמר) עבר לפס העליון של האפליקציה';
+const WHATS_NEW = 'התאמה לטלפון (סמסונג) ולמחשב: סרגלים דקים כשהטלפון לרוחב, כל הכפתורים גלויים בטאבלט, והלשונית "הוסף רכיב" לא מסתירה חלונות';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
