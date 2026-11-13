@@ -723,6 +723,17 @@ const DEF={
      const hs=sc.f==='double'?[sc.x0,sc.x1]:sc.f==='door'?[sc.hinge==='R'?sc.x1:sc.x0]:[];hs.forEach(x=>cabHingeYs(g).forEach(y=>s+=`<rect x="${x-5}" y="${y-30}" width="10" height="60" rx="3" fill="#6b7280" stroke="#374151" stroke-width=".8"/>`));}});
    return s;}},
  mdim:{layer:8,edit:[],def:{mode:'a',off:0,fs:6,color:'red',txt:''},size:o=>mdSync(o),draw:o=>mdDraw(o)},
+ /* ---- panel nameplate (engraved plate): name, fed from, voltage, Icc, main breaker, notes ---- */
+ nplate:{layer:7.2,edit:['title','from','volt','ic','main','notes','pcol','fs'],def:{title:'לוח חשמל',from:'לוח ראשי',volt:'3×400/230V 50Hz',ic:'10kA',main:'',notes:'',pcol:'white',fs:7},
+  size:o=>{const f=Math.max(2,+o.p.fs||7),R=npRows(o),L=Math.max((o.p.title||'').length*1.5,...R.map(r=>r.length));return {w:Math.max(f*12,L*f*.62+f*3),h:f*2.6+R.length*f*1.45+f*1.2};},
+  draw:o=>{const {w,h}=DEF.nplate.size(o),f=Math.max(2,+o.p.fs||7),R=npRows(o),C=NPCOL[o.p.pcol]||NPCOL.white,y0=-h/2;
+   let s=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${f*.45}" fill="${C.bg}" stroke="#333" stroke-width="${f*.08}"/>`+
+    `<rect x="${-w/2+f*.45}" y="${-h/2+f*.45}" width="${w-f*.9}" height="${h-f*.9}" rx="${f*.3}" fill="none" stroke="${C.fg}" stroke-width="${f*.07}"/>`;
+   [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>s+=`<circle cx="${a*(w/2-f*.95)}" cy="${b*(h/2-f*.95)}" r="${f*.28}" fill="#c9c9c9" stroke="#555" stroke-width="${f*.05}"/>`);
+   const T=(y,t,sz,wt)=>`<text x="0" y="${y}" font-size="${sz}" fill="${C.fg}" text-anchor="middle" dominant-baseline="central" font-family="Arial" font-weight="${wt}" direction="rtl">${esc(t)}</text>`;
+   let y=y0+f*1.95;s+=T(y,o.p.title||'',f*1.5,800);y+=f*1.15;
+   if(R.length)s+=`<line x1="${-w/2+f*1.6}" y1="${y}" x2="${w/2-f*1.6}" y2="${y}" stroke="${C.fg}" stroke-width="${f*.06}"/>`;y+=f*.85;
+   R.forEach(r=>{s+=T(y,r,f,600);y+=f*1.45;});return s;}},
  /* ---- drawing & markup: callout, person, wall, shapes (not equipment, not in the BOM) ---- */
  callout:{layer:7,edit:['text','fs','color'],def:{text:'הערה',color:'red',fs:8,tx:-60,ty:-40},
   size:o=>{const f=lblFs(o),ls=lblLines(o);return {w:Math.max(3*f,Math.max(...ls.map(l=>l.length))*f*.77+f*1.4),h:ls.length*f*1.3+f*.6};},
@@ -1209,12 +1220,13 @@ const LIB=[
    {g:'כבלים — פתיחת גידים',items:I('כבל ירוק 2×1.5','כבל ירוק 3×2.5','כבל ירוק 5×2.5','כבל ירוק 5×6','כבל ירוק 5×16','כבל ירוק 4×35','כבל שחור 5×16')}]},
   {tab:'שרטוט וסימון',icon:'✎',draw:true,any:true,hint:'תיבת טקסט עם חץ: אחרי ההוספה גוררים את העיגול הכתום שבקצה החץ אל מה שרוצים להצביע עליו. אדם: נכנס ליד הרכיב הנבחר, עם הרגליים על ציר X. קו / חץ: אורך בגרירת העיגולים, וזווית במאפיינים.',groups:[
    {g:'טקסט והפניות',items:[...I('תווית טקסט'),{t:'callout',n:'תיבת טקסט עם חץ'}]},
+   {g:'שלטי לוח',items:[{t:'nplate',n:'שלט לוח (לבן)'},{t:'nplate',n:'שלט לוח (שחור)',p:{pcol:'black'}},{t:'nplate',n:'שלט לוח חירום (אדום)',p:{pcol:'red',title:'לוח חירום'}},{t:'nplate',n:'שלט אזהרה (צהוב)',p:{pcol:'yellow',title:'זהירות — מתח חשמלי',from:'',volt:'',ic:'',notes:'אין לפתוח ללא אישור'}}]},
    {g:'קווים וחצים',items:[{t:'shline',n:'קו'},{t:'shline',n:'קו מקווקו',p:{dash:'dash'}},{t:'shline',n:'חץ',p:{head:'end'}},{t:'shline',n:'חץ כפול',p:{head:'both'}},{t:'shline',n:'קו אנכי',rot:90}]},
    {g:'צורות',items:[{t:'shrect',n:'ריבוע / מלבן'},{t:'shrect',n:'מלבן מקווקו (אזור)',p:{dash:'dash',fill:'light'}},{t:'shellipse',n:'עיגול'},{t:'shellipse',n:'אליפסה',p:{w:300,h:180}}]},
    {g:'בניין וקנה מידה',items:[{t:'wall',n:'קיר אופקי'},{t:'wall',n:'קיר אנכי',p:{w:200,h:2000}},{t:'person',n:'אדם (קנה מידה)'}]}]}];
  const keep=LIB.filter(T=>T.sld);keep.forEach((T,i)=>T.icon=T.icon||['⚡','⏻','🎛','◎'][i]);const di=NEW.findIndex(T=>T.draw);if(di>1)NEW.splice(1,0,...NEW.splice(di,1));LIB.length=0;LIB.push(...keep,...NEW);})();
 const DUCTW=[25,40,60,80,100,120];
-const THUMBP={wall:{w:600,h:200},shline:{len:120,lw:6},shrect:{w:160,h:110,lw:6},shellipse:{w:140,h:140,lw:6},callout:{text:'הערה',fs:20,tip:{x:-40,y:-40}},wsbox:{tag:''},floor:{len:900,tag:''},traysh:{len:500},traymesh:{len:500},rail:{len:110},partition:{len:110},duct:{len:110},busbar:{len:110},comb:{mods:4},enclosure:{w:120,h:150},cabinet:{view:'front'}};
+const THUMBP={nplate:{fs:12},wall:{w:600,h:200},shline:{len:120,lw:6},shrect:{w:160,h:110,lw:6},shellipse:{w:140,h:140,lw:6},callout:{text:'הערה',fs:20,tip:{x:-40,y:-40}},wsbox:{tag:''},floor:{len:900,tag:''},traysh:{len:500},traymesh:{len:500},rail:{len:110},partition:{len:110},duct:{len:110},busbar:{len:110},comb:{mods:4},enclosure:{w:120,h:150},cabinet:{view:'front'}};
 
 /* ================= state ================= */
 let state={name:'לוח חדש',objs:[]};
@@ -1329,7 +1341,7 @@ function edgeDims(o){const B=bbW(o),cx=(B.x0+B.x1)/2,cy=(B.y0+B.y1)/2,k=1/view.s
 /* Equal gaps on both sides (left = right, top = bottom) show green: measured once,
    compared, then drawn. */
 let EQ={};const EQC='#22c55e';
-function dimsSVG(){DIMS={};const o=sel&&get(sel);if(state.tab==='sld'||isSldObj(o)||(o&&DRAWT.has(o.type)))return '';if(o&&!wireMode&&(o.type==='enclosure'||o.type==='cibox'||o.type==='cabinet')&&o.rot%180===0)return boxDims(o);if(!o||wireMode||o.type==='wire')return '';
+function dimsSVG(){DIMS={};const o=sel&&get(sel);if(state.tab==='sld'||isSldObj(o)||(o&&(DRAWT.has(o.type)||o.type==='nplate')))return '';if(o&&!wireMode&&(o.type==='enclosure'||o.type==='cibox'||o.type==='cabinet')&&o.rot%180===0)return boxDims(o);if(!o||wireMode||o.type==='wire')return '';
  const fn=DEF[o.type]?.front?frontDims:edgeDims;EQ={};fn(o);const d=DIMS,same=(a,b)=>d[a]&&d[b]&&Math.round(d[a].d*10)===Math.round(d[b].d*10);
  EQ={};if(same('L','R'))EQ.L=EQ.R=1;if(same('T','B'))EQ.T=EQ.B=1;DIMS={};return fn(o);}
 function frontDims(o){
@@ -1560,7 +1572,7 @@ const SERIAL={spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sflo
  sbrk:'Q',smpcb:'Q',siso:'Q',slbs:'Q',sfsd:'Q',sats:'Q',srcd:'F',sfuse:'F',sol:'F',sspd:'F',scont:'K',svfd:'U',sss:'U',sups:'U',sgen:'G',sbatt:'G',strafo:'T',sct:'T',svt:'T',skwh:'P',spm:'P',samm:'P',svm:'P',scap:'C',smot:'M',stb:'X',scable:'W'};
 function autoTag(o){const pre=SERIAL[o.type];if(!pre||!o.p||!DEF[o.type].edit?.includes('tag'))return;const re=new RegExp('^'+pre+'(\\d+)$');if(o.p.tag&&!re.test(o.p.tag))return;
  const mine=isSldObj(o),used=new Set();state.objs.forEach(q=>{if(q===o||isSldObj(q)!==mine)return;const m=re.exec(q.p?.tag||'');if(m)used.add(+m[1]);});let n=1;while(used.has(n))n++;o.p.tag=pre+n;}
-function placeNew(o){const D=DEF[o.type];
+function placeNew(o){const D=DEF[o.type];if(o.type==='nplate'&&o.p.title==='לוח חשמל'&&state.name)o.p.title=state.name;
  if(o.type==='person'){const s=sel&&get(sel),O=ORG(),H=sizeOf(o).h,W=sizeOf(o).w;let x=viewCenter()[0];
   if(s&&s.type!=='wire'){const b=bbW(s);x=b.x1+W/2+150;}o.x=r2(x);o.y=r2(O.y-H/2);return;}
  if(o.type==='callout'){o.p.fs=Math.max(o.p.fs,Math.round(mdFs()*1.3));const s=sel&&get(sel);if(s&&s.type!=='wire'){const b=bbW(s),{w,h}=sizeOf(o);o.x=r2(b.x1+w/2+40);o.y=r2(b.y0-h/2-30);const [cx,cy]=fromLocal(s,0,0);o.p.tip={x:r2(cx),y:r2(cy),of:s.id,u:0,v:0};return;}}if(o.type==='floor'&&fitFloor(o))return;autoTag(o);if(D.front){placeFront(o);return;}const [cx,cy]=viewCenter();
@@ -2200,12 +2212,14 @@ let tt=0;function toast(s){const t=$('toast');t.textContent=s;t.classList.add('s
    on, following that part) while the box moves freely. Older callouts kept the
    tip as an offset from the box; it is fixed in place the first time it is drawn. */
 function ctTip(o){if(!o.p.tip)o.p.tip={x:r2(o.x+(+o.p.tx||0)),y:r2(o.y+(+o.p.ty||0))};return mdPt(o.p.tip);}
+const NPCOL={white:{bg:'#f7f7f5',fg:'#111'},black:{bg:'#1f1f1f',fg:'#f5f5f5'},red:{bg:'#c62828',fg:'#fff'},yellow:{bg:'#f5c400',fg:'#111'},blue:{bg:'#1d4ed8',fg:'#fff'},green:{bg:'#15803d',fg:'#fff'}};
+const ISO=v=>'\u2068'+v+'\u2069',npRows=o=>[o.p.from&&'מוזן מ: '+ISO(o.p.from),o.p.volt&&'מתח: '+ISO(o.p.volt),o.p.ic&&'זרם קצר: '+ISO(o.p.ic),o.p.main&&'מפסק ראשי: '+ISO(o.p.main),...String(o.p.notes||'').split('\n')].filter(Boolean);
 const DRAWT=new Set(['label','mdim','callout','person','wall','shline','shrect','shellipse']);
 function shDash(o){const w=Math.max(.2,+o.p.lw||2);return o.p.dash==='dash'?`stroke-dasharray="${w*4} ${w*3}"`:o.p.dash==='dot'?`stroke-dasharray="${w} ${w*2}" stroke-linecap="round"`:o.p.dash==='dashdot'?`stroke-dasharray="${w*6} ${w*2.5} ${w} ${w*2.5}"`:'';}
 function shFill(o){const c=col(o,'blue');return o.p.fill==='light'?c+'33':o.p.fill==='solid'?c:'none';}
 function lblFs(o){return Math.max(1,+o.p.fs||6);}
 function lblLines(o){const ls=String(o.p.text??'').split('\n');return ls.length?ls:[''];}
-const FL={feed:'סוג ההזנה',tn:'מספרי הדקים (למעלה-למטה)',wt:'עובי קיר (מ"מ)',lw:'עובי קו (מ"מ)',dash:'סוג קו',fill:'מילוי',head:'ראשי חץ',ang:'זווית (מעלות)',poles:'מספר קטבים',gang:'מספר שקעים',ip:'הגנה',cee:'סוג שקע',cfg:'הרכב הקופסה',sw:'סוג מפסק',lid:'מכסה',kind:'סוג',th:'עובי רצפה (מ"מ)',rh:'גובה רצפה כפולה (מ"מ)',rad:'רדיוס כיפוף מינימלי',ends:'פתיחת גידים',cores:'מספר גידים',sec:'חתך גיד (ממ"ר)',brk:'אורך פתיחת הגידים (מ"מ)',pump:'משאבה / ציוד מונע',tw:'רוחב תעלה (מ"מ)',set:'הרכב מהדקים',desc:'תיאור',fs:'גודל טקסט (מ"מ)',tag:'סימון (למשל Q1, K2)',rating:'דירוג / ערך',len:'אורך (מ"מ)',dw:'רוחב תעלה (מ"מ)',mods:'מספר מודולים',ph:'מספר פאזות',w:'רוחב (מ"מ)',h:'גובה (מ"מ)',text:'טקסט',kind:'סוג מהדק',color:'צבע',orient:'כיוון התקנה',coil:'מתח סליל',frame:'גודל / מבנה',door:'דלת',hinge:'צד צירים',closed:'תצוגה',size:'גודל קופסה',window:'חלון שקוף'};
+const FL={title:'שם הלוח',from:'מוזן מ',volt:'מתח',ic:'זרם קצר',main:'מפסק ראשי',notes:'שורות נוספות',pcol:'צבע השלט',feed:'סוג ההזנה',tn:'מספרי הדקים (למעלה-למטה)',wt:'עובי קיר (מ"מ)',lw:'עובי קו (מ"מ)',dash:'סוג קו',fill:'מילוי',head:'ראשי חץ',ang:'זווית (מעלות)',poles:'מספר קטבים',gang:'מספר שקעים',ip:'הגנה',cee:'סוג שקע',cfg:'הרכב הקופסה',sw:'סוג מפסק',lid:'מכסה',kind:'סוג',th:'עובי רצפה (מ"מ)',rh:'גובה רצפה כפולה (מ"מ)',rad:'רדיוס כיפוף מינימלי',ends:'פתיחת גידים',cores:'מספר גידים',sec:'חתך גיד (ממ"ר)',brk:'אורך פתיחת הגידים (מ"מ)',pump:'משאבה / ציוד מונע',tw:'רוחב תעלה (מ"מ)',set:'הרכב מהדקים',desc:'תיאור',fs:'גודל טקסט (מ"מ)',tag:'סימון (למשל Q1, K2)',rating:'דירוג / ערך',len:'אורך (מ"מ)',dw:'רוחב תעלה (מ"מ)',mods:'מספר מודולים',ph:'מספר פאזות',w:'רוחב (מ"מ)',h:'גובה (מ"מ)',text:'טקסט',kind:'סוג מהדק',color:'צבע',orient:'כיוון התקנה',coil:'מתח סליל',frame:'גודל / מבנה',door:'דלת',hinge:'צד צירים',closed:'תצוגה',size:'גודל קופסה',window:'חלון שקוף'};
 function cabDialog(o,tmp){tmp=tmp||JSON.parse(JSON.stringify(o.p));const sel_=(f,opts,v)=>`<select data-f="${f}">${opts.map(([a,b])=>`<option value="${a}" ${String(a)===String(v)?'selected':''}>${b}</option>`).join('')}</select>`;
  const WS=[300,400,500,600,800,1000,1200].map(w=>[w,w+' מ"מ']),FS=[['door','דלת'],['double','דלת כפולה'],['cover','פאנלים מוברגים'],['none','ללא חזית']],HS=[['L','צירים שמאל'],['R','צירים ימין']];
  let h=`<div class="fld"><label>שם</label><input id="c_name" value="${esc(tmp.name||'')}"></div><div class="fld"><label>שלט על הדלת</label><input id="c_tag" value="${esc(tmp.tag||'')}"></div>`;
@@ -2266,6 +2280,8 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='set')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_set">${[['S','מהדק בודד'],['1P','חד-פאזי — L, N, PE'],['3P','תלת-פאזי — L1, L2, L3'],['4P','4 קטבים — L1, L2, L3, N'],['5P','5 קטבים — L1, L2, L3, N, PE']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='text')h+=`<div class="fld"><label>${FL[k]}</label><textarea id="f_text" rows="3">${esc(v)}</textarea></div>`;
   else if(k==='feed')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_feed">${['N','L','L1','L2','L3','PE','+24V','0V'].map(a=>`<option ${a===v?'selected':''}>${a}</option>`).join('')}</select></div>`;
+  else if(k==='pcol')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_pcol">${[['white','לבן — כתב שחור'],['black','שחור — כתב לבן'],['red','אדום — כתב לבן'],['yellow','צהוב — כתב שחור'],['blue','כחול — כתב לבן'],['green','ירוק — כתב לבן']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
+  else if(k==='notes')h+=`<div class="fld"><label>${FL[k]} (כל שורה בנפרד)</label><textarea id="f_notes" rows="2">${esc(v)}</textarea></div>`;
   else if(k==='dash')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_dash">${[['solid','רציף'],['dash','מקווקו'],['dot','מנוקד'],['dashdot','קו-נקודה']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='fill')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_fill">${[['none','ללא'],['light','שקוף בצבע הקו'],['solid','מלא']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='head')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_head">${[['none','בלי חץ (קו)'],['end','חץ בקצה אחד'],['both','חץ בשני הקצוות']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
