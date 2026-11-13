@@ -1675,7 +1675,7 @@ function ldMove(x,y){const d=LD;d.g.style.left=x+'px';d.g.style.top=y+'px';
  else{DRAGNEW=null;d.g.classList.remove('over');}render();}
 function ldEnd(d,drop){document.body.classList.remove('libdrag');if(d.g)d.g.remove();const o=DRAGNEW;DRAGNEW=null;LDSW=true;setTimeout(()=>LDSW=false,80);
  if(!drop||!o){renderNow();if(drop)toast('שחרר את הרכיב מעל השרטוט כדי להוסיף אותו');return;}
- autoTag(o);state.objs.push(o);sel=o.id;commit();renderNow();updateBar();if(innerWidth<760)closePanel();toast(`נוסף: ${d.name}`);}
+ autoTag(o);state.objs.push(o);sel=o.id;closePanel();commit();renderNow();updateBar();toast(`נוסף: ${d.name}`);}
 $('sheetBody').addEventListener('pointerdown',e=>{const it=e.target.closest('.item');if(!it||LD||(e.pointerType==='mouse'&&e.button!==0))return;
  LD={it,x:e.clientX,y:e.clientY,id:e.pointerId,touch:e.pointerType!=='mouse',on:false};
  if(LD.touch)LD.t=setTimeout(()=>{if(LD&&!LD.on)ldStart();},320);});
