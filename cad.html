@@ -288,6 +288,16 @@ body.uil .tb:not(:disabled),body.uil .rb:not(:disabled),body.uil .pb,body.uil .t
 body.uil .tb:disabled,body.uil .rb:disabled{opacity:.45}body.uil .tb:disabled svg,body.uil .rb:disabled svg{stroke:#6b7280}body.uil .rb:disabled span{color:#4b5563}
 body.uil #docTabs,body.uil #top,body.uil #panel,body.uil .mbox,body.uil #measBar,body.uil #wireBar{border-width:2px}
 #inEdit{position:fixed;z-index:45;resize:none;padding:6px 8px;border:2px solid var(--acc)!important;border-radius:4px;background:#fffbe6!important;color:#111!important;font-family:Arial,Heebo,sans-serif;font-weight:700;text-align:center;line-height:1.3;box-shadow:0 0 0 3px rgba(255,140,0,.35),0 8px 24px rgba(0,0,0,.45);width:auto}
+/* "add part": a horizontal orange button resting just above the bottom ruler */
+#libStrip{top:auto;bottom:calc(30px + env(safe-area-inset-bottom));right:max(12px,env(safe-area-inset-right));transform:none;flex-direction:row;gap:8px;padding:10px 16px;
+ background:linear-gradient(180deg,var(--acc-light),var(--acc));border:1px solid var(--acc-light);border-bottom:3px solid #a35a00;box-shadow:0 0 0 1px #000,0 0 16px rgba(255,140,0,.5),0 6px 16px rgba(0,0,0,.5)}
+#libStrip span{writing-mode:horizontal-tb;color:#000;font-size:15px;font-weight:800}
+#libStrip svg,body.uil #libStrip svg{stroke:#000;stroke-width:3;width:20px;height:20px}
+body.noaxes #libStrip{bottom:calc(12px + env(safe-area-inset-bottom))}
+@media (hover:hover){#libStrip:hover{background:linear-gradient(180deg,#ffc870,var(--acc-light))}}
+#libStrip:active{transform:translateY(1px)}
+body:has(#wireBar:not(.hidden)) #libStrip,body:has(#measBar:not(.hidden)) #libStrip{display:none}
+@media (max-height:500px){#libStrip{padding:6px 12px;bottom:calc(26px + env(safe-area-inset-bottom))}#libStrip span{font-size:13px}}
 </style>
 </head>
 <body>
