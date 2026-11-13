@@ -632,6 +632,39 @@ const DEF={
      const hs=sc.f==='double'?[sc.x0,sc.x1]:sc.f==='door'?[sc.hinge==='R'?sc.x1:sc.x0]:[];hs.forEach(x=>cabHingeYs(g).forEach(y=>s+=`<rect x="${x-5}" y="${y-30}" width="10" height="60" rx="3" fill="#6b7280" stroke="#374151" stroke-width=".8"/>`));}});
    return s;}},
  mdim:{layer:8,edit:[],def:{mode:'a',off:0,fs:6,color:'red',txt:''},size:o=>mdSync(o),draw:o=>mdDraw(o)},
+ /* ---- drawing & markup: callout, person, wall, shapes (not equipment, not in the BOM) ---- */
+ callout:{layer:7,edit:['text','fs','color'],def:{text:'הערה',color:'red',fs:8,tx:-60,ty:-40},
+  size:o=>{const f=lblFs(o),ls=lblLines(o);return {w:Math.max(3*f,Math.max(...ls.map(l=>l.length))*f*.77+f*1.4),h:ls.length*f*1.3+f*.6};},
+  draw:o=>{const {w,h}=DEF.callout.size(o),f=lblFs(o),ls=lblLines(o),y0=-(ls.length-1)*f*1.3/2,c=col(o,'red'),tx=+o.p.tx||0,ty=+o.p.ty||0;
+   // the leader leaves the box at the edge facing the tip
+   const ex=Math.max(-w/2,Math.min(w/2,tx)),ey=Math.max(-h/2,Math.min(h/2,ty)),sx=Math.abs(tx)>w/2?Math.sign(tx)*w/2:ex,sy=Math.abs(tx)>w/2?Math.max(-h/2,Math.min(h/2,0)):Math.sign(ty)*h/2;
+   const d=Math.hypot(tx-sx,ty-sy)||1,ux=(tx-sx)/d,uy=(ty-sy)/d,al=Math.min(f*1.1,d/2),aw=al*.38,bx=tx-ux*al,by=ty-uy*al,lw=Math.max(.4,f*.12);
+   let s=`<path d="M${sx} ${sy}L${bx} ${by}" stroke="#fff" stroke-opacity=".7" stroke-width="${lw*3}" stroke-linecap="round"/><path d="M${sx} ${sy}L${bx} ${by}" stroke="${c}" stroke-width="${lw}"/>`;
+   s+=`<path d="M${tx} ${ty}L${bx-uy*aw} ${by+ux*aw}L${bx+uy*aw} ${by-ux*aw}Z" fill="${c}" stroke="#fff" stroke-opacity=".7" stroke-width="${lw*.6}" paint-order="stroke"/>`;
+   s+=`<path d="M${sx} ${sy}L${tx} ${ty}" stroke="transparent" stroke-width="${Math.max(f,8)}"/>`;
+   s+=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${f*.25}" fill="#fffbe6" stroke="${c}" stroke-width="${lw}"/>`+ls.map((l,i)=>`<text x="0" y="${y0+i*f*1.3+f*.05}" font-size="${f}" fill="#111" text-anchor="middle" dominant-baseline="central" font-family="Arial" font-weight="700" direction="rtl">${esc(l)}</text>`).join('');
+   return s;}},
+ person:{layer:7.5,edit:['h','color'],def:{h:1750,color:'grey'},size:o=>{const H=Math.max(300,+o.p.h||1750);return {w:H*.34,h:H};},
+  draw:o=>{const H=Math.max(300,+o.p.h||1750),u=H/100,c=col(o,'grey'),y0=-H/2;
+   const P=(x,y)=>`${x*u} ${y0+y*u}`;
+   return `<g fill="${c}" stroke="#111" stroke-width="${u*.5}" stroke-linejoin="round">`+
+    `<circle cx="0" cy="${y0+6.5*u}" r="${6.2*u}"/>`+
+    `<path d="M${P(-9,15)}Q${P(0,13)} ${P(9,15)}L${P(13,17)}L${P(16.5,47)}L${P(13.5,48)}L${P(9.5,24)}L${P(9.5,53)}L${P(8,98)}L${P(10.5,100)}L${P(1.5,100)}L${P(1.5,56)}L${P(-1.5,56)}L${P(-1.5,100)}L${P(-10.5,100)}L${P(-8,98)}L${P(-9.5,53)}L${P(-9.5,24)}L${P(-13.5,48)}L${P(-16.5,47)}L${P(-13,17)}Z"/></g>`+
+    `<text x="0" y="${y0-3*u}" font-size="${3.2*u}" fill="#9ca3af" text-anchor="middle" font-family="Arial" font-weight="700" direction="ltr">${Math.round(H)}</text>`;}},
+ wall:{layer:-.2,resize:'len',minLen:100,edit:['len','wt','orient'],def:{len:2000,wt:200},size:o=>({w:o.p.len,h:+o.p.wt||200}),
+  draw:o=>{const L=o.p.len,T=+o.p.wt||200,id='wh'+(o.id||'t'+(++floorSeq));
+   return `<defs><pattern id="${id}" patternUnits="userSpaceOnUse" width="40" height="40" patternTransform="rotate(45)"><rect width="40" height="40" fill="#bdb6a8"/><line x1="0" y1="0" x2="0" y2="40" stroke="#6f685c" stroke-width="3"/></pattern></defs><rect x="${-L/2}" y="${-T/2}" width="${L}" height="${T}" fill="url(#${id})" stroke="#3a3a3a" stroke-width="3"/>`;}},
+ shline:{layer:7,resize:'len',minLen:5,edit:['len','ang','lw','dash','head','color'],def:{len:200,lw:2,dash:'solid',head:'none',color:'blue'},size:o=>{const lw=+o.p.lw||2;return {w:o.p.len,h:Math.max(lw*4,6)};},
+  draw:o=>{const L=o.p.len,lw=Math.max(.2,+o.p.lw||2),c=col(o,'blue'),al=Math.min(lw*5+4,L/2.5),aw=al*.4,hd=o.p.head||'none';
+   const x0=-L/2+(hd==='both'?al*.85:0),x1=L/2-(hd!=='none'?al*.85:0);
+   let s=`<path d="M${x0} 0H${x1}" stroke="${c}" stroke-width="${lw}" ${shDash(o)} stroke-linecap="butt"/>`;
+   if(hd!=='none')s+=`<path d="M${L/2} 0L${L/2-al} ${-aw}L${L/2-al} ${aw}Z" fill="${c}"/>`;
+   if(hd==='both')s+=`<path d="M${-L/2} 0L${-L/2+al} ${-aw}L${-L/2+al} ${aw}Z" fill="${c}"/>`;
+   return s+`<path d="M${-L/2} 0H${L/2}" stroke="transparent" stroke-width="${Math.max(lw*4,10)}"/>`;}},
+ shrect:{layer:6.8,resize:'box',minBox:5,edit:['w','h','lw','dash','fill','color'],def:{w:300,h:200,lw:2,dash:'solid',fill:'none',color:'blue'},size:o=>({w:o.p.w,h:o.p.h}),
+  draw:o=>`<rect x="${-o.p.w/2}" y="${-o.p.h/2}" width="${o.p.w}" height="${o.p.h}" fill="${shFill(o)}" stroke="${col(o,'blue')}" stroke-width="${Math.max(.2,+o.p.lw||2)}" ${shDash(o)}/>`},
+ shellipse:{layer:6.8,resize:'box',minBox:5,edit:['w','h','lw','dash','fill','color'],def:{w:200,h:200,lw:2,dash:'solid',fill:'none',color:'blue'},size:o=>({w:o.p.w,h:o.p.h}),
+  draw:o=>`<ellipse cx="0" cy="0" rx="${o.p.w/2}" ry="${o.p.h/2}" fill="${shFill(o)}" stroke="${col(o,'blue')}" stroke-width="${Math.max(.2,+o.p.lw||2)}" ${shDash(o)}/>`},
  label:{layer:7,edit:['text','fs','color'],def:{text:'טקסט',color:'black',fs:6},
   size:o=>{const f=lblFs(o),ls=lblLines(o);return {w:Math.max(3*f,Math.max(...ls.map(l=>l.length))*f*.77+f*1.4),h:ls.length*f*1.3+f*.55};},
   draw:o=>{const {w,h}=DEF.label.size(o),f=lblFs(o),ls=lblLines(o),y0=-(ls.length-1)*f*1.3/2;
@@ -1015,10 +1048,14 @@ const LIB=[
   {tab:'מנועים וכבלים',icon:'⟲',hint:'מנוע: את ההספק ואת מה שמותקן עליו (משאבה צנטריפוגלית, בורג, מפוח, טבולה) בוחרים במאפיינים. כבל: בוחרים אותו כדי לנתב — גוררים קצה, ומה-+ שבאמצע קטע יוצרים כיפוף; את הפתיחה בצד אחד או בשניהם בוחרים במאפיינים.',groups:[
    {g:'מנועים ומשאבות',items:I('מנוע חשמלי','מנוע + משאבה צנטריפוגלית','מנוע + משאבת בורג','מנוע + מפוח','משאבה טבולה')},
    {g:'כבלים — פתיחת גידים',items:I('כבל ירוק 2×1.5','כבל ירוק 3×2.5','כבל ירוק 5×2.5','כבל ירוק 5×6','כבל ירוק 5×16','כבל ירוק 4×35','כבל שחור 5×16')}]},
-  {tab:'טקסט',icon:'T',groups:[{g:'טקסט ותוויות',items:I('תווית טקסט')}]}];
+  {tab:'שרטוט וסימון',icon:'✎',hint:'תיבת טקסט עם חץ: אחרי ההוספה גוררים את העיגול הכתום שבקצה החץ אל מה שרוצים להצביע עליו. אדם: נכנס ליד הרכיב הנבחר, עם הרגליים על ציר X. קו / חץ: אורך בגרירת העיגולים, וזווית במאפיינים.',groups:[
+   {g:'טקסט והפניות',items:[...I('תווית טקסט'),{t:'callout',n:'תיבת טקסט עם חץ'}]},
+   {g:'קווים וחצים',items:[{t:'shline',n:'קו'},{t:'shline',n:'קו מקווקו',p:{dash:'dash'}},{t:'shline',n:'חץ',p:{head:'end'}},{t:'shline',n:'חץ כפול',p:{head:'both'}},{t:'shline',n:'קו אנכי',rot:90}]},
+   {g:'צורות',items:[{t:'shrect',n:'ריבוע / מלבן'},{t:'shrect',n:'מלבן מקווקו (אזור)',p:{dash:'dash',fill:'light'}},{t:'shellipse',n:'עיגול'},{t:'shellipse',n:'אליפסה',p:{w:300,h:180}}]},
+   {g:'בניין וקנה מידה',items:[{t:'wall',n:'קיר אופקי'},{t:'wall',n:'קיר אנכי',rot:90},{t:'person',n:'אדם (קנה מידה)'}]}]}];
  const keep=LIB.filter(T=>T.sld);keep.forEach((T,i)=>T.icon=T.icon||['⚡','⏻','◎'][i]);LIB.length=0;LIB.push(...keep,...NEW);})();
 const DUCTW=[25,40,60,80,100,120];
-const THUMBP={wsbox:{tag:''},floor:{len:900,tag:''},traysh:{len:500},traymesh:{len:500},rail:{len:110},partition:{len:110},duct:{len:110},busbar:{len:110},comb:{mods:4},enclosure:{w:120,h:150},cabinet:{view:'front'}};
+const THUMBP={wall:{len:600},shline:{len:120,lw:6},shrect:{w:160,h:110,lw:6},shellipse:{w:140,h:140,lw:6},callout:{text:'הערה',fs:20,tx:-40,ty:-40},wsbox:{tag:''},floor:{len:900,tag:''},traysh:{len:500},traymesh:{len:500},rail:{len:110},partition:{len:110},duct:{len:110},busbar:{len:110},comb:{mods:4},enclosure:{w:120,h:150},cabinet:{view:'front'}};
 
 /* ================= state ================= */
 let state={name:'לוח חדש',objs:[]};
@@ -1086,6 +1123,7 @@ function handlesSVG(){const o=sel&&get(sel);if(!o||o.type==='wire'||o.locked||wi
  if(o.type==='cable'){const R=cabRoute(o),r=9/view.s;let s='';const BB=cabBends(o);R.forEach((p,i)=>{const [x,y]=fromLocal(o,p.x,p.y),tight=i>0&&i<R.length-1&&BB[i-1]&&BB[i-1].tight;s+=`<g data-cp="${i}" style="cursor:move"><title>${tight?`הכיפוף צר מהרדיוס הנדרש (${Math.round(BB[i-1].r)} מתוך ${Math.round(BB[i-1].need)} מ"מ) — האריכו את הקטעים`:''}</title><circle cx="${x}" cy="${y}" r="${r*2}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r}" fill="${tight?'#ef4444':'#3b82f6'}" stroke="#fff" stroke-width="${r*.28}"/></g>`;});
   for(let i=1;i<R.length;i++){const [x,y]=fromLocal(o,(R[i].x+R[i-1].x)/2,(R[i].y+R[i-1].y)/2);s+=`<g data-cm="${i-1}" style="cursor:copy"><circle cx="${x}" cy="${y}" r="${r*1.6}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r*.7}" fill="#fff" stroke="#3b82f6" stroke-width="${r*.3}"/><path d="M${x-r*.4} ${y}h${r*.8}M${x} ${y-r*.4}v${r*.8}" stroke="#3b82f6" stroke-width="${r*.22}"/></g>`;}
   return s;}
+ if(o.type==='callout'){const r=9/view.s,[x,y]=fromLocal(o,+o.p.tx||0,+o.p.ty||0);return `<g data-tip="1" style="cursor:move"><circle cx="${x}" cy="${y}" r="${r*2}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r}" fill="#ff8c00" stroke="#fff" stroke-width="${r*.28}"/></g>`;}
  if(!D.resize)return '';const {w,h}=sizeOf(o),r=10/view.s;
  const hd=(x,y,a)=>`<g data-h="${a}"><circle cx="${x}" cy="${y}" r="${r*2}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r}" fill="#3b82f6" stroke="#fff" stroke-width="${r*.28}"/></g>`;
  let s=`<g transform="translate(${o.x} ${o.y}) rotate(${o.rot})">`;
@@ -1125,7 +1163,7 @@ function edgeDims(o){const B=bbW(o),cx=(B.x0+B.x1)/2,cy=(B.y0+B.y1)/2,k=1/view.s
 /* Equal gaps on both sides (left = right, top = bottom) show green: measured once,
    compared, then drawn. */
 let EQ={};const EQC='#22c55e';
-function dimsSVG(){DIMS={};const o=sel&&get(sel);if(state.tab==='sld'||isSldObj(o))return '';if(o&&!wireMode&&(o.type==='enclosure'||o.type==='cibox'||o.type==='cabinet')&&o.rot%180===0)return boxDims(o);if(!o||wireMode||o.type==='wire')return '';
+function dimsSVG(){DIMS={};const o=sel&&get(sel);if(state.tab==='sld'||isSldObj(o)||(o&&DRAWT.has(o.type)))return '';if(o&&!wireMode&&(o.type==='enclosure'||o.type==='cibox'||o.type==='cabinet')&&o.rot%180===0)return boxDims(o);if(!o||wireMode||o.type==='wire')return '';
  const fn=DEF[o.type]?.front?frontDims:edgeDims;EQ={};fn(o);const d=DIMS,same=(a,b)=>d[a]&&d[b]&&Math.round(d[a].d*10)===Math.round(d[b].d*10);
  EQ={};if(same('L','R'))EQ.L=EQ.R=1;if(same('T','B'))EQ.T=EQ.B=1;DIMS={};return fn(o);}
 function frontDims(o){
@@ -1284,6 +1322,7 @@ if(forThumb&&THUMBP[e.t])Object.assign(p,THUMBP[e.t]);
 function railsFor(o){return state.objs.filter(r=>r.type==='rail'&&r.id!==o.id);}
 function onRail(q,r){if(!DEF[q.type]?.rail||(q.rot%180)!==(r.rot%180))return false;const [u,v]=toLocal(r,q.x,q.y);return Math.abs(v)<.6&&Math.abs(u)<=r.p.len/2+1;}
 function snapPos(o,x,y){const D=DEF[o.type];
+ if(o.type==='person'){const H=sizeOf(o).h,O=ORG(),fy=y+H/2;return [gs(x),Math.abs(fy-O.y)<30/view.s?r2(O.y-H/2):gs(y)];}
  if(D.front){const b=boxOf({x,y});return b?[r2(b.x+gs(x-b.x)),r2(b.y+gs(y-b.y))]:[gs(x),gs(y)];}
  if(D.rail&&!D.comb)return snapRail(o,x,y);
  if(D.rail||D.comb){for(const r of railsFor(o)){const [u,v]=toLocal(r,x,y),L=r.p.len,hw=sizeOf(o).w/2;const vt=D.comb?-44:0;
@@ -1341,7 +1380,10 @@ const SERIAL={wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',mcb:'Q',i
  sbrk:'Q',smpcb:'Q',siso:'Q',slbs:'Q',sfsd:'Q',sats:'Q',srcd:'F',sfuse:'F',sol:'F',sspd:'F',scont:'K',svfd:'U',sss:'U',sups:'U',sgen:'G',sbatt:'G',strafo:'T',sct:'T',svt:'T',skwh:'P',spm:'P',samm:'P',svm:'P',scap:'C',smot:'M',stb:'X',scable:'W'};
 function autoTag(o){const pre=SERIAL[o.type];if(!pre||!o.p||!DEF[o.type].edit?.includes('tag'))return;const re=new RegExp('^'+pre+'(\\d+)$');if(o.p.tag&&!re.test(o.p.tag))return;
  const mine=isSldObj(o),used=new Set();state.objs.forEach(q=>{if(q===o||isSldObj(q)!==mine)return;const m=re.exec(q.p?.tag||'');if(m)used.add(+m[1]);});let n=1;while(used.has(n))n++;o.p.tag=pre+n;}
-function placeNew(o){const D=DEF[o.type];if(o.type==='floor'&&fitFloor(o))return;autoTag(o);if(D.front){placeFront(o);return;}const [cx,cy]=viewCenter();
+function placeNew(o){const D=DEF[o.type];
+ if(o.type==='person'){const s=sel&&get(sel),O=ORG(),H=sizeOf(o).h,W=sizeOf(o).w;let x=viewCenter()[0];
+  if(s&&s.type!=='wire'){const b=bbW(s);x=b.x1+W/2+150;}o.x=r2(x);o.y=r2(O.y-H/2);return;}
+ if(o.type==='callout'){o.p.fs=Math.max(o.p.fs,Math.round(mdFs()*1.3));const s=sel&&get(sel);if(s&&s.type!=='wire'){const b=bbW(s),{w,h}=sizeOf(o);o.x=r2(b.x1+w/2+40);o.y=r2(b.y0-h/2-30);const [tx,ty]=[(b.x0+b.x1)/2,(b.y0+b.y1)/2];o.p.tx=r2(tx-o.x);o.p.ty=r2(ty-o.y);return;}}if(o.type==='floor'&&fitFloor(o))return;autoTag(o);if(D.front){placeFront(o);return;}const [cx,cy]=viewCenter();
  if(D.rail){const s=sel&&get(sel);
   if(s&&DEF[s.type]?.rail){const r=state.objs.find(r=>r.type==='rail'&&onRail(s,r));if(r){o.rot=r.rot;const [us]=toLocal(r,s.x,s.y);const u=us+sizeOf(s).w/2+sizeOf(o).w/2;
     if(u+sizeOf(o).w/2<=r.p.len/2+.01){const [x,y]=fromLocal(r,u,0);const clash=state.objs.some(q=>q!==o&&onRail(q,r)&&Math.abs(toLocal(r,q.x,q.y)[0]-u)<(sizeOf(q).w+sizeOf(o).w)/2-.5);
@@ -1650,7 +1692,7 @@ function mdDraw(o){const g=mdGeom(o),c=col(o,'red'),f=g.f,lw=f*.09,L=([x,y])=>[x
 /* Where a measuring tap lands: a part's corner, edge middle, centre or
    connection point when one is near, otherwise the grid. */
 function mdSnap(x,y){let best=null,bd=40/view.s;
- for(const o of state.objs){if(o.type==='wire'||o.type==='mdim'||o.type==='label'||hiddenFront(o))continue;const {w,h}=sizeOf(o),c=[];
+ for(const o of state.objs){if(o.type==='wire'||o.type==='mdim'||o.type==='label'||o.type==='callout'||hiddenFront(o))continue;const {w,h}=sizeOf(o),c=[];
   for(const u of [-w/2,0,w/2])for(const v of [-h/2,0,h/2])c.push([u,v]);termsOf(o).forEach(t=>c.push([t[0],t[1]]));
   for(const [u,v] of c){const [X,Y]=fromLocal(o,u,v),d=Math.hypot(X-x,Y-y);if(d<bd){bd=d;best={x:r2(X),y:r2(Y),of:o.id,u,v};}}}
  return best;}
@@ -1708,6 +1750,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  const cpEl=e.target.closest('[data-cp],[data-cm]');if(cpEl&&so&&so.type==='cable'&&!so.locked&&!wireMode&&!globalLock){so.p.route=cabRoute(so).map(p=>({...p}));let i;
   if(cpEl.dataset.cm!==undefined){const [wx,wy]=toWorld(e.clientX,e.clientY),[lx,ly]=toLocal(so,wx,wy);i=+cpEl.dataset.cm+1;so.p.route.splice(i,0,{x:r2(lx),y:r2(ly)});G.added=1;}else i=+cpEl.dataset.cp;
   G.mode='cpt';G.o=so;G.i=i;return;}
+ if(e.target.closest('[data-tip]')&&so&&so.type==='callout'&&!so.locked&&!globalLock){G.mode='tip';G.o=so;return;}
  if(hEl&&so&&!so.locked&&!wireMode&&!globalLock){G.mode='resize';G.o=so;G.h=hEl.dataset.h.split(',').map(Number);G.o0={x:so.x,y:so.y,rot:so.rot};G.s0=sizeOf(so);return;}
  if(QW()){const [wx,wy]=toWorld(e.clientX,e.clientY),tr=termAt(wx,wy,qRad('press',e.pointerType!=='mouse'));if(tr){G.mode='qwire';G.from=tr;G.to=null;G.cur=[wx,wy];HOV=null;return;}}
  const o=id&&get(id);
@@ -1732,6 +1775,7 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
  if(!G.moved)return;
  if(G.mode==='pan'){view.tx=G.tx0+dx;view.ty=G.ty0+dy;applyView();}
  else if(G.mode==='band'){G.w1=toWorld(e.clientX,e.clientY);render();}
+ else if(G.mode==='tip'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY),sp=mdSnap(wx,wy),[tx,ty]=sp&&Math.hypot(sp.x-wx,sp.y-wy)<12/view.s?[sp.x,sp.y]:[wx,wy],[lx,ly]=toLocal(o,tx,ty);o.p.tx=r2(lx);o.p.ty=r2(ly);render();}
  else if(G.mode==='meas'){const [wx,wy]=toWorld(e.clientX,e.clientY);MS.cur=mdSnap(wx,wy);render();}
  else if(G.mode==='mdoff'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY),dx=wx-G.w0[0],dy=wy-G.w0[1];if(sel!==o.id){sel=o.id;updateBar();}
   const d=mdMode(o.p.mode,...mdPt(o.p.a),...mdPt(o.p.b))==='h'?dy:dx;
@@ -1756,6 +1800,7 @@ function guidesSVG(){if(!GUIDES.length)return '';const k=1/view.s,ext=12*k;retur
 function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(pinch){if(P.size<2)pinch=null;G=null;return;}
  if(!G)return;const g=G;G=null;if(g.mode==='meas'){MS.cur=null;measUp(g,e);render();return;}
+ if(g.mode==='tip'){if(g.moved){commit();renderNow();}return;}
  if(g.mode==='mdoff'){if(g.moved){commit();renderNow();updateBar();}else select(g.id,g.add);return;}
  if(DROPFULL&&g.mode==='drag'&&g.moved)toast('אין מקום פנוי בפס הזה לרכיב — פנה מקום או הארך את הפס');DROPR=null;DROPFULL=false;if(GUIDES.length){GUIDES=[];render();}
  if(g.mode==='cpt'){const o=g.o,R=o.p.route;if(!g.moved){if(g.added){R.splice(g.i,1);}else if(g.i>0&&g.i<R.length-1){R.splice(g.i,1);toast('הכיפוף הוסר');}else{renderNow();return;}}
@@ -1773,7 +1818,7 @@ function doResize(g,wx,wy){const o=g.o,D=DEF[o.type],[u,v]=toLocal(g.o0,wx,wy);
   const ax=o.rot%180?'y':'x';const [ex,ey]=fromLocal(g.o0,fx+sg*nl,0);const sp=snapPoint(o,ax==='x'?ex:ey,ax);
   if(sp!==null){const [uu]=toLocal(g.o0,ax==='x'?sp:ex,ax==='y'?sp:ey);nl=Math.max(mn,sg*(uu-fx));}
   o.p.len=r2(nl);[o.x,o.y]=fromLocal(g.o0,fx+sg*nl/2,0);}
- else{const [sx,sy]=g.h,fu=-sx*g.s0.w/2,fv=-sy*g.s0.h/2;const nw=Math.max(100,gs(sx*(u-fu))),nh=Math.max(100,gs(sy*(v-fv)));
+ else{const [sx,sy]=g.h,fu=-sx*g.s0.w/2,fv=-sy*g.s0.h/2;const mb=D.minBox??100,nw=Math.max(mb,gs(sx*(u-fu))),nh=Math.max(mb,gs(sy*(v-fv)));
   o.p.w=nw;o.p.h=nh;[o.x,o.y]=fromLocal(g.o0,fu+sx*nw/2,fv+sy*nh/2);}}
 svg.addEventListener('contextmenu',e=>e.preventDefault());
 svg.addEventListener('pointerleave',()=>{if(HOV){HOV=null;svg.style.cursor='';render();}});
@@ -1915,9 +1960,12 @@ $('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();})
 let tt=0;function toast(s){const t=$('toast');t.textContent=s;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),1600);}
 
 /* ================= edit dialog ================= */
+const DRAWT=new Set(['label','mdim','callout','person','wall','shline','shrect','shellipse']);
+function shDash(o){const w=Math.max(.2,+o.p.lw||2);return o.p.dash==='dash'?`stroke-dasharray="${w*4} ${w*3}"`:o.p.dash==='dot'?`stroke-dasharray="${w} ${w*2}" stroke-linecap="round"`:o.p.dash==='dashdot'?`stroke-dasharray="${w*6} ${w*2.5} ${w} ${w*2.5}"`:'';}
+function shFill(o){const c=col(o,'blue');return o.p.fill==='light'?c+'33':o.p.fill==='solid'?c:'none';}
 function lblFs(o){return Math.max(1,+o.p.fs||6);}
 function lblLines(o){const ls=String(o.p.text??'').split('\n');return ls.length?ls:[''];}
-const FL={poles:'מספר קטבים',gang:'מספר שקעים',ip:'הגנה',cee:'סוג שקע',cfg:'הרכב הקופסה',sw:'סוג מפסק',lid:'מכסה',kind:'סוג',th:'עובי רצפה (מ"מ)',rh:'גובה רצפה כפולה (מ"מ)',rad:'רדיוס כיפוף מינימלי',ends:'פתיחת גידים',cores:'מספר גידים',sec:'חתך גיד (ממ"ר)',brk:'אורך פתיחת הגידים (מ"מ)',pump:'משאבה / ציוד מונע',tw:'רוחב תעלה (מ"מ)',set:'הרכב מהדקים',desc:'תיאור',fs:'גודל טקסט (מ"מ)',tag:'סימון (למשל Q1, K2)',rating:'דירוג / ערך',len:'אורך (מ"מ)',dw:'רוחב תעלה (מ"מ)',mods:'מספר מודולים',ph:'מספר פאזות',w:'רוחב (מ"מ)',h:'גובה (מ"מ)',text:'טקסט',kind:'סוג מהדק',color:'צבע',orient:'כיוון התקנה',coil:'מתח סליל',frame:'גודל / מבנה',door:'דלת',hinge:'צד צירים',closed:'תצוגה',size:'גודל קופסה',window:'חלון שקוף'};
+const FL={wt:'עובי קיר (מ"מ)',lw:'עובי קו (מ"מ)',dash:'סוג קו',fill:'מילוי',head:'ראשי חץ',ang:'זווית (מעלות)',poles:'מספר קטבים',gang:'מספר שקעים',ip:'הגנה',cee:'סוג שקע',cfg:'הרכב הקופסה',sw:'סוג מפסק',lid:'מכסה',kind:'סוג',th:'עובי רצפה (מ"מ)',rh:'גובה רצפה כפולה (מ"מ)',rad:'רדיוס כיפוף מינימלי',ends:'פתיחת גידים',cores:'מספר גידים',sec:'חתך גיד (ממ"ר)',brk:'אורך פתיחת הגידים (מ"מ)',pump:'משאבה / ציוד מונע',tw:'רוחב תעלה (מ"מ)',set:'הרכב מהדקים',desc:'תיאור',fs:'גודל טקסט (מ"מ)',tag:'סימון (למשל Q1, K2)',rating:'דירוג / ערך',len:'אורך (מ"מ)',dw:'רוחב תעלה (מ"מ)',mods:'מספר מודולים',ph:'מספר פאזות',w:'רוחב (מ"מ)',h:'גובה (מ"מ)',text:'טקסט',kind:'סוג מהדק',color:'צבע',orient:'כיוון התקנה',coil:'מתח סליל',frame:'גודל / מבנה',door:'דלת',hinge:'צד צירים',closed:'תצוגה',size:'גודל קופסה',window:'חלון שקוף'};
 function cabDialog(o,tmp){tmp=tmp||JSON.parse(JSON.stringify(o.p));const sel_=(f,opts,v)=>`<select data-f="${f}">${opts.map(([a,b])=>`<option value="${a}" ${String(a)===String(v)?'selected':''}>${b}</option>`).join('')}</select>`;
  const WS=[300,400,500,600,800,1000,1200].map(w=>[w,w+' מ"מ']),FS=[['door','דלת'],['double','דלת כפולה'],['cover','פאנלים מוברגים'],['none','ללא חזית']],HS=[['L','צירים שמאל'],['R','צירים ימין']];
  let h=`<div class="fld"><label>שם</label><input id="c_name" value="${esc(tmp.name||'')}"></div><div class="fld"><label>שלט על הדלת</label><input id="c_tag" value="${esc(tmp.tag||'')}"></div>`;
@@ -1977,9 +2025,15 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='tw')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_tw">${[50,100,150,200,300,400,500,600].map(a=>`<option value="${a}" ${a==v?'selected':''}>${a} מ"מ</option>`).join('')}</select></div>`;
   else if(k==='set')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_set">${[['S','מהדק בודד'],['1P','חד-פאזי — L, N, PE'],['3P','תלת-פאזי — L1, L2, L3'],['4P','4 קטבים — L1, L2, L3, N'],['5P','5 קטבים — L1, L2, L3, N, PE']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='text')h+=`<div class="fld"><label>${FL[k]}</label><textarea id="f_text" rows="3">${esc(v)}</textarea></div>`;
+  else if(k==='dash')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_dash">${[['solid','רציף'],['dash','מקווקו'],['dot','מנוקד'],['dashdot','קו-נקודה']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
+  else if(k==='fill')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_fill">${[['none','ללא'],['light','שקוף בצבע הקו'],['solid','מלא']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
+  else if(k==='head')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_head">${[['none','בלי חץ (קו)'],['end','חץ בקצה אחד'],['both','חץ בשני הקצוות']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
+  else if(k==='wt')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_wt">${[100,150,200,250,300,400].map(a=>`<option value="${a}" ${a==v?'selected':''}>${a}</option>`).join('')}</select></div>`;
+  else if(k==='ang')h+=`<div class="fld"><label>${FL[k]}</label><input id="f_ang" type="number" dir="ltr" style="text-align:right" step="15" value="${o.rot}"></div>`;
+  else if(k==='h'&&o.type==='person')h+=`<div class="fld"><label>גובה האדם (מ"מ)</label><input id="f_h" type="number" dir="ltr" style="text-align:right" step="50" value="${esc(v)}"></div>`;
   else{const num=['len','dw','mods','w','h','fs','brk'].includes(k);h+=`<div class="fld"><label>${FL[k]}</label><input id="f_${k}" ${num?'type="number" inputmode="numeric"':''} value="${esc(v)}" ${k==='rating'&&D.ratings?'list="dl_r"':''}></div>`;}});
  if(D.ratings)h+=`<datalist id="dl_r">${D.ratings.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>`;
- panelForm(o.p.name,h,()=>{const k0=o.p.kind;if(o.type==='floor')o._top=o.y-sizeOf(o).h/2;o.p.name=$('f_name').value||o.p.name;D.edit.forEach(k=>{const el=$('f_'+k);if(!el)return;let v=el.value;if(k==='orient'){const want=v==='v'?1:0;if((o.rot%180?1:0)!==want)o.rot=want?90:0;return;}
+ panelForm(o.p.name,h,()=>{const k0=o.p.kind;if(o.type==='floor')o._top=o.y-sizeOf(o).h/2;o.p.name=$('f_name').value||o.p.name;D.edit.forEach(k=>{const el=$('f_'+k);if(!el)return;let v=el.value;if(k==='orient'){const want=v==='v'?1:0;if((o.rot%180?1:0)!==want)o.rot=want?90:0;return;}if(k==='ang'){o.rot=(((Math.round(+v)||0)%360)+360)%360;return;}if(k==='lw'){o.p.lw=Math.max(.2,+v||2);return;}if(k==='fs'){o.p.fs=Math.max(1,+v||o.p.fs);return;}
    if(['len','dw','mods','w','h','ph','brk'].includes(k)){v=Math.max(k==='mods'?1:k==='ph'?1:10,Math.round(+v)||o.p[k]);}o.p[k]=v;});if(o.type==='cable')cabRecentre(o);if(o.type==='floor'&&o._top!=null){o.y=r2(o._top+sizeOf(o).h/2);delete o._top;}if(o.type==='floor'&&o.p.kind!==k0)setTimeout(editDialog,0);if(o.type==='cibox'&&/^(CI-K|Ci )/.test(o.p.name))o.p.name=CISZ[o.p.size].n+(o.p.window==='1'?' עם חלון':'');commit();renderNow();updateBar();});}
 function wireLen(w){const ps=w.pts.map(resolve).filter(Boolean);let L=0;for(let i=1;i<ps.length;i++)L+=Math.hypot(ps[i].x-ps[i-1].x,ps[i].y-ps[i-1].y);return L;}
 
@@ -2152,7 +2206,7 @@ function bomData0(){const rows={};state.objs.forEach(o=>{if(o.type==='wire'){con
   let k=o.p.name+(o.p.rating&&!['label'].includes(o.type)?' '+o.p.rating:'');if(o.type==='cable'||o.type==='traysh'||o.type==='traymesh'){const g=o.type==='cable'?cabG2(o):null;k=o.type==='cable'?`כבל ${CNAME[o.p.color]||''} ${g.n}×${o.p.sec} ממ"ר`:`${o.type==='traysh'?'תעלת פח':'תעלת רשת'} ${o.p.tw} מ"מ`;rows[k]=rows[k]||{n:0,len:0};rows[k].len+=o.type==='cable'?cabLength(o):o.p.len;rows[k].n++;return;}
   if(o.type==='rail'||o.type==='duct'||o.type==='busbar'||o.type==='partition'){k=o.p.name+(o.type==='duct'?` ${o.p.dw}מ"מ`:'');rows[k]=rows[k]||{n:0,len:0};rows[k].len+=o.p.len;rows[k].n++;return;}
   if(o.type==='cabinet'){const g=cabG(o),FN={door:'דלת',double:'דלת כפולה',cover:'פאנלים מוברגים',none:'ללא חזית'};g.S.forEach(sc=>{const kk=`שדה ארון ${sc.w}×${g.H} — ${FN[sc.f]}`;rows[kk]=rows[kk]||{n:0};rows[kk].n++;});if(g.P){const kk=`סוקל ${g.P} מ"מ`;rows[kk]=rows[kk]||{n:0,len:0};rows[kk].len+=g.W;rows[kk].n++;}return;}
-  if(o.type==='label'||o.type==='mdim')return;if(o.type==='enclosure')k=`לוח ${o.p.w}×${o.p.h} `+({key:'עם דלת ומנעול',handle:'עם ידית ומנעול'}[o.p.door]||'ללא דלת');if(o.type==='cibox')k='קופסה '+CISZ[o.p.size].n+(o.p.window==='1'?' עם חלון':'');if(DEF[o.type].front&&DEF[o.type].edit.includes('color'))k=o.p.name+' '+CNAME[o.p.color];rows[k]=rows[k]||{n:0};rows[k].n++;});
+  if(DRAWT.has(o.type))return;if(o.type==='enclosure')k=`לוח ${o.p.w}×${o.p.h} `+({key:'עם דלת ומנעול',handle:'עם ידית ומנעול'}[o.p.door]||'ללא דלת');if(o.type==='cibox')k='קופסה '+CISZ[o.p.size].n+(o.p.window==='1'?' עם חלון':'');if(DEF[o.type].front&&DEF[o.type].edit.includes('color'))k=o.p.name+' '+CNAME[o.p.color];rows[k]=rows[k]||{n:0};rows[k].n++;});
  const ks=Object.keys(rows);const line=k=>{const r=rows[k];return r.len!==undefined?`${(r.len/1000).toFixed(2)} מ'`+(r.n?` (${r.n} יח')`:''):`${r.n} יח'`;};
  return ks.map(k=>[k,line(k)]);}
 function bom(){const d=bomData(),ks=d.map(r=>r[0]),L=Object.fromEntries(d),line=k=>L[k];

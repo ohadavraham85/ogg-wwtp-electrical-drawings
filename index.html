@@ -158,11 +158,11 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 26;
+const VERSION = 27;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'אייקון האפליקציה עודכן גם במחשב (לשונית הדפדפן והאפליקציה המותקנת)';
+const WHATS_NEW = 'חדש בהוספת רכיב ← "שרטוט וסימון": תיבת טקסט עם חץ, אדם לקנה מידה (רגליים על ציר X), קיר, קו, חץ, מלבן ועיגול';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
