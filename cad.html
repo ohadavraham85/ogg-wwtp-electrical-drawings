@@ -1192,7 +1192,7 @@ function termsSVG(){if(!showTerms||wireMode)return '';const k=1/view.s,used=new 
  return s+'</g>';}
 function toggleTerms(){showTerms=!showTerms;try{localStorage.setItem('epd.terms',showTerms?'1':'0');}catch(e){}renderNow();toast(showTerms?'נקודות החיבור מודגשות':'הדגשת נקודות החיבור כבויה');}
 let drawnS=0;
-function renderNow(){drawnS=view.s;let s=layoutSVG()+content({sel:true})+axesSVG()+termsSVG()+handlesSVG()+dimsSVG()+guidesSVG()+dropSVG()+measSVG()+bandSVG()+qWireSVG();
+function renderNow(){drawnS=view.s;let s=layoutSVG()+axesSVG()+content({sel:true})+termsSVG()+handlesSVG()+dimsSVG()+guidesSVG()+dropSVG()+measSVG()+bandSVG()+qWireSVG();
  if(wireMode){for(const o of state.objs){if(o.type==='wire')continue;termsOf(o).forEach(t=>{const [x,y]=fromLocal(o,t[0],t[1]);s+=`<circle cx="${x}" cy="${y}" r="2.8" fill="rgba(34,211,238,.25)" stroke="#22d3ee" stroke-width=".7" pointer-events="none"/>`;});}
   if(draft&&draft.pts.length){const c=WCOL[wireColor];const d=wirePath(null,draft.pts);if(d)s+=`<path d="${d}" fill="none" stroke="${c.base}" stroke-width="${SEC[wireSec]}" stroke-linecap="round" stroke-linejoin="round" opacity=".85" pointer-events="none"/>`;
    draft.pts.map(resolve).forEach((p,i)=>{if(p)s+=`<circle cx="${p.x}" cy="${p.y}" r="${i?2.2:3.4}" fill="#fff" stroke="#22d3ee" stroke-width="1" pointer-events="none"/>`;});}}
@@ -1249,16 +1249,16 @@ function drawRulers(){document.body.classList.toggle('noaxes',!showAxes);if(!sho
  if(curW){hx+=`<i class="cur" style="left:${curW[0]*view.s+view.tx-20}px;bottom:0;width:1px;height:20px"></i>`;hy+=`<i class="cur" style="top:${curW[1]*view.s+view.ty}px;right:0;height:1px;width:20px"></i>`;}
  $('rulX').innerHTML=hx;$('rulY').innerHTML=hy;
  $('coord').textContent=curW?`X ${Math.round(curW[0]-o.x)}   Y ${Math.round(o.y-curW[1])}  מ"מ`:'X —   Y —';}
-function axesSVG(){if(!showAxes)return '';const o=ORG(),k=1/view.s,lt=isLight(),cx='#e11d48',cy='#16a34a',L=90*k,a=11*k;
- const halo=lt?'#ffffff':'#000000';
- let s=`<g pointer-events="none">`;
- [[`M-1e6 ${o.y}H1e6`,cx],[`M${o.x} -1e6V1e6`,cy]].forEach(([d,c])=>s+=`<path d="${d}" stroke="${halo}" stroke-opacity=".55" stroke-width="${4*k}"/><path d="${d}" stroke="${c}" stroke-opacity=".9" stroke-width="${2*k}" stroke-dasharray="${10*k} ${5*k}"/>`);
- s+=`<path d="M${o.x} ${o.y}h${L}" stroke="${cx}" stroke-width="${3*k}"/><path d="M${o.x+L+a} ${o.y}l${-a*1.4} ${-a*.7}v${a*1.4}z" fill="${cx}"/>`+
-  `<path d="M${o.x} ${o.y}v${-L}" stroke="${cy}" stroke-width="${3*k}"/><path d="M${o.x} ${o.y-L-a}l${-a*.7} ${a*1.4}h${a*1.4}z" fill="${cy}"/>`+
-  `<text x="${o.x+L+a+5*k}" y="${o.y}" font-size="${17*k}" font-weight="700" font-family="Arial" fill="${cx}" stroke="${halo}" stroke-width="${3*k}" paint-order="stroke" dominant-baseline="central">X</text>`+
-  `<text x="${o.x}" y="${o.y-L-a-9*k}" font-size="${17*k}" font-weight="700" font-family="Arial" fill="${cy}" stroke="${halo}" stroke-width="${3*k}" paint-order="stroke" text-anchor="middle">Y</text>`+
-  `<circle cx="${o.x}" cy="${o.y}" r="${5*k}" fill="#fbbf24" stroke="${halo}" stroke-width="${1.5*k}"/>`+
-  `<text x="${o.x-7*k}" y="${o.y+13*k}" font-size="${11*k}" font-weight="700" font-family="Arial" fill="#fbbf24" stroke="${halo}" stroke-width="${3*k}" paint-order="stroke" text-anchor="end">0,0</text></g>`;
+function axesSVG(){if(!showAxes)return '';const o=ORG(),k=1/view.s,cx='#e11d48',cy='#16a34a',L=60*k,a=8*k;
+ // quiet background guides: thin, see-through, drawn under the parts
+ let s=`<g pointer-events="none" opacity=".55">`;
+ [[`M-1e6 ${o.y}H1e6`,cx],[`M${o.x} -1e6V1e6`,cy]].forEach(([d,c])=>s+=`<path d="${d}" stroke="${c}" stroke-opacity=".55" stroke-width="${1*k}" stroke-dasharray="${8*k} ${6*k}"/>`);
+ s+=`<path d="M${o.x} ${o.y}h${L}" stroke="${cx}" stroke-width="${1.6*k}"/><path d="M${o.x+L+a} ${o.y}l${-a*1.4} ${-a*.7}v${a*1.4}z" fill="${cx}"/>`+
+  `<path d="M${o.x} ${o.y}v${-L}" stroke="${cy}" stroke-width="${1.6*k}"/><path d="M${o.x} ${o.y-L-a}l${-a*.7} ${a*1.4}h${a*1.4}z" fill="${cy}"/>`+
+  `<text x="${o.x+L+a+4*k}" y="${o.y}" font-size="${12*k}" font-weight="700" font-family="Arial" fill="${cx}" dominant-baseline="central">X</text>`+
+  `<text x="${o.x}" y="${o.y-L-a-6*k}" font-size="${12*k}" font-weight="700" font-family="Arial" fill="${cy}" text-anchor="middle">Y</text>`+
+  `<circle cx="${o.x}" cy="${o.y}" r="${3.5*k}" fill="#fbbf24"/>`+
+  `<text x="${o.x-6*k}" y="${o.y+11*k}" font-size="${10*k}" font-weight="700" font-family="Arial" fill="#fbbf24" text-anchor="end">0,0</text></g>`;
  return s;}
 function toggleAxes(){showAxes=!showAxes;try{localStorage.setItem('epd.axes',showAxes?'1':'0');}catch(e){}applyView();renderNow();toast(showAxes?'צירים וסרגלים מוצגים':'צירים וסרגלים מוסתרים');}
 function setOrigin(){const o=sel&&get(sel);if(!o||o.type==='wire'){toast('בחר רכיב — ראשית הצירים תיקבע בפינה השמאלית התחתונה שלו');return;}const b=bbW(o);state[OKEY()]={x:r2(b.x0),y:r2(b.y1)};commit();fit();renderNow();toast('ראשית הצירים נקבעה בפינת '+o.p.name);}
