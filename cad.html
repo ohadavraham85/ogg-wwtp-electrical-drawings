@@ -807,6 +807,10 @@ const SDEF={
   draw:o=>sSwitch('bar')+sLbl(o,40)},
  slbs:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Q1',rating:'630A',desc:'מנתק עומס'},size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sSwitch('circ')+sLbl(o,40)},
+ /* ---- a single supply point: N, L, PE, L1-L3, +24V, 0V ---- */
+ sfeed:{layer:4,sld:true,edit:['feed','tag','desc'],def:{feed:'N',tag:'',desc:''},size:()=>({w:40,h:60}),terms:()=>[[0,30,'']],
+  draw:o=>{const f=o.p.feed||'N',c={N:'#2563eb',PE:'#16a34a',L:'#8b5a2b',L1:'#8b5a2b',L2:'#111',L3:'#6b7280','+24V':'#dc2626','0V':'#2563eb'}[f]||SK;
+   return sL(0,-1,0,30)+`<circle cx="0" cy="-13" r="12" fill="#fff" stroke="${c}" stroke-width="2.4"/>`+txt(0,-9.2,f,f.length>2?7.5:10,c,800,'middle')+sLbl(o,40);}},
  /* ---- control & signalling ---- */
  sno:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'K1',rating:'13-14',desc:'מגע פתוח (NO)'},size:()=>({w:40,h:60}),terms:IO,draw:o=>cNO()+sLbl(o,40)},
  snc:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'K1',rating:'21-22',desc:'מגע סגור (NC)'},size:()=>({w:40,h:60}),terms:IO,draw:o=>cNC()+sLbl(o,40)},
@@ -888,6 +892,15 @@ const SDEF={
  sframe:{layer:0,sld:true,resize:'box',edit:['tag','w','h'],def:{tag:'לוח חשמל',w:400,h:300},size:o=>({w:o.p.w,h:o.p.h}),
   draw:o=>{const w=o.p.w,h=o.p.h;return `<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" fill="none" stroke="#555" stroke-width="1.4" stroke-dasharray="10 6"/>`+txt(-w/2+8,-h/2+12,o.p.tag,10,'#333',700,'start');}},
 };
+/* Terminal numbers beside the two ends of a symbol (top-bottom), from the
+   standard numbering of each kind; editable per part as "tn". */
+const TN={sbrk:'1-2',srcd:'1-2',smpcb:'1-2',sfuse:'1-2',sfsd:'1-2',siso:'1-2',slbs:'1-2',scont:'1-2',sol:'95-96',
+ sno:'13-14',snc:'21-22',spbno:'13-14',spbnc:'11-12',sestop:'11-12',ssel:'13-14',skeysw:'13-14',slimit:'13-14',sfloat:'13-14',spress:'13-14',sthermo:'11-12',
+ scoil:'A1-A2',stcoil:'A1-A2',stcoiloff:'A1-A2',stno:'17-18',stnc:'15-16',sclock:'A1-A2',sclockc:'13-14',sauxq:'13-14',slamp:'X1-X2',shorn:'X1-X2',splc:'I-O'};
+Object.keys(TN).forEach(k=>{const D=SDEF[k];if(!D)return;const d0=D.draw;D.def=Object.assign({tn:TN[k]},D.def);if(!D.edit.includes('tn'))D.edit=[...D.edit,'tn'];
+ D.draw=o=>{const tn=(o.p.tn??TN[k]??'').split('-');let s=d0(o);if(tn[0])s+=txt(-5,-21,tn[0].trim(),7,'#374151',700,'end');if(tn[1])s+=txt(-5,27,tn[1].trim(),7,'#374151',700,'end');return s;};});
+// numbers that used to sit in the rating line now live in "tn"
+['sno','snc','stno','stnc','sclockc','sauxq'].forEach(k=>{SDEF[k].def.rating='';});SDEF.scoil.def.rating='230VAC';SDEF.scoil.ratings=['24VDC','24VAC','230VAC'];
 Object.assign(DEF,SDEF);
 /* ================= in the field: cables, trays, motors and pumps =================
    Drawn to scale like the rest of the panel (mm). */
@@ -1077,6 +1090,7 @@ const LIB=[
   {g:'מקורות',items:[{t:'sgrid',n:'רשת חח"י'},{t:'sgen',n:'גנרטור'},{t:'strafo',n:'שנאי'},{t:'sups',n:'UPS'},{t:'sbatt',n:'מצבר / DC'}]},
   {g:'מהדקים',items:[{t:'stb',n:'מהדק בודד',p:{set:'S'}},{t:'stb',n:'מהדקים חד-פאזי',p:{set:'1P'}},{t:'stb',n:'מהדקים תלת-פאזי',p:{set:'3P'}},{t:'stb',n:'מהדקים 4 קטבים',p:{set:'4P'}},{t:'stb',n:'מהדקים 5 קטבים',p:{set:'5P'}}]},
   {g:'פסי צבירה וכבלים',items:[{t:'sbus',n:'פס צבירה'},{t:'scable',n:'כבל (אנכי)',rot:90},{t:'scable',n:'כבל (אופקי)'},{t:'searth',n:'הארקה'}]},
+  {g:'הזנות בודדות',items:[{t:'sfeed',n:'הזנת N (אפס)'},{t:'sfeed',n:'הזנת L (פאזה)',p:{feed:'L'}},{t:'sfeed',n:'הזנת PE (הארקה)',p:{feed:'PE'}},{t:'sfeed',n:'הזנת L1',p:{feed:'L1'}},{t:'sfeed',n:'הזנת L2',p:{feed:'L2'}},{t:'sfeed',n:'הזנת L3',p:{feed:'L3'}},{t:'sfeed',n:'הזנת +24V',p:{feed:'+24V'}},{t:'sfeed',n:'הזנת 0V',p:{feed:'0V'}}]},
   {g:'גבול לוח',items:[{t:'sframe',n:'גבול לוח (מקווקו)'}]}]},
  {tab:'הגנה ומיתוג',sld:true,groups:[
   {g:'מפסקים',items:[{t:'sbrk',n:'מפסק זרם (MCCB / ACB)'},{t:'sbrk',n:'מאמ"ת (MCB)',p:{tag:'Q2',rating:'MCB C16'}},{t:'srcd',n:'מפסק פחת / RCBO'},{t:'smpcb',n:'מגן מנוע (MPCB)'},{t:'siso',n:'מנתק / מפסק ראשי'},{t:'slbs',n:'מנתק עומס'}]},
@@ -1206,10 +1220,17 @@ function resolve(p){if(p.r){const o=get(p.r);if(!o)return null;const t=termsOf(o
 
 /* ================= render ================= */
 function wirePath(w,pts){let ps=(pts||w.pts).map(resolve).filter(Boolean);if(ps.length<2)return '';if(!pts&&w.p.auto&&ps.length===2)ps=[ps[0],...qRoute(ps[0],ps[1]),ps[1]];return 'M'+ps.map(p=>r2(p.x)+' '+r2(p.y)).join('L');}
-function drawWire(w,isSel){const d=wirePath(w);if(!d)return '';const sw=SEC[w.p.sec]||2.3,c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+function wirePs(w){let ps=w.pts.map(resolve).filter(Boolean);if(ps.length>=2&&w.p.auto&&ps.length===2)ps=[ps[0],...qRoute(ps[0],ps[1]),ps[1]];return ps;}
+// a polyline moved sideways by d (mitred corners), for the three lines of a three-phase run
+function offPoly(ps,d){const n=[];for(let i=0;i<ps.length-1;i++){const dx=ps[i+1].x-ps[i].x,dy=ps[i+1].y-ps[i].y,L=Math.hypot(dx,dy)||1;n.push([-dy/L,dx/L]);}
+ return ps.map((p,i)=>{const a=n[Math.max(0,i-1)],b=n[Math.min(n.length-1,i)];let mx=a[0]+b[0],my=a[1]+b[1];const m=Math.hypot(mx,my)||1;mx/=m;my/=m;const k=d/Math.max(.35,mx*b[0]+my*b[1]);return {x:p.x+mx*k,y:p.y+my*k};});}
+const PH3=['brown','orange','black'];
+function drawWire(w,isSel){const d=wirePath(w);if(!d)return '';const sld=state.tab==='sld'||isSldObj(w);let sw=SEC[w.p.sec]||2.3;if(sld)sw=1.3;const c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+ if(w.p.ph==='3'){const ps=wirePs(w),gap=sld?2.4:sw*1.25;let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${gap*2+sw+8}"/>`;if(isSel)s+=`<path ${P} stroke="#60a5fa" stroke-width="${gap*2+sw+3}"/>`;
+  PH3.forEach((k,i)=>{const q=offPoly(ps,(i-1)*gap),dd='M'+q.map(p=>r2(p.x)+' '+r2(p.y)).join('L');s+=`<path d="${dd}" fill="none" stroke-linejoin="round" stroke="${WCOL[k].base}" stroke-width="${sw}"/>`;});return s+'</g>';}
  let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${sw+8}"/>`;
  if(isSel)s+=`<path ${P} stroke="#60a5fa" stroke-width="${sw+3.2}"/>`;
- s+=`<path ${P} stroke="rgba(0,0,0,.6)" stroke-width="${sw+.9}"/><path ${P} stroke="${c.base}" stroke-width="${sw}"/>`;
+ s+=(sld?'':`<path ${P} stroke="rgba(0,0,0,.6)" stroke-width="${sw+.9}"/>`)+`<path ${P} stroke="${c.base}" stroke-width="${sw}"/>`;
  if(c.dash)s+=`<path ${P} stroke="${c.dash}" stroke-width="${sw}" stroke-dasharray="5 5" stroke-linecap="butt"/>`;
  return s+'</g>';}
 function objSVG(o,isSel){const D=DEF[o.type];if(!D)return '';const {w,h}=sizeOf(o);
@@ -2004,7 +2025,7 @@ function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(DROPFULL&&g.mode==='drag'&&g.moved)toast('אין מקום פנוי בפס הזה לרכיב — פנה מקום או הארך את הפס');DROPR=null;DROPFULL=false;if(GUIDES.length){GUIDES=[];render();}
  if(g.mode==='cpt'){const o=g.o,R=o.p.route;if(!g.moved){if(g.added){R.splice(g.i,1);}else if(g.i>0&&g.i<R.length-1){R.splice(g.i,1);toast('הכיפוף הוסר');}else{renderNow();return;}}
   cabRecentre(o);commit();renderNow();updateBar();return;}
- if(g.mode==='qwire'){svg.style.cursor='';if(g.to){const a=resolve(g.from),b=resolve(g.to);const w={id:uid(),type:'wire',p:{color:isSldObj(get(g.from.r))?'black':wireColor,sec:wireSec,name:'חוט',auto:1},pts:[g.from,g.to]};
+ if(g.mode==='qwire'){svg.style.cursor='';if(g.to){const a=resolve(g.from),b=resolve(g.to);const w={id:uid(),type:'wire',p:{color:isSldObj(get(g.from.r))?'brown':wireColor,sec:wireSec,name:'חוט',auto:1},pts:[g.from,g.to]};
    state.objs.push(w);commit();renderNow();updateBar();toast('חובר');}else if(!g.moved){select(g.id||null);}else{renderNow();toast('שחרר ליד נקודת חיבור של רכיב אחר כדי לחבר');}return;}
  if(g.mode==='band'&&g.moved){const x0=Math.min(g.w0[0],g.w1[0]),x1=Math.max(g.w0[0],g.w1[0]),y0=Math.min(g.w0[1],g.w1[1]),y1=Math.max(g.w0[1],g.w1[1]);
   const hit=state.objs.filter(o=>!hiddenFront(o)&&boundsOf(o).every(([x,y])=>x>=x0&&x<=x1&&y>=y0&&y<=y1)).map(o=>o.id);
@@ -2170,7 +2191,7 @@ function shDash(o){const w=Math.max(.2,+o.p.lw||2);return o.p.dash==='dash'?`str
 function shFill(o){const c=col(o,'blue');return o.p.fill==='light'?c+'33':o.p.fill==='solid'?c:'none';}
 function lblFs(o){return Math.max(1,+o.p.fs||6);}
 function lblLines(o){const ls=String(o.p.text??'').split('\n');return ls.length?ls:[''];}
-const FL={wt:'עובי קיר (מ"מ)',lw:'עובי קו (מ"מ)',dash:'סוג קו',fill:'מילוי',head:'ראשי חץ',ang:'זווית (מעלות)',poles:'מספר קטבים',gang:'מספר שקעים',ip:'הגנה',cee:'סוג שקע',cfg:'הרכב הקופסה',sw:'סוג מפסק',lid:'מכסה',kind:'סוג',th:'עובי רצפה (מ"מ)',rh:'גובה רצפה כפולה (מ"מ)',rad:'רדיוס כיפוף מינימלי',ends:'פתיחת גידים',cores:'מספר גידים',sec:'חתך גיד (ממ"ר)',brk:'אורך פתיחת הגידים (מ"מ)',pump:'משאבה / ציוד מונע',tw:'רוחב תעלה (מ"מ)',set:'הרכב מהדקים',desc:'תיאור',fs:'גודל טקסט (מ"מ)',tag:'סימון (למשל Q1, K2)',rating:'דירוג / ערך',len:'אורך (מ"מ)',dw:'רוחב תעלה (מ"מ)',mods:'מספר מודולים',ph:'מספר פאזות',w:'רוחב (מ"מ)',h:'גובה (מ"מ)',text:'טקסט',kind:'סוג מהדק',color:'צבע',orient:'כיוון התקנה',coil:'מתח סליל',frame:'גודל / מבנה',door:'דלת',hinge:'צד צירים',closed:'תצוגה',size:'גודל קופסה',window:'חלון שקוף'};
+const FL={feed:'סוג ההזנה',tn:'מספרי הדקים (למעלה-למטה)',wt:'עובי קיר (מ"מ)',lw:'עובי קו (מ"מ)',dash:'סוג קו',fill:'מילוי',head:'ראשי חץ',ang:'זווית (מעלות)',poles:'מספר קטבים',gang:'מספר שקעים',ip:'הגנה',cee:'סוג שקע',cfg:'הרכב הקופסה',sw:'סוג מפסק',lid:'מכסה',kind:'סוג',th:'עובי רצפה (מ"מ)',rh:'גובה רצפה כפולה (מ"מ)',rad:'רדיוס כיפוף מינימלי',ends:'פתיחת גידים',cores:'מספר גידים',sec:'חתך גיד (ממ"ר)',brk:'אורך פתיחת הגידים (מ"מ)',pump:'משאבה / ציוד מונע',tw:'רוחב תעלה (מ"מ)',set:'הרכב מהדקים',desc:'תיאור',fs:'גודל טקסט (מ"מ)',tag:'סימון (למשל Q1, K2)',rating:'דירוג / ערך',len:'אורך (מ"מ)',dw:'רוחב תעלה (מ"מ)',mods:'מספר מודולים',ph:'מספר פאזות',w:'רוחב (מ"מ)',h:'גובה (מ"מ)',text:'טקסט',kind:'סוג מהדק',color:'צבע',orient:'כיוון התקנה',coil:'מתח סליל',frame:'גודל / מבנה',door:'דלת',hinge:'צד צירים',closed:'תצוגה',size:'גודל קופסה',window:'חלון שקוף'};
 function cabDialog(o,tmp){tmp=tmp||JSON.parse(JSON.stringify(o.p));const sel_=(f,opts,v)=>`<select data-f="${f}">${opts.map(([a,b])=>`<option value="${a}" ${String(a)===String(v)?'selected':''}>${b}</option>`).join('')}</select>`;
  const WS=[300,400,500,600,800,1000,1200].map(w=>[w,w+' מ"מ']),FS=[['door','דלת'],['double','דלת כפולה'],['cover','פאנלים מוברגים'],['none','ללא חזית']],HS=[['L','צירים שמאל'],['R','צירים ימין']];
  let h=`<div class="fld"><label>שם</label><input id="c_name" value="${esc(tmp.name||'')}"></div><div class="fld"><label>שלט על הדלת</label><input id="c_tag" value="${esc(tmp.tag||'')}"></div>`;
@@ -2198,8 +2219,8 @@ function editDialog(){const o=sel&&get(sel);
 <div class="fld"><label>צבע</label><select id="f_color">${Object.keys(COLORS).map(c=>`<option value="${c}" ${c===o.p.color?'selected':''}>${CNAME[c]}</option>`).join('')}</select></div>
 <div class="hint">${pin?'המידה מחוברת לרכיב שנמדד וזזה איתו. ':''}כדי להרחיק או לקרב את קו המידה — גרור אותו.</div>`,
   ()=>{o.p.mode=$('f_mm').value;o.p.txt=$('f_mt').value;o.p.fs=+$('f_mfs').value||o.p.fs;o.p.off=+$('f_moff').value||0;o.p.color=$('f_color').value;commit();renderNow();updateBar();});return;}
- if(o.type==='wire'){panelForm('חוט',`<div class="fld"><label>צבע</label><select id="f_wc">${Object.keys(WCOL).map(c=>`<option value="${c}" ${c===o.p.color?'selected':''}>${WCOL[c].n}</option>`).join('')}</select></div><div class="fld"><label>חתך (ממ"ר)</label><select id="f_sec">${SECK.map(s=>`<option ${s===o.p.sec?'selected':''}>${s}</option>`).join('')}</select></div><div class="fld"><label>סימון חוט</label><input id="f_wtag" value="${esc(o.p.tag||'')}"></div><div class="hint">אורך משוער: ${(wireLen(o)/1000).toFixed(2)} מ'</div>`,
-  ()=>{o.p.color=$('f_wc').value;o.p.sec=$('f_sec').value;o.p.tag=$('f_wtag').value;commit();renderNow();updateBar();});return;}
+ if(o.type==='wire'){panelForm('חוט',`<div class="fld"><label>צבע</label><select id="f_wc">${Object.keys(WCOL).map(c=>`<option value="${c}" ${c===o.p.color?'selected':''}>${WCOL[c].n}</option>`).join('')}</select></div><div class="fld"><label>חתך (ממ"ר)</label><select id="f_sec">${SECK.map(s=>`<option ${s===o.p.sec?'selected':''}>${s}</option>`).join('')}</select></div><div class="fld"><label>פאזות</label><select id="f_wph"><option value="1" ${o.p.ph!=='3'?'selected':''}>קו אחד (בצבע שנבחר)</option><option value="3" ${o.p.ph==='3'?'selected':''}>תלת-פאזי — 3 קווים: חום, כתום, שחור</option></select></div><div class="fld"><label>סימון חוט</label><input id="f_wtag" value="${esc(o.p.tag||'')}"></div><div class="hint">אורך משוער: ${(wireLen(o)/1000).toFixed(2)} מ'</div>`,
+  ()=>{o.p.color=$('f_wc').value;o.p.sec=$('f_sec').value;o.p.ph=$('f_wph').value;o.p.tag=$('f_wtag').value;commit();renderNow();updateBar();});return;}
  const D=DEF[o.type];let h=`<div class="fld"><label>שם הרכיב</label><input id="f_name" value="${esc(o.p.name)}"></div>`;
  D.edit.forEach(k=>{const v=o.p[k]??'';
   if(k==='color')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_color">${Object.keys(COLORS).map(c=>`<option value="${c}" ${c===o.p.color?'selected':''}>${CNAME[c]}</option>`).join('')}</select></div>`;
@@ -2230,6 +2251,7 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='tw')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_tw">${[50,100,150,200,300,400,500,600].map(a=>`<option value="${a}" ${a==v?'selected':''}>${a} מ"מ</option>`).join('')}</select></div>`;
   else if(k==='set')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_set">${[['S','מהדק בודד'],['1P','חד-פאזי — L, N, PE'],['3P','תלת-פאזי — L1, L2, L3'],['4P','4 קטבים — L1, L2, L3, N'],['5P','5 קטבים — L1, L2, L3, N, PE']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='text')h+=`<div class="fld"><label>${FL[k]}</label><textarea id="f_text" rows="3">${esc(v)}</textarea></div>`;
+  else if(k==='feed')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_feed">${['N','L','L1','L2','L3','PE','+24V','0V'].map(a=>`<option ${a===v?'selected':''}>${a}</option>`).join('')}</select></div>`;
   else if(k==='dash')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_dash">${[['solid','רציף'],['dash','מקווקו'],['dot','מנוקד'],['dashdot','קו-נקודה']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='fill')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_fill">${[['none','ללא'],['light','שקוף בצבע הקו'],['solid','מלא']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='head')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_head">${[['none','בלי חץ (קו)'],['end','חץ בקצה אחד'],['both','חץ בשני הקצוות']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
@@ -2275,7 +2297,7 @@ function tplKit(){const o=[];
 function sldKit(){const o=[],ws=[];
  const add=(t,p,x,y)=>{const e=mkObj({t,n:(LIB.flatMap(T=>T.groups.flatMap(g=>g.items)).find(i=>i.t===t)||{n:t}).n,p:p||{}});e.x=x;e.y=y;o.push(e);return e;};
  const top=e=>(e.type==='sgrid'||e.type==='sgen')?null:0,bot=e=>(e.type==='sgrid'||e.type==='sgen')?0:(termsOf(e).length>1?(e.type==='sats'?2:1):null);
- const wire=(a,ta,b,tb)=>{if(ta==null||tb==null)return;ws.push({id:uid(),type:'wire',p:{color:'black',sec:'1.5',name:'חוט',auto:1},pts:[{r:a.id,t:ta},{r:b.id,t:tb}]});};
+ const wire=(a,ta,b,tb)=>{if(ta==null||tb==null)return;ws.push({id:uid(),type:'wire',p:{color:'brown',sec:'1.5',name:'חוט',auto:1},pts:[{r:a.id,t:ta},{r:b.id,t:tb}]});};
  const chain=(list,x,y0,step=100)=>{let prev=null;return list.map(([t,p],i)=>{const e=add(t,p,x,y0+i*step);if(prev)wire(prev,bot(prev),e,top(e));prev=e;return e;});};
  const bus=(x,y,len,p)=>add('sbus',Object.assign({tag:'',rating:'3×400/230V 50Hz',len},p||{}),x,y);
  const bt=(b,x)=>{let bi=0,bd=1e9;termsOf(b).forEach((t,i)=>{const d=Math.abs(b.x+t[0]-x);if(d<bd){bd=d;bi=i;}});return bi;};
