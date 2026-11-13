@@ -193,6 +193,18 @@ button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 #bMenu svg{stroke:#000;stroke-width:3;width:30px;height:30px}
 @media (hover:hover){#bMenu:hover{background:linear-gradient(180deg,#ffc870,var(--acc-light));border-color:#fff}}
 #bMenu:active{transform:translateY(1px);border-bottom-width:1px}
+/* toolbar arrangement: chips per bar, and buttons shown in the other bar */
+.tbz{margin:10px 0 4px}.tbzt{font-size:14px;font-weight:700;color:var(--acc-light);margin:0 2px 6px}
+.tbzl{display:flex;flex-wrap:wrap;gap:6px;min-height:56px;padding:8px;border:1.5px dashed var(--acc);border-radius:4px;background:#000}
+.tbz.hz .tbzl{border-color:#6b6b72}
+.tbc{display:flex;align-items:center;gap:6px;padding:8px 10px;min-height:40px;border-radius:4px;background:var(--ctl);border:1px solid var(--ctl-bd);border-bottom:2px solid #000;font-size:14px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.tbc svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tbc.sepc{color:var(--mut)}.tbc.sepc i{width:3px;height:22px;background:var(--acc);display:block}
+.tbc.tbdrag{opacity:.35;border-style:dashed}
+.tbghost{position:fixed;z-index:50;pointer-events:none;border-color:var(--acc);box-shadow:0 0 0 1px #000,0 0 16px rgba(255,140,0,.6);opacity:.95;margin:0}
+#docTabs .rb{width:auto;height:40px;flex-direction:row;gap:6px;padding:0 10px}#docTabs .rb svg{width:20px;height:20px}#docTabs .rb span{font-size:13.5px}#docTabs .rb b{height:auto;font-size:14px}
+#rail>button:not(.rb){height:50px;padding:0 10px;font-size:14px;flex:none;white-space:nowrap;border-radius:4px;background:var(--ctl);border:1px solid var(--ctl-bd);border-bottom:2px solid #000;box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 2px 4px rgba(0,0,0,.6)}
+#rail>button.on:not(.rb){background:linear-gradient(180deg,var(--acc-light),var(--acc));color:#000;font-weight:700}
 </style>
 </head>
 <body>
@@ -240,6 +252,7 @@ button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 <div id="drawer" class="hidden"><div class="dbox" id="dbox"></div></div>
 <div id="modal" class="hidden"><div class="mbox"><h3 id="mTitle"></h3><div class="mbody" id="mBody"></div><div class="mbtns" id="mBtns"></div></div></div>
 <div id="toast"></div>
+<div id="tbHidden" hidden></div>
 
 <script>
 'use strict';
@@ -1317,7 +1330,7 @@ function isSldObj(o){if(!o)return false;if(state.tab==='sld')return true;if(stat
  if(o.type==='wire')return o.pts.some(p=>p.r&&isSldObj(get(p.r)))||(!o.pts.some(p=>p.r)&&o.pts[0].x>=(state.sldBx??1e9));return false;}
 function syncDoc(){const d=state.tab==='sld'?'sld':state.tab==='both'?'both':'panel';sldDark=!isLight();const key=d+(sldDark?'D':'L');if(key===shownDoc)return;const docChanged=!shownDoc||shownDoc[0]!==key[0]||shownDoc.slice(0,-1)!==d;shownDoc=key;
  document.body.classList.toggle('sld',isLight());
- document.querySelectorAll('#docTabs [data-doc]').forEach(b=>b.classList.toggle('on',b.dataset.doc===d));$('bDark').textContent=isLight()?'☀':'🌙';$('bDark').title=isLight()?'תצוגה בהירה — לחץ לכהה':'תצוגה כהה — לחץ לבהירה';$('bDark').classList.toggle('on',!isLight());
+ document.querySelectorAll('button[data-doc]').forEach(b=>b.classList.toggle('on',b.dataset.doc===d));$('bDark').textContent=isLight()?'☀':'🌙';$('bDark').title=isLight()?'תצוגה בהירה — לחץ לכהה':'תצוגה כהה — לחץ לבהירה';$('bDark').classList.toggle('on',!isLight());
  if(d==='sld'){if(wireColor!=='black'){window._panelWire=wireColor;wireColor='black';}}else if(window._panelWire){wireColor=window._panelWire;window._panelWire=null;}
  if(docChanged){curTab=LIB.findIndex(inDoc);if(pMode==='lib')buildSheet();}applyView();}
 /* Both documents apart: the panel's parts and the diagram's, as they're kept. */
@@ -1336,7 +1349,7 @@ function switchDoc(d){const cur=state.tab==='sld'?'sld':state.tab==='both'?'both
  if(d==='sld'&&!state.objs.length)toast('תרשים חד קווי ריק — הוסף סמלים, או "צור טיוטה מרכיבי הלוח" בהוספת רכיב');
  if(d==='both')toast('משולב: חזית הלוח משמאל, החד קווי מימין — אפשר לערוך את שניהם');}
 function toggleDark(){const v=curView();themes[v]=isLight()?'dark':'light';try{localStorage.setItem('epd.themes',JSON.stringify(themes));}catch(e){}syncDoc();renderNow();toast((isLight()?'תצוגה בהירה':'תצוגה כהה')+' — '+{panel:'חזית לוח',sld:'חד קווי',both:'משולב'}[v]);}
-$('docTabs').addEventListener('click',e=>{
+document.addEventListener('click',e=>{if(!e.target.closest('#docTabs,#rail'))return;
  if(e.target.closest('#bDark')){toggleDark();return;}
  if(e.target.closest('#bLayout')){toggleLayout();return;}
  if(e.target.closest('#bNewProj')){newProject();return;}
@@ -1664,6 +1677,49 @@ document.addEventListener('keydown',e=>{const t=e.target;if(t&&(t.isContentEdita
 // On a phone the tools row scrolls; the left edge fades while more buttons lie beyond it.
 function railHint(){const r=$('rail');r.classList.toggle('more',r.scrollWidth-r.clientWidth-Math.abs(r.scrollLeft)>4);}
 $('rail').addEventListener('scroll',railHint,{passive:true});window.addEventListener('resize',railHint);setTimeout(railHint,50);
+/* ================= toolbar arrangement =================
+   The buttons of the two bars (the tool bar #rail and the document bar #docTabs)
+   can be reordered, moved from one bar to the other or hidden, in a dialog
+   where each bar is a row of chips dragged between rows. The arrangement is
+   kept per device in localStorage and applied to the real bars at once. */
+const TB_KEY='ohadcad.toolbar.v1',TBZ={rail:'rail',doc:'docTabs'};
+const TB_DEF={rail:[],doc:[],hide:[]};
+(()=>{let n=0;for(const [z,id] of Object.entries(TBZ))for(const el of [...$(id).children]){if(el.id==='saveSt')continue;
+  el.dataset.tb=el.id||(el.dataset.doc?'doc-'+el.dataset.doc:'sep'+(++n));el.dataset.home=z;TB_DEF[z].push(el.dataset.tb);}})();
+const tbEl=k=>document.querySelector(`[data-tb="${k}"]`);
+function tbCur(){const L={rail:[],doc:[],hide:[]};for(const [z,id] of Object.entries(TBZ))[...$(id).children].forEach(el=>{if(el.dataset.tb)L[z].push(el.dataset.tb);});
+ [...$('tbHidden').children].forEach(el=>L.hide.push(el.dataset.tb));return L;}
+function tbApply(L){const seen=new Set(),box={rail:$('rail'),doc:$('docTabs'),hide:$('tbHidden')};
+ for(const z of ['rail','doc','hide'])(L[z]||[]).forEach(k=>{const el=tbEl(k);if(el&&!seen.has(k)){seen.add(k);box[z].appendChild(el);}});
+ // buttons added in a later version, unknown to a saved arrangement, go back to their own bar
+ document.querySelectorAll('[data-tb]').forEach(el=>{if(!seen.has(el.dataset.tb))box[el.dataset.home].appendChild(el);});
+ $('docTabs').appendChild($('saveSt'));railHint();}
+try{const L=JSON.parse(localStorage.getItem(TB_KEY)||'null');if(L)tbApply(L);}catch(e){}
+function tbStore(){try{localStorage.setItem(TB_KEY,JSON.stringify(tbCur()));}catch(e){}}
+function tbChip(k){const el=tbEl(k);if(!el)return '';if(el.classList.contains('sep'))return `<div class="tbc sepc" data-c="${k}"><i></i>מפריד</div>`;
+ const sv=el.querySelector('svg'),lb=el.querySelector('span')?.textContent||(el.id==='bGrid'?'גריד':'')||el.textContent.trim()||el.title||k;
+ return `<div class="tbc" data-c="${k}">${sv?sv.outerHTML.replace(/ id="[^"]*"/g,''):''}<span>${esc(lb)}</span></div>`;}
+function tbZones(){const L=tbCur(),Z=[['rail','סרגל הכלים (עליון)'],['doc','סרגל המסמכים (שני)'],['hide','מוסתרים — גרור לכאן כפתור שלא צריך']];
+ return `<div class="hint">גרור כפתור כדי לשנות את הסדר, להעביר אותו לסרגל השני או להסתיר אותו. השינוי נשמר מיד במכשיר הזה.</div>`+
+  Z.map(([z,t])=>`<div class="tbz${z==='hide'?' hz':''}"><div class="tbzt">${t}</div><div class="tbzl" data-z="${z}">${L[z].map(tbChip).join('')}</div></div>`).join('');}
+function tbEditor(){modal('סידור כפתורי הסרגלים',tbZones(),[{t:'סיום',cls:'pri'},{t:'איפוס לסידור המקורי',fn:()=>{tbApply(TB_DEF);try{localStorage.removeItem(TB_KEY);}catch(e){}$('mBody').innerHTML=tbZones();toast('הסרגלים חזרו לסידור המקורי');return false;}}]);
+ $('mBody').onpointerdown=tbDown;}
+function tbDown(e){const c=e.target.closest('.tbc');if(!c||(e.pointerType==='mouse'&&e.button!==0))return;e.preventDefault();
+ const r=c.getBoundingClientRect(),gh=c.cloneNode(true);gh.classList.add('tbghost');gh.style.width=r.width+'px';gh.style.left=r.left+'px';gh.style.top=r.top+'px';document.body.appendChild(gh);
+ c.classList.add('tbdrag');const ox=e.clientX-r.left,oy=e.clientY-r.top,mb=$('mBody');let last=null;
+ // held near the top or bottom of the list, it keeps scrolling so a far row can be reached
+ const auto=setInterval(()=>{if(!last)return;const mr=mb.getBoundingClientRect(),y=last.clientY;const d=y<mr.top+40?-10:y>mr.bottom-40?10:0;if(d){const t0=mb.scrollTop;mb.scrollTop+=d;if(mb.scrollTop!==t0)mv(last);}},30);
+ const mv=ev=>{gh.style.left=ev.clientX-ox+'px';gh.style.top=ev.clientY-oy+'px';
+  last=ev;
+  const t=document.elementFromPoint(ev.clientX,ev.clientY),zl=t&&(t.closest('.tbzl')||t.closest('.tbz')?.querySelector('.tbzl'));if(!zl)return;
+  let best=null,bd=1e9;for(const q of zl.children){if(q===c)continue;const b=q.getBoundingClientRect(),d=Math.hypot(ev.clientX-(b.left+b.width/2),(ev.clientY-(b.top+b.height/2))*2);if(d<bd){bd=d;best=q;}}
+  if(!best){zl.appendChild(c);return;}const b=best.getBoundingClientRect(),after=ev.clientX<b.left+b.width/2; // right-to-left rows
+  zl.insertBefore(c,after?best.nextSibling:best);};
+ const up=()=>{clearInterval(auto);removeEventListener('pointermove',mv);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);gh.remove();c.classList.remove('tbdrag');
+  const L={rail:[],doc:[],hide:[]};mb.querySelectorAll('.tbzl').forEach(zl=>zl.querySelectorAll('.tbc').forEach(q=>L[zl.dataset.z].push(q.dataset.c)));
+  tbApply(L);tbStore();};
+ addEventListener('pointermove',mv);addEventListener('pointerup',up);addEventListener('pointercancel',up);}
+
 function doorsFront(){const f=state.objs.find(o=>(o.type==='enclosure'&&hasDoor(o))||o.type==='cabinet'||o.type==='cibox');return f?(f.type==='cabinet'?isFrontV(f):f.type==='cibox'?ciLidOn(f):f.p.closed==='1'):null;}
 function gridLbl(){$('gridLbl').textContent=GRID>0?GRID+'':'חופשי';}
 function gridDialog(){modal('מדרגת תזוזה',`<div class="hint">כל הזזה, הארכה ונקודת חוט יקפצו במדרגות של המשבצת. משבצת הרקע מוצגת באותו גודל (קו עבה כל 5 משבצות). על פס DIN הרכיבים עדיין נצמדים לשכנים.</div><div class="chips">${[0,1,2.5,5,10,20,25,50].map(v=>`<button class="wbtn ${v===GRID?'pri':''}" data-gv="${v}">${v?v+' מ"מ':'חופשי'}</button>`).join('')}</div>`);
@@ -1743,7 +1799,7 @@ function wireLen(w){const ps=w.pts.map(resolve).filter(Boolean);let L=0;for(let 
 
 /* ================= drawer / menu ================= */
 function openDrawer(){const items=[['פרויקט'],['📄 פרויקט חדש',newProject],['🗂 פרויקט חדש מתבנית (דוגמאות)',templatesDialog],...(SH?[['📂 פתח מהתיקייה המשותפת',openShared],['💾 שמור עכשיו (נשמר גם אוטומטית)',saveShared],['📑 שמור עותק בשם…',()=>saveSharedAs(true)]]:[['📂 פתח פרויקט שמור',openProjects],['💾 שמור בשם…',saveAs]]),
- ['תצוגה'],['📄 דף ייצור (Layout)…',layoutDialog],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
+ ['תצוגה'],['🧩 סידור כפתורי הסרגלים…',tbEditor],['📄 דף ייצור (Layout)…',layoutDialog],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
  ['ייצוא ושיתוף'],['📋 רשימת ציוד (BOM)',bom],['📄 ייצוא PDF עם טבלת שרטוט',pdfDialog],['🖼️ ייצוא תמונה (PNG)',exportImage],['💾 הורד קובץ פרויקט (JSON)',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state))],['📤 העתק קובץ פרויקט',copyJSON],['📥 ייבוא קובץ פרויקט',importJSON],...(SH&&SH.menu?[['OhadCad'],...SH.menu()]:[])];
  $('dbox').innerHTML=`<div style="display:flex;align-items:center;justify-content:flex-end;margin:4px 8px 0"><img src="icons/wordmark-dark.svg" alt="OhadCad" height="26"></div><h2>${esc(state.name)}</h2>`+items.map((it,i)=>it[1]?`<button data-i="${i}">${it[0]}</button>`:`<div style="color:#8a8a8a;font-size:13px;margin:12px 12px 2px">${it[0]}</div>`).join('');
  $('drawer').classList.remove('hidden');$('dbox').onclick=e=>{const b=e.target.closest('button');if(!b)return;$('drawer').classList.add('hidden');items[+b.dataset.i][1]();};}
