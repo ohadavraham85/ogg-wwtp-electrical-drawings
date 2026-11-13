@@ -636,7 +636,7 @@ const DEF={
  /* ---- drawing & markup: callout, person, wall, shapes (not equipment, not in the BOM) ---- */
  callout:{layer:7,edit:['text','fs','color'],def:{text:'הערה',color:'red',fs:8,tx:-60,ty:-40},
   size:o=>{const f=lblFs(o),ls=lblLines(o);return {w:Math.max(3*f,Math.max(...ls.map(l=>l.length))*f*.77+f*1.4),h:ls.length*f*1.3+f*.6};},
-  draw:o=>{const {w,h}=DEF.callout.size(o),f=lblFs(o),ls=lblLines(o),y0=-(ls.length-1)*f*1.3/2,c=col(o,'red'),tx=+o.p.tx||0,ty=+o.p.ty||0;
+  draw:o=>{const {w,h}=DEF.callout.size(o),f=lblFs(o),ls=lblLines(o),y0=-(ls.length-1)*f*1.3/2,c=col(o,'red'),[TX,TY]=ctTip(o),tx=TX-o.x,ty=TY-o.y;
    // the leader leaves the box at the edge facing the tip
    const ex=Math.max(-w/2,Math.min(w/2,tx)),ey=Math.max(-h/2,Math.min(h/2,ty)),sx=Math.abs(tx)>w/2?Math.sign(tx)*w/2:ex,sy=Math.abs(tx)>w/2?Math.max(-h/2,Math.min(h/2,0)):Math.sign(ty)*h/2;
    const d=Math.hypot(tx-sx,ty-sy)||1,ux=(tx-sx)/d,uy=(ty-sy)/d,al=Math.min(f*1.1,d/2),aw=al*.38,bx=tx-ux*al,by=ty-uy*al,lw=Math.max(.4,f*.12);
@@ -1057,7 +1057,7 @@ const LIB=[
    {g:'בניין וקנה מידה',items:[{t:'wall',n:'קיר אופקי'},{t:'wall',n:'קיר אנכי',p:{w:200,h:2000}},{t:'person',n:'אדם (קנה מידה)'}]}]}];
  const keep=LIB.filter(T=>T.sld);keep.forEach((T,i)=>T.icon=T.icon||['⚡','⏻','◎'][i]);const di=NEW.findIndex(T=>T.draw);if(di>1)NEW.splice(1,0,...NEW.splice(di,1));LIB.length=0;LIB.push(...keep,...NEW);})();
 const DUCTW=[25,40,60,80,100,120];
-const THUMBP={wall:{w:600,h:200},shline:{len:120,lw:6},shrect:{w:160,h:110,lw:6},shellipse:{w:140,h:140,lw:6},callout:{text:'הערה',fs:20,tx:-40,ty:-40},wsbox:{tag:''},floor:{len:900,tag:''},traysh:{len:500},traymesh:{len:500},rail:{len:110},partition:{len:110},duct:{len:110},busbar:{len:110},comb:{mods:4},enclosure:{w:120,h:150},cabinet:{view:'front'}};
+const THUMBP={wall:{w:600,h:200},shline:{len:120,lw:6},shrect:{w:160,h:110,lw:6},shellipse:{w:140,h:140,lw:6},callout:{text:'הערה',fs:20,tip:{x:-40,y:-40}},wsbox:{tag:''},floor:{len:900,tag:''},traysh:{len:500},traymesh:{len:500},rail:{len:110},partition:{len:110},duct:{len:110},busbar:{len:110},comb:{mods:4},enclosure:{w:120,h:150},cabinet:{view:'front'}};
 
 /* ================= state ================= */
 let state={name:'לוח חדש',objs:[]};
@@ -1125,7 +1125,7 @@ function handlesSVG(){const o=sel&&get(sel);if(!o||o.type==='wire'||o.locked||wi
  if(o.type==='cable'){const R=cabRoute(o),r=9/view.s;let s='';const BB=cabBends(o);R.forEach((p,i)=>{const [x,y]=fromLocal(o,p.x,p.y),tight=i>0&&i<R.length-1&&BB[i-1]&&BB[i-1].tight;s+=`<g data-cp="${i}" style="cursor:move"><title>${tight?`הכיפוף צר מהרדיוס הנדרש (${Math.round(BB[i-1].r)} מתוך ${Math.round(BB[i-1].need)} מ"מ) — האריכו את הקטעים`:''}</title><circle cx="${x}" cy="${y}" r="${r*2}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r}" fill="${tight?'#ef4444':'#3b82f6'}" stroke="#fff" stroke-width="${r*.28}"/></g>`;});
   for(let i=1;i<R.length;i++){const [x,y]=fromLocal(o,(R[i].x+R[i-1].x)/2,(R[i].y+R[i-1].y)/2);s+=`<g data-cm="${i-1}" style="cursor:copy"><circle cx="${x}" cy="${y}" r="${r*1.6}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r*.7}" fill="#fff" stroke="#3b82f6" stroke-width="${r*.3}"/><path d="M${x-r*.4} ${y}h${r*.8}M${x} ${y-r*.4}v${r*.8}" stroke="#3b82f6" stroke-width="${r*.22}"/></g>`;}
   return s;}
- if(o.type==='callout'){const r=9/view.s,[x,y]=fromLocal(o,+o.p.tx||0,+o.p.ty||0);return `<g data-tip="1" style="cursor:move"><circle cx="${x}" cy="${y}" r="${r*2}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r}" fill="#ff8c00" stroke="#fff" stroke-width="${r*.28}"/></g>`;}
+ if(o.type==='callout'){const r=9/view.s,[x,y]=ctTip(o);return `<g data-tip="1" style="cursor:move"><circle cx="${x}" cy="${y}" r="${r*2}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r}" fill="#ff8c00" stroke="#fff" stroke-width="${r*.28}"/></g>`;}
  if(!D.resize)return '';const {w,h}=sizeOf(o),r=10/view.s;
  const hd=(x,y,a)=>`<g data-h="${a}"><circle cx="${x}" cy="${y}" r="${r*2}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r}" fill="#3b82f6" stroke="#fff" stroke-width="${r*.28}"/></g>`;
  let s=`<g transform="translate(${o.x} ${o.y}) rotate(${o.rot})">`;
@@ -1385,7 +1385,7 @@ function autoTag(o){const pre=SERIAL[o.type];if(!pre||!o.p||!DEF[o.type].edit?.i
 function placeNew(o){const D=DEF[o.type];
  if(o.type==='person'){const s=sel&&get(sel),O=ORG(),H=sizeOf(o).h,W=sizeOf(o).w;let x=viewCenter()[0];
   if(s&&s.type!=='wire'){const b=bbW(s);x=b.x1+W/2+150;}o.x=r2(x);o.y=r2(O.y-H/2);return;}
- if(o.type==='callout'){o.p.fs=Math.max(o.p.fs,Math.round(mdFs()*1.3));const s=sel&&get(sel);if(s&&s.type!=='wire'){const b=bbW(s),{w,h}=sizeOf(o);o.x=r2(b.x1+w/2+40);o.y=r2(b.y0-h/2-30);const [tx,ty]=[(b.x0+b.x1)/2,(b.y0+b.y1)/2];o.p.tx=r2(tx-o.x);o.p.ty=r2(ty-o.y);return;}}if(o.type==='floor'&&fitFloor(o))return;autoTag(o);if(D.front){placeFront(o);return;}const [cx,cy]=viewCenter();
+ if(o.type==='callout'){o.p.fs=Math.max(o.p.fs,Math.round(mdFs()*1.3));const s=sel&&get(sel);if(s&&s.type!=='wire'){const b=bbW(s),{w,h}=sizeOf(o);o.x=r2(b.x1+w/2+40);o.y=r2(b.y0-h/2-30);const [cx,cy]=fromLocal(s,0,0);o.p.tip={x:r2(cx),y:r2(cy),of:s.id,u:0,v:0};return;}}if(o.type==='floor'&&fitFloor(o))return;autoTag(o);if(D.front){placeFront(o);return;}const [cx,cy]=viewCenter();
  if(D.rail){const s=sel&&get(sel);
   if(s&&DEF[s.type]?.rail){const r=state.objs.find(r=>r.type==='rail'&&onRail(s,r));if(r){o.rot=r.rot;const [us]=toLocal(r,s.x,s.y);const u=us+sizeOf(s).w/2+sizeOf(o).w/2;
     if(u+sizeOf(o).w/2<=r.p.len/2+.01){const [x,y]=fromLocal(r,u,0);const clash=state.objs.some(q=>q!==o&&onRail(q,r)&&Math.abs(toLocal(r,q.x,q.y)[0]-u)<(sizeOf(q).w+sizeOf(o).w)/2-.5);
@@ -1777,7 +1777,7 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
  if(!G.moved)return;
  if(G.mode==='pan'){view.tx=G.tx0+dx;view.ty=G.ty0+dy;applyView();}
  else if(G.mode==='band'){G.w1=toWorld(e.clientX,e.clientY);render();}
- else if(G.mode==='tip'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY),sp=mdSnap(wx,wy),[tx,ty]=sp&&Math.hypot(sp.x-wx,sp.y-wy)<12/view.s?[sp.x,sp.y]:[wx,wy],[lx,ly]=toLocal(o,tx,ty);o.p.tx=r2(lx);o.p.ty=r2(ly);render();}
+ else if(G.mode==='tip'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY),sp=mdSnap(wx,wy);o.p.tip=sp&&Math.hypot(sp.x-wx,sp.y-wy)<12/view.s?{...sp}:{x:r2(wx),y:r2(wy)};render();}
  else if(G.mode==='meas'){const [wx,wy]=toWorld(e.clientX,e.clientY);MS.cur=mdSnap(wx,wy);render();}
  else if(G.mode==='mdoff'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY),dx=wx-G.w0[0],dy=wy-G.w0[1];if(sel!==o.id){sel=o.id;updateBar();}
   const d=mdMode(o.p.mode,...mdPt(o.p.a),...mdPt(o.p.b))==='h'?dy:dx;
@@ -1840,7 +1840,7 @@ function fit(){const r=svg.getBoundingClientRect(),e0=viewExt();let e=e0;if(e0&&
 /* ================= top bar actions ================= */
 $('bDel').onclick=deleteSelected;
 $('bLock').onclick=()=>{const o=sel&&get(sel);if(!o)return;o.locked=!o.locked;commit();renderNow();updateBar();toast(o.locked?'הרכיב ננעל':'הנעילה שוחררה');};
-$('bRot').onclick=()=>{const o=sel&&get(sel);if(!o||o.type==='wire'||o.type==='mdim'||o.locked)return;if(o.type==='cabinet'){toast('ארון לא מסתובב');return;}o.rot=(o.rot+90)%360;commit();renderNow();};
+$('bRot').onclick=()=>{const o=sel&&get(sel);if(!o||o.type==='wire'||o.type==='mdim'||o.type==='callout'||o.locked)return;if(o.type==='cabinet'){toast('ארון לא מסתובב');return;}o.rot=(o.rot+90)%360;commit();renderNow();};
 $('bDup').onclick=()=>{const o=sel&&get(sel);if(!o)return;const c=JSON.parse(JSON.stringify(o));c.id=uid();c.locked=false;if(c.type==='label')delete c.p.of;
  if(c.type==='wire'){c.pts=c.pts.map(p=>{const q=resolve(p)||p;return {x:q.x+15,y:q.y+15};});}
  else{c.x=o.x;c.y=o.y;const sv=sel;placeNew(c);if(c.x===o.x&&c.y===o.y){c.x+=20;c.y+=20;}sel=sv;}
@@ -1962,6 +1962,10 @@ $('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();})
 let tt=0;function toast(s){const t=$('toast');t.textContent=s;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),1600);}
 
 /* ================= edit dialog ================= */
+/* A callout's arrow tip stays where it was put (or on the part it was dropped
+   on, following that part) while the box moves freely. Older callouts kept the
+   tip as an offset from the box; it is fixed in place the first time it is drawn. */
+function ctTip(o){if(!o.p.tip)o.p.tip={x:r2(o.x+(+o.p.tx||0)),y:r2(o.y+(+o.p.ty||0))};return mdPt(o.p.tip);}
 const DRAWT=new Set(['label','mdim','callout','person','wall','shline','shrect','shellipse']);
 function shDash(o){const w=Math.max(.2,+o.p.lw||2);return o.p.dash==='dash'?`stroke-dasharray="${w*4} ${w*3}"`:o.p.dash==='dot'?`stroke-dasharray="${w} ${w*2}" stroke-linecap="round"`:o.p.dash==='dashdot'?`stroke-dasharray="${w*6} ${w*2.5} ${w} ${w*2.5}"`:'';}
 function shFill(o){const c=col(o,'blue');return o.p.fill==='light'?c+'33':o.p.fill==='solid'?c:'none';}

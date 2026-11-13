@@ -159,11 +159,11 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 29;
+const VERSION = 30;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'קירות משנים גודל כמו מלבן — גם אורך וגם עובי, בגרירת העיגולים בפינות';
+const WHATS_NEW = 'תיבת טקסט עם חץ: קצה החץ נשאר במקום כשמזיזים את התיבה, וזז עם הרכיב שהוא מצביע עליו';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
