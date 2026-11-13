@@ -490,6 +490,23 @@ function cabFrontOpen(o){const g=cabG(Object.assign({},o,{x:0,y:0}));let s='';
  return s;}
 function cabSecAt(q){for(const c of state.objs){if(c.type!=='cabinet'||!isFrontV(c))continue;const g=cabG(c);for(const sc of g.S){if(sc.f==='none')continue;if(q.x>sc.x0&&q.x<sc.x1&&q.y>g.y0&&q.y<g.y0+g.H)return {type:'_sec',x:(sc.x0+sc.x1)/2,y:g.y0+g.H/2,_r:{w:sc.w,h:g.H},p:{size:'X'}};}}return null;}
 function lcSz(o){const r=String(o.p.rating);return /D(80|95)/.test(r)?{w:85,h:127}:/D(40A|50A|65A)/.test(r)?{w:55,h:85}:{w:45,h:77};}
+const nsxFrame=o=>+((String(o.p.rating).match(/NSXm?(\d+)/)||[])[1]||250);
+// The ComPacT front: dark case, pole shields with screws top and bottom, a light
+// face with the toggle (ON up), the name and the trip unit with its dials.
+function nsxDraw(o,{w,h},mini){const sh=h*(mini?.15:.17),fw=w*.84,fx=-fw/2,fy=-h/2+sh+h*.03,fh=h-2*sh-h*.06,trip=String(o.p.rating).split(' ').slice(1).join(' '),frame=String(o.p.rating).split(' ')[0];
+ let s=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${w*.04}" fill="#2a2d30" stroke="#0b0b0b" stroke-width=".8"/>`;
+ s+=`<rect x="${-w/2+1.5}" y="${-h/2+1.5}" width="${w-3}" height="${sh}" rx="2" fill="#3a3f44"/><rect x="${-w/2+1.5}" y="${h/2-sh-1.5}" width="${w-3}" height="${sh}" rx="2" fill="#3a3f44"/>`;
+ s+=`<rect x="${fx}" y="${fy}" width="${fw}" height="${fh}" rx="3" fill="#d9dcdf" stroke="#9aa0a6" stroke-width=".6"/>`;
+ s+=`<rect x="${fx+3}" y="${fy+3}" width="${fw*.18}" height="${fh*.06}" rx="1" fill="#3dcd58"/>`+txt(fx+fw-3,fy+fh*.06,'ComPacT',Math.max(3,fw*.07),'#3dcd58',800,'end');
+ const tw=fw*.22,th=fh*.36,ty=fy+fh*.14;
+ s+=`<rect x="${-tw/2-2}" y="${ty-2}" width="${tw+4}" height="${th+4}" rx="2" fill="#5b6066"/><rect x="${-tw/2}" y="${ty}" width="${tw}" height="${th}" rx="1.5" fill="#1c1e20"/><rect x="${-tw/2+1.5}" y="${ty+1.5}" width="${tw-3}" height="${th*.42}" rx="1" fill="#3a3d40"/>`;
+ s+=txt(0,ty-3.5,'I ON',Math.max(2.4,fw*.05),'#111',700)+txt(0,ty+th+fw*.07,'O OFF',Math.max(2.4,fw*.05),'#111',700);
+ s+=txt(-fw*.31,ty+th*.55,frame,Math.max(2.6,fw*(frame.length>7?.062:.08)),'#111',800)+txt(fw*.3,ty+th*.55,(+o.p.poles===4?'4P':'3P'),Math.max(3,fw*.08),'#111',800);
+ const uy=fy+fh*.66,uh=fh*.28;s+=`<rect x="${fx+fw*.1}" y="${uy}" width="${fw*.8}" height="${uh}" rx="2" fill="#b6bcc2" stroke="#7d848b" stroke-width=".5"/>`;
+ [-.22,.08].forEach(k=>{s+=`<circle cx="${fw*k}" cy="${uy+uh*.48}" r="${Math.min(uh*.24,fw*.08)}" fill="#e9ecef" stroke="#555" stroke-width=".5"/><path d="M${fw*k} ${uy+uh*.48}l${fw*.04} ${-uh*.12}" stroke="#c62828" stroke-width=".8"/>`;});
+ s+=txt(fw*.3,uy+uh*.55,trip,Math.max(2.6,fw*.06),'#111',700)+`<rect x="${fx+fw*.82}" y="${uy+uh*.1}" width="${fw*.06}" height="${uh*.25}" fill="#facc15"/>`;
+ s+=sTerms(o,Math.max(3.2,w*.035),'#e5e7eb');if(o.p.tag)s+=txt(-w/2+3,-h/2+sh+h*.03-1.5,o.p.tag,Math.max(3.4,w*.04),'#7dd3fc',700,'start');
+ return s;}
 function sBody(w,h,b){return `<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="2" fill="#2e3235" stroke="#0d0d0d" stroke-width=".7"/><rect x="${-w/2+.4}" y="${-h/2+.4}" width="${w-.8}" height="${b}" fill="#383d41"/><rect x="${-w/2+.4}" y="${h/2-b-.4}" width="${w-.8}" height="${b}" fill="#383d41"/>`;}
 function sTerms(o,r,c){let s='';termsOf(o).forEach(([x,y,l])=>{s+=screw(x,y,r);if(l)s+=txt(x,y<0?y+r+3.6:y-r-3.6,l,2.5,c,700);});return s;}
 const ATVR=[['ATV630U07N4 0.75kW',1],['ATV630U15N4 1.5kW',1],['ATV630U22N4 2.2kW',1],['ATV630U30N4 3kW',1],['ATV630U40N4 4kW',1],['ATV630U55N4 5.5kW',1],['ATV630U75N4 7.5kW',2],['ATV630D11N4 11kW',2],['ATV630D15N4 15kW',3],['ATV630D18N4 18.5kW',3],['ATV630D22N4 22kW',3],['ATV630D30N4 30kW',4],['ATV630D37N4 37kW',4],['ATV630D45N4 45kW',4],['ATV630D55N4 55kW',5],['ATV630D75N4 75kW',5],['ATV630D90N4 90kW',5]];
@@ -662,6 +679,18 @@ const DEF={
   terms:()=>[...spread(45,4).map((x,i)=>[x,-26,['97','98','95','96'][i]]),...spread(45,3).map((x,i)=>[x,26,['2','4','6'][i]])],
   draw:o=>{let s=sBody(45,66,12);s+=`<circle cx="-11" cy="-4" r="7" fill="#1d4ed8" stroke="#0b2a6b" stroke-width=".6"/><path d="M-11 -4L-7 -9" stroke="#fff" stroke-width="1.2"/><rect x="2" y="-11" width="8" height="8" rx="1.5" fill="#2563eb"/>`+txt(6,-7,'R',3.6,'#fff',700)+`<rect x="12" y="-11" width="8" height="8" rx="1.5" fill="#c62828"/>`+txt(16,-7,'S',3.6,'#fff',700);
    s+=txt(0,9,o.p.rating.split(' ').slice(1).join(' '),4,'#e5e7eb',700)+sTerms(o,3,'#e5e7eb')+(o.p.tag?txt(0,15,o.p.tag,3.6,'#7dd3fc',700):'');return s;}},
+ /* ---- Schneider ComPacT NSX (100-630A, on a plate) and NSXm (16-160A, on DIN rail), 1:1 from the catalogue:
+    NSX100-250 105×161 (3P) / 140×161 (4P), NSX400-630 140×255 / 185×255, NSXm 81×137 / 108×137 ---- */
+ nsx:{layer:4,edit:['tag','rating','poles'],def:{rating:'NSX250F TM250D',poles:3,tag:''},
+  ratings:['NSX100F TM100D','NSX160F TM160D','NSX250F TM250D','NSX100F Micrologic 2.2','NSX250F Micrologic 2.2','NSX400F Micrologic 2.3','NSX630F Micrologic 2.3','NSX100F MA100','NSX250F MA220'],
+  size:o=>{const f=nsxFrame(o),p4=+o.p.poles===4;return f>250?{w:p4?185:140,h:255}:{w:p4?140:105,h:161};},
+  terms:o=>{const {w,h}=DEF.nsx.size(o),n=+o.p.poles===4?4:3,L=n===4?['N','1','3','5']:['1','3','5'],B=n===4?['N','2','4','6']:['2','4','6'];return [...spread(w*.86,n).map((x,i)=>[x,-h/2+h*.07,L[i]]),...spread(w*.86,n).map((x,i)=>[x,h/2-h*.07,B[i]])];},
+  draw:o=>nsxDraw(o,DEF.nsx.size(o),false)},
+ nsxm:{layer:4,rail:true,edit:['tag','rating','poles'],def:{rating:'NSXm160F TM160D',poles:3,tag:''},
+  ratings:['NSXm16F TM16D','NSXm25F TM25D','NSXm40F TM40D','NSXm63F TM63D','NSXm100F TM100D','NSXm125F TM125D','NSXm160F TM160D','NSXm160F Micrologic 4.1'],
+  size:o=>({w:+o.p.poles===4?108:81,h:137}),
+  terms:o=>{const w=+o.p.poles===4?108:81,n=+o.p.poles===4?4:3,L=n===4?['N','1','3','5']:['1','3','5'],B=n===4?['N','2','4','6']:['2','4','6'];return [...spread(w*.86,n).map((x,i)=>[x,-58,L[i]]),...spread(w*.86,n).map((x,i)=>[x,58,B[i]])];},
+  draw:o=>nsxDraw(o,DEF.nsxm.size(o),true)},
  gv2:{layer:4,rail:true,edit:['tag','rating'],ratings:['GV2ME06 1-1.6A','GV2ME07 1.6-2.5A','GV2ME08 2.5-4A','GV2ME10 4-6.3A','GV2ME14 6-10A','GV2ME16 9-14A','GV2ME20 13-18A','GV2ME21 17-23A','GV2ME22 20-25A','GV2ME32 24-32A'],
   def:{rating:'GV2ME10 4-6.3A'},size:()=>({w:45,h:89}),terms:()=>[...spread(45,3).map((x,i)=>[x,-37,['1','3','5'][i]]),...spread(45,3).map((x,i)=>[x,37,['2','4','6'][i]])],
   draw:o=>{let s=sBody(45,89,15);s+=`<rect x="-19" y="-27" width="38" height="54" rx="2" fill="#41474c"/><circle cx="0" cy="-17" r="6.5" fill="#e5e7eb" stroke="#555" stroke-width=".5"/><path d="M0 -17L4 -21" stroke="#c62828" stroke-width="1.1"/>`;
@@ -818,7 +847,7 @@ const SDEF={
   draw:o=>sL(0,-30,0,-16)+sL(0,16,0,30)+sR(-16,-16,32,32)+sL(-16,16,16,-16,1.4)+sT(-8,-7,'~',9)+sT(8,7,'=',9)+sLbl(o,40)},
  sbatt:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'',rating:'24VDC',desc:'מצבר'},size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sL(0,-30,0,-6)+sL(0,6,0,30)+sL(-12,-6,12,-6,2.4)+sL(-6,0,6,0,3.2)+sL(-12,6,12,6,2.4)+sLbl(o,40)},
- sbrk:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Q1',rating:'MCCB 100A',desc:''},ratings:['MCB C10','MCB C16','MCB C20','MCB C32','MCCB 63A','MCCB 100A','MCCB 160A','MCCB 250A','MCCB 400A','MCCB 630A','ACB 1600A','ACB 2500A'],size:()=>({w:40,h:60}),terms:IO,
+ sbrk:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Q1',rating:'MCCB 100A',desc:''},ratings:['NSXm63F 63A','NSXm160F 160A','NSX100F 100A','NSX160F 160A','NSX250F 250A','NSX400F 400A','NSX630F 630A','MCB C10','MCB C16','MCB C20','MCB C32','MCCB 63A','MCCB 100A','MCCB 160A','MCCB 250A','MCCB 400A','MCCB 630A','ACB 1600A','ACB 2500A'],size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sSwitch('x')+sLbl(o,40)},
  srcd:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'F1',rating:'40A 30mA',desc:''},ratings:['25A 30mA','40A 30mA','63A 30mA','40A 300mA','RCBO C16 30mA'],size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sSwitch('x')+`<ellipse cx="0" cy="21" rx="8" ry="3.2" fill="none" stroke="${SK}" stroke-width="1.8"/>`+`<path d="M8 21h6v-21h-9" fill="none" stroke="${SK}" stroke-width="1.2" stroke-dasharray="3 2"/>`+sLbl(o,40)},
@@ -1160,6 +1189,7 @@ const LIB=[
  ]},
  {tab:'ציוד 22 מ"מ',hint:'בבחירת אביזר בחזית מוצגות המידות ממרכזו: <b style="color:#22d3ee">תכלת</b> — עד שפת הקופסה, <b style="color:#f59e0b">כתום</b> — מרכז-למרכז לאביזר השכן. הקשה על מספר מאפשרת להקליד מידה מדויקת.',groups:[{g:'אביזרי 22 מ"מ לחזית — בחר צבע ואז אביזר',colors:'all',items:[{t:'hole22',n:'חור 22 מ"מ'},{t:'pb',n:'לחצן'},{t:'pbl',n:'לחצן מואר'},{t:'pl22',n:'נורית 22'},{t:'sel2',n:'בורר 2 מצבים'},{t:'sel3',n:'בורר 3 מצבים'},{t:'key',n:'בורר מפתח'},{t:'estop',n:'לחצן חירום'},{t:'pot',n:'פוטנציומטר'},{t:'buzzer',n:'זמזם'}]}]},
  {tab:'ציוד שניידר',hint:'כל הציוד בקנה מידה 1:1 לפי מידות הקטלוג. בעריכה (מאפיינים) בוחרים דגם — הגודל משתנה לבד: מגען 45/55/85 מ"מ, ווסת ATV630 לפי גודל 1–5.',groups:[
+  {g:'מפסקי ComPacT NSX / NSXm (בקנה מידה)',items:[{t:'nsxm',n:'NSXm 63A 3P',p:{rating:'NSXm63F TM63D'}},{t:'nsxm',n:'NSXm 160A 3P'},{t:'nsxm',n:'NSXm 160A 4P',p:{poles:4}},{t:'nsx',n:'NSX100F 3P',p:{rating:'NSX100F TM100D'}},{t:'nsx',n:'NSX160F 3P',p:{rating:'NSX160F TM160D'}},{t:'nsx',n:'NSX250F 3P'},{t:'nsx',n:'NSX250F 4P',p:{poles:4}},{t:'nsx',n:'NSX400F 3P',p:{rating:'NSX400F Micrologic 2.3'}},{t:'nsx',n:'NSX630F 3P',p:{rating:'NSX630F Micrologic 2.3'}},{t:'nsx',n:'NSX630F 4P',p:{rating:'NSX630F Micrologic 2.3',poles:4}}]},
   {g:'מגענים והגנת מנוע',items:[{t:'lc1d',n:'מגען TeSys D 9-38A',p:{rating:'LC1D09 9A'}},{t:'lc1d',n:'מגען TeSys D 40-65A',p:{rating:'LC1D40A 40A'}},{t:'lc1d',n:'מגען TeSys D 80-95A',p:{rating:'LC1D80 80A'}},{t:'gv2',n:'מפסק מנוע GV2ME'},{t:'lrd',n:'ממסר תרמי LRD'}]},
   {g:'ממסרים',items:[{t:'rxm',n:'ממסר 4 צ׳יינג׳ אובר + בסיס',p:{co:4}},{t:'rxm',n:'ממסר 2 צ׳יינג׳ אובר + בסיס',p:{co:2}},{t:'rm22',n:'ממסר חוסר / סדר פאזות'}]},
   {g:'ווסתי מהירות Altivar Process ATV630 (בקנה מידה)',items:[{t:'atv630',n:'ATV630 גודל 1 · עד 5.5kW',p:{rating:'ATV630U40N4 4kW'}},{t:'atv630',n:'ATV630 גודל 2 · 7.5-11kW',p:{rating:'ATV630D11N4 11kW'}},{t:'atv630',n:'ATV630 גודל 3 · 15-22kW',p:{rating:'ATV630D22N4 22kW'}},{t:'atv630',n:'ATV630 גודל 4 · 30-45kW',p:{rating:'ATV630D37N4 37kW'}},{t:'atv630',n:'ATV630 גודל 5 · 55-90kW',p:{rating:'ATV630D75N4 75kW'}}]}]},
@@ -1191,6 +1221,8 @@ const LIB=[
    {g:'תעלות כבלים מרשת',items:I('תעלת רשת 100','תעלת רשת 200','תעלת רשת 300','תעלת רשת אנכית 200')}]},
   {tab:'מפסקים והגנות',icon:'⏻',groups:[
    {g:'מפסקים ראשיים',items:I('מפסק ראשי 3P','מפסק ראשי 4P')},
+   {g:'שניידר ComPacT NSXm (מיני, על פס DIN)',items:I('NSXm 63A 3P','NSXm 160A 3P','NSXm 160A 4P')},
+   {g:'שניידר ComPacT NSX (על פלטה)',items:I('NSX100F 3P','NSX160F 3P','NSX250F 3P','NSX250F 4P','NSX400F 3P','NSX630F 3P','NSX630F 4P')},
    {g:'מאמ"תים (MCB) — בחר צבע ואז מפסק',colors:true,items:I('MCB 1P','MCB 2P','MCB 3P','MCB 4P','MCB 1P + N')},
    {g:'מפסקי פחת',items:I('RCD 2P','RCD 4P','RCBO 1P+N')},
    {g:'הגנות',items:I('מגן ברק SPD')}]},
@@ -1568,7 +1600,7 @@ function inCab(c,x,y){const g=cabG(c);return x>g.x0&&x<g.x0+g.W&&y>g.y0&&y<g.y0+
 /* Designations by IEC 81346 letter, numbered as parts are added: the next free
    number for that letter in this document (H1, H2… lamps; Q1, Q2… breakers…). A
    designation typed by hand stays as it is. */
-const SERIAL={spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
+const SERIAL={nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
  sbrk:'Q',smpcb:'Q',siso:'Q',slbs:'Q',sfsd:'Q',sats:'Q',srcd:'F',sfuse:'F',sol:'F',sspd:'F',scont:'K',svfd:'U',sss:'U',sups:'U',sgen:'G',sbatt:'G',strafo:'T',sct:'T',svt:'T',skwh:'P',spm:'P',samm:'P',svm:'P',scap:'C',smot:'M',stb:'X',scable:'W'};
 function autoTag(o){const pre=SERIAL[o.type];if(!pre||!o.p||!DEF[o.type].edit?.includes('tag'))return;const re=new RegExp('^'+pre+'(\\d+)$');if(o.p.tag&&!re.test(o.p.tag))return;
  const mine=isSldObj(o),used=new Set();state.objs.forEach(q=>{if(q===o||isSldObj(q)!==mine)return;const m=re.exec(q.p?.tag||'');if(m)used.add(+m[1]);});let n=1;while(used.has(n))n++;o.p.tag=pre+n;}
@@ -2263,7 +2295,7 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='frame')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_frame">${[['c72','קומפקטי 72×143'],['c105','קומפקטי 105×142'],['b45','ספרי 45×325'],['b60','ספרי 60×325']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='ph')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_ph"><option value="1" ${v==1?'selected':''}>1</option><option value="3" ${v==3?'selected':''}>3</option></select></div>`;
   else if(k==='cores')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_cores">${[['2','2 גידים — L, N'],['3','3 גידים — L, N, PE'],['4','4 גידים — L1, L2, L3, PE'],['5','5 גידים — L1, L2, L3, N, PE']].map(([a,b])=>`<option value="${a}" ${a===String(v)?'selected':''}>${b}</option>`).join('')}</select></div>`;
-  else if(k==='poles'&&o.type==='wiso')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_poles"><option value="3" ${+v!==4?'selected':''}>3 קטבים</option><option value="4" ${+v===4?'selected':''}>4 קטבים (+N)</option></select></div>`;
+  else if(k==='poles'&&(o.type==='wiso'||o.type==='nsx'||o.type==='nsxm'))h+=`<div class="fld"><label>${FL[k]}</label><select id="f_poles"><option value="3" ${+v!==4?'selected':''}>3 קטבים</option><option value="4" ${+v===4?'selected':''}>4 קטבים (+N)</option></select></div>`;
   else if(k==='gang')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_gang">${[[1,'יחיד'],[2,'כפול'],[3,'משולש'],[4,'מרובע']].map(([a,b])=>`<option value="${a}" ${a==v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='ip')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_ip"><option value="20" ${v!=='44'?'selected':''}>רגיל (פנים)</option><option value="44" ${v==='44'?'selected':''}>IP44 מוגן מים, עם מכסה</option></select></div>`;
   else if(k==='cee')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_cee">${[['16-3','16A 230V חד-פאזי (כחול)'],['16-5','16A 400V תלת-פאזי (אדום)'],['32-5','32A 400V תלת-פאזי'],['63-5','63A 400V תלת-פאזי']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
