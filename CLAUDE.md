@@ -11,6 +11,8 @@ Live at https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/ (GitHub Pa
 ## Layout
 - `index.html`: the shell. It handles Google sign-in (Firebase Auth compat), the owner/approval gate, user management and bulk import. It hosts the drawing tool in an iframe and exposes `window.panelDesignsBridge`, which provides:
   - `me`, `list`, `info`, `load`, `save`, `remove`, `onChange`
+  - `saveStatus(k, text, title)`: the tool's save state, shown in the shell's top bar.
+  - `refresh()`: reloads the app (the tool's `appRefresh` saves first).
   - `menu()`, which returns extra items for the tool's drawer.
 - `cad.html`: the drawing tool, a single file. It finds the bridge as `SH` (via `window.parent.panelDesignsBridge`). Opened directly, it saves to localStorage.
   - Parts live in `DEF[type]`.
@@ -19,6 +21,8 @@ Live at https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/ (GitHub Pa
   - Templates: `TEMPLATES`.
   - Autosave: `scheduleSave` / `doAutoSave`.
   - Drawer menu: `openDrawer`.
+  - Dimensions: part type `mdim` (`mdGeom`, `setMeas`); ends may be pinned to a part (`of`, `u`, `v`).
+  - Toolbar order: `tbApply` / `tbStore`, kept per device in localStorage.
 - `sw.js`: offline cache. Pages are network-first with `cache: 'no-cache'`; other assets are stale-while-revalidate.
 - `manifest.webmanifest`, `icons/`, `favicon.ico`: the official OhadCad brand kit (amber "O" ring + crosshair icon, white/amber wordmark for dark backgrounds, amber/dark wordmark for light ones). Colors, fonts (Heebo/Inter/JetBrains Mono) and style are in `icons/wordmark-dark.svg` / `icons/wordmark-light.svg` and documented in the brand kit's own README (not kept in this repo) — the live palette is in both `index.html`'s and `cad.html`'s `:root` CSS variables.
 - `vendor/firebase/`: firebase 12.19 compat bundles (app, auth, firestore).
