@@ -271,6 +271,22 @@ body.uil .tbfly{background:linear-gradient(180deg,#fff3e0,#ffe2b8)!important}
 body.uil #drawer{background:rgba(0,0,0,.3)}body.uil #modal{background:rgba(0,0,0,.35)}
 body.uil #wireBar .wc{border-color:#9aa0a8}body.uil .chip{border-color:#c9ccd2}
 body.uil #saveSt{color:#6b7280}
+/* ---- stronger lettering on buttons and bars (both themes) ---- */
+.rb span,.pb span{font-weight:700;font-size:11.5px;letter-spacing:.1px}
+#docTabs button,.tab,#tabs .tab,.wbtn,.mbtns button,.plist button,#drawer .dbox button,.tbc{font-weight:700}
+#selName{font-weight:800}.phead b,#pTitle{font-weight:800}
+.fld label{font-weight:700}.hint{font-weight:500}
+.item .nm{font-weight:700}
+.tb:disabled,.rb:disabled{opacity:.4}
+.tb svg,.rb svg,.pb svg{stroke-width:2.3}
+/* light theme: black lettering, firmer outlines so buttons stand off the bar */
+body.uil{--mut:#374151;--ctl-bd:#9ca3af}
+body.uil .rb span,body.uil .pb span{color:#000}
+body.uil #docTabs button,body.uil .tab,body.uil #tabs .tab,body.uil .wbtn,body.uil .mbtns button,body.uil .plist button,body.uil #drawer .dbox button,body.uil .item .nm,body.uil #selName,body.uil .fld label{color:#000}
+body.uil .tb svg,body.uil .rb svg,body.uil .pb svg,body.uil .tbc svg{stroke:#000;stroke-width:2.4}
+body.uil .tb:not(:disabled),body.uil .rb:not(:disabled),body.uil .pb,body.uil .tab,body.uil .wbtn,body.uil .mbtns button,body.uil #pClose,body.uil #docTabs button,body.uil #tabs .tab,body.uil .plist button,body.uil #rail>button:not(.rb){border-color:#9ca3af;border-bottom:2px solid #6b7280;box-shadow:inset 0 1px 0 #fff,0 2px 4px rgba(0,0,0,.22)}
+body.uil .tb:disabled,body.uil .rb:disabled{opacity:.45}body.uil .tb:disabled svg,body.uil .rb:disabled svg{stroke:#6b7280}body.uil .rb:disabled span{color:#4b5563}
+body.uil #docTabs,body.uil #top,body.uil #panel,body.uil .mbox,body.uil #measBar,body.uil #wireBar{border-width:2px}
 </style>
 </head>
 <body>

@@ -113,6 +113,9 @@ html.uil .btn.pri{background:linear-gradient(180deg,var(--amber-light),var(--amb
 html.uil #topbar .tbSave{background:#fff}html.uil .ver{color:#6b7280}
 html.uil .err{background:#fee2e2;color:#7f1d1d}
 #topbar .tbTheme{flex:none;width:38px;height:38px;border-radius:4px;border:1px solid #4a4a50;border-bottom:2px solid #000;background:linear-gradient(180deg,#2c2c30,#17171a);font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+#topbar .tbWho,#topbar .tbClock{font-weight:600}
+html.uil #topbar .tbWho,html.uil #topbar .tbClock,html.uil #topbar .tbWho b{color:#000}
+html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font-weight:700;color:#000;border-color:#9ca3af;border-bottom:2px solid #6b7280}
 </style>
 </head>
 <body>
@@ -167,11 +170,11 @@ html.uil .err{background:#fee2e2;color:#7f1d1d}
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 31;
+const VERSION = 32;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'מצב בהיר לכל האפליקציה: כפתור ☀ בפס העליון, או בתפריט ☰ ← "מצב בהיר לאפליקציה"';
+const WHATS_NEW = 'כתב מודגש וברור יותר על הכפתורים והסרגלים, ובמצב בהיר — כתב שחור ומסגרות בולטות';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
