@@ -1135,7 +1135,7 @@ function termsSVG(){if(!showTerms||wireMode)return '';const k=1/view.s,used=new 
  return s+'</g>';}
 function toggleTerms(){showTerms=!showTerms;try{localStorage.setItem('epd.terms',showTerms?'1':'0');}catch(e){}renderNow();toast(showTerms?'נקודות החיבור מודגשות':'הדגשת נקודות החיבור כבויה');}
 let drawnS=0;
-function renderNow(){drawnS=view.s;let s=layoutSVG()+content({sel:true})+axesSVG()+termsSVG()+handlesSVG()+dimsSVG()+guidesSVG()+bandSVG()+qWireSVG();
+function renderNow(){drawnS=view.s;let s=layoutSVG()+content({sel:true})+axesSVG()+termsSVG()+handlesSVG()+dimsSVG()+guidesSVG()+dropSVG()+bandSVG()+qWireSVG();
  if(wireMode){for(const o of state.objs){if(o.type==='wire')continue;termsOf(o).forEach(t=>{const [x,y]=fromLocal(o,t[0],t[1]);s+=`<circle cx="${x}" cy="${y}" r="2.8" fill="rgba(34,211,238,.25)" stroke="#22d3ee" stroke-width=".7" pointer-events="none"/>`;});}
   if(draft&&draft.pts.length){const c=WCOL[wireColor];const d=wirePath(null,draft.pts);if(d)s+=`<path d="${d}" fill="none" stroke="${c.base}" stroke-width="${SEC[wireSec]}" stroke-linecap="round" stroke-linejoin="round" opacity=".85" pointer-events="none"/>`;
    draft.pts.map(resolve).forEach((p,i)=>{if(p)s+=`<circle cx="${p.x}" cy="${p.y}" r="${i?2.2:3.4}" fill="#fff" stroke="#22d3ee" stroke-width="1" pointer-events="none"/>`;});}}
@@ -1228,6 +1228,7 @@ function railsFor(o){return state.objs.filter(r=>r.type==='rail'&&r.id!==o.id);}
 function onRail(q,r){if(!DEF[q.type]?.rail||(q.rot%180)!==(r.rot%180))return false;const [u,v]=toLocal(r,q.x,q.y);return Math.abs(v)<.6&&Math.abs(u)<=r.p.len/2+1;}
 function snapPos(o,x,y){const D=DEF[o.type];
  if(D.front){const b=boxOf({x,y});return b?[r2(b.x+gs(x-b.x)),r2(b.y+gs(y-b.y))]:[gs(x),gs(y)];}
+ if(D.rail&&!D.comb)return snapRail(o,x,y);
  if(D.rail||D.comb){for(const r of railsFor(o)){const [u,v]=toLocal(r,x,y),L=r.p.len,hw=sizeOf(o).w/2;const vt=D.comb?-44:0;
    if(Math.abs(v-vt)<(D.comb?10:24)&&u>-L/2-20&&u<L/2+20){let nu=r2(-L/2+hw+gs(u+L/2-hw)),best=Math.max(7,GS()/2+1);
     const tg=[-L/2+hw,L/2-hw];
@@ -1513,6 +1514,30 @@ function wireTap(x,y){const tr=nearestTerm(x,y,Math.max(5,20/view.s));let pt=tr?
  renderNow();}
 function finishWire(){if(draft&&draft.pts.length>=2){const w={id:uid(),type:'wire',p:{color:wireColor,sec:wireSec,name:'חוט'},pts:draft.pts};state.objs.push(w);draft=null;commit();toast('החוט נוסף');}else draft=null;renderNow();updateBar();}
 
+/* A DIN-rail part goes onto the nearest rail it is held over (within about half
+   its own height), next to its neighbours, and never on top of another part:
+   if the spot is taken it lands in the nearest free gap on that rail. DROPR is
+   the rail it will land on, highlighted while dragging. */
+let DROPR=null,DROPFULL=false;
+function snapRail(o,x,y){const hw=sizeOf(o).w/2,reach=Math.max(30,sizeOf(o).h/2+12);
+ const moving=new Set(G&&G.mode==='drag'&&G.o===o?G.kids.map(k=>k.q):[]);
+ let best=null;
+ for(const r of railsFor(o)){const [u,v]=toLocal(r,x,y),L=r.p.len;
+  if(Math.abs(v)<reach&&u>-L/2-hw-20&&u<L/2+hw+20&&(!best||Math.abs(v)<Math.abs(best.v)))best={r,u,v};}
+ if(!best)return snapBox(o,x,y);
+ const {r,u}=best,L=r.p.len;
+ const iv=state.objs.filter(q=>q!==o&&!moving.has(q)&&onRail(q,r)).map(q=>{const [uq]=toLocal(r,q.x,q.y),qh=sizeOf(q).w/2;return [uq-qh,uq+qh];});
+ const fits=c=>c-hw>=-L/2-.01&&c+hw<=L/2+.01&&iv.every(([a,b])=>c+hw<=a+.5||c-hw>=b-.5);
+ let nu=r2(-L/2+hw+gs(u+L/2-hw)),d=Math.max(7,GS()/2+1);
+ for(const [a,b] of iv)for(const t of [b+hw,a-hw])if(Math.abs(t-u)<d){d=Math.abs(t-u);nu=t;}
+ nu=Math.min(L/2-hw,Math.max(-L/2+hw,nu));
+ if(!fits(nu)){const c=[-L/2+hw,L/2-hw];iv.forEach(([a,b])=>c.push(b+hw,a-hw));
+  const ok=c.filter(fits).sort((p,q)=>Math.abs(p-u)-Math.abs(q-u));
+  if(!ok.length){if(G&&G.o===o){DROPR=r;DROPFULL=true;return [G.ox,G.oy];}return snapBox(o,x,y);}nu=ok[0];}
+ if((o.rot%180)!==(r.rot%180))o.rot=r.rot;if(G&&G.o===o)DROPR=r;return fromLocal(r,r2(nu),0);}
+function dropSVG(){if(!DROPR||!G||G.mode!=='drag')return '';const B=bbW(DROPR),m=4/view.s;
+ const c=DROPFULL?'239,68,68':'255,140,0';return `<rect pointer-events="none" x="${B.x0-m}" y="${B.y0-m}" width="${B.x1-B.x0+2*m}" height="${B.y1-B.y0+2*m}" fill="rgba(${c},.18)" stroke="rgb(${c})" stroke-width="2.5" vector-effect="non-scaling-stroke" rx="${2*m}"/>`;}
+
 /* ================= pointer interaction ================= */
 // A cabinet, box or CI enclosure carries what's mounted in it when dragged,
 // but never another one standing over it — each moves on its own.
@@ -1555,7 +1580,7 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)){if(e.pointerType=
  else if(G.mode==='qwire'){const [x,y]=toWorld(e.clientX,e.clientY);G.cur=[x,y];G.to=termAt(x,y,qRad('snap',e.pointerType!=='mouse'),G.from.r);render();}
  else if(G.mode==='resize'){const [wx,wy]=toWorld(e.clientX,e.clientY);doResize(G,wx,wy);render();}
  else if(G.mode==='cpt'){const [wx,wy]=toWorld(e.clientX,e.clientY),[lx,ly]=toLocal(G.o,gs(wx),gs(wy));G.o.p.route[G.i]={x:r2(lx),y:r2(ly)};render();}
- else{const [wx,wy]=toWorld(e.clientX,e.clientY);const o=G.o;const [sx,sy]=snapPos(o,G.ox+wx-G.w0[0],G.oy+wy-G.w0[1]);o.x=sx;o.y=sy;const onR=DEF[o.type].rail&&state.objs.some(r=>r.type==='rail'&&onRail(o,r));alignSnap(o,G.kids,!onR);const nx=o.x,ny=o.y;
+ else{const [wx,wy]=toWorld(e.clientX,e.clientY);const o=G.o;DROPR=null;DROPFULL=false;const [sx,sy]=snapPos(o,G.ox+wx-G.w0[0],G.oy+wy-G.w0[1]);o.x=sx;o.y=sy;const onR=DEF[o.type].rail&&state.objs.some(r=>r.type==='rail'&&onRail(o,r));alignSnap(o,G.kids,!onR);const nx=o.x,ny=o.y;
   const ddx=nx-G.ox,ddy=ny-G.oy;G.kids.forEach(k=>{k.q.x=r2(k.x+ddx);k.q.y=r2(k.y+ddy);});render();}});
 let GUIDES=[];
 function alignSnap(o,kids,snap){GUIDES=[];if(o.type==='wire')return;const kset=new Set((kids||[]).map(k=>k.q));let B=bbW(o);const th=7/view.s;let bx=null,by=null;
@@ -1571,7 +1596,7 @@ function alignSnap(o,kids,snap){GUIDES=[];if(o.type==='wire')return;const kset=n
 function guidesSVG(){if(!GUIDES.length)return '';const k=1/view.s,ext=12*k;return '<g pointer-events="none">'+GUIDES.map(g=>g.x!==undefined?`<line x1="${g.x}" y1="${g.y0-ext}" x2="${g.x}" y2="${g.y1+ext}"`:`<line x1="${g.x0-ext}" y1="${g.y}" x2="${g.x1+ext}" y2="${g.y}"`).map(l=>l+` stroke="#ff2d95" stroke-width="1.3" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"/>`).join('')+'</g>';}
 function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(pinch){if(P.size<2)pinch=null;G=null;return;}
- if(!G)return;const g=G;G=null;if(GUIDES.length){GUIDES=[];render();}
+ if(!G)return;const g=G;G=null;if(DROPFULL&&g.mode==='drag'&&g.moved)toast('אין מקום פנוי בפס הזה לרכיב — פנה מקום או הארך את הפס');DROPR=null;DROPFULL=false;if(GUIDES.length){GUIDES=[];render();}
  if(g.mode==='cpt'){const o=g.o,R=o.p.route;if(!g.moved){if(g.added){R.splice(g.i,1);}else if(g.i>0&&g.i<R.length-1){R.splice(g.i,1);toast('הכיפוף הוסר');}else{renderNow();return;}}
   cabRecentre(o);commit();renderNow();updateBar();return;}
  if(g.mode==='qwire'){svg.style.cursor='';if(g.to){const a=resolve(g.from),b=resolve(g.to);const w={id:uid(),type:'wire',p:{color:isSldObj(get(g.from.r))?'black':wireColor,sec:wireSec,name:'חוט',auto:1},pts:[g.from,g.to]};
@@ -1591,7 +1616,7 @@ function doResize(g,wx,wy){const o=g.o,D=DEF[o.type],[u,v]=toLocal(g.o0,wx,wy);
   o.p.w=nw;o.p.h=nh;[o.x,o.y]=fromLocal(g.o0,fu+sx*nw/2,fv+sy*nh/2);}}
 svg.addEventListener('contextmenu',e=>e.preventDefault());
 svg.addEventListener('pointerleave',()=>{if(HOV){HOV=null;svg.style.cursor='';render();}});
-svg.addEventListener('pointerup',endPtr);svg.addEventListener('pointercancel',e=>{P.delete(e.pointerId);pinch=null;G=null;});
+svg.addEventListener('pointerup',endPtr);svg.addEventListener('pointercancel',e=>{P.delete(e.pointerId);pinch=null;G=null;DROPR=null;});
 svg.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.clientX,e.clientY,Math.exp(-e.deltaY*.0015));},{passive:false});
 function zoomAt(cx,cy,f){const r=svg.getBoundingClientRect();const s=Math.min(30,Math.max(.04,view.s*f));const wx=(cx-r.left-view.tx)/view.s,wy=(cy-r.top-view.ty)/view.s;view.s=s;view.tx=cx-r.left-wx*s;view.ty=cy-r.top-wy*s;applyView();}
 function zoomCenter(f){const r=svg.getBoundingClientRect();zoomAt(r.left+(16+r.width-84)/2,(80+sheetTop())/2,f);}
