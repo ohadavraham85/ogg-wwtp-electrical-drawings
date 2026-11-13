@@ -298,6 +298,14 @@ body.noaxes #libStrip{bottom:calc(12px + env(safe-area-inset-bottom))}
 #libStrip:active{transform:translateY(1px)}
 body:has(#wireBar:not(.hidden)) #libStrip,body:has(#measBar:not(.hidden)) #libStrip{display:none}
 @media (max-height:500px){#libStrip{padding:6px 12px;bottom:calc(26px + env(safe-area-inset-bottom))}#libStrip span{font-size:13px}}
+/* dragging a part out of the library */
+body.libdrag #panel{opacity:0;pointer-events:none;transition:opacity .15s}body.libdrag #libStrip{display:none}
+body.libdrag,body.libdrag *{cursor:grabbing!important;user-select:none;-webkit-user-select:none}
+#ldGhost{position:fixed;z-index:60;pointer-events:none;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 8px;background:var(--card);border:2px solid var(--acc);border-radius:4px;box-shadow:0 0 16px rgba(255,140,0,.6),0 8px 20px rgba(0,0,0,.6);max-width:130px}
+#ldGhost svg{max-width:90px;max-height:60px}#ldGhost span{font-size:12px;font-weight:700;text-align:center}
+#ldGhost.over{opacity:0}
+.ldhint{margin:2px 0 6px!important;color:var(--acc-light)!important;font-weight:700!important}body.uil .ldhint{color:#c2410c!important}
+#sheetBody .item{-webkit-touch-callout:none;touch-action:pan-y}
 </style>
 </head>
 <body>
@@ -1284,7 +1292,7 @@ function termsSVG(){if(!showTerms||wireMode)return '';const k=1/view.s,used=new 
  return s+'</g>';}
 function toggleTerms(){showTerms=!showTerms;try{localStorage.setItem('epd.terms',showTerms?'1':'0');}catch(e){}renderNow();toast(showTerms?'נקודות החיבור מודגשות':'הדגשת נקודות החיבור כבויה');}
 let drawnS=0;
-function renderNow(){drawnS=view.s;let s=layoutSVG()+axesSVG()+content({sel:true})+termsSVG()+handlesSVG()+dimsSVG()+guidesSVG()+dropSVG()+measSVG()+bandSVG()+qWireSVG();
+function renderNow(){drawnS=view.s;let s=layoutSVG()+axesSVG()+content({sel:true})+termsSVG()+handlesSVG()+dimsSVG()+guidesSVG()+dropSVG()+measSVG()+(DRAGNEW?`<g opacity=".8" pointer-events="none">${objSVG(DRAGNEW,true)}</g>`:'')+bandSVG()+qWireSVG();
  if(wireMode){for(const o of state.objs){if(o.type==='wire')continue;termsOf(o).forEach(t=>{const [x,y]=fromLocal(o,t[0],t[1]);s+=`<circle cx="${x}" cy="${y}" r="2.8" fill="rgba(34,211,238,.25)" stroke="#22d3ee" stroke-width=".7" pointer-events="none"/>`;});}
   if(draft&&draft.pts.length){const c=WCOL[wireColor];const d=wirePath(null,draft.pts);if(d)s+=`<path d="${d}" fill="none" stroke="${c.base}" stroke-width="${SEC[wireSec]}" stroke-linecap="round" stroke-linejoin="round" opacity=".85" pointer-events="none"/>`;
    draft.pts.map(resolve).forEach((p,i)=>{if(p)s+=`<circle cx="${p.x}" cy="${p.y}" r="${i?2.2:3.4}" fill="#fff" stroke="#22d3ee" stroke-width="1" pointer-events="none"/>`;});}}
@@ -1592,7 +1600,7 @@ function updateBar(){const o=sel&&get(sel);{const df=doorsFront();$('bDoor').dis
   $('selThumb').innerHTML=o.type==='wire'?`<svg viewBox="0 0 24 24"><path d="M3 18C9 18 9 6 21 6" stroke="${WCOL[o.p.color]?.base}" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>`:thumbSVG(Object.assign({},o,{p:Object.assign({},o.p,THUMBP[o.type]||{})}));
   $('lockShackle').setAttribute('d',o.locked?'M8 11V8a4 4 0 0 1 8 0v3':'M8 11V8a4 4 0 0 1 7.6-1.7');
   $('bRot').disabled=o.type==='wire'||wireMode;}
- else{$('selName').textContent=state.name||'לוח חדש';$('selThumb').innerHTML=`<svg viewBox="0 0 24 24" style="width:30px"><rect x="4" y="3" width="16" height="18" rx="2" fill="none" stroke="#9ca3af" stroke-width="1.6"/><path d="M7 9h10M7 15h10" stroke="#9ca3af" stroke-width="2.4"/></svg>`;}
+ else{$('selName').textContent=state.name||'לוח חדש';$('selThumb').innerHTML=`<svg viewBox="0 0 24 24" style="width:30px"><rect x="4.5" y="2.5" width="15" height="19" rx="1.5" fill="none" stroke="#9ca3af" stroke-width="1.6"/><path d="M13.2 5.5L8.6 12.6h3.3l-1.3 5.9 4.9-7.6h-3.4z" fill="#ff8c00" stroke="#ff8c00" stroke-width=".6" stroke-linejoin="round"/></svg>`;}
  if(selIds().length>1){$('selName').textContent=`${selIds().length} רכיבים נבחרו`;['bDel'].forEach(b=>$(b).disabled=wireMode);}
  $('selName').textContent=(globalLock?'🔒 ':'')+$('selName').textContent;
  $('bUndo').style.opacity=hi>0||draft?1:.4;$('bRedo').style.opacity=hi<hist.length-1?1:.4;}
@@ -1618,7 +1626,7 @@ function buildSheet(){buildTabs();const q=libQ.trim().toLowerCase();
  if(q){const res=[],seen=new Set(),words=q.split(/\s+/).filter(Boolean).map(w=>/[א-ת]/.test(w)&&w.length>3?w.replace(/(ות|ים|ה|ת)$/,''):w);
   LIB.forEach((T,ti)=>inDoc(T)&&T.groups.forEach((g,gi)=>g.items.forEach((e,ii)=>{const tx=(e.n+' '+g.g+' '+T.tab).toLowerCase();if(!seen.has(e)&&words.every(w=>tx.includes(w))){seen.add(e);res.push([ti,gi,ii,e]);}})));
   $('sheetBody').innerHTML=res.length?`<div class="grp">תוצאות (${res.length})</div><div class="grid">`+res.map(([ti,gi,ii,e])=>itemBtn(ti,gi,ii,e)).join('')+'</div>':'<div class="hint" style="margin-top:12px">לא נמצאו רכיבים.</div>';return;}
- const T=LIB[curTab];let h=T.hint?`<div class="hint" style="margin-top:4px">${T.hint}</div>`:'';
+ const T=LIB[curTab];let h=`<div class="hint ldhint">✋ ${matchMedia('(pointer:coarse)').matches?'החזק רגע על רכיב וגרור אותו':'גרור רכיב'} אל השרטוט כדי למקם אותו בדיוק — או ${matchMedia('(pointer:coarse)').matches?'הקש':'לחץ'} עליו להוספה אוטומטית</div>`+(T.hint?`<div class="hint" style="margin-top:4px">${T.hint}</div>`:'');
  T.groups.forEach((g,gi)=>{h+=`<div class="grp">${g.g}</div>`;
   if(g.colors)h+=`<div class="chips">${Object.keys(COLORS).filter(c=>g.colors==='all'||!['black','grey','yellow','white'].includes(c)).map(c=>`<button class="chip ${c===curColor?'on':''}" data-c="${c}" style="background:${COLORS[c]}"></button>`).join('')}</div>`;
   if(g.widths)h+=`<div class="chips">${DUCTW.map(d=>`<button class="wbtn ${d==curDW?'pri':''}" data-dw="${d}">${d} מ"מ</button>`).join('')}</div><div class="hint">לשינוי אורך: בחר תעלה/פס וגרור את העיגולים הכחולים שבקצוות.</div>`;
@@ -1643,7 +1651,7 @@ $('tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(!b)re
 function sheetClick(e){const t=e.target;if(t.id==='sldGen'){genSld();return;}
  const c=t.closest('[data-c]');if(c){curColor=c.dataset.c;const o=sel&&get(sel);if(o&&['mcb','rcd','cont','lamp','busbar','label','pb','pbl','pl22'].includes(o.type)){o.p.color=curColor;commit();renderNow();}buildSheet();return;}
  const dw=t.closest('[data-dw]');if(dw){curDW=+dw.dataset.dw;const o=sel&&get(sel);if(o&&o.type==='duct'){o.p.dw=curDW;commit();renderNow();updateBar();}buildSheet();return;}
- const it=t.closest('.item');if(it){addItem(LIB[+it.dataset.t].groups[+it.dataset.g].items[+it.dataset.ii]);return;}
+ const it=t.closest('.item');if(it){if(LDSW)return;addItem(LIB[+it.dataset.t].groups[+it.dataset.g].items[+it.dataset.ii]);return;}
  const wc=t.closest('[data-wc]');if(wc){wireColor=wc.dataset.wc;const o=sel&&get(sel);if(o&&o.type==='wire'){o.p.color=wireColor;commit();}renderNow();buildWirePanel();return;}
  const sc=t.closest('[data-sec]');if(sc){wireSec=sc.dataset.sec;const o=sel&&get(sel);if(o&&o.type==='wire'){o.p.sec=wireSec;commit();}renderNow();buildWirePanel();return;}
  if(t.closest('#wOrth')){orth=!orth;buildWirePanel();return;}
@@ -1652,6 +1660,32 @@ function sheetClick(e){const t=e.target;if(t.id==='sldGen'){genSld();return;}
  if(t.closest('#wExit')){setWire(false);return;}}
 $('sheetBody').addEventListener('click',sheetClick);$('wireBar').addEventListener('click',sheetClick);
 $('wireBar').addEventListener('change',e=>{if(e.target.id==='wSec'){wireSec=e.target.value;const o=sel&&get(sel);if(o&&o.type==='wire'){o.p.sec=wireSec;commit();}renderNow();}});
+/* ================= drag a part from the library =================
+   Press on a part in the library and drag it onto the drawing (with a finger:
+   hold it a moment first, so the list still scrolls): it shows where it will
+   land, catching rails, boxes and the grid like a part being moved, and drops
+   there. A plain click / tap still adds it in the automatic place. */
+var LD=null,LDSW=false,DRAGNEW=null;
+function ldOverCanvas(x,y){const el=document.elementFromPoint(x,y);return !!el&&!!el.closest('#stage')&&!el.closest('#top,#docTabs');}
+function ldStart(){const d=LD,it=d.it,e=LIB[+it.dataset.t].groups[+it.dataset.g].items[+it.dataset.ii];d.on=true;d.name=e.n;d.o=mkObj(e);
+ const g=document.createElement('div');g.id='ldGhost';g.innerHTML=it.querySelector('.th').innerHTML+`<span>${esc(e.n)}</span>`;document.body.appendChild(g);d.g=g;
+ document.body.classList.add('libdrag');toast('שחרר במקום הרצוי בשרטוט · לביטול — שחרר על הסרגל העליון');if(navigator.vibrate&&d.touch)try{navigator.vibrate(15);}catch(_){}ldMove(d.x,d.y);}
+function ldMove(x,y){const d=LD;d.g.style.left=x+'px';d.g.style.top=y+'px';
+ if(ldOverCanvas(x,y)){const [wx,wy]=toWorld(x,y),[sx,sy]=snapPos(d.o,wx,wy);d.o.x=sx;d.o.y=sy;DRAGNEW=d.o;d.g.classList.add('over');}
+ else{DRAGNEW=null;d.g.classList.remove('over');}render();}
+function ldEnd(d,drop){document.body.classList.remove('libdrag');if(d.g)d.g.remove();const o=DRAGNEW;DRAGNEW=null;LDSW=true;setTimeout(()=>LDSW=false,80);
+ if(!drop||!o){renderNow();if(drop)toast('שחרר את הרכיב מעל השרטוט כדי להוסיף אותו');return;}
+ autoTag(o);state.objs.push(o);sel=o.id;commit();renderNow();updateBar();if(innerWidth<760)closePanel();toast(`נוסף: ${d.name}`);}
+$('sheetBody').addEventListener('pointerdown',e=>{const it=e.target.closest('.item');if(!it||LD||(e.pointerType==='mouse'&&e.button!==0))return;
+ LD={it,x:e.clientX,y:e.clientY,id:e.pointerId,touch:e.pointerType!=='mouse',on:false};
+ if(LD.touch)LD.t=setTimeout(()=>{if(LD&&!LD.on)ldStart();},320);});
+addEventListener('pointermove',e=>{if(!LD||e.pointerId!==LD.id)return;const m=Math.hypot(e.clientX-LD.x,e.clientY-LD.y);
+ if(!LD.on){if(LD.touch){if(m>10){clearTimeout(LD.t);LD=null;}return;}if(m<6)return;ldStart();}
+ e.preventDefault();ldMove(e.clientX,e.clientY);},true);
+addEventListener('pointerup',e=>{if(!LD||e.pointerId!==LD.id)return;clearTimeout(LD.t);const d=LD;LD=null;if(d.on)ldEnd(d,ldOverCanvas(e.clientX,e.clientY));},true);
+addEventListener('pointercancel',e=>{if(!LD||e.pointerId!==LD.id)return;clearTimeout(LD.t);const d=LD;LD=null;if(d.on)ldEnd(d,false);},true);
+addEventListener('touchmove',e=>{if(LD&&LD.on&&e.cancelable)e.preventDefault();},{passive:false,capture:true});
+$('sheetBody').addEventListener('contextmenu',e=>{if(e.target.closest('.item'))e.preventDefault();});
 function addItem(e){const o=mkObj(e);placeNew(o);state.objs.push(o);sel=o.id;commit();renderNow();updateBar();if(innerWidth<760)closePanel();if(o.type==='cabinet')fit();else ensureVisible(o);toast(`נוסף: ${e.n}`);}
 function ensureVisible(o){const r=svg.getBoundingClientRect();const sx=o.x*view.s+view.tx,sy=o.y*view.s+view.ty;if(sx<20||sx>r.width-20||sy<topBottom()+20||sy>sheetTop()-80){const [cx,cy]=viewCenter();view.tx+=(cx-o.x)*view.s;view.ty+=(cy-o.y)*view.s;applyView();}}
 
