@@ -306,12 +306,28 @@ body.libdrag,body.libdrag *{cursor:grabbing!important;user-select:none;-webkit-u
 #ldGhost.over{opacity:0}
 .ldhint{margin:2px 0 6px!important;color:var(--acc-light)!important;font-weight:700!important}body.uil .ldhint{color:#c2410c!important}
 #sheetBody .item{-webkit-touch-callout:none;touch-action:pan-y}
+/* crosshair following the mouse */
+#xh,#yh{position:fixed;z-index:2;pointer-events:none;display:none;background:rgba(255,140,0,.55)}
+#xh{left:0;right:0;height:1px}#yh{top:0;bottom:0;width:1px}
+body.sld #xh,body.sld #yh{background:rgba(194,65,12,.5)}
+/* bottom status bar: coordinates + switches */
+#sbar{position:fixed;left:max(26px,env(safe-area-inset-left));bottom:calc(26px + env(safe-area-inset-bottom));z-index:4;display:flex;align-items:center;gap:4px;padding:3px;background:var(--card);border:1.5px solid var(--acc);border-radius:4px;box-shadow:0 4px 14px rgba(0,0,0,.5);direction:rtl;max-width:calc(100vw - 190px);overflow-x:auto;scrollbar-width:none}
+#sbar::-webkit-scrollbar{display:none}
+#sbar #coord{min-width:24ch;text-align:left;font-variant-numeric:tabular-nums;position:static;box-shadow:none;border:0;border-left:1.5px solid var(--acc);border-radius:0;margin:0;order:9;direction:ltr;white-space:pre}
+#sbar button{flex:none;padding:6px 10px;border-radius:4px;font:700 13px Heebo,Arial,sans-serif;background:var(--ctl);border:1px solid var(--ctl-bd);border-bottom:2px solid #000;color:var(--txt);white-space:nowrap}
+#sbar button.on{background:linear-gradient(180deg,var(--acc-light),var(--acc));color:#000;border-color:var(--acc-light);border-bottom-color:#a35a00}
+body.uil #sbar button{border-bottom-color:#6b7280}body.uil #sbar button.on{color:#000}
+body.noaxes #sbar{bottom:calc(10px + env(safe-area-inset-bottom))}body.noaxes #sbar #coord{display:none}
+body:has(#wireBar:not(.hidden)) #sbar,body:has(#measBar:not(.hidden)) #sbar,body.libdrag #sbar{display:none}
+@media (max-width:600px){#sbar button{padding:5px 7px;font-size:12px}#sbar #coord{font-size:11px;padding:3px 6px}}
+@media (pointer:coarse){#sbar [data-sb=cross]{display:none}}
 </style>
 </head>
 <body>
 <div id="stage"><svg id="svg"><g id="world"></g></svg></div>
 
-<div id="rulX"></div><div id="rulY"></div><div id="coord"></div>
+<div id="rulX"></div><div id="rulY"></div><div id="xh"></div><div id="yh"></div>
+<div id="sbar"><span id="coord"></span><button data-sb="cross" title="סמן צלב X/Y שזז עם העכבר">✛ סמן צלב</button><button data-sb="axes" title="צירים וסרגלים">📏 צירים</button><button data-sb="terms" title="הדגשת נקודות החיבור">🔵 נקודות</button></div>
 <div id="docTabs"><button id="bNewProj" title="פרויקט חדש">📄 פרויקט חדש</button><button id="bTemplates" title="פרויקט חדש מתבנית (דוגמאות)">🗂 תבנית</button><button id="bOpenProj" title="פתח פרויקט">📂 פתח</button><button id="bSaveCopy" title="שמור עותק בשם">📑 שמור עותק</button><div class="sep"></div><button id="bBom" title="רשימת ציוד (BOM)">📋 BOM</button><button id="bPdf" title="ייצוא PDF עם טבלת שרטוט">📄 PDF</button><button id="bPng" title="ייצוא תמונה (PNG)">🖼️ PNG</button><div class="sep"></div><button data-doc="panel">🗄 חזית לוח</button><button data-doc="sld">⚡ חד קווי</button><button data-doc="both">◧ משולב</button><button id="bDark" title="חד קווי: רקע שחור / דף לבן">🌙</button><button id="bLayout" title="הצג / הסתר את דף הייצור (Layout)">📄</button><span id="saveSt"></span></div>
 <div id="top" class="card">
   <button class="tb" id="bMenu" title="תפריט"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
@@ -1290,7 +1306,7 @@ function termsSVG(){if(!showTerms||wireMode)return '';const k=1/view.s,used=new 
  let s='<g pointer-events="none">';for(const o of state.objs){if(o.type==='wire'||hiddenFront(o)||behindFront(o))continue;termsOf(o).forEach((t,i)=>{const [x,y]=fromLocal(o,t[0],t[1]),u=used.has(o.id+'#'+i);
   if(!u&&(o.type==='sbus'||o.type==='busbar'))return;const R=isSldObj(o)?4.5*k:Math.max(4*k,3.6);s+=u?`<circle cx="${x}" cy="${y}" r="${R}" fill="rgba(22,163,74,.35)" stroke="#16a34a" stroke-width="${1.6*k}"/>`:`<circle cx="${x}" cy="${y}" r="${R}" fill="rgba(6,182,212,.22)" stroke="#06b6d4" stroke-width="${1.6*k}"/>`;});}
  return s+'</g>';}
-function toggleTerms(){showTerms=!showTerms;try{localStorage.setItem('epd.terms',showTerms?'1':'0');}catch(e){}renderNow();toast(showTerms?'נקודות החיבור מודגשות':'הדגשת נקודות החיבור כבויה');}
+function toggleTerms(){showTerms=!showTerms;setTimeout(()=>window.sbSync&&sbSync());try{localStorage.setItem('epd.terms',showTerms?'1':'0');}catch(e){}renderNow();toast(showTerms?'נקודות החיבור מודגשות':'הדגשת נקודות החיבור כבויה');}
 let drawnS=0;
 function renderNow(){drawnS=view.s;let s=layoutSVG()+axesSVG()+content({sel:true})+termsSVG()+handlesSVG()+dimsSVG()+guidesSVG()+dropSVG()+measSVG()+(DRAGNEW?`<g opacity=".8" pointer-events="none">${objSVG(DRAGNEW,true)}</g>`:'')+bandSVG()+qWireSVG();
  if(wireMode){for(const o of state.objs){if(o.type==='wire')continue;termsOf(o).forEach(t=>{const [x,y]=fromLocal(o,t[0],t[1]);s+=`<circle cx="${x}" cy="${y}" r="2.8" fill="rgba(34,211,238,.25)" stroke="#22d3ee" stroke-width=".7" pointer-events="none"/>`;});}
@@ -1348,7 +1364,7 @@ function drawRulers(){document.body.classList.toggle('noaxes',!showAxes);if(!sho
   hy+=`<i style="top:${sy}px;right:0;height:1px;width:${maj?9:4}px"></i>`;if(maj)hy+=`<b style="top:${sy-3}px;left:1px;transform:rotate(-90deg);transform-origin:0 0">${Math.round(V)}</b>`;}
  if(curW){hx+=`<i class="cur" style="left:${curW[0]*view.s+view.tx-20}px;bottom:0;width:1px;height:20px"></i>`;hy+=`<i class="cur" style="top:${curW[1]*view.s+view.ty}px;right:0;height:1px;width:20px"></i>`;}
  $('rulX').innerHTML=hx;$('rulY').innerHTML=hy;
- $('coord').textContent=curW?`X ${Math.round(curW[0]-o.x)}   Y ${Math.round(o.y-curW[1])}  מ"מ`:'X —   Y —';}
+ $('coord').textContent=curW?`X ${String(Math.round(curW[0]-o.x)).padStart(6)}  Y ${String(Math.round(o.y-curW[1])).padStart(6)}  מ"מ`:`X ${'—'.padStart(6)}  Y ${'—'.padStart(6)}  מ"מ`;}
 function axesSVG(){if(!showAxes)return '';const o=ORG(),k=1/view.s,cx='#e11d48',cy='#16a34a',L=60*k,a=8*k;
  // quiet background guides: thin, see-through, drawn under the parts
  let s=`<g pointer-events="none" opacity=".55">`;
@@ -1360,10 +1376,24 @@ function axesSVG(){if(!showAxes)return '';const o=ORG(),k=1/view.s,cx='#e11d48',
   `<circle cx="${o.x}" cy="${o.y}" r="${3.5*k}" fill="#fbbf24"/>`+
   `<text x="${o.x-6*k}" y="${o.y+11*k}" font-size="${10*k}" font-weight="700" font-family="Arial" fill="#fbbf24" text-anchor="end">0,0</text></g>`;
  return s;}
-function toggleAxes(){showAxes=!showAxes;try{localStorage.setItem('epd.axes',showAxes?'1':'0');}catch(e){}applyView();renderNow();toast(showAxes?'צירים וסרגלים מוצגים':'צירים וסרגלים מוסתרים');}
+function toggleAxes(){showAxes=!showAxes;setTimeout(()=>window.sbSync&&sbSync());try{localStorage.setItem('epd.axes',showAxes?'1':'0');}catch(e){}applyView();renderNow();toast(showAxes?'צירים וסרגלים מוצגים':'צירים וסרגלים מוסתרים');}
 function setOrigin(){const o=sel&&get(sel);if(!o||o.type==='wire'){toast('בחר רכיב — ראשית הצירים תיקבע בפינה השמאלית התחתונה שלו');return;}const b=bbW(o);state[OKEY()]={x:r2(b.x0),y:r2(b.y1)};commit();fit();renderNow();toast('ראשית הצירים נקבעה בפינת '+o.p.name);}
 function resetOrigin(){delete state[OKEY()];commit();applyView();renderNow();toast('ראשית הצירים בפינה השמאלית-תחתונה של השרטוט');}
 svg.addEventListener('pointermove',e=>{if(!showAxes)return;curW=toWorld(e.clientX,e.clientY);drawRulers();});
+/* ================= crosshair + bottom status bar =================
+   A full-length X/Y crosshair follows the mouse over the drawing; the bar at
+   the bottom holds the coordinate readout and on/off switches for it, the
+   axes & rulers and the connection-point marks. */
+let showCross=true;try{showCross=localStorage.getItem('ohadcad.cross')!=='0';}catch(e){}
+function sbSync(){const S={cross:showCross,axes:showAxes,terms:showTerms};document.querySelectorAll('#sbar [data-sb]').forEach(b=>b.classList.toggle('on',!!S[b.dataset.sb]));svg.style.cursor=showCross?'crosshair':'';if(!showCross)xhHide();}
+function xhHide(){$('xh').style.display=$('yh').style.display='none';}
+function toggleCross(){showCross=!showCross;try{localStorage.setItem('ohadcad.cross',showCross?'1':'0');}catch(e){}sbSync();toast(showCross?'סמן צלב פעיל':'סמן צלב כבוי');}
+svg.addEventListener('pointermove',e=>{if(!showCross||e.pointerType!=='mouse'){xhHide();return;}const r=svg.getBoundingClientRect();
+ $('xh').style.display=$('yh').style.display='block';$('xh').style.top=(e.clientY-r.top+r.top)+'px';$('yh').style.left=e.clientX+'px';});
+svg.addEventListener('pointerleave',xhHide);
+$('sbar').addEventListener('click',e=>{const b=e.target.closest('[data-sb]');if(!b)return;({cross:toggleCross,axes:toggleAxes,terms:toggleTerms})[b.dataset.sb]();sbSync();});
+sbSync();
+
 svg.addEventListener('pointerleave',()=>{curW=null;if(showAxes)drawRulers();});
 function applyView(){world.setAttribute('transform',`translate(${view.tx} ${view.ty}) scale(${view.s})`);drawRulers();if(drawnS&&Math.abs(view.s-drawnS)/view.s>.02)render();
  const st=GRID>0?GRID:10,mj=st*5*view.s,mn=st*view.s,showMn=mn>=7;
@@ -2393,8 +2423,8 @@ const WORDMARK_PATH=`<g transform="translate(4,12) scale(1.15625)"><circle cx="3
 const WM_ICON=`<rect width="64" height="64" rx="6" fill="#F5A524"/><path d="M44 0H58a6 6 0 0 1 6 6V20Z" fill="#FFC35C"/><g transform="translate(0.4,0)"><circle cx="23" cy="32" r="11.5" fill="none" stroke="#14181D" stroke-width="7"/><path d="M51.63 23.87 A11.5 11.5 0 1 0 51.63 40.13" fill="none" stroke="#F5A524" stroke-width="13"/><path d="M51.63 23.87 A11.5 11.5 0 1 0 51.63 40.13" fill="none" stroke="#14181D" stroke-width="7"/><path d="M23 26V30M23 34V38M17 32H21M25 32H27.5" stroke="#14181D" stroke-width="1.3"/><rect x="21" y="30" width="4" height="4" fill="none" stroke="#14181D" stroke-width="1.1"/></g>`;
 function watermark(cx,cy,W,H){const TW=556,TH=100,diag=Math.hypot(W,H),ang=-Math.atan2(H,W)*180/Math.PI;
  const s=Math.min(.78*diag/TW,.22*Math.min(W,H)/TH);
- return `<g transform="translate(${cx} ${cy}) rotate(${ang}) scale(${s}) translate(${-TW/2} ${-TH/2})" opacity=".07"><g transform="scale(${100/64})">${WM_ICON}</g><g transform="translate(115 0)" style="color:#F5A524">${WORDMARK_PATH}</g></g>`;}
-function pageFrame(W,H){const X0=20,Y0=10,X1=W-10,Y1=H-10,b=5;let s=`<rect x="0" y="0" width="${W}" height="${H}" fill="#fff"/>${watermark(W/2,H/2,W,H)}<rect x="${X0}" y="${Y0}" width="${X1-X0}" height="${Y1-Y0}" fill="none" stroke="#000" stroke-width=".35"/><rect x="${X0+b}" y="${Y0+b}" width="${X1-X0-2*b}" height="${Y1-Y0-2*b}" fill="none" stroke="#000" stroke-width=".7"/>`;
+ return `<g transform="translate(${cx} ${cy}) rotate(${ang}) scale(${s}) translate(${-TW/2} ${-TH/2})" opacity=".1" style="mix-blend-mode:multiply"><g transform="scale(${100/64})">${WM_ICON}</g><g transform="translate(115 0)" style="color:#F5A524">${WORDMARK_PATH}</g></g>`;}
+function pageFrame(W,H,noWm){const X0=20,Y0=10,X1=W-10,Y1=H-10,b=5;let s=`<rect x="0" y="0" width="${W}" height="${H}" fill="#fff"/>${noWm?'':watermark(W/2,H/2,W,H)}<rect x="${X0}" y="${Y0}" width="${X1-X0}" height="${Y1-Y0}" fill="none" stroke="#000" stroke-width=".35"/><rect x="${X0+b}" y="${Y0+b}" width="${X1-X0-2*b}" height="${Y1-Y0-2*b}" fill="none" stroke="#000" stroke-width=".7"/>`;
  const nc=Math.max(4,Math.round((X1-X0)/50)),nr=Math.max(3,Math.round((Y1-Y0)/50)),cw=(X1-X0)/nc,rh=(Y1-Y0)/nr;const Tz=(x,y,t)=>`<text x="${x}" y="${y+1.2}" font-size="3" font-family="Arial" text-anchor="middle">${t}</text>`;
  for(let i=0;i<nc;i++){const xa=X0+i*cw,xm=xa+cw/2;if(i)s+=`<line x1="${xa}" y1="${Y0}" x2="${xa}" y2="${Y0+b}" stroke="#000" stroke-width=".3"/><line x1="${xa}" y1="${Y1-b}" x2="${xa}" y2="${Y1}" stroke="#000" stroke-width=".3"/>`;const lbl=String(nc-i);s+=Tz(xm,Y0+b/2,lbl)+Tz(xm,Y1-b/2,lbl);}
  for(let j=0;j<nr;j++){const ya=Y0+j*rh,ym=ya+rh/2;if(j)s+=`<line x1="${X0}" y1="${ya}" x2="${X0+b}" y2="${ya}" stroke="#000" stroke-width=".3"/><line x1="${X1-b}" y1="${ya}" x2="${X1}" y2="${ya}" stroke="#000" stroke-width=".3"/>`;const lbl=String.fromCharCode(65+j);s+=Tz(X0+b/2,ym,lbl)+Tz(X1-b/2,ym,lbl);}
@@ -2418,7 +2448,7 @@ async function makePdf(t){toast('יוצר PDF…');const LY=layoutRect();if(LY){
   const need=Math.max(bw/aw,bh/ah);const STD=[1,2,2.5,5,10,15,20,25,50,75,100,200];let n=LY?LY.n:(STD.find(v=>v>=need)||Math.ceil(need));const k=1/n;
   const scaleLbl=n===1?'1:1':`1:${n}`;const tb2=tbSVG(t,W,H,1,pages,scaleLbl);
   const ox=ax0+(aw-bw*k)/2,oy=ay0+20+(ah-bh*k)/2;
-  svgs.push(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${W} ${H}" width="${W}mm" height="${H}mm">${pageFrame(W,H)}<g transform="${LY?`translate(${-LY.x0*k} ${-LY.y0*k}) scale(${k})`:`translate(${ox} ${oy}) scale(${k}) translate(${-(b.x-pad)} ${-(b.y-pad)})`}">${content({sel:false})}${pdfDims(k)}</g>${scaleBar(32,tb2.y0-9,k,n)}${tb2.s}<text x="22" y="${H-5}" font-size="2.2" font-family="Arial" fill="#777">OhadCad</text></svg>`);
+  svgs.push(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${W} ${H}" width="${W}mm" height="${H}mm">${pageFrame(W,H,true)}<g transform="${LY?`translate(${-LY.x0*k} ${-LY.y0*k}) scale(${k})`:`translate(${ox} ${oy}) scale(${k}) translate(${-(b.x-pad)} ${-(b.y-pad)})`}">${content({sel:false})}${pdfDims(k)}</g>${watermark(W/2,H/2,W,H)}${scaleBar(32,tb2.y0-9,k,n)}${tb2.s}<text x="22" y="${H-5}" font-size="2.2" font-family="Arial" fill="#777">OhadCad</text></svg>`);
   t.__scale=scaleLbl;}
  if(pages===2){const tb=tbSVG(Object.assign({},t,{title:t.title+' — רשימת ציוד'}),W,H,2,2,'-');let s='';const R=W-20,x0=30,rh=7;let y=26;
   s+=`<text x="${R}" y="${y}" font-size="6" font-weight="700" font-family="Arial" text-anchor="start" direction="rtl">רשימת ציוד</text>`;y+=6;
@@ -2441,7 +2471,7 @@ function printVector(svgs,W,H,fname){const fr=document.createElement('iframe');f
  toast('בחלון ההדפסה בחר "שמור כ-PDF" (Save as PDF)');
  setTimeout(()=>{try{fr.contentWindow.focus();fr.contentWindow.print();}catch(e){toast('ההדפסה נחסמה בדפדפן');}setTimeout(()=>fr.remove(),60000);},400);}
 function exportImage(){if(!state.objs.length){toast('הלוח ריק');return;}const b=boundsAll(),pad=12;const x=b.x-pad,y=b.y-pad,w=b.w+2*pad,h=b.h+2*pad;const k=Math.min(10,9000/Math.max(w,h),Math.sqrt(48e6/(w*h)));
- const s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${h}" width="${Math.round(w*k)}" height="${Math.round(h*k)}"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#ffffff"/>${watermark(x+w/2,y+h/2,w,h)}${content({sel:false})}</svg>`;
+ const s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${h}" width="${Math.round(w*k)}" height="${Math.round(h*k)}"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#ffffff"/>${content({sel:false})}${watermark(x+w/2,y+h/2,w,h)}</svg>`;
  const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);const g=c.getContext('2d');g.drawImage(img,0,0,c.width,c.height);let url;try{url=c.toDataURL('image/png');}catch(e){url='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);}
   modal('תמונת הלוח',`<img src="${url}" style="width:100%;border-radius:8px;background:#fff">`,[{t:'⬇ הורד PNG',cls:'pri',fn:()=>{saveFile(safeName(state.name)+'.png',dataUrlToBlob(url));return false;}},{t:'סגור'}]);};
  img.onerror=()=>toast('יצירת התמונה נכשלה');img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);}
