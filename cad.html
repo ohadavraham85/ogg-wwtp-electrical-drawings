@@ -1382,9 +1382,11 @@ function partsCount(){return panelObjs().filter(o=>o.type!=='wire'&&o.type!=='la
    nothing to save by hand. If someone else saved the same board in between, ours
    is kept as a copy rather than written over theirs. */
 let saveT=null,saving=false,lastSaved=null,cloudStamp=null;
-function setSaveSt(k){const el=$('saveSt');if(!el)return;if(!SH){el.style.display='none';return;}el.style.display='';
- el.textContent={pending:'● לא נשמר',saving:'⟳ שומר…',saved:'☁ נשמר',error:'⚠ לא נשמר'}[k]||'';el.dataset.k=k;
- el.title={pending:'יישמר אוטומטית בעוד רגע',saving:'שומר בתיקייה המשותפת',saved:'נשמר אוטומטית בתיקייה המשותפת',error:'השמירה נכשלה — ננסה שוב בשינוי הבא'}[k]||'';}
+function setSaveSt(k){const el=$('saveSt');if(!el)return;if(!SH){el.style.display='none';return;}
+ const txt={pending:'● לא נשמר',saving:'⟳ שומר…',saved:'☁ נשמר',error:'⚠ לא נשמר'}[k]||'',ttl={pending:'יישמר אוטומטית בעוד רגע',saving:'שומר בתיקייה המשותפת',saved:'נשמר אוטומטית בתיקייה המשותפת',error:'השמירה נכשלה — ננסה שוב בשינוי הבא'}[k]||'';
+ // the app's top bar shows it when the shell offers that; otherwise it stays in the document bar
+ if(SH.saveStatus){el.style.display='none';try{SH.saveStatus(k,txt,ttl);return;}catch(e){}}
+ el.style.display='';el.textContent=txt;el.dataset.k=k;el.title=ttl;}
 function scheduleSave(){if(!SH)return;if(lastSaved!==null&&JSON.stringify(state)===lastSaved){if(!saveT&&!saving)setSaveSt('saved');return;}clearTimeout(saveT);setSaveSt('pending');saveT=setTimeout(doAutoSave,1800);}
 function flushSave(){if(saveT){clearTimeout(saveT);saveT=null;return doAutoSave();}}
 async function doAutoSave(){saveT=null;const data=JSON.stringify(state);if(data===lastSaved){setSaveSt('saved');return;}if(saving){scheduleSave();return;}saving=true;setSaveSt('saving');
