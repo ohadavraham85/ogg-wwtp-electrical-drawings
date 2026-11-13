@@ -12,7 +12,7 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:Heebo,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
-#stage{position:fixed;inset:0;background-color:var(--bg);touch-action:none}
+#stage{position:fixed;inset:0;background-color:#0b0b0c;touch-action:none}
 #svg{width:100%;height:100%;display:block;touch-action:none;direction:ltr;user-select:none;-webkit-user-select:none}
 .card{background:var(--card);border:1px solid var(--line-acc);border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
 #top{position:fixed;top:calc(env(safe-area-inset-top) + 10px);left:10px;right:10px;height:var(--toph);display:flex;align-items:center;gap:6px;padding:0 6px;z-index:6}
@@ -246,6 +246,31 @@ body.tbmoving,body.tbmoving *{cursor:grabbing!important;user-select:none;-webkit
 #ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 4px);transform:translate(-50%,0);opacity:0;z-index:40;pointer-events:none;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:20px;background:#000;border:2px solid var(--acc);color:var(--acc-light);font-weight:700;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.7);transition:opacity .15s}
 #ptr i{font-style:normal;font-size:20px;display:inline-block}#ptr.ready{background:var(--acc);color:#000}
 #ptr.go{opacity:1!important}#ptr.go i{animation:ptrspin .8s linear infinite}@keyframes ptrspin{to{transform:rotate(360deg)}}
+/* ---- light app theme (bars, panels, dialogs) — the drawing keeps its own ☀/🌙 ---- */
+body.uil{--bg:#f2f3f5;--card:#ffffff;--card2:#eceef1;--line:#c9ccd2;--line-acc:rgba(234,120,0,.8);--txt:#111317;--mut:#4b5563;--acc:#f58a00;--acc-light:#ffa52e;--ink:#ffffff;--fab:#ffffff;--ctl:linear-gradient(180deg,#ffffff,#e8eaee);--ctl-bd:#b7bcc4}
+body.uil .tb svg,body.uil .fab svg,body.uil .pb svg,body.uil .rb svg,body.uil #libStrip svg,body.uil .tbc svg{stroke:#1f2937}
+body.uil .rb svg [fill="#fff"],body.uil .tb svg [fill="#fff"]{fill:#1f2937}
+body.uil .tb.on svg,body.uil .rb.on svg,body.uil .pb.on svg,body.uil .fab.on svg,body.uil #bMenu svg{stroke:#000}
+body.uil .rb.dng svg{stroke:#dc2626}
+body.uil .rb span,body.uil .pb span{color:#374151}body.uil .rb.on span{color:#000}
+body.uil #docTabs button{color:#111317}body.uil #docTabs button.on{color:#000}
+body.uil .tb:not(:disabled),body.uil .rb:not(:disabled),body.uil .pb,body.uil .fab,body.uil .tab,body.uil .wbtn,body.uil .mbtns button,body.uil #pClose,body.uil #bSheet,body.uil #docTabs button,body.uil #tabs .tab,body.uil .plist button,body.uil .tbc,body.uil #rail>button:not(.rb){border-bottom-color:#9aa0a8;box-shadow:inset 0 1px 0 #fff,0 1px 3px rgba(0,0,0,.18);color:#111317}
+body.uil .tb.on,body.uil .rb.on,body.uil .pb.on,body.uil .fab.on,body.uil .tab.on,body.uil #tabs .tab.on,body.uil .wbtn.pri,body.uil .mbtns button.pri,body.uil #docTabs button.on,body.uil #rail>button.on:not(.rb){color:#000;border-bottom-color:#b35f00;box-shadow:0 0 0 1px rgba(0,0,0,.15),0 0 10px rgba(245,138,0,.35)}
+body.uil .wbtn.on{color:#fff}body.uil .mbtns button.dng{color:#fff}
+@media (hover:hover){body.uil .tb:not(:disabled):hover,body.uil .rb:not(:disabled):hover,body.uil .pb:hover,body.uil .tab:hover,body.uil .wbtn:hover,body.uil .mbtns button:hover,body.uil #docTabs button:hover,body.uil #tabs .tab:hover,body.uil .plist button:hover,body.uil #drawer .dbox button:hover,body.uil .item:hover{background:#fff1dc}}
+body.uil .tb:not(:disabled):active,body.uil .rb:not(:disabled):active,body.uil .item:active{background:#ffe2b8}
+body.uil #panel,body.uil #docTabs,body.uil #wireBar,body.uil .mbox,body.uil #measBar,body.uil .card{box-shadow:0 0 0 1px rgba(0,0,0,.06),0 6px 20px rgba(0,0,0,.16)}
+body.uil select,body.uil input,body.uil textarea{background:#fff;color:#111317;border-color:#b7bcc4}
+body.uil .item{background:#f6f7f9;border-color:#d3d6db}
+body.uil #sheetBody .grp,body.uil .phead b,body.uil .tbzt{color:#c2410c}
+body.uil #rulX,body.uil #rulY{background:#fff}body.uil #rulX i,body.uil #rulY i{background:#374151}body.uil #rulX b,body.uil #rulY b{color:#111317}
+body.uil #coord{background:#fff;color:#c2410c;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+body.uil .tbzl{background:#f7f8fa}body.uil #toast{background:#fff;color:#111317;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+body.uil #ptr{background:#fff;color:#c2410c}body.uil #ptr.ready{background:var(--acc);color:#000}
+body.uil .tbfly{background:linear-gradient(180deg,#fff3e0,#ffe2b8)!important}
+body.uil #drawer{background:rgba(0,0,0,.3)}body.uil #modal{background:rgba(0,0,0,.35)}
+body.uil #wireBar .wc{border-color:#9aa0a8}body.uil .chip{border-color:#c9ccd2}
+body.uil #saveSt{color:#6b7280}
 </style>
 </head>
 <body>
@@ -1643,6 +1668,15 @@ function dropSVG(){if(!DROPR||!G||G.mode!=='drag')return '';const B=bbW(DROPR),m
  const c=DROPFULL?'239,68,68':'255,140,0';return `<rect pointer-events="none" x="${B.x0-m}" y="${B.y0-m}" width="${B.x1-B.x0+2*m}" height="${B.y1-B.y0+2*m}" fill="rgba(${c},.18)" stroke="rgb(${c})" stroke-width="2.5" vector-effect="non-scaling-stroke" rx="${2*m}"/>`;}
 
 
+
+/* ================= app theme =================
+   Light or dark bars, panels and dialogs, for this device; the shell around the
+   tool follows it (same localStorage key, picked up by its storage event). */
+const UI_KEY='ohadcad.ui';
+function uiLight(){try{return localStorage.getItem(UI_KEY)==='light';}catch(e){return false;}}
+function applyUI(){document.body.classList.toggle('uil',uiLight());}
+function toggleUI(){const l=!uiLight();try{localStorage.setItem(UI_KEY,l?'light':'dark');}catch(e){}applyUI();try{SH&&SH.applyUI&&SH.applyUI();}catch(e){}toast(l?'☀ האפליקציה במצב בהיר':'🌙 האפליקציה במצב כהה');}
+applyUI();addEventListener('storage',e=>{if(e.key===UI_KEY)applyUI();});
 /* ================= refresh =================
    The shell's ⟳ button and a pull down on the top bars both land here: any
    pending save goes out first, then the whole app reloads. */
@@ -2045,9 +2079,9 @@ function wireLen(w){const ps=w.pts.map(resolve).filter(Boolean);let L=0;for(let 
 
 /* ================= drawer / menu ================= */
 function openDrawer(){const items=[['פרויקט'],['📄 פרויקט חדש',newProject],['🗂 פרויקט חדש מתבנית (דוגמאות)',templatesDialog],...(SH?[['📂 פתח מהתיקייה המשותפת',openShared],['💾 שמור עכשיו (נשמר גם אוטומטית)',saveShared],['📑 שמור עותק בשם…',()=>saveSharedAs(true)]]:[['📂 פתח פרויקט שמור',openProjects],['💾 שמור בשם…',saveAs]]),
- ['תצוגה'],['🧩 הסתרת כפתורים / איפוס הסרגלים…',tbEditor],['📄 דף ייצור (Layout)…',layoutDialog],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
+ ['תצוגה'],[uiLight()?'🌙 מצב כהה לאפליקציה':'☀ מצב בהיר לאפליקציה',toggleUI],['🧩 הסתרת כפתורים / איפוס הסרגלים…',tbEditor],['📄 דף ייצור (Layout)…',layoutDialog],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
  ['ייצוא ושיתוף'],['📋 רשימת ציוד (BOM)',bom],['📄 ייצוא PDF עם טבלת שרטוט',pdfDialog],['🖼️ ייצוא תמונה (PNG)',exportImage],['💾 הורד קובץ פרויקט (JSON)',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state))],['📤 העתק קובץ פרויקט',copyJSON],['📥 ייבוא קובץ פרויקט',importJSON],...(SH&&SH.menu?[['OhadCad'],...SH.menu()]:[])];
- $('dbox').innerHTML=`<div style="display:flex;align-items:center;justify-content:flex-end;margin:4px 8px 0"><img src="icons/wordmark-dark.svg" alt="OhadCad" height="26"></div><h2>${esc(state.name)}</h2>`+items.map((it,i)=>it[1]?`<button data-i="${i}">${it[0]}</button>`:`<div style="color:#8a8a8a;font-size:13px;margin:12px 12px 2px">${it[0]}</div>`).join('');
+ $('dbox').innerHTML=`<div style="display:flex;align-items:center;justify-content:flex-end;margin:4px 8px 0"><img src="icons/wordmark-${uiLight()?'light':'dark'}.svg" alt="OhadCad" height="26"></div><h2>${esc(state.name)}</h2>`+items.map((it,i)=>it[1]?`<button data-i="${i}">${it[0]}</button>`:`<div style="color:#8a8a8a;font-size:13px;margin:12px 12px 2px">${it[0]}</div>`).join('');
  $('drawer').classList.remove('hidden');$('dbox').onclick=e=>{const b=e.target.closest('button');if(!b)return;$('drawer').classList.add('hidden');items[+b.dataset.i][1]();};}
 $('drawer').addEventListener('click',e=>{if(e.target.id==='drawer')$('drawer').classList.add('hidden');});
 function toggleDoors(){const es=state.objs.filter(o=>(o.type==='enclosure'&&hasDoor(o))||o.type==='cabinet'||o.type==='cibox');if(!es.length){toast('אין לוח עם דלת');return;}
