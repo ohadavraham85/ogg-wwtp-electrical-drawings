@@ -335,6 +335,38 @@ body.noaxes #measBar,body.noaxes #wireBar{left:0;bottom:0}
 #toast{top:calc(env(safe-area-inset-top) + var(--toph) + var(--toph2) + 10px)}
 @media (min-width:900px){#measBar{left:auto;width:520px}}
 @media (max-height:500px){#panel,#panel.half{top:calc(env(safe-area-inset-top) + var(--toph) + var(--toph2));border-top:0}}
+/* ================= compact phone layout =================
+   Narrow screens: slimmer bars, smaller lettering and buttons, so the drawing
+   keeps most of the screen. */
+@media (max-width:600px){
+ :root{--toph:94px;--toph2:40px}
+ #top{padding:0 4px;row-gap:0}
+ #top .tb{width:38px;height:38px}#top .tb svg{width:22px;height:22px}
+ #bMenu{width:40px!important;height:40px!important}#bMenu svg{width:24px!important;height:24px!important}
+ #selName{font-size:14.5px}#selThumb{width:24px;height:30px}#selThumb svg{width:22px!important}#selInfo{gap:6px}
+ #rail{height:50px!important}
+ #rail .rb{height:46px!important;min-width:44px!important;gap:1px!important;padding:0 2px!important}
+ #rail .rb svg{width:19px!important;height:19px!important}#rail .rb span{font-size:9.5px!important}#rail .rb b{font-size:12.5px;height:19px}
+ #rail .sep{height:26px}#rail>button:not(.rb){height:44px;font-size:12px;padding:0 7px}
+ #docTabs{padding:2px 4px;gap:3px}
+ #docTabs button{padding:4px 8px;font-size:12.5px}#docTabs .rb{height:30px}#docTabs .sep{height:22px}
+ .phead{padding:6px 10px 4px}.phead b{font-size:15.5px}#pClose{width:34px;height:34px;font-size:15px}
+ #search{margin:0 8px 6px;padding:7px 9px;font-size:14px}
+ #tabs .tab{padding:6px 9px;font-size:12px}
+ #sheetBody{padding:0 8px 12px}
+ #sheetBody .grid{grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:6px}
+ #sheetBody .item{min-height:82px;padding:5px 3px 4px}#sheetBody .item .th{height:46px}#sheetBody .item .th svg{max-height:46px}
+ #sheetBody .item .nm{font-size:11px}#sheetBody .grp{font-size:13px;padding:7px 4px 5px}
+ #sheetBody .hint,.hint{font-size:12px;line-height:1.4}
+ #propsBody{padding:2px 10px 12px}.fld{margin-bottom:9px}.fld label{font-size:12.5px;margin-bottom:4px}
+ select,input,textarea{padding:7px 9px;font-size:15px}
+ .mbox h3{font-size:16.5px;padding:12px 14px 4px}.mbody{padding:6px 14px}.mbtns{gap:7px;padding:8px 14px 12px}.mbtns button{padding:9px;font-size:14px}
+ #drawer .dbox{width:250px}#drawer .dbox button{padding:8px 10px;font-size:14.5px}#drawer .dbox h2{font-size:16px}
+ #sbar{gap:3px;padding:2px}#sbar button{padding:4px 6px;font-size:11px}#sbar #coord{font-size:10px;padding:2px 5px;min-width:22ch}
+ #libStrip{padding:7px 11px;gap:5px}#libStrip span{font-size:13px}#libStrip svg{width:16px;height:16px}
+ #toast{font-size:13px;padding:8px 12px;max-width:90vw}
+ #measBar,#wireBar{padding:6px}#measBar .wbtn,#wireBar .wbtn{padding:6px 9px;font-size:12.5px}
+}
 </style>
 </head>
 <body>
