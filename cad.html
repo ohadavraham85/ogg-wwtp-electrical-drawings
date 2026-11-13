@@ -787,7 +787,7 @@ const DEF={
    return s;}},
  mdim:{layer:8,edit:[],def:{mode:'a',off:0,fs:6,color:'red',txt:''},size:o=>mdSync(o),draw:o=>mdDraw(o)},
  /* ---- panel nameplate (engraved plate): name, fed from, voltage, Icc, main breaker, notes ---- */
- nplate:{layer:7.2,edit:['title','from','volt','ic','main','notes','pcol','fs'],def:{title:'לוח חשמל',from:'לוח ראשי',volt:'3×400/230V 50Hz',ic:'10kA',main:'',notes:'',pcol:'white',fs:7},
+ nplate:{layer:7.2,front:true,resize:'scale',edit:['title','from','volt','ic','main','notes','pcol','fs'],def:{title:'לוח חשמל',from:'לוח ראשי',volt:'3×400/230V 50Hz',ic:'10kA',main:'',notes:'',pcol:'white',fs:7},
   size:o=>{const f=Math.max(2,+o.p.fs||7),R=npRows(o),L=Math.max((o.p.title||'').length*1.5,...R.map(r=>r.length));return {w:Math.max(f*12,L*f*.62+f*3),h:f*2.6+R.length*f*1.45+f*1.2};},
   draw:o=>{const {w,h}=DEF.nplate.size(o),f=Math.max(2,+o.p.fs||7),R=npRows(o),C=NPCOL[o.p.pcol]||NPCOL.white,y0=-h/2;
    let s=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${f*.45}" fill="${C.bg}" stroke="#333" stroke-width="${f*.08}"/>`+
@@ -2063,7 +2063,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
   if(cpEl.dataset.cm!==undefined){const [wx,wy]=toWorld(e.clientX,e.clientY),[lx,ly]=toLocal(so,wx,wy);i=+cpEl.dataset.cm+1;so.p.route.splice(i,0,{x:r2(lx),y:r2(ly)});G.added=1;}else i=+cpEl.dataset.cp;
   G.mode='cpt';G.o=so;G.i=i;return;}
  if(e.target.closest('[data-tip]')&&so&&so.type==='callout'&&!so.locked&&!globalLock){G.mode='tip';G.o=so;return;}
- if(hEl&&so&&!so.locked&&!wireMode&&!globalLock){G.mode='resize';G.o=so;G.h=hEl.dataset.h.split(',').map(Number);G.o0={x:so.x,y:so.y,rot:so.rot};G.s0=sizeOf(so);return;}
+ if(hEl&&so&&!so.locked&&!wireMode&&!globalLock){G.mode='resize';G.o=so;G.h=hEl.dataset.h.split(',').map(Number);G.o0={x:so.x,y:so.y,rot:so.rot};G.s0=sizeOf(so);G.fs0=+so.p.fs||0;return;}
  if(QW()){const [wx,wy]=toWorld(e.clientX,e.clientY),tr=termAt(wx,wy,qRad('press',e.pointerType!=='mouse'));if(tr){G.mode='qwire';G.from=tr;G.to=null;G.cur=[wx,wy];HOV=null;return;}}
  const o=id&&get(id);
  if(o&&!wireMode&&!globalLock&&!o.locked&&o.type!=='wire'&&((o.type!=='enclosure'&&o.type!=='cibox'&&o.type!=='cabinet')||sel===o.id)){
@@ -2128,6 +2128,8 @@ function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
    select(g.id,g.add);if(dbl&&!g.add)dblEdit(get(g.id));}}
  else if(g.mode==='drag'||g.mode==='resize'){commit();renderNow();updateBar();}}
 function doResize(g,wx,wy){const o=g.o,D=DEF[o.type],[u,v]=toLocal(g.o0,wx,wy);
+ if(D.resize==='scale'){const [sx,sy]=g.h,fu=-sx*g.s0.w/2,fv=-sy*g.s0.h/2,k=Math.max(.2,Math.max(sx*(u-fu)/g.s0.w,sy*(v-fv)/g.s0.h));
+  o.p.fs=r2(Math.max(1.5,(g.fs0||o.p.fs)*k));const n=sizeOf(o);[o.x,o.y]=fromLocal(g.o0,fu+sx*n.w/2,fv+sy*n.h/2);return;}
  if(D.resize==='len'){const sg=g.h[0],fx=-sg*g.s0.w/2,mn=D.minLen||20;let nl=Math.max(mn,gs(sg*(u-fx)));
   const ax=o.rot%180?'y':'x';const [ex,ey]=fromLocal(g.o0,fx+sg*nl,0);const sp=snapPoint(o,ax==='x'?ex:ey,ax);
   if(sp!==null){const [uu]=toLocal(g.o0,ax==='x'?sp:ex,ax==='y'?sp:ey);nl=Math.max(mn,sg*(uu-fx));}
