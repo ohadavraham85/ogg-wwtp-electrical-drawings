@@ -105,6 +105,7 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 #topbar .tbRefresh.spin{animation:tbspin .8s linear infinite}@keyframes tbspin{to{transform:rotate(360deg)}}
 @media (hover:none) and (pointer:coarse){#topbar .tbRefresh{display:none}}
 #topbar{transition:transform .15s}#topbar.pull{box-shadow:0 4px 0 var(--amber)}
+#updBar{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 8px);z-index:40;background:linear-gradient(180deg,var(--amber-light),var(--amber));color:#000;font-weight:700;font-size:15px;border:2px solid #000;border-radius:4px;padding:10px 16px;box-shadow:0 0 0 1px var(--amber),0 6px 20px rgba(0,0,0,.7);max-width:92vw}
 </style>
 </head>
 <body>
@@ -158,11 +159,11 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 27;
+const VERSION = 28;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'חדש בהוספת רכיב ← "שרטוט וסימון": תיבת טקסט עם חץ, אדם לקנה מידה (רגליים על ציר X), קיר, קו, חץ, מלבן ועיגול';
+const WHATS_NEW = 'כפתור "שרטוט" חדש בסרגל (טקסט עם חץ, אדם, קיר, קווים וצורות), והודעה אוטומטית כשיש גרסה חדשה';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -369,6 +370,20 @@ $('tbRefresh').onclick = () => {
   try { if (w && w.appRefresh) { w.appRefresh(); return; } } catch (e) {}
   location.reload();
 };
+// A newer version on the site: offer it right away instead of waiting for a
+// reload (checked on open, when the app comes back to the front, and every 10 min).
+function checkUpdate() {
+  fetch('index.html?vcheck=1', { cache: 'no-store' }).then((r) => r.text()).then((t) => {
+    const m = t.match(/const VERSION = (\d+);/);
+    if (!m || +m[1] <= VERSION || $('updBar')) return;
+    const b = document.createElement('button');
+    b.id = 'updBar'; b.textContent = '🆕 יש גרסה חדשה (' + m[1] + ') — לחץ כאן לעדכון';
+    b.onclick = () => { b.textContent = '⟳ מעדכן…'; $('tbRefresh').onclick(); };
+    document.body.appendChild(b);
+  }).catch(() => {});
+}
+setTimeout(checkUpdate, 4000); setInterval(checkUpdate, 10 * 60 * 1000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkUpdate(); });
 // Pull down on the top bar (phone): the same refresh.
 (() => {
   let P = null;
