@@ -116,6 +116,12 @@ html.uil .err{background:#fee2e2;color:#7f1d1d}
 #topbar .tbWho,#topbar .tbClock{font-weight:600}
 html.uil #topbar .tbWho,html.uil #topbar .tbClock,html.uil #topbar .tbWho b{color:#000}
 html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font-weight:700;color:#000;border-color:#9ca3af;border-bottom:2px solid #6b7280}
+/* a logo with presence: the icon beside a larger wordmark */
+#topbar .tbBrand{gap:10px}
+#topbar .tbBrand img.tbWm{height:34px}
+#topbar .tbBrand img.tbIcon{height:40px;width:40px;border-radius:6px;box-shadow:0 0 0 1px rgba(0,0,0,.25),0 0 14px rgba(255,140,0,.45)}
+@media (max-width:520px){#topbar .tbBrand img.tbWm{height:22px}#topbar .tbBrand img.tbIcon{height:28px;width:28px}#topbar .tbBrand{gap:6px}}
+@media (max-height:500px){#topbar .tbBrand img.tbWm{height:20px}#topbar .tbBrand img.tbIcon{height:26px;width:26px}}
 </style>
 </head>
 <body>
@@ -157,7 +163,7 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 </div>
 <div id="topbar" hidden>
   <span class="tbWho"><span>שלום, <b id="tbName"></b></span><span class="sep">·</span><span id="tbClock"></span><span class="sep">·</span><span>גרסה <b id="tbVer"></b></span></span>
-  <span class="tbBrand"><img src="icons/wordmark-dark.svg" alt="OhadCad"></span>
+  <span class="tbBrand"><img class="tbIcon" src="icons/icon.svg" alt=""><img class="tbWm" src="icons/wordmark-dark.svg" alt="OhadCad"></span>
   <span id="tbSave" class="tbSave" hidden></span>
   <button id="tbTheme" class="tbTheme" title="מצב בהיר / כהה לאפליקציה" aria-label="מצב בהיר או כהה"></button>
   <button id="tbRefresh" class="tbRefresh" title="רענון (שומר קודם)" aria-label="רענון">⟳</button>
@@ -170,11 +176,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 41;
+const VERSION = 42;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'כל רצועות הכלים צמודות לקצוות המסך, בלי רווחים';
+const WHATS_NEW = 'הלוגו בפס העליון גדול יותר ועם האייקון; כל רצועות הכלים צמודות לקצוות המסך';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
