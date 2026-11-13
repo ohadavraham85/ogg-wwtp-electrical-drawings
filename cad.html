@@ -321,6 +321,20 @@ body.noaxes #sbar{bottom:calc(10px + env(safe-area-inset-bottom))}body.noaxes #s
 body:has(#wireBar:not(.hidden)) #sbar,body:has(#measBar:not(.hidden)) #sbar,body.libdrag #sbar{display:none}
 @media (max-width:600px){#sbar button{padding:5px 7px;font-size:12px}#sbar #coord{font-size:11px;padding:3px 6px}}
 @media (pointer:coarse){#sbar [data-sb=cross]{display:none}}
+/* ---- bars docked to the edges, no gaps ---- */
+#top{top:env(safe-area-inset-top);left:0;right:0;border-radius:0;border:0;border-bottom:1px solid var(--line);box-shadow:none;padding-left:max(6px,env(safe-area-inset-left));padding-right:max(6px,env(safe-area-inset-right))}
+#docTabs{top:calc(env(safe-area-inset-top) + var(--toph));left:0;right:0;border-radius:0;border:0;border-bottom:2px solid var(--acc);box-shadow:0 3px 10px rgba(0,0,0,.35);padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right))}
+#panel{top:calc(env(safe-area-inset-top) + var(--toph) + var(--toph2));right:0;bottom:0;border-radius:0;border:0;border-left:2px solid var(--acc)}
+#panel.half{top:52vh;border-top:2px solid var(--acc)}
+#sbar{left:20px;bottom:20px;border-radius:0;border-width:2px 2px 0 0;box-shadow:none}
+body.noaxes #sbar{left:0;bottom:0}
+#libStrip{right:0;bottom:20px;border-radius:0}
+body.noaxes #libStrip{bottom:0}
+#measBar,#wireBar{left:20px;right:0;bottom:20px;border-radius:0;border-width:2px 0 0 0}
+body.noaxes #measBar,body.noaxes #wireBar{left:0;bottom:0}
+#toast{top:calc(env(safe-area-inset-top) + var(--toph) + var(--toph2) + 10px)}
+@media (min-width:900px){#measBar{left:auto;width:520px}}
+@media (max-height:500px){#panel,#panel.half{top:calc(env(safe-area-inset-top) + var(--toph) + var(--toph2));border-top:0}}
 </style>
 </head>
 <body>
