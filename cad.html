@@ -652,8 +652,9 @@ const DEF={
     `<circle cx="0" cy="${y0+6.5*u}" r="${6.2*u}"/>`+
     `<path d="M${P(-9,15)}Q${P(0,13)} ${P(9,15)}L${P(13,17)}L${P(16.5,47)}L${P(13.5,48)}L${P(9.5,24)}L${P(9.5,53)}L${P(8,98)}L${P(10.5,100)}L${P(1.5,100)}L${P(1.5,56)}L${P(-1.5,56)}L${P(-1.5,100)}L${P(-10.5,100)}L${P(-8,98)}L${P(-9.5,53)}L${P(-9.5,24)}L${P(-13.5,48)}L${P(-16.5,47)}L${P(-13,17)}Z"/></g>`+
     `<text x="0" y="${y0-3*u}" font-size="${3.2*u}" fill="#9ca3af" text-anchor="middle" font-family="Arial" font-weight="700" direction="ltr">${Math.round(H)}</text>`;}},
- wall:{layer:-.2,resize:'len',minLen:100,edit:['len','wt','orient'],def:{len:2000,wt:200},size:o=>({w:o.p.len,h:+o.p.wt||200}),
-  draw:o=>{const L=o.p.len,T=+o.p.wt||200,id='wh'+(o.id||'t'+(++floorSeq));
+ // a wall is a box: both its length and its thickness drag like a rectangle (older ones kept len/wt)
+ wall:{layer:-.2,resize:'box',minBox:20,edit:['w','h'],def:{w:2000,h:200},size:o=>{const p=o.p;if(p.w==null&&p.len!=null){p.w=+p.len;p.h=+p.wt||200;delete p.len;delete p.wt;}return {w:+p.w||2000,h:+p.h||200};},
+  draw:o=>{const {w:L,h:T}=DEF.wall.size(o),id='wh'+(o.id||'t'+(++floorSeq));
    return `<defs><pattern id="${id}" patternUnits="userSpaceOnUse" width="40" height="40" patternTransform="rotate(45)"><rect width="40" height="40" fill="#bdb6a8"/><line x1="0" y1="0" x2="0" y2="40" stroke="#6f685c" stroke-width="3"/></pattern></defs><rect x="${-L/2}" y="${-T/2}" width="${L}" height="${T}" fill="url(#${id})" stroke="#3a3a3a" stroke-width="3"/>`;}},
  shline:{layer:7,resize:'len',minLen:5,edit:['len','ang','lw','dash','head','color'],def:{len:200,lw:2,dash:'solid',head:'none',color:'blue'},size:o=>{const lw=+o.p.lw||2;return {w:o.p.len,h:Math.max(lw*4,6)};},
   draw:o=>{const L=o.p.len,lw=Math.max(.2,+o.p.lw||2),c=col(o,'blue'),al=Math.min(lw*5+4,L/2.5),aw=al*.4,hd=o.p.head||'none';
@@ -1053,10 +1054,10 @@ const LIB=[
    {g:'טקסט והפניות',items:[...I('תווית טקסט'),{t:'callout',n:'תיבת טקסט עם חץ'}]},
    {g:'קווים וחצים',items:[{t:'shline',n:'קו'},{t:'shline',n:'קו מקווקו',p:{dash:'dash'}},{t:'shline',n:'חץ',p:{head:'end'}},{t:'shline',n:'חץ כפול',p:{head:'both'}},{t:'shline',n:'קו אנכי',rot:90}]},
    {g:'צורות',items:[{t:'shrect',n:'ריבוע / מלבן'},{t:'shrect',n:'מלבן מקווקו (אזור)',p:{dash:'dash',fill:'light'}},{t:'shellipse',n:'עיגול'},{t:'shellipse',n:'אליפסה',p:{w:300,h:180}}]},
-   {g:'בניין וקנה מידה',items:[{t:'wall',n:'קיר אופקי'},{t:'wall',n:'קיר אנכי',rot:90},{t:'person',n:'אדם (קנה מידה)'}]}]}];
+   {g:'בניין וקנה מידה',items:[{t:'wall',n:'קיר אופקי'},{t:'wall',n:'קיר אנכי',p:{w:200,h:2000}},{t:'person',n:'אדם (קנה מידה)'}]}]}];
  const keep=LIB.filter(T=>T.sld);keep.forEach((T,i)=>T.icon=T.icon||['⚡','⏻','◎'][i]);const di=NEW.findIndex(T=>T.draw);if(di>1)NEW.splice(1,0,...NEW.splice(di,1));LIB.length=0;LIB.push(...keep,...NEW);})();
 const DUCTW=[25,40,60,80,100,120];
-const THUMBP={wall:{len:600},shline:{len:120,lw:6},shrect:{w:160,h:110,lw:6},shellipse:{w:140,h:140,lw:6},callout:{text:'הערה',fs:20,tx:-40,ty:-40},wsbox:{tag:''},floor:{len:900,tag:''},traysh:{len:500},traymesh:{len:500},rail:{len:110},partition:{len:110},duct:{len:110},busbar:{len:110},comb:{mods:4},enclosure:{w:120,h:150},cabinet:{view:'front'}};
+const THUMBP={wall:{w:600,h:200},shline:{len:120,lw:6},shrect:{w:160,h:110,lw:6},shellipse:{w:140,h:140,lw:6},callout:{text:'הערה',fs:20,tx:-40,ty:-40},wsbox:{tag:''},floor:{len:900,tag:''},traysh:{len:500},traymesh:{len:500},rail:{len:110},partition:{len:110},duct:{len:110},busbar:{len:110},comb:{mods:4},enclosure:{w:120,h:150},cabinet:{view:'front'}};
 
 /* ================= state ================= */
 let state={name:'לוח חדש',objs:[]};
