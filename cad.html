@@ -234,6 +234,12 @@ body:has(#panel:not(.hidden)) #libStrip{display:none}
 /* computer: hover help and a wider library */
 @media (hover:hover) and (pointer:fine){.tb,.rb,#docTabs button{cursor:pointer}}
 @media (min-width:1400px){#panel{width:400px}#panel.lib{width:min(680px,calc(100vw - 20px))}}
+/* dragging a button along / between the bars */
+.tbfly{position:fixed;z-index:60;pointer-events:none;margin:0;opacity:.95;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#3a2408,#1c1206)!important;border:2px solid var(--acc)!important;border-radius:4px;box-shadow:0 0 0 1px #000,0 0 18px rgba(255,140,0,.7),0 8px 20px rgba(0,0,0,.8)!important;transform:scale(1.08)}
+.tbdragging{opacity:.25!important;outline:2px dashed var(--acc);outline-offset:-2px}
+.tbtarget{box-shadow:0 0 0 2px var(--acc),0 0 16px rgba(255,140,0,.5)!important}
+body.tbmoving,body.tbmoving *{cursor:grabbing!important;user-select:none;-webkit-user-select:none}
+#rail,#docTabs{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 </style>
 </head>
 <body>
@@ -1727,11 +1733,42 @@ function tbApply(L){const seen=new Set(),box={rail:$('rail'),doc:$('docTabs'),hi
  $('docTabs').appendChild($('saveSt'));railHint();}
 try{const L=JSON.parse(localStorage.getItem(TB_KEY)||'null');if(L)tbApply(L);}catch(e){}
 function tbStore(){try{localStorage.setItem(TB_KEY,JSON.stringify(tbCur()));}catch(e){}}
+/* Drag a button right on the bar: with the mouse, press and move; with a finger,
+   hold it a moment (so the bar still scrolls with a plain swipe) and then move.
+   It can go anywhere along its bar or onto the other bar; the order is kept. */
+(()=>{const BARS='#rail,#docTabs';let D=null,swallow=false;
+ const barAt=(x,y)=>{for(const id of ['rail','docTabs']){const r=$(id).getBoundingClientRect();if(x>=r.left-6&&x<=r.right+6&&y>=r.top-14&&y<=r.bottom+14)return $(id);}return null;};
+ function start(){const el=D.el,r=el.getBoundingClientRect(),g=el.cloneNode(true);g.removeAttribute('id');g.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
+  g.classList.add('tbfly');g.style.width=r.width+'px';g.style.height=r.height+'px';document.body.appendChild(g);D.g=g;D.ox=D.x-r.left;D.oy=D.y-r.top;
+  el.classList.add('tbdragging');document.body.classList.add('tbmoving');if(navigator.vibrate&&D.touch)try{navigator.vibrate(15);}catch(e){}place(D.x,D.y);}
+ function place(x,y){D.g.style.left=x-D.ox+'px';D.g.style.top=y-D.oy+'px';const bar=barAt(x,y);document.querySelectorAll('.tbtarget').forEach(b=>b!==bar&&b.classList.remove('tbtarget'));if(!bar)return;bar.classList.add('tbtarget');
+  const br=bar.getBoundingClientRect();if(x<br.left+30)bar.scrollLeft-=10;else if(x>br.right-30)bar.scrollLeft+=10;
+  const rtl=getComputedStyle(bar).direction==='rtl';let best=null,bd=1e9;
+  for(const q of bar.children){if(q===D.el||!q.dataset.tb)continue;const b=q.getBoundingClientRect(),d=Math.abs(x-(b.left+b.width/2));if(d<bd){bd=d;best=q;}}
+  if(!best){bar.insertBefore(D.el,bar.querySelector('#saveSt'));return;}
+  const b=best.getBoundingClientRect(),after=rtl?x<b.left+b.width/2:x>b.left+b.width/2;bar.insertBefore(D.el,after?best.nextSibling:best);
+  if(bar.id==='docTabs')bar.appendChild($('saveSt'));}
+ function end(drop){if(!D)return;clearTimeout(D.t);const d=D;D=null;if(!d.g)return;d.g.remove();d.el.classList.remove('tbdragging');document.body.classList.remove('tbmoving');
+  document.querySelectorAll('.tbtarget').forEach(b=>b.classList.remove('tbtarget'));swallow=true;setTimeout(()=>swallow=false,60);
+  if(drop){tbStore();railHint();}}
+ document.addEventListener('pointerdown',e=>{if(D||(e.pointerType==='mouse'&&e.button!==0))return;const el=e.target.closest('[data-tb]');if(!el||!el.closest(BARS))return;
+  D={el,x:e.clientX,y:e.clientY,id:e.pointerId,touch:e.pointerType!=='mouse'};
+  if(D.touch)D.t=setTimeout(()=>{if(D&&!D.g)start();},380);},true);
+ document.addEventListener('pointermove',e=>{if(!D||e.pointerId!==D.id)return;
+  if(!D.g){const m=Math.hypot(e.clientX-D.x,e.clientY-D.y);if(D.touch){if(m>10){clearTimeout(D.t);D=null;}return;}if(m<7)return;start();}
+  e.preventDefault();place(e.clientX,e.clientY);},true);
+ document.addEventListener('pointerup',e=>{if(D&&e.pointerId===D.id)end(true);},true);
+ document.addEventListener('pointercancel',e=>{if(D&&e.pointerId===D.id)end(!!D.g);},true);
+ // a held finger must not scroll the bar or open the long-press menu
+ document.addEventListener('touchmove',e=>{if(D&&D.g)e.preventDefault();},{passive:false,capture:true});
+ document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest(BARS))e.preventDefault();},true);
+ // the click that ends a drag is not a press of the button
+ document.addEventListener('click',e=>{if(swallow&&e.target.closest&&e.target.closest(BARS)){e.preventDefault();e.stopImmediatePropagation();swallow=false;}},true);})();
 function tbChip(k){const el=tbEl(k);if(!el)return '';if(el.classList.contains('sep'))return `<div class="tbc sepc" data-c="${k}"><i></i>מפריד</div>`;
  const sv=el.querySelector('svg'),lb=el.querySelector('span')?.textContent||(el.id==='bGrid'?'גריד':'')||el.textContent.trim()||el.title||k;
  return `<div class="tbc" data-c="${k}">${sv?sv.outerHTML.replace(/ id="[^"]*"/g,''):''}<span>${esc(lb)}</span></div>`;}
 function tbZones(){const L=tbCur(),Z=[['rail','סרגל הכלים (עליון)'],['doc','סרגל המסמכים (שני)'],['hide','מוסתרים — גרור לכאן כפתור שלא צריך']];
- return `<div class="hint">גרור כפתור כדי לשנות את הסדר, להעביר אותו לסרגל השני או להסתיר אותו. השינוי נשמר מיד במכשיר הזה.</div>`+
+ return `<div class="hint">טיפ: אפשר לגרור כפתורים ישירות על הסרגלים עצמם — בעכבר לוחצים וגוררים, באצבע מחזיקים רגע וגוררים. כאן אפשר גם להסתיר כפתור (גרור ל"מוסתרים") או לאפס הכול.</div>`+
   Z.map(([z,t])=>`<div class="tbz${z==='hide'?' hz':''}"><div class="tbzt">${t}</div><div class="tbzl" data-z="${z}">${L[z].map(tbChip).join('')}</div></div>`).join('');}
 function tbEditor(){modal('סידור כפתורי הסרגלים',tbZones(),[{t:'סיום',cls:'pri'},{t:'איפוס לסידור המקורי',fn:()=>{tbApply(TB_DEF);try{localStorage.removeItem(TB_KEY);}catch(e){}$('mBody').innerHTML=tbZones();toast('הסרגלים חזרו לסידור המקורי');return false;}}]);
  $('mBody').onpointerdown=tbDown;}
@@ -1830,7 +1867,7 @@ function wireLen(w){const ps=w.pts.map(resolve).filter(Boolean);let L=0;for(let 
 
 /* ================= drawer / menu ================= */
 function openDrawer(){const items=[['פרויקט'],['📄 פרויקט חדש',newProject],['🗂 פרויקט חדש מתבנית (דוגמאות)',templatesDialog],...(SH?[['📂 פתח מהתיקייה המשותפת',openShared],['💾 שמור עכשיו (נשמר גם אוטומטית)',saveShared],['📑 שמור עותק בשם…',()=>saveSharedAs(true)]]:[['📂 פתח פרויקט שמור',openProjects],['💾 שמור בשם…',saveAs]]),
- ['תצוגה'],['🧩 סידור כפתורי הסרגלים…',tbEditor],['📄 דף ייצור (Layout)…',layoutDialog],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
+ ['תצוגה'],['🧩 הסתרת כפתורים / איפוס הסרגלים…',tbEditor],['📄 דף ייצור (Layout)…',layoutDialog],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
  ['ייצוא ושיתוף'],['📋 רשימת ציוד (BOM)',bom],['📄 ייצוא PDF עם טבלת שרטוט',pdfDialog],['🖼️ ייצוא תמונה (PNG)',exportImage],['💾 הורד קובץ פרויקט (JSON)',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state))],['📤 העתק קובץ פרויקט',copyJSON],['📥 ייבוא קובץ פרויקט',importJSON],...(SH&&SH.menu?[['OhadCad'],...SH.menu()]:[])];
  $('dbox').innerHTML=`<div style="display:flex;align-items:center;justify-content:flex-end;margin:4px 8px 0"><img src="icons/wordmark-dark.svg" alt="OhadCad" height="26"></div><h2>${esc(state.name)}</h2>`+items.map((it,i)=>it[1]?`<button data-i="${i}">${it[0]}</button>`:`<div style="color:#8a8a8a;font-size:13px;margin:12px 12px 2px">${it[0]}</div>`).join('');
  $('drawer').classList.remove('hidden');$('dbox').onclick=e=>{const b=e.target.closest('button');if(!b)return;$('drawer').classList.add('hidden');items[+b.dataset.i][1]();};}

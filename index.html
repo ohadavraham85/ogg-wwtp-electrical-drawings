@@ -151,11 +151,11 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 20;
+const VERSION = 21;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'התאמה לטלפון (סמסונג) ולמחשב: סרגלים דקים כשהטלפון לרוחב, כל הכפתורים גלויים בטאבלט, והלשונית "הוסף רכיב" לא מסתירה חלונות';
+const WHATS_NEW = 'גוררים כפתורים ישירות על הסרגלים: בעכבר לוחצים וגוררים, באצבע מחזיקים רגע וגוררים — גם מסרגל לסרגל';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
