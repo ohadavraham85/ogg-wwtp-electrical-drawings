@@ -427,6 +427,14 @@ body.liblist #sheetBody .item .favstar{position:static;order:9;font-size:19px}
 @media (hover:none){#favBar .favx{opacity:.8}}
 body.favnames #favBar .item.fav{width:auto;padding:2px 22px 2px 8px!important;justify-content:flex-start;gap:6px}
 body.favnames #favBar .item.fav .nm{display:block}body.favnames #favBar .item.fav .th{width:40px;height:36px}
+/* icons only: labels hidden everywhere, the icon centred (descriptions are the buttons' tooltips) */
+body.iconsonly .rb span{display:none!important}body.iconsonly .rb{gap:0!important}body.iconsonly .rb svg{width:27px!important;height:27px!important}
+body.iconsonly #docTabs .lbl,body.iconsonly #sbar .lbl{display:none}
+body.iconsonly #docTabs button{padding:6px 10px;font-size:17px}body.iconsonly #docTabs .ico{font-style:normal}
+body.iconsonly #sbar button{padding:5px 9px;font-size:15px}
+#docTabs .ico,#sbar .ico{font-style:normal}
+body.iconsonly #libStrip span{display:none}body.iconsonly #libStrip{padding:12px 14px}body.iconsonly #libStrip svg{width:24px!important;height:24px!important}
+#docTabs button,#sbar button{display:inline-flex;align-items:center;gap:5px}
 </style>
 </head>
 <body>
@@ -2091,22 +2099,27 @@ applyUI();addEventListener('storage',e=>{if(e.key===UI_KEY)applyUI();});
    Kept per device. The font is applied here and in the shell; the size scales
    the whole drawing tool from the shell (like a zoom), or this page itself when
    it is opened on its own. */
+// "icons only": buttons show just their icon, the description comes up on hover
+function iconsOnly(){try{const v=localStorage.getItem('ohadcad.icons');if(v!==null)return v==='1';return localStorage.getItem('ohadcad.favnames')!=='1';}catch(e){return true;}}
+function wrapLabels(){document.querySelectorAll('#docTabs button,#sbar button').forEach(b=>{if(b.querySelector('.lbl'))return;const t=b.textContent.trim(),m=t.match(/^(\S+)\s+(.+)$/);if(!m||/^[\p{L}\d]/u.test(m[1]))return;
+  b.innerHTML=`<i class="ico">${esc(m[1])}</i><span class="lbl">${esc(m[2])}</span>`;if(!b.title)b.title=m[2];});
+ document.querySelectorAll('#rail .rb,#top .tb,#libStrip').forEach(b=>{if(b.title)return;const sp=b.querySelector('span');if(sp&&sp.textContent.trim())b.title=sp.textContent.trim();});}
 const UIFONTS=[['Heebo','Heebo (ברירת מחדל)'],['Rubik','Rubik — עגול ומודגש'],['Assistant','Assistant — דק ונקי'],['Alef','Alef — קלאסי'],['Varela Round','Varela Round — רך'],['Arial','Arial — מערכת']];
 function uiFont(){try{return localStorage.getItem('ohadcad.font')||'Heebo';}catch(e){return 'Heebo';}}
 function uiScale(){try{return +localStorage.getItem('ohadcad.uiscale')||1;}catch(e){return 1;}}
 function loadFont(f,doc){doc=doc||document;if(f==='Heebo'||f==='Arial'||doc.getElementById('gf-'+f.replace(/ /g,'')))return;const l=doc.createElement('link');l.id='gf-'+f.replace(/ /g,'');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+f.replace(/ /g,'+')+':wght@400;500;600;700;800&display=swap';doc.head.appendChild(l);}
-function applyFontScale(){let fn=false;try{fn=localStorage.getItem('ohadcad.favnames')==='1';}catch(e){}document.body.classList.toggle('favnames',fn);const f=uiFont();loadFont(f);document.body.style.fontFamily=`'${f}',Heebo,system-ui,Arial,sans-serif`;document.documentElement.style.setProperty('--uif',`'${f}',Heebo,Arial,sans-serif`);
+function applyFontScale(){const io=iconsOnly();document.body.classList.toggle('iconsonly',io);document.body.classList.toggle('favnames',!io);wrapLabels();const f=uiFont();loadFont(f);document.body.style.fontFamily=`'${f}',Heebo,system-ui,Arial,sans-serif`;document.documentElement.style.setProperty('--uif',`'${f}',Heebo,Arial,sans-serif`);
  if(!SH){const z=uiScale();document.documentElement.style.zoom=z===1?'':String(z);}
  try{SH&&SH.applyUI&&SH.applyUI();}catch(e){}}
 function displayDialog(){const f0=uiFont(),z0=uiScale();
  modal('הגדרות תצוגה',`<div class="fld"><label>גופן כללי</label><select id="ds_f">${UIFONTS.map(([v,n])=>`<option value="${v}" ${v===f0?'selected':''}>${n}</option>`).join('')}</select></div>
 <div class="fld"><label>הגדלה כללית: <b id="ds_zl">${Math.round(z0*100)}%</b></label><input id="ds_z" type="range" min="0.8" max="1.5" step="0.05" value="${z0}" style="padding:0"></div>
 <div style="display:flex;gap:6px;flex-wrap:wrap">${[0.9,1,1.1,1.25,1.4].map(v=>`<button class="wbtn" data-z="${v}">${Math.round(v*100)}%</button>`).join('')}</div>
-<div class="fld" style="margin-top:12px"><label>רצועת המועדפים</label><select id="ds_fn"><option value="0">אייקונים בלבד (השם מופיע בריחוף עם העכבר)</option><option value="1" ${document.body.classList.contains('favnames')?'selected':''}>אייקון + שם</option></select></div>
+<div class="fld" style="margin-top:12px"><label>כיתוב על הכפתורים (כל הסרגלים והמועדפים)</label><select id="ds_fn"><option value="1">אייקונים בלבד — התיאור מופיע בריחוף עם העכבר</option><option value="0" ${iconsOnly()?'':'selected'}>אייקון + כיתוב</option></select></div>
 <div class="hint" style="margin-top:10px">השינוי מוחל מיד ונשמר במכשיר הזה. ההגדלה מגדילה את כל הכפתורים, הכתב והחלונות.</div>`,
-  [{t:'סגור',cls:'pri'},{t:'ברירת מחדל',fn:()=>{try{localStorage.removeItem('ohadcad.font');localStorage.removeItem('ohadcad.uiscale');localStorage.removeItem('ohadcad.favnames');}catch(e){}applyFontScale();closeModal();toast('חזרה לברירת המחדל');return false;}}]);
+  [{t:'סגור',cls:'pri'},{t:'ברירת מחדל',fn:()=>{try{localStorage.removeItem('ohadcad.font');localStorage.removeItem('ohadcad.uiscale');localStorage.removeItem('ohadcad.favnames');localStorage.removeItem('ohadcad.icons');}catch(e){}applyFontScale();closeModal();toast('חזרה לברירת המחדל');return false;}}]);
  const setZ=v=>{v=Math.max(.8,Math.min(1.5,+v));try{localStorage.setItem('ohadcad.uiscale',String(v));}catch(e){}$('ds_zl').textContent=Math.round(v*100)+'%';$('ds_z').value=v;applyFontScale();};
- $('ds_fn').onchange=e=>{try{localStorage.setItem('ohadcad.favnames',e.target.value);}catch(_){}applyFontScale();};
+ $('ds_fn').onchange=e=>{try{localStorage.setItem('ohadcad.icons',e.target.value);}catch(_){}applyFontScale();railHint();};
  $('ds_f').onchange=e=>{try{localStorage.setItem('ohadcad.font',e.target.value);}catch(_){}applyFontScale();};
  $('ds_z').onchange=e=>setZ(e.target.value);$('ds_z').oninput=e=>{$('ds_zl').textContent=Math.round(e.target.value*100)+'%';};
  $('mBody').onclick=e=>{const b=e.target.closest('[data-z]');if(b)setZ(b.dataset.z);};}
