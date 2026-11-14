@@ -397,6 +397,26 @@ body.liblist #sheetBody .item .nm{font-size:14px!important;text-align:right;flex
 @media (hover:hover){.tabhead:not(.open):hover{border-color:var(--acc)}}
 body.uil .tabhead{border-bottom-color:#6b7280}
 .libtools{display:flex;gap:4px;margin:2px 0 4px}.libtools button{padding:3px 9px;font-size:12px;font-weight:700;border-radius:4px;background:none;border:1px solid var(--line);color:var(--mut)}
+/* favourites strip under the document bar */
+:root{--toph3:52px}
+#favBar{position:fixed;top:calc(env(safe-area-inset-top) + var(--toph) + var(--toph2));left:0;right:0;height:var(--toph3);z-index:5;display:flex;align-items:center;gap:5px;padding:3px 8px;background:var(--card);border-bottom:2px solid var(--acc);overflow-x:auto;overflow-y:hidden;scrollbar-width:none;box-shadow:0 3px 8px rgba(0,0,0,.3)}
+#favBar::-webkit-scrollbar{display:none}
+#favBar .favlbl{flex:none;font-size:12.5px;font-weight:800;color:var(--acc);padding:0 4px}
+#favBar .favhint{font-size:12.5px;color:var(--mut);white-space:nowrap}
+#favBar .item.fav{position:relative;flex:none;display:flex;flex-direction:row;align-items:center;gap:6px;height:44px;min-height:0!important;padding:2px 22px 2px 8px;border-radius:4px;background:var(--ctl);border:1px solid var(--ctl-bd);border-bottom:2px solid #000;color:var(--txt);cursor:grab;touch-action:pan-x;-webkit-touch-callout:none}
+#favBar .item.fav .th{width:40px;height:36px;display:flex;align-items:center;justify-content:center}#favBar .item.fav .th svg{max-width:40px;max-height:36px}
+#favBar .item.fav .nm{font-size:12.5px;font-weight:700;white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis}
+#favBar .favx{position:absolute;top:1px;left:3px;font-size:14px;line-height:1;color:var(--mut);padding:2px}
+@media (hover:hover){#favBar .item.fav:hover{border-color:var(--acc)}#favBar .favx:hover{color:#ef4444}}
+body.uil #favBar .item.fav{border-bottom-color:#6b7280}
+.item{position:relative}
+.favstar{position:absolute;top:3px;left:5px;font-size:17px;line-height:1;color:var(--mut);z-index:1;padding:2px}
+.favstar.on{color:var(--acc)}@media (hover:hover){.favstar:hover{color:var(--acc-light)}}
+body.liblist #sheetBody .item .favstar{position:static;order:9;font-size:19px}
+#panel:not(.half){top:calc(env(safe-area-inset-top) + var(--toph) + var(--toph2) + var(--toph3))!important}
+#toast{top:calc(env(safe-area-inset-top) + var(--toph) + var(--toph2) + var(--toph3) + 10px)}
+@media (max-height:500px){:root{--toph3:42px}#favBar .item.fav{height:36px}#favBar .item.fav .th{height:28px}}
+@media (max-width:600px){:root{--toph3:48px}}
 </style>
 </head>
 <body>
@@ -405,6 +425,7 @@ body.uil .tabhead{border-bottom-color:#6b7280}
 <div id="rulX"></div><div id="rulY"></div><div id="xh"></div><div id="yh"></div>
 <div id="sbar"><span id="coord"></span><button data-sb="cross" title="סמן צלב X/Y שזז עם העכבר">✛ סמן צלב</button><button data-sb="axes" title="צירים וסרגלים">📏 צירים</button><button data-sb="terms" title="הדגשת נקודות החיבור">🔵 נקודות</button></div>
 <div id="docTabs"><button id="bNewProj" title="פרויקט חדש">📄 פרויקט חדש</button><button id="bTemplates" title="פרויקט חדש מתבנית (דוגמאות)">🗂 תבנית</button><button id="bOpenProj" title="פתח פרויקט">📂 פתח</button><button id="bSaveCopy" title="שמור עותק בשם">📑 שמור עותק</button><div class="sep"></div><button id="bBom" title="רשימת ציוד (BOM)">📋 BOM</button><button id="bPdf" title="ייצוא PDF עם טבלת שרטוט">📄 PDF</button><button id="bPng" title="ייצוא תמונה (PNG)">🖼️ PNG</button><div class="sep"></div><button data-doc="panel">🗄 חזית לוח</button><button data-doc="sld">⚡ חד קווי</button><button data-doc="both">◧ משולב</button><button id="bDark" title="חד קווי: רקע שחור / דף לבן">🌙</button><button id="bLayout" title="הצג / הסתר את דף הייצור (Layout)">📄</button><span id="saveSt"></span></div>
+<div id="favBar"></div>
 <div id="top" class="card">
   <button class="tb" id="bMenu" title="תפריט"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
   <div id="selInfo" title="מאפיינים"><div id="selThumb"></div><div id="selName"></div></div>
@@ -1687,7 +1708,7 @@ function snapEdge(o,c,half,ax){const cs=edgeCands(o,ax);let best=Math.min(6,GS()
 function snapPoint(o,v,ax){let best=Math.min(6,GS()/2.5+.5),res=null;for(const e of edgeCands(o,ax)){const d=Math.abs(v-e);if(d<best){best=d;res=e;}}return res;}
 function firstFree(r,o){const L=r.p.len,hw=sizeOf(o).w/2;const iv=[];for(const q of state.objs){if(q===o||!onRail(q,r))continue;const [uq]=toLocal(r,q.x,q.y),qh=sizeOf(q).w/2;iv.push([uq-qh,uq+qh]);}
  iv.sort((a,b)=>a[0]-b[0]);let u=-L/2+hw;for(const [a,b] of iv){if(u+hw<=a+.01)break;u=Math.max(u,b+hw);}return u+hw<=L/2+.01?u:null;}
-function topBottom(){return $('top').getBoundingClientRect().bottom;}
+function topBottom(){return ($('favBar')||$('top')).getBoundingClientRect().bottom;}
 function viewCenter(){const r=svg.getBoundingClientRect(),top=topBottom(),bot=sheetTop();return toWorld(r.left+r.width/2,(top+bot)/2);}
 function sheetTop(){return innerHeight-(wireMode?($('wireBar').offsetHeight+20):12);}
 function boxOf(q){const inn=b=>Math.abs(q.x-b.x)<sizeOf(b).w/2&&Math.abs(q.y-b.y)<sizeOf(b).h/2;return state.objs.find(b=>b.type==='cibox'&&ciLidOn(b)&&inn(b))||state.objs.find(b=>b.type==='enclosure'&&hasDoor(b)&&b.p.closed==='1'&&inn(b))||cabSecAt(q);}
@@ -1765,7 +1786,7 @@ function syncDoc(){const d=state.tab==='sld'?'sld':state.tab==='both'?'both':'pa
  document.body.classList.toggle('sld',isLight());
  document.querySelectorAll('button[data-doc]').forEach(b=>b.classList.toggle('on',b.dataset.doc===d));$('bDark').textContent=isLight()?'☀':'🌙';$('bDark').title=isLight()?'תצוגה בהירה — לחץ לכהה':'תצוגה כהה — לחץ לבהירה';$('bDark').classList.toggle('on',!isLight());
  if(d==='sld'){if(wireColor!=='black'){window._panelWire=wireColor;wireColor='black';}}else if(window._panelWire){wireColor=window._panelWire;window._panelWire=null;}
- if(docChanged){if(curTab!==-1)curTab=LIB.findIndex(inDoc);if(pMode==='lib')buildSheet();}applyView();}
+ if(docChanged){if(curTab!==-1)curTab=LIB.findIndex(inDoc);try{buildFav();}catch(e){}if(pMode==='lib')buildSheet();}applyView();}
 /* Both documents apart: the panel's parts and the diagram's, as they're kept. */
 function splitDocs(){if(state.tab==='sld')return {panel:state.alt||[],sld:state.objs};if(state.tab!=='both')return {panel:state.objs,sld:state.alt||[]};
  const dx=state.sldDx||0,sl=new Set(state.objs.filter(isSldObj));const panel=[],sld=[];
@@ -1926,7 +1947,7 @@ function buildSheet(){buildTabs();const q=libQ.trim().toLowerCase();
   if(g.widths)h+=`<div class="chips">${DUCTW.map(d=>`<button class="wbtn ${d==curDW?'pri':''}" data-dw="${d}">${d} מ"מ</button>`).join('')}</div><div class="hint">לשינוי אורך: בחר תעלה/פס וגרור את העיגולים הכחולים שבקצוות.</div>`;
   h+=`<div class="grid">`+g.items.map((e,ii)=>itemBtn(ti,gi,ii,e)).join('')+`</div>`;});});
  $('sheetBody').classList.toggle('allv',curTab===-1);$('sheetBody').innerHTML=h;}
-function itemBtn(ti,gi,ii,e){return `<button class="item" data-t="${ti}" data-g="${gi}" data-ii="${ii}"><div class="th${DEF[e.t]?.sld?' lt':''}">${thumbSVG(mkObj(e,true))}</div><div class="nm ${/[א-ת]/.test(e.n)?'he':''}">${e.n}</div></button>`;}
+function itemBtn(ti,gi,ii,e){const fv=favList(LIB[ti]?.sld?'sld':'panel').includes(e.n);return `<button class="item" data-t="${ti}" data-g="${gi}" data-ii="${ii}"><span class="favstar${fv?' on':''}" data-fav="${esc(e.n)}" data-fk="${LIB[ti]?.sld?'sld':'panel'}" title="${fv?'הסר מהמועדפים':'הוסף למועדפים'}">${fv?'★':'☆'}</span><div class="th${DEF[e.t]?.sld?' lt':''}">${thumbSVG(mkObj(e,true))}</div><div class="nm ${/[א-ת]/.test(e.n)?'he':''}">${e.n}</div></button>`;}
 function openPanel(m,title){pMode=m;$('panel').classList.remove('hidden');$('panel').classList.toggle('lib',m==='lib');$('panel').classList.toggle('half',m==='props'&&innerWidth<600);$('libWrap').style.display=m==='lib'?'':'none';$('propsBody').style.display=m==='props'?'':'none';$('pTitle').textContent=title||'';if(m==='lib')buildSheet();updateBar();}
 function closePanel(){pMode=null;$('panel').classList.add('hidden');updateBar();}
 $('pClose').onclick=closePanel;
@@ -1943,6 +1964,7 @@ function buildWirePanel(){const W=$('wireBar');W.classList.toggle('hidden',!wire
   <div class="hint" style="margin:8px 2px 0;font-size:12.5px">הקש על מהדק (עיגול תכלת) ← נקודות פינה ← מהדק יעד.</div>`;}
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(!b)return;curTab=+b.dataset.i;libQ='';$('search').value='';buildSheet();$('sheetBody').scrollTop=0;updateBar();});
 function sheetClick(e){const t=e.target;if(t.id==='sldGen'){genSld();return;}
+ const fv=t.closest('[data-fav]');if(fv){favToggle(fv.dataset.fk,fv.dataset.fav);buildSheet();return;}
  const sec=t.closest('[data-sec]');if(sec){const k=sec.dataset.sec;if(LOPEN.has(k))LOPEN.delete(k);else LOPEN.add(k);lopenSave();buildSheet();const el=[...$('sheetBody').querySelectorAll('[data-sec]')].find(b=>b.dataset.sec===k);if(el&&LOPEN.has(k))el.scrollIntoView({block:'start'});return;}
  const fd=t.closest('[data-fold]');if(fd){LIB.filter(inDoc).forEach(T=>fd.dataset.fold==='open'?LOPEN.add(T.tab):LOPEN.delete(T.tab));lopenSave();buildSheet();return;}
  const lv=t.closest('[data-lv]');if(lv){LIBLIST=lv.dataset.lv==='list';try{localStorage.setItem('ohadcad.libview',LIBLIST?'list':'grid');}catch(_){}document.body.classList.toggle('liblist',LIBLIST);buildSheet();return;}
@@ -1983,6 +2005,25 @@ addEventListener('pointerup',e=>{if(!LD||e.pointerId!==LD.id)return;clearTimeout
 addEventListener('pointercancel',e=>{if(!LD||e.pointerId!==LD.id)return;clearTimeout(LD.t);const d=LD;LD=null;if(d.on)ldEnd(d,false);},true);
 addEventListener('touchmove',e=>{if(LD&&LD.on&&e.cancelable)e.preventDefault();},{passive:false,capture:true});
 $('sheetBody').addEventListener('contextmenu',e=>{if(e.target.closest('.item'))e.preventDefault();});
+/* ================= favourites bar =================
+   Up to 10 parts per view (panel front / single-line), starred in the library;
+   a strip under the document bar adds them with a click or a drag. Kept per device. */
+const FAVMAX=10;
+function favList(k){try{return JSON.parse(localStorage.getItem('ohadcad.fav.'+k)||'[]');}catch(e){return [];}}
+function favToggle(k,n){let L=favList(k);if(L.includes(n))L=L.filter(x=>x!==n);else{if(L.length>=FAVMAX){toast(`אפשר עד ${FAVMAX} מועדפים — הסר אחד קודם`);return;}L.push(n);toast('נוסף למועדפים: '+n);}
+ try{localStorage.setItem('ohadcad.fav.'+k,JSON.stringify(L));}catch(e){}buildFav();}
+function favFind(k,n){for(let ti=0;ti<LIB.length;ti++){const T=LIB[ti];if(!!T.sld!==(k==='sld'))continue;for(let gi=0;gi<T.groups.length;gi++){const ii=T.groups[gi].items.findIndex(e=>e.n===n);if(ii>=0)return [ti,gi,ii,T.groups[gi].items[ii]];}}return null;}
+function buildFav(){const B=$('favBar');if(!B)return;const ks=state.tab==='both'?['panel','sld']:[state.tab==='sld'?'sld':'panel'];let h='<span class="favlbl">★ מועדפים</span>',n=0;
+ ks.forEach(k=>favList(k).forEach(name=>{const f=favFind(k,name);if(!f)return;const [ti,gi,ii,e]=f;n++;
+  h+=`<button class="item fav" data-t="${ti}" data-g="${gi}" data-ii="${ii}" title="${esc(e.n)} — לחיצה מוסיפה, גרירה ממקמת"><div class="th${DEF[e.t]?.sld?' lt':''}">${thumbSVG(mkObj(e,true))}</div><div class="nm">${esc(e.n)}</div><span class="favx" data-unfav="${esc(e.n)}" data-fk="${k}" title="הסר מהמועדפים">×</span></button>`;}));
+ if(!n)h+=`<span class="favhint">סמן ☆ ליד רכיבים בחלון "הוסף רכיב" כדי להוסיף אותם לכאן (עד ${FAVMAX})</span>`;
+ B.innerHTML=h;}
+$('favBar').addEventListener('click',e=>{const x=e.target.closest('[data-unfav]');if(x){e.stopPropagation();favToggle(x.dataset.fk,x.dataset.unfav);if(pMode==='lib')buildSheet();return;}
+ const it=e.target.closest('.item');if(it&&!LDSW)addItem(LIB[+it.dataset.t].groups[+it.dataset.g].items[+it.dataset.ii]);});
+$('favBar').addEventListener('pointerdown',e=>{const it=e.target.closest('.item');if(!it||e.target.closest('[data-unfav]')||LD||(e.pointerType==='mouse'&&e.button!==0))return;
+ LD={it,x:e.clientX,y:e.clientY,id:e.pointerId,touch:e.pointerType!=='mouse',on:false};if(LD.touch)LD.t=setTimeout(()=>{if(LD&&!LD.on)ldStart();},320);});
+$('favBar').addEventListener('contextmenu',e=>{if(e.target.closest('.item'))e.preventDefault();});
+try{buildFav();}catch(e){}
 function addItem(e){const o=mkObj(e);placeNew(o);state.objs.push(o);sel=o.id;commit();renderNow();updateBar();if(innerWidth<760)closePanel();if(o.type==='cabinet')fit();else ensureVisible(o);toast(`נוסף: ${e.n}`);}
 function ensureVisible(o){const r=svg.getBoundingClientRect();const sx=o.x*view.s+view.tx,sy=o.y*view.s+view.ty;if(sx<20||sx>r.width-20||sy<topBottom()+20||sy>sheetTop()-80){const [cx,cy]=viewCenter();view.tx+=(cx-o.x)*view.s;view.ty+=(cy-o.y)*view.s;applyView();}}
 
