@@ -1330,15 +1330,40 @@ function resolve(p){if(p.r){const o=get(p.r);if(!o)return null;const t=termsOf(o
 
 /* ================= render ================= */
 function wirePath(w,pts){let ps=(pts||w.pts).map(resolve).filter(Boolean);if(ps.length<2)return '';if(!pts&&w.p.auto&&ps.length===2)ps=[ps[0],...qRoute(ps[0],ps[1]),ps[1]];return 'M'+ps.map(p=>r2(p.x)+' '+r2(p.y)).join('L');}
+/* ================= single-line wire layout =================
+   Auto-routed wires whose middle runs would lie on top of each other are
+   spread 10 mm apart, ordered so they don't cross; where two wires still
+   cross, the one running across is drawn with a small gap. */
+let WL=new Map(),WG=new Map();
+function wireLayout(){WL=new Map();WG=new Map();
+ const W=state.objs.filter(w=>w.type==='wire'&&!w.p.joint&&(state.tab==='sld'||isSldObj(w)));if(W.length<2)return;
+ // symbols' terminals point up/down, so an auto wire leaves them vertically: down (or up), across, then into the other end
+ W.forEach(w=>{let q=wirePs(w).map(p=>({x:p.x,y:p.y}));if(w.p.auto&&w.pts.length===2&&q.length===4&&Math.abs(q[0].y-q[1].y)<.01){const a=q[0],b=q[3],ym=r2(gs((a.y+b.y)/2));q=[a,{x:a.x,y:ym},{x:b.x,y:ym},b];}WL.set(w.id,q);});
+ // middle runs: V-H-V (horizontal at ym) or H-V-H (vertical at xm)
+ const Z=[];W.forEach(w=>{if(!w.p.auto||w.pts.length!==2)return;const q=WL.get(w.id);if(q.length!==4)return;
+  if(Math.abs(q[1].y-q[2].y)<.01&&Math.abs(q[0].x-q[1].x)<.01)Z.push({w,q,ax:'y'});else if(Math.abs(q[1].x-q[2].x)<.01&&Math.abs(q[0].y-q[1].y)<.01)Z.push({w,q,ax:'x'});});
+ for(const ax of ['y','x']){const o=ax==='y'?'x':'y',L=Z.filter(z=>z.ax===ax);const used=new Set();
+  L.forEach(z=>{if(used.has(z))return;const grp=[z];used.add(z);
+   for(let i=0;i<grp.length;i++){const g=grp[i],a0=Math.min(g.q[1][o],g.q[2][o]),a1=Math.max(g.q[1][o],g.q[2][o]);
+    L.forEach(k=>{if(used.has(k)||Math.abs(k.q[1][ax]-g.q[1][ax])>.5)return;const b0=Math.min(k.q[1][o],k.q[2][o]),b1=Math.max(k.q[1][o],k.q[2][o]);if(b0<a1-.5&&b1>a0+.5){grp.push(k);used.add(k);}});}
+   if(grp.length<2)return;
+   const dir=Math.sign(grp.reduce((t,g)=>t+(g.q[3][o]-g.q[0][o]),0))||1,down=Math.sign(grp.reduce((t,g)=>t+(g.q[3][ax]-g.q[0][ax]),0))||1;
+   grp.sort((a,b)=>(a.q[0][o]-b.q[0][o])*dir);
+   const n=grp.length;grp.forEach((g,i)=>{const d=((n-1)/2-i)*10*down;g.q[1][ax]=r2(g.q[1][ax]+d);g.q[2][ax]=r2(g.q[2][ax]+d);});});}
+ // crossings: the vertical piece gets the gap
+ const segs=[];W.forEach(w=>{const q=WL.get(w.id);for(let i=0;i<q.length-1;i++){const a=q[i],b=q[i+1];if(Math.abs(a.x-b.x)<.01)segs.push({w,v:true,c:a.x,lo:Math.min(a.y,b.y),hi:Math.max(a.y,b.y)});else if(Math.abs(a.y-b.y)<.01)segs.push({w,v:false,c:a.y,lo:Math.min(a.x,b.x),hi:Math.max(a.x,b.x)});}});
+ for(const v of segs){if(!v.v)continue;for(const h of segs){if(h.v||h.w===v.w)continue;
+  if(v.c>h.lo+1.5&&v.c<h.hi-1.5&&h.c>v.lo+1.5&&h.c<v.hi-1.5){if(!WG.has(v.w.id))WG.set(v.w.id,[]);WG.get(v.w.id).push({x:v.c,y:h.c});}}}}
 function wirePs(w){let ps=w.pts.map(resolve).filter(Boolean);if(ps.length>=2&&w.p.auto&&ps.length===2)ps=[ps[0],...qRoute(ps[0],ps[1]),ps[1]];return ps;}
 // a polyline moved sideways by d (mitred corners), for the three lines of a three-phase run
 function offPoly(ps,d){const n=[];for(let i=0;i<ps.length-1;i++){const dx=ps[i+1].x-ps[i].x,dy=ps[i+1].y-ps[i].y,L=Math.hypot(dx,dy)||1;n.push([-dy/L,dx/L]);}
  return ps.map((p,i)=>{const a=n[Math.max(0,i-1)],b=n[Math.min(n.length-1,i)];let mx=a[0]+b[0],my=a[1]+b[1];const m=Math.hypot(mx,my)||1;mx/=m;my/=m;const k=d/Math.max(.35,mx*b[0]+my*b[1]);return {x:p.x+mx*k,y:p.y+my*k};});}
 const PH3=['brown','orange','black'];
-function drawWire(w,isSel){const d=wirePath(w);if(!d)return '';if(w.p.joint){const a=resolve(w.pts[0]),b=resolve(w.pts[1]);if(a&&b&&Math.hypot(a.x-b.x,a.y-b.y)<.6)return `<g data-id="${w.id}"><circle cx="${a.x}" cy="${a.y}" r="6" fill="transparent"/><circle cx="${a.x}" cy="${a.y}" r="${isSel?3.2:2.2}" fill="${isSel?'#60a5fa':'#8b5a2b'}"/></g>`;}const sld=state.tab==='sld'||isSldObj(w);let sw=SEC[w.p.sec]||2.3;if(sld)sw=1.3;const c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
- if(w.p.ph==='3'){const ps=wirePs(w),gap=sld?2.4:sw*1.25;let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${gap*2+sw+8}"/>`;if(isSel)s+=`<path ${P} stroke="#60a5fa" stroke-width="${gap*2+sw+3}"/>`;
+function drawWire(w,isSel){const LP=WL.get(w.id);const d=LP&&LP.length>1?'M'+LP.map(p=>r2(p.x)+' '+r2(p.y)).join('L'):wirePath(w);if(!d)return '';if(w.p.joint){const a=resolve(w.pts[0]),b=resolve(w.pts[1]);if(a&&b&&Math.hypot(a.x-b.x,a.y-b.y)<.6)return `<g data-id="${w.id}"><circle cx="${a.x}" cy="${a.y}" r="6" fill="transparent"/><circle cx="${a.x}" cy="${a.y}" r="${isSel?3.2:2.2}" fill="${isSel?'#60a5fa':'#8b5a2b'}"/></g>`;}const sld=state.tab==='sld'||isSldObj(w);let sw=SEC[w.p.sec]||2.3;if(sld)sw=1.3;const c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+ if(w.p.ph==='3'){const ps=LP&&LP.length>1?LP:wirePs(w),gap=sld?2.4:sw*1.25;let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${gap*2+sw+8}"/>`;if(isSel)s+=`<path ${P} stroke="#60a5fa" stroke-width="${gap*2+sw+3}"/>`;
   PH3.forEach((k,i)=>{const q=offPoly(ps,(i-1)*gap),dd='M'+q.map(p=>r2(p.x)+' '+r2(p.y)).join('L');s+=`<path d="${dd}" fill="none" stroke-linejoin="round" stroke="${WCOL[k].base}" stroke-width="${sw}"/>`;});return s+'</g>';}
- let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${sw+8}"/>`;
+ const gp=WG.get(w.id),mk=gp&&gp.length?`<mask id="gm-${w.id}" maskUnits="userSpaceOnUse" x="-100000" y="-100000" width="200000" height="200000"><rect x="-100000" y="-100000" width="200000" height="200000" fill="#fff"/>${gp.map(g=>`<rect x="${g.x-sw*2}" y="${g.y-4}" width="${sw*4}" height="8" fill="#000"/>`).join('')}</mask>`:'';
+ let s=`${mk}<g data-id="${w.id}"${mk?` mask="url(#gm-${w.id})"`:''}><path ${P} stroke="transparent" stroke-width="${sw+8}"/>`;
  if(isSel)s+=`<path ${P} stroke="#60a5fa" stroke-width="${sw+3.2}"/>`;
  s+=(sld?'':`<path ${P} stroke="rgba(0,0,0,.6)" stroke-width="${sw+.9}"/>`)+`<path ${P} stroke="${c.base}" stroke-width="${sw}"/>`;
  if(c.dash)s+=`<path ${P} stroke="${c.dash}" stroke-width="${sw}" stroke-dasharray="5 5" stroke-linecap="butt"/>`;
@@ -1492,7 +1517,7 @@ function termsSVG(){if(!showTerms||wireMode)return '';const k=1/view.s,used=new 
  return s+'</g>';}
 function toggleTerms(){showTerms=!showTerms;setTimeout(()=>window.sbSync&&sbSync());try{localStorage.setItem('epd.terms',showTerms?'1':'0');}catch(e){}renderNow();toast(showTerms?'נקודות החיבור מודגשות':'הדגשת נקודות החיבור כבויה');}
 let drawnS=0;
-function renderNow(){drawnS=view.s;let s=layoutSVG()+axesSVG()+content({sel:true})+termsSVG()+handlesSVG()+dimsSVG()+guidesSVG()+dropSVG()+measSVG()+(DRAGNEW?`<g opacity=".8" pointer-events="none">${objSVG(DRAGNEW,true)}</g>`:'')+bandSVG()+qWireSVG();
+function renderNow(){drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}let s=layoutSVG()+axesSVG()+content({sel:true})+termsSVG()+handlesSVG()+dimsSVG()+guidesSVG()+dropSVG()+measSVG()+(DRAGNEW?`<g opacity=".8" pointer-events="none">${objSVG(DRAGNEW,true)}</g>`:'')+bandSVG()+qWireSVG();
  if(wireMode){for(const o of state.objs){if(o.type==='wire')continue;termsOf(o).forEach(t=>{const [x,y]=fromLocal(o,t[0],t[1]);s+=`<circle cx="${x}" cy="${y}" r="2.8" fill="rgba(34,211,238,.25)" stroke="#22d3ee" stroke-width=".7" pointer-events="none"/>`;});}
   if(draft&&draft.pts.length){const c=WCOL[wireColor];const d=wirePath(null,draft.pts);if(d)s+=`<path d="${d}" fill="none" stroke="${c.base}" stroke-width="${SEC[wireSec]}" stroke-linecap="round" stroke-linejoin="round" opacity=".85" pointer-events="none"/>`;
    draft.pts.map(resolve).forEach((p,i)=>{if(p)s+=`<circle cx="${p.x}" cy="${p.y}" r="${i?2.2:3.4}" fill="#fff" stroke="#22d3ee" stroke-width="1" pointer-events="none"/>`;});}}
