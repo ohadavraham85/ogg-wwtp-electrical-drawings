@@ -378,6 +378,14 @@ body.liblist #sheetBody .item{flex-direction:row;justify-content:flex-start;alig
 body.liblist #sheetBody .item .th{width:78px;height:48px!important;flex:none}body.liblist #sheetBody .item .th svg{max-height:48px!important;max-width:100%}
 body.liblist #sheetBody .item .nm{font-size:14px!important;text-align:right;flex:1}body.liblist #sheetBody .item .nm:not(.he){text-align:left}
 @media (min-width:900px){body.liblist #panel.lib{width:min(520px,calc(100vw - 20px))}}
+/* library tabs as a row under the title (wrapping), so the window stays narrow — every view */
+#libBody{flex-direction:column!important}
+#tabs{flex-direction:row!important;flex-wrap:wrap!important;overflow:visible!important;width:auto!important;border-left:0!important;padding:0 10px 8px!important;gap:5px!important;border-bottom:1px solid var(--line)}
+#tabs .tab{white-space:nowrap!important;padding:6px 10px!important;font-size:13px!important;text-align:center!important;background:var(--ctl)!important;flex:none}
+#tabs .tab.on{background:linear-gradient(180deg,var(--acc-light),var(--acc))!important;color:#000}
+#sheetBody{padding-top:4px}
+@media (min-width:900px){#panel.lib{width:min(440px,calc(100vw - 20px))!important}body:not(.liblist) #panel.lib{width:min(520px,calc(100vw - 20px))!important}}
+@media (max-width:600px){#tabs{flex-wrap:nowrap!important;overflow-x:auto!important;scrollbar-width:none}#tabs::-webkit-scrollbar{display:none}}
 </style>
 </head>
 <body>
