@@ -973,10 +973,10 @@ const SDEF={
  sbus:{layer:3,sld:true,resize:'len',minLen:40,edit:['tag','rating','len'],def:{tag:'',rating:'3×400/230V 50Hz',len:300},size:o=>({w:o.p.len,h:6}),
   terms:o=>{const L=o.p.len,t=[];for(let u=-L/2+10;u<=L/2-10+.01;u+=10)t.push([r2(u),0,'']);return t;},
   draw:o=>{const L=o.p.len;return `<rect x="${-L/2}" y="-3" width="${L}" height="6" fill="${SK}"/>`+txt(-L/2,-11,[o.p.tag,o.p.rating].filter(Boolean).join(' · '),8,SK,700,'start');}},
- stb:{layer:4,sld:true,edit:['tag','set','desc'],def:{set:'5P',tag:'X1',desc:''},size:o=>({w:TBSET(o).length*16+8,h:40}),
-  terms:o=>{const L=TBSET(o),w=L.length*16;return [...L.map((l,i)=>[-w/2+8+i*16,-20,l]),...L.map((l,i)=>[-w/2+8+i*16,20,''])];},
-  draw:o=>{const L=TBSET(o),w=L.length*16;let s='';L.forEach((l,i)=>{const x=-w/2+8+i*16;s+=sL(x,-20,x,-4.5,1.6)+sL(x,4.5,x,20,1.6)+sC(x,0,4.5,'#fff',1.6)+sL(x-4.6,4.6,x+4.6,-4.6,1.4)+(l?txt(x+2.5,-14,l,5.5,SK,700,'start'):'');});
-   return s+[o.p.tag,o.p.desc].filter(Boolean).map((t,i)=>txt(w/2+8,-4+i*9,t,i?7.5:9,SK,i?400:700,'start')).join('');}},
+ stb:{layer:4,sld:true,edit:['tag','set','desc'],def:{set:'5P',tag:'X1',desc:''},size:o=>({w:TBSET(o).length*20+20,h:40}),
+  terms:o=>{const L=TBSET(o),w=L.length*20+20;return [...L.map((l,i)=>[-w/2+20+i*20,-20,l]),...L.map((l,i)=>[-w/2+20+i*20,20,''])];},
+  draw:o=>{const L=TBSET(o),w=L.length*20+20;let s='';L.forEach((l,i)=>{const x=-w/2+20+i*20;s+=sL(x,-20,x,-4.5,1.6)+sL(x,4.5,x,20,1.6)+sC(x,0,4.5,'#fff',1.6)+sL(x-4.6,4.6,x+4.6,-4.6,1.4)+(l?txt(x+2.5,-14,l,5.5,SK,700,'start'):'');});
+   return s+[o.p.tag,o.p.desc].filter(Boolean).map((t,i)=>txt(w/2+2,-4+i*9,t,i?7.5:9,SK,i?400:700,'start')).join('');}},
  sframe:{layer:0,sld:true,resize:'box',edit:['tag','w','h'],def:{tag:'לוח חשמל',w:400,h:300},size:o=>({w:o.p.w,h:o.p.h}),
   draw:o=>{const w=o.p.w,h=o.p.h;return `<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" fill="none" stroke="#555" stroke-width="1.4" stroke-dasharray="10 6"/>`+txt(-w/2+8,-h/2+12,o.p.tag,10,'#333',700,'start');}},
 };
@@ -988,7 +988,24 @@ const TN={sbrk:'1-2',srcd:'1-2',smpcb:'1-2',sfuse:'1-2',sfsd:'1-2',siso:'1-2',sl
 Object.keys(TN).forEach(k=>{const D=SDEF[k];if(!D)return;const d0=D.draw;D.def=Object.assign({tn:TN[k]},D.def);if(!D.edit.includes('tn'))D.edit=[...D.edit,'tn'];
  D.draw=o=>{const tn=(o.p.tn??TN[k]??'').split('-');let s=d0(o);if(tn[0])s+=txt(-5,-21,tn[0].trim(),7,'#374151',700,'end');if(tn[1])s+=txt(-5,27,tn[1].trim(),7,'#374151',700,'end');return s;};});
 // numbers that used to sit in the rating line now live in "tn"
-['sno','snc','stno','stnc','sclockc','sauxq'].forEach(k=>{SDEF[k].def.rating='';});SDEF.scoil.def.rating='230VAC';SDEF.scoil.ratings=['24VDC','24VAC','230VAC'];
+['sno','snc','stno','stnc','sclockc','sauxq'].forEach(k=>{SDEF[k].def.rating='';});
+/* Multi-pole (3P / 4P) versions: the one-pole symbol repeated every 20 mm — the
+   same pitch as terminal blocks, so poles, terminals and wires line up — with a
+   dashed mechanical link and terminals 1-3-5(-N) / 2-4-6(-N). */
+const PP=20,MPT=['sbrk','srcd','smpcb','sfuse','sfsd','siso','slbs','scont','sol'],npol=o=>Math.max(1,Math.min(4,Math.round(+o.p.poles||1)));
+const PT=['1','3','5','N'],PB=['2','4','6','N'];
+MPT.forEach(k=>{const D=SDEF[k],d1=D.draw,t1=D.terms,s1=D.size;D.def=Object.assign({poles:1},D.def);if(!D.edit.includes('poles'))D.edit=[...D.edit,'poles'];
+ D.size=o=>npol(o)===1?s1(o):{w:npol(o)*PP+20,h:60};
+ D.terms=o=>{const n=npol(o);if(n===1)return t1(o);const r=[];for(let i=0;i<n;i++)r.push([(i-(n-1)/2)*PP,-30,PT[i]]);for(let i=0;i<n;i++)r.push([(i-(n-1)/2)*PP,30,PB[i]]);return r;};
+ D.draw=o=>{const n=npol(o);if(n===1)return d1(o);const blank=Object.assign({},o,{p:Object.assign({},o.p,{tag:'',rating:'',desc:'',tn:''})});let s='';
+  for(let i=0;i<n;i++){const x=(i-(n-1)/2)*PP;s+=`<g transform="translate(${x} 0)">${d1(blank)}</g>`+txt(x-3,-21,PT[i],6.5,'#374151',700,'end')+txt(x-3,27,PB[i],6.5,'#374151',700,'end');}
+  if(k!=='sfuse')s+=`<line x1="${-(n-1)/2*PP-5.5}" y1="0" x2="${(n-1)/2*PP-5.5}" y2="0" stroke="${SK}" stroke-width="1.3" stroke-dasharray="3 2.5"/>`;
+  return s+sLbl(o,n*PP+20);};});
+// a motor with its three terminals (U V W) instead of one line
+{const D=SDEF.smot,d1=D.draw;D.def=Object.assign({poles:1},D.def);D.edit=[...D.edit,'poles'];
+ D.terms=o=>npol(o)>=3?[[-20,-30,'U'],[0,-30,'V'],[20,-30,'W']]:TOP();
+ D.draw=o=>npol(o)>=3?sL(0,-30,0,-14)+sL(-20,-30,-20,-22)+sL(-20,-22,-10,-11)+sL(20,-30,20,-22)+sL(20,-22,10,-11)+sC(0,2,16)+sT(0,-2,'M',12)+sT(0,9,'3~',7.5)+txt(-23,-24,'U',6.5,'#374151',700,'end')+txt(-3,-24,'V',6.5,'#374151',700,'end')+txt(23,-24,'W',6.5,'#374151',700,'start')+sLbl(o,60):d1(o);
+ D.size=o=>npol(o)>=3?{w:60,h:60}:{w:40,h:60};}SDEF.scoil.def.rating='230VAC';SDEF.scoil.ratings=['24VDC','24VAC','230VAC'];
 Object.assign(DEF,SDEF);
 /* ================= in the field: cables, trays, motors and pumps =================
    Drawn to scale like the rest of the panel (mm). */
@@ -1183,6 +1200,7 @@ const LIB=[
  {tab:'הגנה ומיתוג',sld:true,groups:[
   {g:'מפסקים',items:[{t:'sbrk',n:'מפסק זרם (MCCB / ACB)'},{t:'sbrk',n:'מאמ"ת (MCB)',p:{tag:'Q2',rating:'MCB C16'}},{t:'srcd',n:'מפסק פחת / RCBO'},{t:'smpcb',n:'מגן מנוע (MPCB)'},{t:'siso',n:'מנתק / מפסק ראשי'},{t:'slbs',n:'מנתק עומס'}]},
   {g:'נתיכים',items:[{t:'sfuse',n:'נתיך'},{t:'sfsd',n:'מנתק נתיכים'}]},
+  {g:'תלת-פאזי (3 קטבים, ברוחב המהדקים)',items:[{t:'sbrk',n:'מפסק זרם 3P',p:{poles:3}},{t:'sbrk',n:'מאמ"ת 3P',p:{poles:3,tag:'Q2',rating:'MCB C16'}},{t:'siso',n:'מנתק 3P',p:{poles:3}},{t:'srcd',n:'מפסק פחת 4P',p:{poles:4}},{t:'smpcb',n:'מגן מנוע 3P',p:{poles:3}},{t:'scont',n:'מגען 3P',p:{poles:3}},{t:'sol',n:'ממסר טרמי 3P',p:{poles:3}},{t:'sfuse',n:'נתיכים 3P',p:{poles:3}},{t:'smot',n:'מנוע (U V W)',p:{poles:3}}]},
   {g:'מיתוג והתנעה',items:[{t:'scont',n:'מגען'},{t:'sol',n:'ממסר טרמי'},{t:'svfd',n:'ווסת מהירות (VFD)'},{t:'sss',n:'מתנע רך'},{t:'sats',n:'מחליף אוטומטי (ATS)'}]},
   {g:'הגנות',items:[{t:'sspd',n:'מגן ברקים (SPD)'}]}]},
  {tab:'פיקוד ובקרה',sld:true,icon:'🎛',hint:'סמלי פיקוד (IEC): מגעים, לחצנים, בוררים, סלילים, טיימרים ושעונים. מחברים ביניהם ב"חיווט". הסימון (למשל K1) והמספרים (13-14) נערכים במאפיינים.',groups:[
@@ -1317,7 +1335,7 @@ function wirePs(w){let ps=w.pts.map(resolve).filter(Boolean);if(ps.length>=2&&w.
 function offPoly(ps,d){const n=[];for(let i=0;i<ps.length-1;i++){const dx=ps[i+1].x-ps[i].x,dy=ps[i+1].y-ps[i].y,L=Math.hypot(dx,dy)||1;n.push([-dy/L,dx/L]);}
  return ps.map((p,i)=>{const a=n[Math.max(0,i-1)],b=n[Math.min(n.length-1,i)];let mx=a[0]+b[0],my=a[1]+b[1];const m=Math.hypot(mx,my)||1;mx/=m;my/=m;const k=d/Math.max(.35,mx*b[0]+my*b[1]);return {x:p.x+mx*k,y:p.y+my*k};});}
 const PH3=['brown','orange','black'];
-function drawWire(w,isSel){const d=wirePath(w);if(!d)return '';const sld=state.tab==='sld'||isSldObj(w);let sw=SEC[w.p.sec]||2.3;if(sld)sw=1.3;const c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+function drawWire(w,isSel){const d=wirePath(w);if(!d)return '';if(w.p.joint){const a=resolve(w.pts[0]),b=resolve(w.pts[1]);if(a&&b&&Math.hypot(a.x-b.x,a.y-b.y)<.6)return `<g data-id="${w.id}"><circle cx="${a.x}" cy="${a.y}" r="6" fill="transparent"/><circle cx="${a.x}" cy="${a.y}" r="${isSel?3.2:2.2}" fill="${isSel?'#60a5fa':'#8b5a2b'}"/></g>`;}const sld=state.tab==='sld'||isSldObj(w);let sw=SEC[w.p.sec]||2.3;if(sld)sw=1.3;const c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
  if(w.p.ph==='3'){const ps=wirePs(w),gap=sld?2.4:sw*1.25;let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${gap*2+sw+8}"/>`;if(isSel)s+=`<path ${P} stroke="#60a5fa" stroke-width="${gap*2+sw+3}"/>`;
   PH3.forEach((k,i)=>{const q=offPoly(ps,(i-1)*gap),dd='M'+q.map(p=>r2(p.x)+' '+r2(p.y)).join('L');s+=`<path d="${dd}" fill="none" stroke-linejoin="round" stroke="${WCOL[k].base}" stroke-width="${sw}"/>`;});return s+'</g>';}
  let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${sw+8}"/>`;
@@ -1968,6 +1986,25 @@ function dblEdit(o){if(!o||o.locked||globalLock)return;
  ta.addEventListener('blur',()=>fin(true));
  toast('כתוב את הטקסט — Enter לשמירה, Shift+Enter לשורה חדשה');}
 svg.addEventListener('dblclick',e=>e.preventDefault());
+
+/* ================= single-line: terminal on terminal =================
+   Dragging a symbol, its connection points are drawn to the nearest free ones
+   of other symbols; dropped point-on-point they are joined (a zero-length
+   "joint" wire). Pulling them apart again separates them. */
+function termMagnet(o,kids){const mv=new Set([o,...(kids||[]).map(k=>k.q)]),R=10/view.s;let best=null;
+ const mine=termsOf(o).map(t=>fromLocal(o,t[0],t[1]));if(!mine.length)return;
+ for(const q of state.objs){if(mv.has(q)||q.type==='wire'||!(DEF[q.type]?.sld||isSldObj(q)))continue;
+  for(const t of termsOf(q)){const [X,Y]=fromLocal(q,t[0],t[1]);for(const [x,y] of mine){const d=Math.hypot(X-x,Y-y);if(d<R&&(!best||d<best.d))best={d,dx:X-x,dy:Y-y};}}}
+ if(best){o.x=r2(o.x+best.dx);o.y=r2(o.y+best.dy);}}
+function sldJoin(moving){const mv=new Set(moving.filter(Boolean)),ids=new Set([...mv].map(q=>q.id));let added=0,cut=0;
+ // joints of what moved whose two ends no longer meet are separated
+ state.objs=state.objs.filter(w=>{if(w.type!=='wire'||!w.p.joint||!w.pts.some(p=>ids.has(p.r)))return true;const a=resolve(w.pts[0]),b=resolve(w.pts[1]);if(a&&b&&Math.hypot(a.x-b.x,a.y-b.y)<.6)return true;cut++;return false;});
+ const linked=(a,i,b,j)=>state.objs.some(w=>w.type==='wire'&&w.pts.length===2&&((w.pts[0].r===a&&w.pts[0].t===i&&w.pts[1].r===b&&w.pts[1].t===j)||(w.pts[0].r===b&&w.pts[0].t===j&&w.pts[1].r===a&&w.pts[1].t===i)));
+ for(const m of mv){if(m.type==='wire'||!(DEF[m.type]?.sld||isSldObj(m)))continue;
+  termsOf(m).forEach((t,i)=>{const [x,y]=fromLocal(m,t[0],t[1]);
+   for(const q of state.objs){if(q===m||mv.has(q)||q.type==='wire'||!(DEF[q.type]?.sld||isSldObj(q)))continue;
+    termsOf(q).forEach((u,j)=>{const [X,Y]=fromLocal(q,u[0],u[1]);if(Math.hypot(X-x,Y-y)<.6&&!linked(m.id,i,q.id,j)){state.objs.push({id:uid(),type:'wire',p:{color:'brown',sec:'1.5',name:'חיבור',auto:1,joint:1},pts:[{r:m.id,t:i},{r:q.id,t:j}]});added++;}});}});}
+ if(added)toast(`חובר אוטומטית (${added}) — כדי להפריד, גרור את הרכיב הצידה`);else if(cut)toast('החיבור הופרד');}
 /* ================= dimensions (סרט מדידה) =================
    A fixed dimension between two points. Each end may be pinned to a part (its
    id and a point in the part's own frame), so the dimension follows the part
@@ -2095,7 +2132,7 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
  else if(G.mode==='qwire'){const [x,y]=toWorld(e.clientX,e.clientY);G.cur=[x,y];G.to=termAt(x,y,qRad('snap',e.pointerType!=='mouse'),G.from.r);render();}
  else if(G.mode==='resize'){const [wx,wy]=toWorld(e.clientX,e.clientY);doResize(G,wx,wy);render();}
  else if(G.mode==='cpt'){const [wx,wy]=toWorld(e.clientX,e.clientY),[lx,ly]=toLocal(G.o,gs(wx),gs(wy));G.o.p.route[G.i]={x:r2(lx),y:r2(ly)};render();}
- else{const [wx,wy]=toWorld(e.clientX,e.clientY);const o=G.o;DROPR=null;DROPFULL=false;const [sx,sy]=snapPos(o,G.ox+wx-G.w0[0],G.oy+wy-G.w0[1]);o.x=sx;o.y=sy;const onR=DEF[o.type].rail&&state.objs.some(r=>r.type==='rail'&&onRail(o,r));alignSnap(o,G.kids,!onR);const nx=o.x,ny=o.y;
+ else{const [wx,wy]=toWorld(e.clientX,e.clientY);const o=G.o;DROPR=null;DROPFULL=false;const [sx,sy]=snapPos(o,G.ox+wx-G.w0[0],G.oy+wy-G.w0[1]);o.x=sx;o.y=sy;const onR=DEF[o.type].rail&&state.objs.some(r=>r.type==='rail'&&onRail(o,r));alignSnap(o,G.kids,!onR);if(DEF[o.type]?.sld||isSldObj(o))termMagnet(o,G.kids);const nx=o.x,ny=o.y;
   const ddx=nx-G.ox,ddy=ny-G.oy;G.kids.forEach(k=>{if(k.q.type==='mdim'){if(!k.e)k.e=[k.q.p.a,k.q.p.b].map(p=>[p,p.x,p.y]);k.e.forEach(([p,x,y])=>{if(!p.of||!get(p.of)){p.x=r2(x+ddx);p.y=r2(y+ddy);}});return;}k.q.x=r2(k.x+ddx);k.q.y=r2(k.y+ddy);});render();}});
 let GUIDES=[];
 function alignSnap(o,kids,snap){GUIDES=[];if(o.type==='wire')return;const kset=new Set((kids||[]).map(k=>k.q));let B=bbW(o);const th=7/view.s;let bx=null,by=null;
@@ -2126,7 +2163,7 @@ function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(!g.moved&&Date.now()-g.t0<600){if(g.dim){dimEdit(g.dim);return;}if(wireMode){const [x,y]=toWorld(e.clientX,e.clientY);wireTap(x,y);}
   else{const now=Date.now(),dbl=g.id&&LASTTAP.id===g.id&&now-LASTTAP.t<400&&Math.hypot(e.clientX-LASTTAP.x,e.clientY-LASTTAP.y)<24;LASTTAP={id:g.id,t:dbl?0:now,x:e.clientX,y:e.clientY};
    select(g.id,g.add);if(dbl&&!g.add)dblEdit(get(g.id));}}
- else if(g.mode==='drag'||g.mode==='resize'){commit();renderNow();updateBar();}}
+ else if(g.mode==='drag'||g.mode==='resize'){if(g.mode==='drag'&&g.moved&&g.o)sldJoin([g.o,...(g.kids||[]).map(k=>k.q)]);commit();renderNow();updateBar();}}
 function doResize(g,wx,wy){const o=g.o,D=DEF[o.type],[u,v]=toLocal(g.o0,wx,wy);
  if(D.resize==='scale'){const [sx,sy]=g.h,fu=-sx*g.s0.w/2,fv=-sy*g.s0.h/2,k=Math.max(.2,Math.max(sx*(u-fu)/g.s0.w,sy*(v-fv)/g.s0.h));
   o.p.fs=r2(Math.max(1.5,(g.fs0||o.p.fs)*k));const n=sizeOf(o);[o.x,o.y]=fromLocal(g.o0,fu+sx*n.w/2,fv+sy*n.h/2);return;}
@@ -2331,6 +2368,7 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='frame')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_frame">${[['c72','קומפקטי 72×143'],['c105','קומפקטי 105×142'],['b45','ספרי 45×325'],['b60','ספרי 60×325']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='ph')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_ph"><option value="1" ${v==1?'selected':''}>1</option><option value="3" ${v==3?'selected':''}>3</option></select></div>`;
   else if(k==='cores')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_cores">${[['2','2 גידים — L, N'],['3','3 גידים — L, N, PE'],['4','4 גידים — L1, L2, L3, PE'],['5','5 גידים — L1, L2, L3, N, PE']].map(([a,b])=>`<option value="${a}" ${a===String(v)?'selected':''}>${b}</option>`).join('')}</select></div>`;
+  else if(k==='poles'&&DEF[o.type]?.sld)h+=`<div class="fld"><label>${FL[k]}</label><select id="f_poles">${(o.type==='smot'?[[1,'קו אחד'],[3,'3 הדקים (U V W)']]:[[1,'קוטב אחד'],[2,'2 קטבים'],[3,'3 קטבים (תלת-פאזי)'],[4,'4 קטבים (3P+N)']]).map(([a,b])=>`<option value="${a}" ${a==(+v||1)?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='poles'&&(o.type==='wiso'||o.type==='nsx'||o.type==='nsxm'))h+=`<div class="fld"><label>${FL[k]}</label><select id="f_poles"><option value="3" ${+v!==4?'selected':''}>3 קטבים</option><option value="4" ${+v===4?'selected':''}>4 קטבים (+N)</option></select></div>`;
   else if(k==='gang')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_gang">${[[1,'יחיד'],[2,'כפול'],[3,'משולש'],[4,'מרובע']].map(([a,b])=>`<option value="${a}" ${a==v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='ip')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_ip"><option value="20" ${v!=='44'?'selected':''}>רגיל (פנים)</option><option value="44" ${v==='44'?'selected':''}>IP44 מוגן מים, עם מכסה</option></select></div>`;
