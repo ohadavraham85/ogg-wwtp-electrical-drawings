@@ -388,6 +388,15 @@ body.liblist #sheetBody .item .nm{font-size:14px!important;text-align:right;flex
 @media (max-width:600px){#tabs{flex-wrap:nowrap!important;overflow-x:auto!important;scrollbar-width:none}#tabs::-webkit-scrollbar{display:none}}
 .tabhead{position:sticky;top:0;z-index:2;margin:14px -2px 2px;padding:8px 8px;font-size:15.5px;font-weight:800;background:linear-gradient(180deg,var(--acc-light),var(--acc));color:#000;border-radius:4px}
 #sheetBody.allv .grp{top:38px}
+/* library: folding sections instead of a tab row */
+#tabs{display:none!important}
+.tabhead{display:flex;align-items:center;gap:8px;width:100%;position:sticky;top:0;z-index:2;margin:6px 0 2px;padding:10px 10px;font-size:15px;font-weight:800;text-align:right;border-radius:4px;background:var(--ctl);border:1px solid var(--ctl-bd);border-bottom:2px solid #000;color:var(--txt)}
+.tabhead .tt{flex:1}.tabhead .cnt{font-size:12px;font-weight:700;padding:1px 8px;border-radius:10px;background:var(--card2);color:var(--mut)}
+.tabhead .chev{width:14px;text-align:center;color:var(--acc)}
+.tabhead.open{background:linear-gradient(180deg,var(--acc-light),var(--acc));color:#000;border-color:var(--acc-light);border-bottom-color:#a35a00}.tabhead.open .chev{color:#000}.tabhead.open .cnt{background:rgba(0,0,0,.15);color:#000}
+@media (hover:hover){.tabhead:not(.open):hover{border-color:var(--acc)}}
+body.uil .tabhead{border-bottom-color:#6b7280}
+.libtools{display:flex;gap:4px;margin:2px 0 4px}.libtools button{padding:3px 9px;font-size:12px;font-weight:700;border-radius:4px;background:none;border:1px solid var(--line);color:var(--mut)}
 </style>
 </head>
 <body>
@@ -1869,7 +1878,7 @@ function loadProjects(){try{return JSON.parse(localStorage.getItem('epd.projects
 function saveProjects(p){try{localStorage.setItem('epd.projects',JSON.stringify(p));return true;}catch(e){return false;}}
 
 /* ================= UI: top bar ================= */
-function updateBar(){const o=sel&&get(sel);{const df=doorsFront();$('bDoor').disabled=df===null;$('bDoor').classList.toggle('on',df===true);$('bDoor').title=df?'הצג את פנים הלוח':'הצג את חזית הלוח (דלת סגורה)';}$('bLockAll').classList.toggle('on',globalLock);$('bText').disabled=wireMode||globalLock;{const o2=sel&&get(sel);$('bText').title=o2&&o2.type!=='wire'&&o2.type!=='label'?'הוסף תיבת טקסט ל'+o2.p.name:'הוסף תיבת טקסט';}$('bLockAll').title=globalLock?'פתח עריכה':'נעל עריכה (צפייה בלבד)';['bDel','bLock','bRot','bDup'].forEach(b=>$(b).disabled=!o||wireMode);$('rWire').classList.toggle('on',wireMode);$('bMeas').classList.toggle('on',!!measMode);$('rAdd').classList.toggle('on',pMode==='lib'&&!LIB[curTab]?.draw);$('bDraw').classList.toggle('on',pMode==='lib'&&!!LIB[curTab]?.draw);$('rProps').classList.toggle('on',pMode==='props');$('libStrip').classList.toggle('on',pMode==='lib');
+function updateBar(){const o=sel&&get(sel);{const df=doorsFront();$('bDoor').disabled=df===null;$('bDoor').classList.toggle('on',df===true);$('bDoor').title=df?'הצג את פנים הלוח':'הצג את חזית הלוח (דלת סגורה)';}$('bLockAll').classList.toggle('on',globalLock);$('bText').disabled=wireMode||globalLock;{const o2=sel&&get(sel);$('bText').title=o2&&o2.type!=='wire'&&o2.type!=='label'?'הוסף תיבת טקסט ל'+o2.p.name:'הוסף תיבת טקסט';}$('bLockAll').title=globalLock?'פתח עריכה':'נעל עריכה (צפייה בלבד)';['bDel','bLock','bRot','bDup'].forEach(b=>$(b).disabled=!o||wireMode);$('rWire').classList.toggle('on',wireMode);$('bMeas').classList.toggle('on',!!measMode);if(pMode!=='lib')DRAWOPEN=false;$('rAdd').classList.toggle('on',pMode==='lib'&&!DRAWOPEN);$('bDraw').classList.toggle('on',pMode==='lib'&&DRAWOPEN);$('rProps').classList.toggle('on',pMode==='props');$('libStrip').classList.toggle('on',pMode==='lib');
  if(o)$('lockLbl').textContent=o.locked?'שחרור':'נעילה';
  if(o){$('selName').textContent=o.type==='wire'?`חוט ${WCOL[o.p.color]?.n||''} ${o.p.sec} ממ"ר`:(o.p.name+(o.p.tag&&o.type!=='label'?' · '+o.p.tag:''));
   $('selThumb').innerHTML=o.type==='wire'?`<svg viewBox="0 0 24 24"><path d="M3 18C9 18 9 6 21 6" stroke="${WCOL[o.p.color]?.base}" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>`:thumbSVG(Object.assign({},o,{p:Object.assign({},o.p,THUMBP[o.type]||{})}));
@@ -1897,16 +1906,21 @@ const WIRE_IC='<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" strok
 const inDoc=T=>T.any||state.tab==='both'||!!T.sld===(state.tab==='sld');
 function buildTabs(){if(curTab!==-1&&(!LIB[curTab]||!inDoc(LIB[curTab])))curTab=-1;$('tabs').innerHTML=`<button class="tab ${curTab===-1&&!libQ?'on':''}" data-i="-1"><span class="ti">☰</span><span>הכל</span></button>`+LIB.map((t,i)=>inDoc(t)?`<button class="tab ${i===curTab&&!libQ?'on':''}" data-i="${i}"><span class="ti">${t.icon||''}</span><span>${t.tab}</span></button>`:'').join('');}
 let libQ='',pMode=null;
+// which library sections are unfolded, kept per device
+let LOPEN=new Set();try{LOPEN=new Set(JSON.parse(localStorage.getItem('ohadcad.libopen')||'[]'));}catch(e){}
+function lopenSave(){try{localStorage.setItem('ohadcad.libopen',JSON.stringify([...LOPEN]));}catch(e){}}
 // the library lists parts one under another (picture + name) unless the viewer chose the tile grid
 let LIBLIST=true;try{LIBLIST=localStorage.getItem('ohadcad.libview')!=='grid';}catch(e){}document.body.classList.toggle('liblist',LIBLIST);
 function buildSheet(){buildTabs();const q=libQ.trim().toLowerCase();
  if(q){const res=[],seen=new Set(),words=q.split(/\s+/).filter(Boolean).map(w=>/[א-ת]/.test(w)&&w.length>3?w.replace(/(ות|ים|ה|ת)$/,''):w);
   LIB.forEach((T,ti)=>inDoc(T)&&T.groups.forEach((g,gi)=>g.items.forEach((e,ii)=>{const tx=(e.n+' '+g.g+' '+T.tab).toLowerCase();if(!seen.has(e)&&words.every(w=>tx.includes(w))){seen.add(e);res.push([ti,gi,ii,e]);}})));
   $('sheetBody').innerHTML=res.length?`<div class="grp">תוצאות (${res.length})</div><div class="grid">`+res.map(([ti,gi,ii,e])=>itemBtn(ti,gi,ii,e)).join('')+'</div>':'<div class="hint" style="margin-top:12px">לא נמצאו רכיבים.</div>';return;}
- const T=LIB[curTab]||{groups:[]};let h=`<div class="libview"><button data-lv="list" class="${LIBLIST?'on':''}">☰ רשימה</button><button data-lv="grid" class="${LIBLIST?'':'on'}">▦ משבצות</button></div><div class="hint ldhint">✋ ${matchMedia('(pointer:coarse)').matches?'החזק רגע על רכיב וגרור אותו':'גרור רכיב'} אל השרטוט כדי למקם אותו בדיוק — או ${matchMedia('(pointer:coarse)').matches?'הקש':'לחץ'} עליו להוספה אוטומטית</div>`+(T.hint?`<div class="hint" style="margin-top:4px">${T.hint}</div>`:'');
- // "הכל": every tab of this view, one after another, each under its own heading
- const tabs=curTab===-1?LIB.map((t,i)=>[t,i]).filter(([t])=>inDoc(t)):[[T,curTab]];
- tabs.forEach(([T2,ti])=>{if(curTab===-1)h+=`<div class="tabhead">${T2.icon||''} ${T2.tab}</div>`;
+ const T=LIB[curTab]||{groups:[]};let h=`<div class="libview"><button data-lv="list" class="${LIBLIST?'on':''}">☰ רשימה</button><button data-lv="grid" class="${LIBLIST?'':'on'}">▦ משבצות</button></div><div class="hint ldhint">✋ ${matchMedia('(pointer:coarse)').matches?'החזק רגע על רכיב וגרור אותו':'גרור רכיב'} אל השרטוט כדי למקם אותו בדיוק — או ${matchMedia('(pointer:coarse)').matches?'הקש':'לחץ'} עליו להוספה אוטומטית</div>`+`<div class="libtools"><button data-fold="open">פתח הכל</button><button data-fold="close">סגור הכל</button></div>`;
+ // every section of this view as a folding heading; open ones show their groups
+ const tabs=LIB.map((t,i)=>[t,i]).filter(([t])=>inDoc(t));
+ tabs.forEach(([T2,ti])=>{const open=LOPEN.has(T2.tab),cnt=T2.groups.reduce((n,g)=>n+g.items.length,0);
+  h+=`<button class="tabhead${open?' open':''}" data-sec="${esc(T2.tab)}"><span class="chev">${open?'▾':'◂'}</span><span class="tt">${T2.icon||''} ${T2.tab}</span><span class="cnt">${cnt}</span></button>`;
+  if(!open)return;if(T2.hint)h+=`<div class="hint" style="margin:4px 2px 2px">${T2.hint}</div>`;
  T2.groups.forEach((g,gi)=>{h+=`<div class="grp">${g.g}</div>`;
   if(g.colors)h+=`<div class="chips">${Object.keys(COLORS).filter(c=>g.colors==='all'||!['black','grey','yellow','white'].includes(c)).map(c=>`<button class="chip ${c===curColor?'on':''}" data-c="${c}" style="background:${COLORS[c]}"></button>`).join('')}</div>`;
   if(g.widths)h+=`<div class="chips">${DUCTW.map(d=>`<button class="wbtn ${d==curDW?'pri':''}" data-dw="${d}">${d} מ"מ</button>`).join('')}</div><div class="hint">לשינוי אורך: בחר תעלה/פס וגרור את העיגולים הכחולים שבקצוות.</div>`;
@@ -1929,6 +1943,8 @@ function buildWirePanel(){const W=$('wireBar');W.classList.toggle('hidden',!wire
   <div class="hint" style="margin:8px 2px 0;font-size:12.5px">הקש על מהדק (עיגול תכלת) ← נקודות פינה ← מהדק יעד.</div>`;}
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(!b)return;curTab=+b.dataset.i;libQ='';$('search').value='';buildSheet();$('sheetBody').scrollTop=0;updateBar();});
 function sheetClick(e){const t=e.target;if(t.id==='sldGen'){genSld();return;}
+ const sec=t.closest('[data-sec]');if(sec){const k=sec.dataset.sec;if(LOPEN.has(k))LOPEN.delete(k);else LOPEN.add(k);lopenSave();buildSheet();const el=[...$('sheetBody').querySelectorAll('[data-sec]')].find(b=>b.dataset.sec===k);if(el&&LOPEN.has(k))el.scrollIntoView({block:'start'});return;}
+ const fd=t.closest('[data-fold]');if(fd){LIB.filter(inDoc).forEach(T=>fd.dataset.fold==='open'?LOPEN.add(T.tab):LOPEN.delete(T.tab));lopenSave();buildSheet();return;}
  const lv=t.closest('[data-lv]');if(lv){LIBLIST=lv.dataset.lv==='list';try{localStorage.setItem('ohadcad.libview',LIBLIST?'list':'grid');}catch(_){}document.body.classList.toggle('liblist',LIBLIST);buildSheet();return;}
  const c=t.closest('[data-c]');if(c){curColor=c.dataset.c;const o=sel&&get(sel);if(o&&['mcb','rcd','cont','lamp','busbar','label','pb','pbl','pl22'].includes(o.type)){o.p.color=curColor;commit();renderNow();}buildSheet();return;}
  const dw=t.closest('[data-dw]');if(dw){curDW=+dw.dataset.dw;const o=sel&&get(sel);if(o&&o.type==='duct'){o.p.dw=curDW;commit();renderNow();updateBar();}buildSheet();return;}
@@ -2294,7 +2310,7 @@ $('bText').onclick=()=>{if(wireMode||globalLock)return;const o=sel&&get(sel);con
     state.objs.push(L);sel=L.id;commit();renderNow();updateBar();}},{t:'ביטול'}]);
  setTimeout(()=>$('f_newtxt')&&$('f_newtxt').focus(),60);};
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;
-$('bDraw').onclick=()=>{if(wireMode)setWire(false);if(measMode)setMeas(null);const i=LIB.findIndex(T=>T.draw);if(pMode==='lib'&&curTab===i){closePanel();return;}curTab=i;libQ='';$('search').value='';openPanel('lib','שרטוט וסימון');};$('bMeas').onclick=()=>setMeas(measMode?null:'dist');$('bFit').onclick=fit;$('bGrid').onclick=()=>gridDialog();
+$('bDraw').onclick=()=>{if(wireMode)setWire(false);if(measMode)setMeas(null);const D=LIB.find(T=>T.draw);if(pMode==='lib'&&DRAWOPEN){DRAWOPEN=false;closePanel();return;}LOPEN.add(D.tab);lopenSave();libQ='';$('search').value='';DRAWOPEN=true;openPanel('lib','הוספת רכיב');updateBar();setTimeout(()=>{const el=[...$('sheetBody').querySelectorAll('[data-sec]')].find(b=>b.dataset.sec===D.tab);if(el)el.scrollIntoView({block:'start'});},30);};let DRAWOPEN=false;$('bMeas').onclick=()=>setMeas(measMode?null:'dist');$('bFit').onclick=fit;$('bGrid').onclick=()=>gridDialog();
 $('bDoor').onclick=()=>{toggleDoors();updateBar();};$('bLockAll').onclick=toggleLockAll;
 /* Keyboard: Delete removes what's selected, Esc lets go, Ctrl+Z / Ctrl+Y undo and redo, Ctrl+A takes all. */
 document.addEventListener('keydown',e=>{const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;if(!$('modal').classList.contains('hidden'))return;
