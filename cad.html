@@ -386,6 +386,8 @@ body.liblist #sheetBody .item .nm{font-size:14px!important;text-align:right;flex
 #sheetBody{padding-top:4px}
 @media (min-width:900px){#panel.lib{width:min(440px,calc(100vw - 20px))!important}body:not(.liblist) #panel.lib{width:min(520px,calc(100vw - 20px))!important}}
 @media (max-width:600px){#tabs{flex-wrap:nowrap!important;overflow-x:auto!important;scrollbar-width:none}#tabs::-webkit-scrollbar{display:none}}
+.tabhead{position:sticky;top:0;z-index:2;margin:14px -2px 2px;padding:8px 8px;font-size:15.5px;font-weight:800;background:linear-gradient(180deg,var(--acc-light),var(--acc));color:#000;border-radius:4px}
+#sheetBody.allv .grp{top:38px}
 </style>
 </head>
 <body>
@@ -1332,7 +1334,7 @@ const THUMBP={nplate:{fs:12},wall:{w:600,h:200},shline:{len:120,lw:6},shrect:{w:
 
 /* ================= state ================= */
 let state={name:'לוח חדש',objs:[]};
-let sel=null,wireMode=false,draft=null,orth=true,wireColor='brown',wireSec='1.5',curColor='green',globalLock=false,curTab=0,curDW=40;
+let sel=null,wireMode=false,draft=null,orth=true,wireColor='brown',wireSec='1.5',curColor='green',globalLock=false,curTab=-1,curDW=40;
 let view={s:2,tx:0,ty:0};
 let hist=[],hi=-1;
 const get=id=>state.objs.find(o=>o.id===id);
@@ -1754,7 +1756,7 @@ function syncDoc(){const d=state.tab==='sld'?'sld':state.tab==='both'?'both':'pa
  document.body.classList.toggle('sld',isLight());
  document.querySelectorAll('button[data-doc]').forEach(b=>b.classList.toggle('on',b.dataset.doc===d));$('bDark').textContent=isLight()?'☀':'🌙';$('bDark').title=isLight()?'תצוגה בהירה — לחץ לכהה':'תצוגה כהה — לחץ לבהירה';$('bDark').classList.toggle('on',!isLight());
  if(d==='sld'){if(wireColor!=='black'){window._panelWire=wireColor;wireColor='black';}}else if(window._panelWire){wireColor=window._panelWire;window._panelWire=null;}
- if(docChanged){curTab=LIB.findIndex(inDoc);if(pMode==='lib')buildSheet();}applyView();}
+ if(docChanged){if(curTab!==-1)curTab=LIB.findIndex(inDoc);if(pMode==='lib')buildSheet();}applyView();}
 /* Both documents apart: the panel's parts and the diagram's, as they're kept. */
 function splitDocs(){if(state.tab==='sld')return {panel:state.alt||[],sld:state.objs};if(state.tab!=='both')return {panel:state.objs,sld:state.alt||[]};
  const dx=state.sldDx||0,sl=new Set(state.objs.filter(isSldObj));const panel=[],sld=[];
@@ -1893,7 +1895,7 @@ function deleteSelected(){const ids=selIds();if(!ids.length)return;const objs=id
 /* ================= sheet ================= */
 const WIRE_IC='<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-width="2.4"><path d="M12 22v-8" stroke="#666" stroke-width="5"/><path d="M11 14c-1-5-4-8-7-10" stroke="#e53935"/><path d="M12 14c0-5 0-8 1-11" stroke="#43a047"/><path d="M13 14c1-5 4-8 7-9" stroke="#1e88e5"/></svg>';
 const inDoc=T=>T.any||state.tab==='both'||!!T.sld===(state.tab==='sld');
-function buildTabs(){if(!LIB[curTab]||!inDoc(LIB[curTab]))curTab=LIB.findIndex(inDoc);$('tabs').innerHTML=LIB.map((t,i)=>inDoc(t)?`<button class="tab ${i===curTab&&!libQ?'on':''}" data-i="${i}"><span class="ti">${t.icon||''}</span><span>${t.tab}</span></button>`:'').join('');}
+function buildTabs(){if(curTab!==-1&&(!LIB[curTab]||!inDoc(LIB[curTab])))curTab=-1;$('tabs').innerHTML=`<button class="tab ${curTab===-1&&!libQ?'on':''}" data-i="-1"><span class="ti">☰</span><span>הכל</span></button>`+LIB.map((t,i)=>inDoc(t)?`<button class="tab ${i===curTab&&!libQ?'on':''}" data-i="${i}"><span class="ti">${t.icon||''}</span><span>${t.tab}</span></button>`:'').join('');}
 let libQ='',pMode=null;
 // the library lists parts one under another (picture + name) unless the viewer chose the tile grid
 let LIBLIST=true;try{LIBLIST=localStorage.getItem('ohadcad.libview')!=='grid';}catch(e){}document.body.classList.toggle('liblist',LIBLIST);
@@ -1901,12 +1903,15 @@ function buildSheet(){buildTabs();const q=libQ.trim().toLowerCase();
  if(q){const res=[],seen=new Set(),words=q.split(/\s+/).filter(Boolean).map(w=>/[א-ת]/.test(w)&&w.length>3?w.replace(/(ות|ים|ה|ת)$/,''):w);
   LIB.forEach((T,ti)=>inDoc(T)&&T.groups.forEach((g,gi)=>g.items.forEach((e,ii)=>{const tx=(e.n+' '+g.g+' '+T.tab).toLowerCase();if(!seen.has(e)&&words.every(w=>tx.includes(w))){seen.add(e);res.push([ti,gi,ii,e]);}})));
   $('sheetBody').innerHTML=res.length?`<div class="grp">תוצאות (${res.length})</div><div class="grid">`+res.map(([ti,gi,ii,e])=>itemBtn(ti,gi,ii,e)).join('')+'</div>':'<div class="hint" style="margin-top:12px">לא נמצאו רכיבים.</div>';return;}
- const T=LIB[curTab];let h=`<div class="libview"><button data-lv="list" class="${LIBLIST?'on':''}">☰ רשימה</button><button data-lv="grid" class="${LIBLIST?'':'on'}">▦ משבצות</button></div><div class="hint ldhint">✋ ${matchMedia('(pointer:coarse)').matches?'החזק רגע על רכיב וגרור אותו':'גרור רכיב'} אל השרטוט כדי למקם אותו בדיוק — או ${matchMedia('(pointer:coarse)').matches?'הקש':'לחץ'} עליו להוספה אוטומטית</div>`+(T.hint?`<div class="hint" style="margin-top:4px">${T.hint}</div>`:'');
- T.groups.forEach((g,gi)=>{h+=`<div class="grp">${g.g}</div>`;
+ const T=LIB[curTab]||{groups:[]};let h=`<div class="libview"><button data-lv="list" class="${LIBLIST?'on':''}">☰ רשימה</button><button data-lv="grid" class="${LIBLIST?'':'on'}">▦ משבצות</button></div><div class="hint ldhint">✋ ${matchMedia('(pointer:coarse)').matches?'החזק רגע על רכיב וגרור אותו':'גרור רכיב'} אל השרטוט כדי למקם אותו בדיוק — או ${matchMedia('(pointer:coarse)').matches?'הקש':'לחץ'} עליו להוספה אוטומטית</div>`+(T.hint?`<div class="hint" style="margin-top:4px">${T.hint}</div>`:'');
+ // "הכל": every tab of this view, one after another, each under its own heading
+ const tabs=curTab===-1?LIB.map((t,i)=>[t,i]).filter(([t])=>inDoc(t)):[[T,curTab]];
+ tabs.forEach(([T2,ti])=>{if(curTab===-1)h+=`<div class="tabhead">${T2.icon||''} ${T2.tab}</div>`;
+ T2.groups.forEach((g,gi)=>{h+=`<div class="grp">${g.g}</div>`;
   if(g.colors)h+=`<div class="chips">${Object.keys(COLORS).filter(c=>g.colors==='all'||!['black','grey','yellow','white'].includes(c)).map(c=>`<button class="chip ${c===curColor?'on':''}" data-c="${c}" style="background:${COLORS[c]}"></button>`).join('')}</div>`;
   if(g.widths)h+=`<div class="chips">${DUCTW.map(d=>`<button class="wbtn ${d==curDW?'pri':''}" data-dw="${d}">${d} מ"מ</button>`).join('')}</div><div class="hint">לשינוי אורך: בחר תעלה/פס וגרור את העיגולים הכחולים שבקצוות.</div>`;
-  h+=`<div class="grid">`+g.items.map((e,ii)=>itemBtn(curTab,gi,ii,e)).join('')+`</div>`;});
- $('sheetBody').innerHTML=h;}
+  h+=`<div class="grid">`+g.items.map((e,ii)=>itemBtn(ti,gi,ii,e)).join('')+`</div>`;});});
+ $('sheetBody').classList.toggle('allv',curTab===-1);$('sheetBody').innerHTML=h;}
 function itemBtn(ti,gi,ii,e){return `<button class="item" data-t="${ti}" data-g="${gi}" data-ii="${ii}"><div class="th${DEF[e.t]?.sld?' lt':''}">${thumbSVG(mkObj(e,true))}</div><div class="nm ${/[א-ת]/.test(e.n)?'he':''}">${e.n}</div></button>`;}
 function openPanel(m,title){pMode=m;$('panel').classList.remove('hidden');$('panel').classList.toggle('lib',m==='lib');$('panel').classList.toggle('half',m==='props'&&innerWidth<600);$('libWrap').style.display=m==='lib'?'':'none';$('propsBody').style.display=m==='props'?'':'none';$('pTitle').textContent=title||'';if(m==='lib')buildSheet();updateBar();}
 function closePanel(){pMode=null;$('panel').classList.add('hidden');updateBar();}
