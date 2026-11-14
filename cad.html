@@ -1336,10 +1336,12 @@ function wirePath(w,pts){let ps=(pts||w.pts).map(resolve).filter(Boolean);if(ps.
    spread 10 mm apart, ordered so they don't cross; where two wires still
    cross, the one running across jumps over the other with a small arc. */
 let WL=new Map(),WG=new Map();
+// a terminal-on-terminal joint whose two ends still meet (drawn as a dot); once pulled apart it is a wire like any other
+function jointClosed(w){if(!w.p.joint)return false;const a=resolve(w.pts[0]),b=resolve(w.pts[1]);return !!a&&!!b&&Math.hypot(a.x-b.x,a.y-b.y)<.6;}
 // which way a terminal points (-1 up, +1 down), following the part's turn
 function tDir(p){const o=get(p.r),t=o&&termsOf(o)[p.t];if(!t)return 1;const [,y0]=fromLocal(o,t[0],t[1]),[,y1]=fromLocal(o,t[0],t[1]+(t[1]<0?-1:1));return y1<y0?-1:1;}
 function wireLayout(){WL=new Map();WG=new Map();
- const W=state.objs.filter(w=>w.type==='wire'&&!w.p.joint&&(state.tab==='sld'||isSldObj(w)));if(!W.length)return;
+ const W=state.objs.filter(w=>w.type==='wire'&&!jointClosed(w)&&(state.tab==='sld'||isSldObj(w)));if(!W.length)return;
  // symbols' terminals point up or down: an auto wire leaves each end that way, runs across at one
  // height (its own "ym" once dragged there) and goes into the other end — over the top when both
  // ends point up, under when both point down, half way otherwise
@@ -2143,7 +2145,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  if(hEl&&so&&!so.locked&&!wireMode&&!globalLock){G.mode='resize';G.o=so;G.h=hEl.dataset.h.split(',').map(Number);G.o0={x:so.x,y:so.y,rot:so.rot};G.s0=sizeOf(so);G.fs0=+so.p.fs||0;return;}
  if(QW()){const [wx,wy]=toWorld(e.clientX,e.clientY),tr=termAt(wx,wy,qRad('press',e.pointerType!=='mouse'));if(tr){G.mode='qwire';G.from=tr;G.to=null;G.cur=[wx,wy];HOV=null;return;}}
  const o=id&&get(id);
- if(o&&o.type==='wire'&&o.p.auto&&o.pts.length===2&&!o.p.joint&&(state.tab==='sld'||isSldObj(o))&&!wireMode&&!globalLock&&!o.locked){G.mode='wmid';G.o=o;return;}
+ if(o&&o.type==='wire'&&o.p.auto&&o.pts.length===2&&!jointClosed(o)&&(state.tab==='sld'||isSldObj(o))&&!wireMode&&!globalLock&&!o.locked){G.mode='wmid';G.o=o;return;}
  if(o&&!wireMode&&!globalLock&&!o.locked&&o.type!=='wire'&&((o.type!=='enclosure'&&o.type!=='cibox'&&o.type!=='cabinet')||sel===o.id)){
   if(o.type==='mdim'){G.mode='mdoff';G.o=o;G.off0=+o.p.off||0;G.w0=toWorld(e.clientX,e.clientY);return;}
   G.mode='drag';G.o=o;G.ox=o.x;G.oy=o.y;G.w0=toWorld(e.clientX,e.clientY);G.kids=[];
