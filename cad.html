@@ -801,6 +801,17 @@ const DEF={
   size:o=>({w:+o.p.poles===4?108:81,h:137}),
   terms:o=>{const w=+o.p.poles===4?108:81,n=+o.p.poles===4?4:3,L=n===4?['N','1','3','5']:['1','3','5'],B=n===4?['N','2','4','6']:['2','4','6'];return [...spread(w*.86,n).map((x,i)=>[x,-58,L[i]]),...spread(w*.86,n).map((x,i)=>[x,58,B[i]])];},
   draw:o=>nsxDraw(o,DEF.nsxm.size(o),true)},
+ /* ---- domestic modular panel (rows × modules): white plastic box; its DIN rails are added with it ---- */
+ hbox:{layer:0,edit:['tag','rows','mods'],def:{rows:2,mods:12,tag:''},
+  size:o=>{const r=Math.max(1,+o.p.rows||1),m=+o.p.mods||12;return {w:m*18+70,h:85+150*r};},
+  draw:o=>{const r=Math.max(1,+o.p.rows||1),m=+o.p.mods||12,W=m*18+70,H=85+150*r,y0=-H/2;
+   let s=`<rect x="${-W/2}" y="${y0}" width="${W}" height="${H}" rx="10" fill="#f3f3f0" stroke="#8d8d88" stroke-width="2"/><rect x="${-W/2+9}" y="${y0+9}" width="${W-18}" height="${H-18}" rx="6" fill="none" stroke="#c9c9c3" stroke-width="1.4"/>`;
+   for(let i=0;i<r;i++){const cy=y0+42.5+75+i*150,ww=m*18+8;
+    s+=`<rect x="${-ww/2}" y="${cy-48}" width="${ww}" height="96" rx="3" fill="#5f6266" stroke="#46494d" stroke-width="1"/>`+
+     `<rect x="${-ww/2}" y="${cy+52}" width="${ww}" height="14" rx="2" fill="#e6e6e1" stroke="#b9b9b3" stroke-width=".8"/>`;}
+   [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>s+=`<circle cx="${a*(W/2-20)}" cy="${b*(H/2-20)}" r="4" fill="#dcdcd6" stroke="#8d8d88" stroke-width=".8"/><path d="M${a*(W/2-20)-2.5} ${b*(H/2-20)}h5" stroke="#8d8d88" stroke-width=".8"/>`);
+   if(o.p.tag)s+=txt(0,y0+28,o.p.tag,10,'#333',700);else s+=txt(0,y0+28,`${r}×${m}`,9,'#888',700);
+   return s;}},
  gv2:{layer:4,rail:true,edit:['tag','rating'],ratings:['GV2ME06 1-1.6A','GV2ME07 1.6-2.5A','GV2ME08 2.5-4A','GV2ME10 4-6.3A','GV2ME14 6-10A','GV2ME16 9-14A','GV2ME20 13-18A','GV2ME21 17-23A','GV2ME22 20-25A','GV2ME32 24-32A'],
   def:{rating:'GV2ME10 4-6.3A'},size:()=>({w:45,h:89}),terms:()=>[...spread(45,3).map((x,i)=>[x,-37,['1','3','5'][i]]),...spread(45,3).map((x,i)=>[x,37,['2','4','6'][i]])],
   draw:o=>{let s=sBody(45,89,15);s+=`<rect x="-19" y="-27" width="38" height="54" rx="2" fill="#41474c"/><circle cx="0" cy="-17" r="6.5" fill="#e5e7eb" stroke="#555" stroke-width=".5"/><path d="M0 -17L4 -21" stroke="#c62828" stroke-width="1.1"/>`;
@@ -1338,6 +1349,7 @@ const LIB=[
   {tab:'ארונות ולוחות',icon:'🗄',hint:'בעריכת ארון (עיפרון): מספר שדות, רוחב, דלת / פאנלים / דלת חיצונית, גובה וסוקל. פתח למפסקים מוסיפים כשהארון בתצוגת חזית.',groups:[
    {g:'ארונות עומדים (גובה 2000, סוקל 100)',items:I('ארון 600','ארון 800','ארון 1200 דלת כפולה','ארון כפול 2×800','ארון 3 שדות','ארון עם פאנלים','ארון ללא דלת','ארון ללא סוקל')},
    {g:'לוחות קיר',items:I('לוח עם דלת ומנעול','לוח עם ידית ומנעול','לוח ללא דלת')},
+   {g:'לוחות ביתיים מודולריים (כולל פסי DIN)',items:[{t:'hbox',n:'לוח ביתי 1×12',p:{rows:1,mods:12}},{t:'hbox',n:'לוח ביתי 2×12',p:{rows:2,mods:12}},{t:'hbox',n:'לוח ביתי 3×12',p:{rows:3,mods:12}},{t:'hbox',n:'לוח ביתי 4×12',p:{rows:4,mods:12}},{t:'hbox',n:'לוח ביתי 1×18',p:{rows:1,mods:18}},{t:'hbox',n:'לוח ביתי 2×18',p:{rows:2,mods:18}},{t:'hbox',n:'לוח ביתי 3×18',p:{rows:3,mods:18}},{t:'hbox',n:'לוח ביתי 4×18',p:{rows:4,mods:18}}]},
    {g:'קופסאות לחצנים CI-K (גובה×רוחב מ"מ)',items:I('CI-K1 131×80','CI-K2 181×100','CI-K3 222×120','CI-K4 240×160','CI-K5 280×200')},
    {g:'קופסאות Ci מודולריות',items:I('Ci 250×187.5','Ci 375×250','Ci 250×375','Ci 375×375','Ci 250×375 עם חלון')},
    {g:'מחיצות פח',items:I('מחיצה אופקית','מחיצה אנכית')},
@@ -2021,7 +2033,7 @@ function ldMove(x,y){const d=LD;d.g.style.left=x+'px';d.g.style.top=y+'px';
  else{DRAGNEW=null;d.g.classList.remove('over');}render();}
 function ldEnd(d,drop){document.body.classList.remove('libdrag');if(d.g)d.g.remove();const o=DRAGNEW;DRAGNEW=null;LDSW=true;setTimeout(()=>LDSW=false,80);
  if(!drop||!o){renderNow();if(drop)toast('שחרר את הרכיב מעל השרטוט כדי להוסיף אותו');return;}
- autoTag(o);state.objs.push(o);sel=o.id;closePanel();splitThrough(o);sldJoin([o]);commit();renderNow();updateBar();toast(`נוסף: ${d.name}`);}
+ autoTag(o);state.objs.push(o);hboxRails(o);sel=o.id;closePanel();splitThrough(o);sldJoin([o]);commit();renderNow();updateBar();toast(`נוסף: ${d.name}`);}
 $('sheetBody').addEventListener('pointerdown',e=>{const it=e.target.closest('.item');if(!it||LD||(e.pointerType==='mouse'&&e.button!==0))return;
  LD={it,x:e.clientX,y:e.clientY,id:e.pointerId,touch:e.pointerType!=='mouse',on:false};
  if(LD.touch)LD.t=setTimeout(()=>{if(LD&&!LD.on)ldStart();},320);});
@@ -2051,7 +2063,10 @@ $('favBar').addEventListener('pointerdown',e=>{const it=e.target.closest('.item'
  LD={it,x:e.clientX,y:e.clientY,id:e.pointerId,touch:e.pointerType!=='mouse',on:false};if(LD.touch)LD.t=setTimeout(()=>{if(LD&&!LD.on)ldStart();},320);});
 $('favBar').addEventListener('contextmenu',e=>{if(e.target.closest('.item'))e.preventDefault();});
 try{buildFav();}catch(e){}
-function addItem(e){const o=mkObj(e);placeNew(o);state.objs.push(o);sel=o.id;commit();renderNow();updateBar();if(innerWidth<760)closePanel();if(o.type==='cabinet')fit();else ensureVisible(o);toast(`נוסף: ${e.n}`);}
+// a domestic panel brings one DIN rail per row, sized to its modules
+function hboxRails(o){if(o.type!=='hbox')return;const r=Math.max(1,+o.p.rows||1),m=+o.p.mods||12,H=85+150*r;
+ for(let i=0;i<r;i++){const rl=mkObj({t:'rail',n:'פס DIN 35',p:{len:m*18+10}});rl.x=o.x;rl.y=r2(o.y-H/2+42.5+75+i*150);rl.rot=0;state.objs.push(rl);}}
+function addItem(e){const o=mkObj(e);placeNew(o);state.objs.push(o);hboxRails(o);sel=o.id;commit();renderNow();updateBar();if(innerWidth<760)closePanel();if(o.type==='cabinet')fit();else ensureVisible(o);toast(`נוסף: ${e.n}`);}
 function ensureVisible(o){const r=svg.getBoundingClientRect();const sx=o.x*view.s+view.tx,sy=o.y*view.s+view.ty;if(sx<20||sx>r.width-20||sy<topBottom()+20||sy>sheetTop()-80){const [cx,cy]=viewCenter();view.tx+=(cx-o.x)*view.s;view.ty+=(cy-o.y)*view.s;applyView();}}
 
 /* ================= wiring ================= */
@@ -2309,7 +2324,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('#measBar [data-m
 /* ================= pointer interaction ================= */
 // A cabinet, box or CI enclosure carries what's mounted in it when dragged,
 // but never another one standing over it — each moves on its own.
-const isBox=o=>o.type==='enclosure'||o.type==='cibox'||o.type==='cabinet';
+const isBox=o=>o.type==='enclosure'||o.type==='cibox'||o.type==='cabinet'||o.type==='hbox';
 const P=new Map();let G=null,pinch=null;
 svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(e.pointerId,{x:e.clientX,y:e.clientY});
  if(P.size===2){if(G&&G.mode==='drag'&&G.moved)commit();G=null;const [a,b]=[...P.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),cx:(a.x+b.x)/2,cy:(a.y+b.y)/2,v:{...view}};return;}
@@ -2552,7 +2567,7 @@ function shDash(o){const w=Math.max(.2,+o.p.lw||2);return o.p.dash==='dash'?`str
 function shFill(o){const c=col(o,'blue');return o.p.fill==='light'?c+'33':o.p.fill==='solid'?c:'none';}
 function lblFs(o){return Math.max(1,+o.p.fs||6);}
 function lblLines(o){const ls=String(o.p.text??'').split('\n');return ls.length?ls:[''];}
-const FL={title:'שם הלוח',from:'מוזן מ',volt:'מתח',ic:'זרם קצר',main:'מפסק ראשי',notes:'שורות נוספות',pcol:'צבע השלט',feed:'סוג ההזנה',tn:'מספרי הדקים (למעלה-למטה)',wt:'עובי קיר (מ"מ)',lw:'עובי קו (מ"מ)',dash:'סוג קו',fill:'מילוי',head:'ראשי חץ',ang:'זווית (מעלות)',poles:'מספר קטבים',gang:'מספר שקעים',ip:'הגנה',cee:'סוג שקע',cfg:'הרכב הקופסה',sw:'סוג מפסק',lid:'מכסה',kind:'סוג',th:'עובי רצפה (מ"מ)',rh:'גובה רצפה כפולה (מ"מ)',rad:'רדיוס כיפוף מינימלי',ends:'פתיחת גידים',cores:'מספר גידים',sec:'חתך גיד (ממ"ר)',brk:'אורך פתיחת הגידים (מ"מ)',pump:'משאבה / ציוד מונע',tw:'רוחב תעלה (מ"מ)',set:'הרכב מהדקים',desc:'תיאור',fs:'גודל טקסט (מ"מ)',tag:'סימון (למשל Q1, K2)',rating:'דירוג / ערך',len:'אורך (מ"מ)',dw:'רוחב תעלה (מ"מ)',mods:'מספר מודולים',ph:'מספר פאזות',w:'רוחב (מ"מ)',h:'גובה (מ"מ)',text:'טקסט',kind:'סוג מהדק',color:'צבע',orient:'כיוון התקנה',coil:'מתח סליל',frame:'גודל / מבנה',door:'דלת',hinge:'צד צירים',closed:'תצוגה',size:'גודל קופסה',window:'חלון שקוף'};
+const FL={rows:'מספר שורות',mods:'מודולים בשורה',title:'שם הלוח',from:'מוזן מ',volt:'מתח',ic:'זרם קצר',main:'מפסק ראשי',notes:'שורות נוספות',pcol:'צבע השלט',feed:'סוג ההזנה',tn:'מספרי הדקים (למעלה-למטה)',wt:'עובי קיר (מ"מ)',lw:'עובי קו (מ"מ)',dash:'סוג קו',fill:'מילוי',head:'ראשי חץ',ang:'זווית (מעלות)',poles:'מספר קטבים',gang:'מספר שקעים',ip:'הגנה',cee:'סוג שקע',cfg:'הרכב הקופסה',sw:'סוג מפסק',lid:'מכסה',kind:'סוג',th:'עובי רצפה (מ"מ)',rh:'גובה רצפה כפולה (מ"מ)',rad:'רדיוס כיפוף מינימלי',ends:'פתיחת גידים',cores:'מספר גידים',sec:'חתך גיד (ממ"ר)',brk:'אורך פתיחת הגידים (מ"מ)',pump:'משאבה / ציוד מונע',tw:'רוחב תעלה (מ"מ)',set:'הרכב מהדקים',desc:'תיאור',fs:'גודל טקסט (מ"מ)',tag:'סימון (למשל Q1, K2)',rating:'דירוג / ערך',len:'אורך (מ"מ)',dw:'רוחב תעלה (מ"מ)',mods:'מספר מודולים',ph:'מספר פאזות',w:'רוחב (מ"מ)',h:'גובה (מ"מ)',text:'טקסט',kind:'סוג מהדק',color:'צבע',orient:'כיוון התקנה',coil:'מתח סליל',frame:'גודל / מבנה',door:'דלת',hinge:'צד צירים',closed:'תצוגה',size:'גודל קופסה',window:'חלון שקוף'};
 function cabDialog(o,tmp){tmp=tmp||JSON.parse(JSON.stringify(o.p));const sel_=(f,opts,v)=>`<select data-f="${f}">${opts.map(([a,b])=>`<option value="${a}" ${String(a)===String(v)?'selected':''}>${b}</option>`).join('')}</select>`;
  const WS=[300,400,500,600,800,1000,1200].map(w=>[w,w+' מ"מ']),FS=[['door','דלת'],['double','דלת כפולה'],['cover','פאנלים מוברגים'],['none','ללא חזית']],HS=[['L','צירים שמאל'],['R','צירים ימין']];
  let h=`<div class="fld"><label>שם</label><input id="c_name" value="${esc(tmp.name||'')}"></div><div class="fld"><label>שלט על הדלת</label><input id="c_tag" value="${esc(tmp.tag||'')}"></div>`;
@@ -2616,6 +2631,8 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='feed')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_feed">${['N','L','L1','L2','L3','PE','+24V','0V'].map(a=>`<option ${a===v?'selected':''}>${a}</option>`).join('')}</select></div>`;
   else if(k==='pcol')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_pcol">${[['white','לבן — כתב שחור'],['black','שחור — כתב לבן'],['red','אדום — כתב לבן'],['yellow','צהוב — כתב שחור'],['blue','כחול — כתב לבן'],['green','ירוק — כתב לבן']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='notes')h+=`<div class="fld"><label>${FL[k]} (כל שורה בנפרד)</label><textarea id="f_notes" rows="2">${esc(v)}</textarea></div>`;
+  else if(k==='rows')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_rows">${[1,2,3,4,5,6].map(a=>`<option value="${a}" ${a==v?'selected':''}>${a}</option>`).join('')}</select></div><div class="hint">שינוי שורות לא מזיז את פסי ה-DIN הקיימים — הוסף או הזז פסים לפי הצורך.</div>`;
+  else if(k==='mods')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_mods">${[8,12,13,18,24].map(a=>`<option value="${a}" ${a==v?'selected':''}>${a} מודולים</option>`).join('')}</select></div>`;
   else if(k==='dash')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_dash">${[['solid','רציף'],['dash','מקווקו'],['dot','מנוקד'],['dashdot','קו-נקודה']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='fill')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_fill">${[['none','ללא'],['light','שקוף בצבע הקו'],['solid','מלא']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='head')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_head">${[['none','בלי חץ (קו)'],['end','חץ בקצה אחד'],['both','חץ בשני הקצוות']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
