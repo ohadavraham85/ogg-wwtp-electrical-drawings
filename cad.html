@@ -418,6 +418,15 @@ body.liblist #sheetBody .item .favstar{position:static;order:9;font-size:19px}
 @media (max-height:500px){:root{--toph3:42px}#favBar .item.fav{height:36px}#favBar .item.fav .th{height:28px}}
 @media (max-width:600px){:root{--toph3:48px}}
 #sbar button{font-family:var(--uif,Heebo),Arial,sans-serif!important}
+/* favourites: icons only; the name shows on hover */
+#favBar .item.fav{width:52px;height:44px;padding:2px!important;justify-content:center;gap:0}
+#favBar .item.fav .nm{display:none}
+#favBar .item.fav .th{width:44px;height:38px}#favBar .item.fav .th svg{max-width:44px;max-height:38px}
+#favBar .favx{top:-1px;left:1px;font-size:12px;opacity:0;transition:opacity .12s}
+#favBar .item.fav:hover .favx,#favBar .item.fav:focus-within .favx{opacity:1}
+@media (hover:none){#favBar .favx{opacity:.8}}
+body.favnames #favBar .item.fav{width:auto;padding:2px 22px 2px 8px!important;justify-content:flex-start;gap:6px}
+body.favnames #favBar .item.fav .nm{display:block}body.favnames #favBar .item.fav .th{width:40px;height:36px}
 </style>
 </head>
 <body>
@@ -2016,7 +2025,7 @@ function favToggle(k,n){let L=favList(k);if(L.includes(n))L=L.filter(x=>x!==n);e
 function favFind(k,n){for(let ti=0;ti<LIB.length;ti++){const T=LIB[ti];if(!!T.sld!==(k==='sld'))continue;for(let gi=0;gi<T.groups.length;gi++){const ii=T.groups[gi].items.findIndex(e=>e.n===n);if(ii>=0)return [ti,gi,ii,T.groups[gi].items[ii]];}}return null;}
 function buildFav(){const B=$('favBar');if(!B)return;const ks=state.tab==='both'?['panel','sld']:[state.tab==='sld'?'sld':'panel'];let h='<span class="favlbl">★ מועדפים</span>',n=0;
  ks.forEach(k=>favList(k).forEach(name=>{const f=favFind(k,name);if(!f)return;const [ti,gi,ii,e]=f;n++;
-  h+=`<button class="item fav" data-t="${ti}" data-g="${gi}" data-ii="${ii}" title="${esc(e.n)} — לחיצה מוסיפה, גרירה ממקמת"><div class="th${DEF[e.t]?.sld?' lt':''}">${thumbSVG(mkObj(e,true))}</div><div class="nm">${esc(e.n)}</div><span class="favx" data-unfav="${esc(e.n)}" data-fk="${k}" title="הסר מהמועדפים">×</span></button>`;}));
+  h+=`<button class="item fav" data-t="${ti}" data-g="${gi}" data-ii="${ii}" title="${esc(e.n)}\nלחיצה מוסיפה · גרירה ממקמת" aria-label="${esc(e.n)}"><div class="th${DEF[e.t]?.sld?' lt':''}">${thumbSVG(mkObj(e,true))}</div><div class="nm">${esc(e.n)}</div><span class="favx" data-unfav="${esc(e.n)}" data-fk="${k}" title="הסר מהמועדפים">×</span></button>`;}));
  if(!n)h+=`<span class="favhint">סמן ☆ ליד רכיבים בחלון "הוסף רכיב" כדי להוסיף אותם לכאן (עד ${FAVMAX})</span>`;
  B.innerHTML=h;}
 $('favBar').addEventListener('click',e=>{const x=e.target.closest('[data-unfav]');if(x){e.stopPropagation();favToggle(x.dataset.fk,x.dataset.unfav);if(pMode==='lib')buildSheet();return;}
@@ -2086,16 +2095,18 @@ const UIFONTS=[['Heebo','Heebo (ברירת מחדל)'],['Rubik','Rubik — עג�
 function uiFont(){try{return localStorage.getItem('ohadcad.font')||'Heebo';}catch(e){return 'Heebo';}}
 function uiScale(){try{return +localStorage.getItem('ohadcad.uiscale')||1;}catch(e){return 1;}}
 function loadFont(f,doc){doc=doc||document;if(f==='Heebo'||f==='Arial'||doc.getElementById('gf-'+f.replace(/ /g,'')))return;const l=doc.createElement('link');l.id='gf-'+f.replace(/ /g,'');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+f.replace(/ /g,'+')+':wght@400;500;600;700;800&display=swap';doc.head.appendChild(l);}
-function applyFontScale(){const f=uiFont();loadFont(f);document.body.style.fontFamily=`'${f}',Heebo,system-ui,Arial,sans-serif`;document.documentElement.style.setProperty('--uif',`'${f}',Heebo,Arial,sans-serif`);
+function applyFontScale(){let fn=false;try{fn=localStorage.getItem('ohadcad.favnames')==='1';}catch(e){}document.body.classList.toggle('favnames',fn);const f=uiFont();loadFont(f);document.body.style.fontFamily=`'${f}',Heebo,system-ui,Arial,sans-serif`;document.documentElement.style.setProperty('--uif',`'${f}',Heebo,Arial,sans-serif`);
  if(!SH){const z=uiScale();document.documentElement.style.zoom=z===1?'':String(z);}
  try{SH&&SH.applyUI&&SH.applyUI();}catch(e){}}
 function displayDialog(){const f0=uiFont(),z0=uiScale();
  modal('הגדרות תצוגה',`<div class="fld"><label>גופן כללי</label><select id="ds_f">${UIFONTS.map(([v,n])=>`<option value="${v}" ${v===f0?'selected':''}>${n}</option>`).join('')}</select></div>
 <div class="fld"><label>הגדלה כללית: <b id="ds_zl">${Math.round(z0*100)}%</b></label><input id="ds_z" type="range" min="0.8" max="1.5" step="0.05" value="${z0}" style="padding:0"></div>
 <div style="display:flex;gap:6px;flex-wrap:wrap">${[0.9,1,1.1,1.25,1.4].map(v=>`<button class="wbtn" data-z="${v}">${Math.round(v*100)}%</button>`).join('')}</div>
+<div class="fld" style="margin-top:12px"><label>רצועת המועדפים</label><select id="ds_fn"><option value="0">אייקונים בלבד (השם מופיע בריחוף עם העכבר)</option><option value="1" ${document.body.classList.contains('favnames')?'selected':''}>אייקון + שם</option></select></div>
 <div class="hint" style="margin-top:10px">השינוי מוחל מיד ונשמר במכשיר הזה. ההגדלה מגדילה את כל הכפתורים, הכתב והחלונות.</div>`,
-  [{t:'סגור',cls:'pri'},{t:'ברירת מחדל',fn:()=>{try{localStorage.removeItem('ohadcad.font');localStorage.removeItem('ohadcad.uiscale');}catch(e){}applyFontScale();closeModal();toast('חזרה לברירת המחדל');return false;}}]);
+  [{t:'סגור',cls:'pri'},{t:'ברירת מחדל',fn:()=>{try{localStorage.removeItem('ohadcad.font');localStorage.removeItem('ohadcad.uiscale');localStorage.removeItem('ohadcad.favnames');}catch(e){}applyFontScale();closeModal();toast('חזרה לברירת המחדל');return false;}}]);
  const setZ=v=>{v=Math.max(.8,Math.min(1.5,+v));try{localStorage.setItem('ohadcad.uiscale',String(v));}catch(e){}$('ds_zl').textContent=Math.round(v*100)+'%';$('ds_z').value=v;applyFontScale();};
+ $('ds_fn').onchange=e=>{try{localStorage.setItem('ohadcad.favnames',e.target.value);}catch(_){}applyFontScale();};
  $('ds_f').onchange=e=>{try{localStorage.setItem('ohadcad.font',e.target.value);}catch(_){}applyFontScale();};
  $('ds_z').onchange=e=>setZ(e.target.value);$('ds_z').oninput=e=>{$('ds_zl').textContent=Math.round(e.target.value*100)+'%';};
  $('mBody').onclick=e=>{const b=e.target.closest('[data-z]');if(b)setZ(b.dataset.z);};}
