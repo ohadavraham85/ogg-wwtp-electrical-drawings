@@ -369,6 +369,15 @@ body.noaxes #measBar,body.noaxes #wireBar{left:0;bottom:0}
 }
  #measBar,#wireBar{padding:6px}#measBar .wbtn,#wireBar .wbtn{padding:6px 9px;font-size:12.5px}
 }
+/* library as one column: picture beside the name */
+.libview{display:flex;gap:4px;justify-content:flex-start;margin:6px 0 2px}
+.libview button{padding:4px 10px;font-size:12.5px;font-weight:700;border-radius:4px;background:var(--ctl);border:1px solid var(--ctl-bd);color:var(--txt)}
+.libview button.on{background:linear-gradient(180deg,var(--acc-light),var(--acc));color:#000;border-color:var(--acc-light)}
+body.liblist #sheetBody .grid{grid-template-columns:1fr!important;gap:5px}
+body.liblist #sheetBody .item{flex-direction:row;justify-content:flex-start;align-items:center;gap:12px;min-height:58px!important;padding:5px 10px!important}
+body.liblist #sheetBody .item .th{width:78px;height:48px!important;flex:none}body.liblist #sheetBody .item .th svg{max-height:48px!important;max-width:100%}
+body.liblist #sheetBody .item .nm{font-size:14px!important;text-align:right;flex:1}body.liblist #sheetBody .item .nm:not(.he){text-align:left}
+@media (min-width:900px){body.liblist #panel.lib{width:min(520px,calc(100vw - 20px))}}
 </style>
 </head>
 <body>
@@ -1878,11 +1887,13 @@ const WIRE_IC='<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" strok
 const inDoc=T=>T.any||state.tab==='both'||!!T.sld===(state.tab==='sld');
 function buildTabs(){if(!LIB[curTab]||!inDoc(LIB[curTab]))curTab=LIB.findIndex(inDoc);$('tabs').innerHTML=LIB.map((t,i)=>inDoc(t)?`<button class="tab ${i===curTab&&!libQ?'on':''}" data-i="${i}"><span class="ti">${t.icon||''}</span><span>${t.tab}</span></button>`:'').join('');}
 let libQ='',pMode=null;
+// the library lists parts one under another (picture + name) unless the viewer chose the tile grid
+let LIBLIST=true;try{LIBLIST=localStorage.getItem('ohadcad.libview')!=='grid';}catch(e){}document.body.classList.toggle('liblist',LIBLIST);
 function buildSheet(){buildTabs();const q=libQ.trim().toLowerCase();
  if(q){const res=[],seen=new Set(),words=q.split(/\s+/).filter(Boolean).map(w=>/[א-ת]/.test(w)&&w.length>3?w.replace(/(ות|ים|ה|ת)$/,''):w);
   LIB.forEach((T,ti)=>inDoc(T)&&T.groups.forEach((g,gi)=>g.items.forEach((e,ii)=>{const tx=(e.n+' '+g.g+' '+T.tab).toLowerCase();if(!seen.has(e)&&words.every(w=>tx.includes(w))){seen.add(e);res.push([ti,gi,ii,e]);}})));
   $('sheetBody').innerHTML=res.length?`<div class="grp">תוצאות (${res.length})</div><div class="grid">`+res.map(([ti,gi,ii,e])=>itemBtn(ti,gi,ii,e)).join('')+'</div>':'<div class="hint" style="margin-top:12px">לא נמצאו רכיבים.</div>';return;}
- const T=LIB[curTab];let h=`<div class="hint ldhint">✋ ${matchMedia('(pointer:coarse)').matches?'החזק רגע על רכיב וגרור אותו':'גרור רכיב'} אל השרטוט כדי למקם אותו בדיוק — או ${matchMedia('(pointer:coarse)').matches?'הקש':'לחץ'} עליו להוספה אוטומטית</div>`+(T.hint?`<div class="hint" style="margin-top:4px">${T.hint}</div>`:'');
+ const T=LIB[curTab];let h=`<div class="libview"><button data-lv="list" class="${LIBLIST?'on':''}">☰ רשימה</button><button data-lv="grid" class="${LIBLIST?'':'on'}">▦ משבצות</button></div><div class="hint ldhint">✋ ${matchMedia('(pointer:coarse)').matches?'החזק רגע על רכיב וגרור אותו':'גרור רכיב'} אל השרטוט כדי למקם אותו בדיוק — או ${matchMedia('(pointer:coarse)').matches?'הקש':'לחץ'} עליו להוספה אוטומטית</div>`+(T.hint?`<div class="hint" style="margin-top:4px">${T.hint}</div>`:'');
  T.groups.forEach((g,gi)=>{h+=`<div class="grp">${g.g}</div>`;
   if(g.colors)h+=`<div class="chips">${Object.keys(COLORS).filter(c=>g.colors==='all'||!['black','grey','yellow','white'].includes(c)).map(c=>`<button class="chip ${c===curColor?'on':''}" data-c="${c}" style="background:${COLORS[c]}"></button>`).join('')}</div>`;
   if(g.widths)h+=`<div class="chips">${DUCTW.map(d=>`<button class="wbtn ${d==curDW?'pri':''}" data-dw="${d}">${d} מ"מ</button>`).join('')}</div><div class="hint">לשינוי אורך: בחר תעלה/פס וגרור את העיגולים הכחולים שבקצוות.</div>`;
@@ -1905,6 +1916,7 @@ function buildWirePanel(){const W=$('wireBar');W.classList.toggle('hidden',!wire
   <div class="hint" style="margin:8px 2px 0;font-size:12.5px">הקש על מהדק (עיגול תכלת) ← נקודות פינה ← מהדק יעד.</div>`;}
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(!b)return;curTab=+b.dataset.i;libQ='';$('search').value='';buildSheet();$('sheetBody').scrollTop=0;updateBar();});
 function sheetClick(e){const t=e.target;if(t.id==='sldGen'){genSld();return;}
+ const lv=t.closest('[data-lv]');if(lv){LIBLIST=lv.dataset.lv==='list';try{localStorage.setItem('ohadcad.libview',LIBLIST?'list':'grid');}catch(_){}document.body.classList.toggle('liblist',LIBLIST);buildSheet();return;}
  const c=t.closest('[data-c]');if(c){curColor=c.dataset.c;const o=sel&&get(sel);if(o&&['mcb','rcd','cont','lamp','busbar','label','pb','pbl','pl22'].includes(o.type)){o.p.color=curColor;commit();renderNow();}buildSheet();return;}
  const dw=t.closest('[data-dw]');if(dw){curDW=+dw.dataset.dw;const o=sel&&get(sel);if(o&&o.type==='duct'){o.p.dw=curDW;commit();renderNow();updateBar();}buildSheet();return;}
  const it=t.closest('.item');if(it){if(LDSW)return;addItem(LIB[+it.dataset.t].groups[+it.dataset.g].items[+it.dataset.ii]);return;}
