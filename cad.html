@@ -1931,7 +1931,7 @@ function ldMove(x,y){const d=LD;d.g.style.left=x+'px';d.g.style.top=y+'px';
  else{DRAGNEW=null;d.g.classList.remove('over');}render();}
 function ldEnd(d,drop){document.body.classList.remove('libdrag');if(d.g)d.g.remove();const o=DRAGNEW;DRAGNEW=null;LDSW=true;setTimeout(()=>LDSW=false,80);
  if(!drop||!o){renderNow();if(drop)toast('שחרר את הרכיב מעל השרטוט כדי להוסיף אותו');return;}
- autoTag(o);state.objs.push(o);sel=o.id;closePanel();commit();renderNow();updateBar();toast(`נוסף: ${d.name}`);}
+ autoTag(o);state.objs.push(o);sel=o.id;closePanel();splitThrough(o);sldJoin([o]);commit();renderNow();updateBar();toast(`נוסף: ${d.name}`);}
 $('sheetBody').addEventListener('pointerdown',e=>{const it=e.target.closest('.item');if(!it||LD||(e.pointerType==='mouse'&&e.button!==0))return;
  LD={it,x:e.clientX,y:e.clientY,id:e.pointerId,touch:e.pointerType!=='mouse',on:false};
  if(LD.touch)LD.t=setTimeout(()=>{if(LD&&!LD.on)ldStart();},320);});
@@ -2039,6 +2039,20 @@ function termMagnet(o,kids){const mv=new Set([o,...(kids||[]).map(k=>k.q)]),R=10
  for(const q of state.objs){if(mv.has(q)||q.type==='wire'||!(DEF[q.type]?.sld||isSldObj(q)))continue;
   for(const t of termsOf(q)){const [X,Y]=fromLocal(q,t[0],t[1]);for(const [x,y] of mine){const d=Math.hypot(X-x,Y-y);if(d<R&&(!best||d<best.d))best={d,dx:X-x,dy:Y-y};}}}
  if(best){o.x=r2(o.x+best.dx);o.y=r2(o.y+best.dy);}}
+/* A symbol dropped onto a wire that runs straight through one of its poles
+   (top and bottom terminal on the line) is put into the wire: the wire is cut
+   there and its two halves go to the pole's top and bottom terminals. */
+function splitThrough(m){if(!m||m.type==='wire'||!(DEF[m.type]?.sld||isSldObj(m)))return 0;try{wireLayout();}catch(e){}
+ const T=termsOf(m),pairs=[];T.forEach((t,i)=>{if(t[1]>=0)return;const j=T.findIndex(u=>u[1]>0&&Math.abs(u[0]-t[0])<.6);if(j<0)return;
+  const [x,y0]=fromLocal(m,t[0],t[1]),[,y1]=fromLocal(m,T[j][0],T[j][1]);pairs.push({ti:y0<y1?i:j,bi:y0<y1?j:i,x,top:Math.min(y0,y1),bot:Math.max(y0,y1)});});
+ if(!pairs.length)return 0;let n=0;
+ for(const w of state.objs.slice()){if(w.type!=='wire'||w.pts.some(p=>p.r===m.id))continue;const R=WL.get(w.id)||wirePs(w);if(!R||R.length<2)continue;
+  for(let i=0;i<R.length-1;i++){const a=R[i],b=R[i+1];if(Math.abs(a.x-b.x)>.6)continue;
+   const pr=pairs.find(P=>Math.abs(P.x-a.x)<.6&&Math.min(a.y,b.y)<=P.top+.6&&Math.max(a.y,b.y)>=P.bot-.6);if(!pr)continue;
+   const down=b.y>a.y,first={r:m.id,t:down?pr.ti:pr.bi},second={r:m.id,t:down?pr.bi:pr.ti},p0=Object.assign({},w.p);delete p0.joint;delete p0.ym;
+   let A,B;if(w.pts.length===2||w.p.auto){A=[w.pts[0],first];B=[second,w.pts[w.pts.length-1]];}else{A=w.pts.slice(0,i+1).concat([first]);B=[second].concat(w.pts.slice(i+1));}
+   state.objs=state.objs.filter(q=>q!==w);state.objs.push({id:uid(),type:'wire',p:Object.assign({},p0,{auto:w.p.auto||(A.length===2?1:undefined)}),pts:A},{id:uid(),type:'wire',p:Object.assign({},p0,{auto:w.p.auto||(B.length===2?1:undefined)}),pts:B});n++;break;}}
+ if(n)toast(`הרכיב שולב בקו (${n} ${n>1?'חוטים':'חוט'})`);return n;}
 function sldJoin(moving){const mv=new Set(moving.filter(Boolean)),ids=new Set([...mv].map(q=>q.id));let added=0,cut=0;
  // a joint stays connected when its parts are pulled apart (it then shows as a wire); only deleting it disconnects
  const linked=(a,i,b,j)=>state.objs.some(w=>w.type==='wire'&&w.pts.length===2&&((w.pts[0].r===a&&w.pts[0].t===i&&w.pts[1].r===b&&w.pts[1].t===j)||(w.pts[0].r===b&&w.pts[0].t===j&&w.pts[1].r===a&&w.pts[1].t===i)));
@@ -2208,7 +2222,7 @@ function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(!g.moved&&Date.now()-g.t0<600){if(g.dim){dimEdit(g.dim);return;}if(wireMode){const [x,y]=toWorld(e.clientX,e.clientY);wireTap(x,y);}
   else{const now=Date.now(),dbl=g.id&&LASTTAP.id===g.id&&now-LASTTAP.t<400&&Math.hypot(e.clientX-LASTTAP.x,e.clientY-LASTTAP.y)<24;LASTTAP={id:g.id,t:dbl?0:now,x:e.clientX,y:e.clientY};
    select(g.id,g.add);if(dbl&&!g.add)dblEdit(get(g.id));}}
- else if(g.mode==='drag'||g.mode==='resize'){if(g.mode==='drag'&&g.moved&&g.o)sldJoin([g.o,...(g.kids||[]).map(k=>k.q)]);commit();renderNow();updateBar();}}
+ else if(g.mode==='drag'||g.mode==='resize'){if(g.mode==='drag'&&g.moved&&g.o){splitThrough(g.o);sldJoin([g.o,...(g.kids||[]).map(k=>k.q)]);}commit();renderNow();updateBar();}}
 function doResize(g,wx,wy){const o=g.o,D=DEF[o.type],[u,v]=toLocal(g.o0,wx,wy);
  if(D.resize==='scale'){const [sx,sy]=g.h,fu=-sx*g.s0.w/2,fv=-sy*g.s0.h/2,k=Math.max(.2,Math.max(sx*(u-fu)/g.s0.w,sy*(v-fv)/g.s0.h));
   o.p.fs=r2(Math.max(1.5,(g.fs0||o.p.fs)*k));const n=sizeOf(o);[o.x,o.y]=fromLocal(g.o0,fu+sx*n.w/2,fv+sy*n.h/2);return;}
