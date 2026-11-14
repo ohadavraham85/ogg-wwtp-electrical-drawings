@@ -435,6 +435,15 @@ body.iconsonly #sbar button{padding:5px 9px;font-size:15px}
 #docTabs .ico,#sbar .ico{font-style:normal}
 body.iconsonly #libStrip span{display:none}body.iconsonly #libStrip{padding:12px 14px}body.iconsonly #libStrip svg{width:24px!important;height:24px!important}
 #docTabs button,#sbar button{display:inline-flex;align-items:center;gap:5px}
+/* thinner strokes for every toolbar icon; drawn icons in the bars */
+.tb svg,.rb svg,.pb svg,#libStrip svg,.tbc svg{stroke-width:1.6!important}
+body.uil .tb svg,body.uil .rb svg,body.uil .pb svg,body.uil .tbc svg{stroke-width:1.7!important}
+#bMenu svg{stroke-width:2.2!important}
+.lic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block}
+#docTabs .ico,#sbar .ico{display:inline-flex}
+body.iconsonly #docTabs button{padding:6px 11px}body.iconsonly #docTabs .lic{width:22px;height:22px}
+#docTabs button.on .lic,#sbar button.on .lic{stroke:#000}
+.tb,.rb,.pb,.tab,.wbtn,#docTabs button,#sbar button{border-bottom-width:1px!important}
 </style>
 </head>
 <body>
@@ -1802,7 +1811,7 @@ function isSldObj(o){if(!o)return false;if(state.tab==='sld')return true;if(stat
  if(o.type==='wire')return o.pts.some(p=>p.r&&isSldObj(get(p.r)))||(!o.pts.some(p=>p.r)&&o.pts[0].x>=(state.sldBx??1e9));return false;}
 function syncDoc(){const d=state.tab==='sld'?'sld':state.tab==='both'?'both':'panel';sldDark=!isLight();const key=d+(sldDark?'D':'L');if(key===shownDoc)return;const docChanged=!shownDoc||shownDoc[0]!==key[0]||shownDoc.slice(0,-1)!==d;shownDoc=key;
  document.body.classList.toggle('sld',isLight());
- document.querySelectorAll('button[data-doc]').forEach(b=>b.classList.toggle('on',b.dataset.doc===d));$('bDark').textContent=isLight()?'☀':'🌙';$('bDark').title=isLight()?'תצוגה בהירה — לחץ לכהה':'תצוגה כהה — לחץ לבהירה';$('bDark').classList.toggle('on',!isLight());
+ document.querySelectorAll('button[data-doc]').forEach(b=>b.classList.toggle('on',b.dataset.doc===d));$('bDark').innerHTML=`<i class="ico">${ico(isLight()?'sun':'moon')}</i>`;$('bDark').title=isLight()?'תצוגה בהירה — לחץ לכהה':'תצוגה כהה — לחץ לבהירה';$('bDark').classList.toggle('on',!isLight());
  if(d==='sld'){if(wireColor!=='black'){window._panelWire=wireColor;wireColor='black';}}else if(window._panelWire){wireColor=window._panelWire;window._panelWire=null;}
  if(docChanged){if(curTab!==-1)curTab=LIB.findIndex(inDoc);try{buildFav();}catch(e){}if(pMode==='lib')buildSheet();}applyView();}
 /* Both documents apart: the panel's parts and the diagram's, as they're kept. */
@@ -2104,11 +2113,41 @@ function iconsOnly(){try{const v=localStorage.getItem('ohadcad.icons');if(v!==nu
 function wrapLabels(){document.querySelectorAll('#docTabs button,#sbar button').forEach(b=>{if(b.querySelector('.lbl'))return;const t=b.textContent.trim(),m=t.match(/^(\S+)\s+(.+)$/);if(!m||/^[\p{L}\d]/u.test(m[1]))return;
   b.innerHTML=`<i class="ico">${esc(m[1])}</i><span class="lbl">${esc(m[2])}</span>`;if(!b.title)b.title=m[2];});
  document.querySelectorAll('#rail .rb,#top .tb,#libStrip').forEach(b=>{if(b.title)return;const sp=b.querySelector('span');if(sp&&sp.textContent.trim())b.title=sp.textContent.trim();});}
+/* ================= line icons =================
+   One drawn icon set (thin, rounded strokes in the text colour) for the document
+   bar and the status bar, in place of emoji. */
+const IC={
+ newp:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11v6M9 14h6"/>',
+ tpl:'<rect x="3" y="3" width="18" height="7" rx="1"/><rect x="3" y="14" width="9" height="7" rx="1"/><rect x="15" y="14" width="6" height="7" rx="1"/>',
+ open:'<path d="M3 19V5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v2"/><path d="M3 19l3-8h16l-3 8z"/>',
+ save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M7 3v5h8M7 21v-7h10v7"/>',
+ bom:'<path d="M3 6l1.5 1.5L7 5M3 12l1.5 1.5L7 11M3 18l1.5 1.5L7 17M11 6h10M11 12h10M11 18h10"/>',
+ pdf:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><text x="12" y="17.2" font-size="5.6" font-weight="800" text-anchor="middle" fill="currentColor" stroke="none" font-family="Arial">PDF</text>',
+ png:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="1.8"/><path d="M21 15l-5-5L5 21"/>',
+ panel:'<rect x="5" y="2.5" width="14" height="19" rx="1"/><path d="M8 6.5h8M8 10h8M8 13.5h4"/><circle cx="15.5" cy="17" r=".9"/>',
+ sld:'<path d="M12 2v5M12 7l-4.5 5.5M12 13v3M5 16h14M8 16v5M16 16v5"/>',
+ both:'<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M12 4v16M6 8h3M6 11h3M15 8l1.5 3M15 14h3"/>',
+ moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+ page:'<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M5.5 7.5h13v9h-13zM13 16.5v-3h5.5"/>',
+ cross:'<path d="M12 2v7M12 15v7M2 12h7M15 12h7"/><circle cx="12" cy="12" r="3"/>',
+ axes:'<path d="M5 3v16h16"/><path d="M3 6l2-3 2 3M18 17l3 2-3 2"/>',
+ dots:'<circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><path d="M8 12h2M14 12h2"/>',
+ ruler:'<path d="M3 16.5L16.5 3 21 7.5 7.5 21z"/><path d="M7 12.5l2 2M10 9.5l1.5 1.5M13 6.5l2 2"/>'};
+const ico=k=>`<svg viewBox="0 0 24 24" class="lic">${IC[k]}</svg>`;
+function setIcons(){const M={bNewProj:'newp',bTemplates:'tpl',bOpenProj:'open',bSaveCopy:'save',bBom:'bom',bPdf:'pdf',bPng:'png',bLayout:'page'};
+ const lab=b=>(b.querySelector('.lbl')?.textContent||b.title||b.textContent).trim().replace(/^\S+\s+(?=\S)/u,m=>/[\p{L}\d]/u.test(m)?m:'');
+ const SL={bNewProj:'פרויקט חדש',bTemplates:'תבנית',bOpenProj:'פתח',bSaveCopy:'שמור עותק',bBom:'BOM',bPdf:'PDF',bPng:'PNG',bLayout:''};
+ Object.entries(M).forEach(([id,k])=>{const b=$(id);if(!b||b.dataset.ic)return;const L=SL[id]??lab(b);b.innerHTML=`<i class="ico">${ico(k)}</i>`+(L?`<span class="lbl">${esc(L)}</span>`:'');b.dataset.ic=1;if(L&&!b.title)b.title=L;});
+ document.querySelectorAll('button[data-doc]').forEach(b=>{if(b.dataset.ic)return;const L={panel:'חזית לוח',sld:'חד קווי',both:'משולב'}[b.dataset.doc];b.innerHTML=`<i class="ico">${ico(b.dataset.doc)}</i><span class="lbl">${L}</span>`;b.title=L;b.dataset.ic=1;});
+ const S={cross:['cross','סמן צלב'],axes:['axes','צירים'],terms:['dots','נקודות']};document.querySelectorAll('#sbar [data-sb]').forEach(b=>{if(b.dataset.ic)return;const [k,L]=S[b.dataset.sb];b.innerHTML=`<i class="ico">${ico(k)}</i><span class="lbl">${L}</span>`;b.dataset.ic=1;});
+ const m=$('bMeas');if(m&&!m.dataset.ic){m.querySelector('svg').outerHTML=`<svg viewBox="0 0 24 24">${IC.ruler}</svg>`;m.dataset.ic=1;}
+ const d=$('bDark');if(d)d.innerHTML=`<i class="ico">${ico(isLight()?'sun':'moon')}</i>`;}
 const UIFONTS=[['Heebo','Heebo (ברירת מחדל)'],['Rubik','Rubik — עגול ומודגש'],['Assistant','Assistant — דק ונקי'],['Alef','Alef — קלאסי'],['Varela Round','Varela Round — רך'],['Arial','Arial — מערכת']];
 function uiFont(){try{return localStorage.getItem('ohadcad.font')||'Heebo';}catch(e){return 'Heebo';}}
 function uiScale(){try{return +localStorage.getItem('ohadcad.uiscale')||1;}catch(e){return 1;}}
 function loadFont(f,doc){doc=doc||document;if(f==='Heebo'||f==='Arial'||doc.getElementById('gf-'+f.replace(/ /g,'')))return;const l=doc.createElement('link');l.id='gf-'+f.replace(/ /g,'');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+f.replace(/ /g,'+')+':wght@400;500;600;700;800&display=swap';doc.head.appendChild(l);}
-function applyFontScale(){const io=iconsOnly();document.body.classList.toggle('iconsonly',io);document.body.classList.toggle('favnames',!io);wrapLabels();const f=uiFont();loadFont(f);document.body.style.fontFamily=`'${f}',Heebo,system-ui,Arial,sans-serif`;document.documentElement.style.setProperty('--uif',`'${f}',Heebo,Arial,sans-serif`);
+function applyFontScale(){try{setIcons();}catch(e){}const io=iconsOnly();document.body.classList.toggle('iconsonly',io);document.body.classList.toggle('favnames',!io);wrapLabels();const f=uiFont();loadFont(f);document.body.style.fontFamily=`'${f}',Heebo,system-ui,Arial,sans-serif`;document.documentElement.style.setProperty('--uif',`'${f}',Heebo,Arial,sans-serif`);
  if(!SH){const z=uiScale();document.documentElement.style.zoom=z===1?'':String(z);}
  try{SH&&SH.applyUI&&SH.applyUI();}catch(e){}}
 function displayDialog(){const f0=uiFont(),z0=uiScale();
