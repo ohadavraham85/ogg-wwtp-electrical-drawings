@@ -1363,7 +1363,7 @@ function wirePath(w,pts){let ps=(pts||w.pts).map(resolve).filter(Boolean);if(ps.
    Auto-routed wires whose middle runs would lie on top of each other are
    spread 10 mm apart, ordered so they don't cross; where two wires still
    cross, the one running across jumps over the other with a small arc. */
-let WL=new Map(),WG=new Map();
+let WL=new Map(),WG=new Map(),EXPMIN=0;
 // a terminal-on-terminal joint whose two ends still meet (drawn as a dot); once pulled apart it is a wire like any other
 function jointClosed(w){if(!w.p.joint)return false;const a=resolve(w.pts[0]),b=resolve(w.pts[1]);return !!a&&!!b&&Math.hypot(a.x-b.x,a.y-b.y)<.6;}
 // which way a terminal points (-1 up, +1 down), following the part's turn
@@ -1405,7 +1405,7 @@ function hopPath(ps,hops){const R=5;let d='M'+r2(ps[0].x)+' '+r2(ps[0].y);
    H.forEach(h=>{d+='L'+r2(h.x-dir*R)+' '+r2(a.y)+'A'+R+' '+R+' 0 0 '+(dir>0?1:0)+' '+r2(h.x+dir*R)+' '+r2(a.y);});}
   d+='L'+r2(b.x)+' '+r2(b.y);}
  return d;}
-function drawWire(w,isSel){const LP=WL.get(w.id);const d=LP&&LP.length>1?hopPath(LP,WG.get(w.id)):wirePath(w);if(!d)return '';if(w.p.joint){const a=resolve(w.pts[0]),b=resolve(w.pts[1]);if(a&&b&&Math.hypot(a.x-b.x,a.y-b.y)<.6)return `<g data-id="${w.id}"><circle cx="${a.x}" cy="${a.y}" r="6" fill="transparent"/><circle cx="${a.x}" cy="${a.y}" r="${isSel?3.2:2.2}" fill="${isSel?'#60a5fa':'#8b5a2b'}"/></g>`;}const sld=state.tab==='sld'||isSldObj(w);let sw=SEC[w.p.sec]||2.3;if(sld)sw=1.3;const c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+function drawWire(w,isSel){const LP=WL.get(w.id);const d=LP&&LP.length>1?hopPath(LP,WG.get(w.id)):wirePath(w);if(!d)return '';if(w.p.joint){const a=resolve(w.pts[0]),b=resolve(w.pts[1]);if(a&&b&&Math.hypot(a.x-b.x,a.y-b.y)<.6)return `<g data-id="${w.id}"><circle cx="${a.x}" cy="${a.y}" r="6" fill="transparent"/><circle cx="${a.x}" cy="${a.y}" r="${isSel?3.2:2.2}" fill="${isSel?'#60a5fa':'#8b5a2b'}"/></g>`;}const sld=state.tab==='sld'||isSldObj(w);let sw=SEC[w.p.sec]||2.3;if(sld)sw=1.3;if(EXPMIN)sw=Math.max(sw,EXPMIN);const c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
  if(w.p.ph==='3'){const ps=LP&&LP.length>1?LP:wirePs(w),gap=sld?2.4:sw*1.25;let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${gap*2+sw+8}"/>`;if(isSel)s+=`<path ${P} stroke="#60a5fa" stroke-width="${gap*2+sw+3}"/>`;
   PH3.forEach((k,i)=>{const q=offPoly(ps,(i-1)*gap),dd='M'+q.map(p=>r2(p.x)+' '+r2(p.y)).join('L');s+=`<path d="${dd}" fill="none" stroke-linejoin="round" stroke="${WCOL[k].base}" stroke-width="${sw}"/>`;});return s+'</g>';}
  let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${sw+8}"/>`;
@@ -2734,7 +2734,8 @@ const WORDMARK_PATH=`<g transform="translate(4,12) scale(1.15625)"><circle cx="3
 const WM_ICON=`<rect width="64" height="64" rx="6" fill="#F5A524"/><path d="M44 0H58a6 6 0 0 1 6 6V20Z" fill="#FFC35C"/><g transform="translate(0.4,0)"><circle cx="23" cy="32" r="11.5" fill="none" stroke="#14181D" stroke-width="7"/><path d="M51.63 23.87 A11.5 11.5 0 1 0 51.63 40.13" fill="none" stroke="#F5A524" stroke-width="13"/><path d="M51.63 23.87 A11.5 11.5 0 1 0 51.63 40.13" fill="none" stroke="#14181D" stroke-width="7"/><path d="M23 26V30M23 34V38M17 32H21M25 32H27.5" stroke="#14181D" stroke-width="1.3"/><rect x="21" y="30" width="4" height="4" fill="none" stroke="#14181D" stroke-width="1.1"/></g>`;
 function watermark(cx,cy,W,H){const TW=556,TH=100,diag=Math.hypot(W,H),ang=-Math.atan2(H,W)*180/Math.PI;
  const s=Math.min(.78*diag/TW,.22*Math.min(W,H)/TH);
- return `<g transform="translate(${cx} ${cy}) rotate(${ang}) scale(${s}) translate(${-TW/2} ${-TH/2})" opacity=".17" style="mix-blend-mode:multiply"><g transform="scale(${100/64})">${WM_ICON}</g><g transform="translate(115 0)" style="color:#F5A524">${WORDMARK_PATH}</g></g>`;}
+ const art=`<g transform="scale(${100/64})">${WM_ICON}</g><g transform="translate(115 0)" style="color:#F5A524">${WORDMARK_PATH}</g>`;
+ return `<g transform="translate(${cx} ${cy}) rotate(${ang}) scale(${s}) translate(${-TW/2} ${-TH/2})" style="mix-blend-mode:multiply"><style>.wmo *{fill:none!important;stroke:#000!important;stroke-width:${(.45/s).toFixed(2)}px!important;stroke-linejoin:round}</style><g class="wmo" opacity=".5">${art}</g><g opacity=".17">${art}</g></g>`;}
 function pageFrame(W,H,noWm){const X0=20,Y0=10,X1=W-10,Y1=H-10,b=5;let s=`<rect x="0" y="0" width="${W}" height="${H}" fill="#fff"/>${noWm?'':watermark(W/2,H/2,W,H)}<rect x="${X0}" y="${Y0}" width="${X1-X0}" height="${Y1-Y0}" fill="none" stroke="#000" stroke-width=".35"/><rect x="${X0+b}" y="${Y0+b}" width="${X1-X0-2*b}" height="${Y1-Y0-2*b}" fill="none" stroke="#000" stroke-width=".7"/>`;
  const nc=Math.max(4,Math.round((X1-X0)/50)),nr=Math.max(3,Math.round((Y1-Y0)/50)),cw=(X1-X0)/nc,rh=(Y1-Y0)/nr;const Tz=(x,y,t)=>`<text x="${x}" y="${y+1.2}" font-size="3" font-family="Arial" text-anchor="middle">${t}</text>`;
  for(let i=0;i<nc;i++){const xa=X0+i*cw,xm=xa+cw/2;if(i)s+=`<line x1="${xa}" y1="${Y0}" x2="${xa}" y2="${Y0+b}" stroke="#000" stroke-width=".3"/><line x1="${xa}" y1="${Y1-b}" x2="${xa}" y2="${Y1}" stroke="#000" stroke-width=".3"/>`;const lbl=String(nc-i);s+=Tz(xm,Y0+b/2,lbl)+Tz(xm,Y1-b/2,lbl);}
@@ -2765,7 +2766,8 @@ async function makePdf(t){toast('יוצר PDF…');
   const need=Math.max(bw/aw,bh/ah);const STD=[1,2,2.5,5,10,15,20,25,50,75,100,200];let n=LY?LY.n:(STD.find(v=>v>=need)||Math.ceil(need));const k=1/n;
   const scaleLbl=n===1?'1:1':`1:${n}`;const tb2=tbSVG(tt,W,H,di+1,pages,scaleLbl);
   const ox=ax0+(aw-bw*k)/2,oy=ay0+20+(ah-bh*k)/2;
-  svgs.push(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${W} ${H}" width="${W}mm" height="${H}mm">${pageFrame(W,H,true)}<g transform="${LY?`translate(${-LY.x0*k} ${-LY.y0*k}) scale(${k})`:`translate(${ox} ${oy}) scale(${k}) translate(${-(b.x-pad)} ${-(b.y-pad)})`}">${content({sel:false})}${d==='panel'?pdfDims(k):''}</g>${watermark(W/2,H/2,W,H)}${scaleBar(32,tb2.y0-9,k,n)}${tb2.s}<text x="22" y="${H-5}" font-size="2.2" font-family="Arial" fill="#777">OhadCad</text></svg>`);
+  try{wireLayout();}catch(e){}EXPMIN=.3/k;const body=content({sel:false});EXPMIN=0;
+  svgs.push(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${W} ${H}" width="${W}mm" height="${H}mm">${pageFrame(W,H,true)}<g transform="${LY?`translate(${-LY.x0*k} ${-LY.y0*k}) scale(${k})`:`translate(${ox} ${oy}) scale(${k}) translate(${-(b.x-pad)} ${-(b.y-pad)})`}">${body}${d==='panel'?pdfDims(k):''}</g>${watermark(W/2,H/2,W,H)}${scaleBar(32,tb2.y0-9,k,n)}${tb2.s}<text x="22" y="${H-5}" font-size="2.2" font-family="Arial" fill="#777">OhadCad</text></svg>`);
   if(!di)t.__scale=scaleLbl;}));
  renderNow();
  if(pages>docs.length){const tb=tbSVG(Object.assign({},t,{title:t.title+' — רשימת ציוד'}),W,H,pages,pages,'-');let s='';const R=W-20,x0=30,rh=7;let y=26;
@@ -2789,8 +2791,9 @@ function printVector(svgs,W,H,fname){const fr=document.createElement('iframe');f
  toast('בחלון ההדפסה בחר "שמור כ-PDF" (Save as PDF)');
  setTimeout(()=>{try{fr.contentWindow.focus();fr.contentWindow.print();}catch(e){toast('ההדפסה נחסמה בדפדפן');}setTimeout(()=>fr.remove(),60000);},400);}
 function exportImage(){const hasP=withDoc('panel',()=>state.objs.length>0),hasS=withDoc('sld',()=>state.objs.length>0);if(!hasP&&!hasS){toast('הלוח ריק');return;}withDoc(hasP&&hasS?'both':hasP?'panel':'sld',exportImage0);renderNow();}
-function exportImage0(){const b=boundsAll(),pad=12;const x=b.x-pad,y=b.y-pad,w=b.w+2*pad,h=b.h+2*pad;const k=Math.min(10,9000/Math.max(w,h),Math.sqrt(48e6/(w*h)));
- const s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${h}" width="${Math.round(w*k)}" height="${Math.round(h*k)}"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#ffffff"/>${content({sel:false})}${watermark(x+w/2,y+h/2,w,h)}</svg>`;
+function exportImage0(){try{wireLayout();}catch(e){}const b=boundsAll(),pad=12;const x=b.x-pad,y=b.y-pad,w=b.w+2*pad,h=b.h+2*pad;const k=Math.min(10,9000/Math.max(w,h),Math.sqrt(48e6/(w*h)));
+ EXPMIN=1.6/k;const body=content({sel:false});EXPMIN=0;
+ const s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${h}" width="${Math.round(w*k)}" height="${Math.round(h*k)}"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#ffffff"/>${body}${watermark(x+w/2,y+h/2,w,h)}</svg>`;
  const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);const g=c.getContext('2d');g.drawImage(img,0,0,c.width,c.height);let url;try{url=c.toDataURL('image/png');}catch(e){url='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);}
   modal('תמונת הלוח',`<img src="${url}" style="width:100%;border-radius:8px;background:#fff">`,[{t:'⬇ הורד PNG',cls:'pri',fn:()=>{saveFile(safeName(state.name)+'.png',dataUrlToBlob(url));return false;}},{t:'סגור'}]);};
  img.onerror=()=>toast('יצירת התמונה נכשלה');img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);}
