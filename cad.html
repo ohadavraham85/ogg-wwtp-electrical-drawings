@@ -1003,9 +1003,10 @@ MPT.forEach(k=>{const D=SDEF[k],d1=D.draw,t1=D.terms,s1=D.size;D.def=Object.assi
   return s+sLbl(o,n*PP+20);};});
 // a motor with its three terminals (U V W) instead of one line
 {const D=SDEF.smot,d1=D.draw;D.def=Object.assign({poles:1},D.def);D.edit=[...D.edit,'poles'];
- D.terms=o=>npol(o)>=3?[[-20,-30,'U'],[0,-30,'V'],[20,-30,'W']]:TOP();
- D.draw=o=>npol(o)>=3?sL(0,-30,0,-14)+sL(-20,-30,-20,-22)+sL(-20,-22,-10,-11)+sL(20,-30,20,-22)+sL(20,-22,10,-11)+sC(0,2,16)+sT(0,-2,'M',12)+sT(0,9,'3~',7.5)+txt(-23,-24,'U',6.5,'#374151',700,'end')+txt(-3,-24,'V',6.5,'#374151',700,'end')+txt(23,-24,'W',6.5,'#374151',700,'start')+sLbl(o,60):d1(o);
- D.size=o=>npol(o)>=3?{w:60,h:60}:{w:40,h:60};}SDEF.scoil.def.rating='230VAC';SDEF.scoil.ratings=['24VDC','24VAC','230VAC'];
+ const M6=['U1','V1','W1','W2','U2','V2'];
+ D.terms=o=>+o.p.poles===6?M6.map((l,i)=>[-50+i*20,-30,l]):npol(o)>=3?[[-20,-30,'U'],[0,-30,'V'],[20,-30,'W']]:TOP();
+ D.draw=o=>+o.p.poles===6?M6.map((l,i)=>{const x=-50+i*20,ex=x*.32;return sL(x,-30,x,-22)+sL(x,-22,ex,-15)+txt(x+(x<0?-3:3),-24,l,6,'#374151',700,x<0?'end':'start');}).join('')+sC(0,4,20)+sT(0,0,'M',13)+sT(0,12,'3~',8)+sT(0,22.5,'Y/Δ',6.5)+sLbl(o,120):npol(o)>=3?sL(0,-30,0,-14)+sL(-20,-30,-20,-22)+sL(-20,-22,-10,-11)+sL(20,-30,20,-22)+sL(20,-22,10,-11)+sC(0,2,16)+sT(0,-2,'M',12)+sT(0,9,'3~',7.5)+txt(-23,-24,'U',6.5,'#374151',700,'end')+txt(-3,-24,'V',6.5,'#374151',700,'end')+txt(23,-24,'W',6.5,'#374151',700,'start')+sLbl(o,60):d1(o);
+ D.size=o=>+o.p.poles===6?{w:120,h:60}:npol(o)>=3?{w:60,h:60}:{w:40,h:60};}SDEF.scoil.def.rating='230VAC';SDEF.scoil.ratings=['24VDC','24VAC','230VAC'];
 Object.assign(DEF,SDEF);
 /* ================= in the field: cables, trays, motors and pumps =================
    Drawn to scale like the rest of the panel (mm). */
@@ -1213,7 +1214,7 @@ const LIB=[
   {g:'סימון',items:[{t:'slamp',n:'נורית ירוקה',p:{color:'green',tag:'H1'}},{t:'slamp',n:'נורית אדומה',p:{color:'red',tag:'H2'}},{t:'slamp',n:'נורית כתומה',p:{color:'orange',tag:'H3'}},{t:'shorn',n:'צופר / זמזם'}]}]},
  {tab:'מדידה וצרכנים',sld:true,groups:[
   {g:'מדידה',items:[{t:'sct',n:'משנה זרם (CT)'},{t:'svt',n:'משנה מתח (VT)'},{t:'skwh',n:'מונה kWh'},{t:'spm',n:'רב-מודד'},{t:'samm',n:'מד זרם'},{t:'svm',n:'מד מתח'}]},
-  {g:'צרכנים',items:[{t:'smot',n:'מנוע'},{t:'slight',n:'תאורה'},{t:'ssock',n:'שקעים'},{t:'sheat',n:'גוף חימום'},{t:'scap',n:'סוללת קבלים'},{t:'sload',n:'לוח משנה / עומס'}]},
+  {g:'צרכנים',items:[{t:'smot',n:'מנוע תלת-פאזי (U V W)',p:{poles:3}},{t:'smot',n:'מנוע כוכב-משולש (6 הדקים)',p:{poles:6,rating:'30kW'}},{t:'smot',n:'מנוע (קו אחד)'},{t:'slight',n:'תאורה'},{t:'ssock',n:'שקעים'},{t:'sheat',n:'גוף חימום'},{t:'scap',n:'סוללת קבלים'},{t:'sload',n:'לוח משנה / עומס'}]},
   {g:'טקסט',items:[{t:'label',n:'תיבת טקסט',p:{text:'טקסט',fs:9}}]}]},
  {tab:'מכשירים',groups:[
   {g:'מנוע חשמלי',items:[{t:'emotor',n:'מנוע חשמלי',p:{rating:'7.5kW'}},{t:'emotor',n:'מנוע + משאבה',p:{rating:'11kW',pump:'centrifugal'}}]},
@@ -2393,7 +2394,7 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='frame')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_frame">${[['c72','קומפקטי 72×143'],['c105','קומפקטי 105×142'],['b45','ספרי 45×325'],['b60','ספרי 60×325']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='ph')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_ph"><option value="1" ${v==1?'selected':''}>1</option><option value="3" ${v==3?'selected':''}>3</option></select></div>`;
   else if(k==='cores')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_cores">${[['2','2 גידים — L, N'],['3','3 גידים — L, N, PE'],['4','4 גידים — L1, L2, L3, PE'],['5','5 גידים — L1, L2, L3, N, PE']].map(([a,b])=>`<option value="${a}" ${a===String(v)?'selected':''}>${b}</option>`).join('')}</select></div>`;
-  else if(k==='poles'&&DEF[o.type]?.sld)h+=`<div class="fld"><label>${FL[k]}</label><select id="f_poles">${(o.type==='smot'?[[1,'קו אחד'],[3,'3 הדקים (U V W)']]:[[1,'קוטב אחד'],[2,'2 קטבים'],[3,'3 קטבים (תלת-פאזי)'],[4,'4 קטבים (3P+N)']]).map(([a,b])=>`<option value="${a}" ${a==(+v||1)?'selected':''}>${b}</option>`).join('')}</select></div>`;
+  else if(k==='poles'&&DEF[o.type]?.sld)h+=`<div class="fld"><label>${FL[k]}</label><select id="f_poles">${(o.type==='smot'?[[1,'קו אחד'],[3,'3 הדקים (U V W)'],[6,'6 הדקים — כוכב-משולש (U1 V1 W1 / W2 U2 V2)']]:[[1,'קוטב אחד'],[2,'2 קטבים'],[3,'3 קטבים (תלת-פאזי)'],[4,'4 קטבים (3P+N)']]).map(([a,b])=>`<option value="${a}" ${a==(+v||1)?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='poles'&&(o.type==='wiso'||o.type==='nsx'||o.type==='nsxm'))h+=`<div class="fld"><label>${FL[k]}</label><select id="f_poles"><option value="3" ${+v!==4?'selected':''}>3 קטבים</option><option value="4" ${+v===4?'selected':''}>4 קטבים (+N)</option></select></div>`;
   else if(k==='gang')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_gang">${[[1,'יחיד'],[2,'כפול'],[3,'משולש'],[4,'מרובע']].map(([a,b])=>`<option value="${a}" ${a==v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='ip')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_ip"><option value="20" ${v!=='44'?'selected':''}>רגיל (פנים)</option><option value="44" ${v==='44'?'selected':''}>IP44 מוגן מים, עם מכסה</option></select></div>`;
