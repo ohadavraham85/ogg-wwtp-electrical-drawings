@@ -617,6 +617,40 @@ function nsxDraw(o,{w,h},mini){const sh=h*(mini?.15:.17),fw=w*.84,fx=-fw/2,fy=-h
  s+=txt(fw*.3,uy+uh*.55,trip,Math.max(2.6,fw*.06),'#111',700)+`<rect x="${fx+fw*.82}" y="${uy+uh*.1}" width="${fw*.06}" height="${uh*.25}" fill="#facc15"/>`;
  s+=sTerms(o,Math.max(3.2,w*.035),'#e5e7eb');if(o.p.tag)s+=txt(-w/2+3,-h/2+sh+h*.03-1.5,o.p.tag,Math.max(3.4,w*.04),'#7dd3fc',700,'start');
  return s;}
+/* PLC catalogue: chassis widths (mm) by slot count, and each module's kind and description. */
+const PLCR={m340:{W:{4:242.4,6:307.6,8:372.8,12:503.2},ps:88,m:12,pitch:32.6,name:'Modicon M340 BMXXBP'},
+ clx:{W:{4:263,7:368,10:483,13:588,17:738},ps:0,m:0,pitch:35,name:'ControlLogix 1756-A'}};
+const PLCM={m340:{'BMXCPS2000':['ps','ספק כוח 100-240VAC 20W'],'BMXCPS3500':['ps','ספק כוח 100-240VAC 36W'],'BMXCPS2010':['ps','ספק כוח 24VDC 17W'],
+  'BMXP341000':['cpu','מעבד P34 1000 (Modbus)'],'BMXP342020':['cpu','מעבד P34 2020 (Ethernet + Modbus)'],'BMXP342030':['cpu','מעבד P34 2030 (Ethernet + CANopen)'],
+  'BMXNOE0100':['com','תקשורת Ethernet'],'BMXNOM0200':['com','תקשורת טורית Modbus'],
+  'BMXDDI1602':['io','16 כניסות דיגיטליות 24VDC'],'BMXDDI3202K':['io','32 כניסות דיגיטליות 24VDC'],'BMXDAI1604':['io','16 כניסות 100-120VAC'],
+  'BMXDDO1602':['io','16 יציאות טרנזיסטור 24VDC'],'BMXDDO3202K':['io','32 יציאות טרנזיסטור 24VDC'],'BMXDRA0805':['io','8 יציאות ממסר'],'BMXDRA1605':['io','16 יציאות ממסר'],
+  'BMXAMI0410':['io','4 כניסות אנלוגיות'],'BMXAMI0810':['io','8 כניסות אנלוגיות'],'BMXAMO0210':['io','2 יציאות אנלוגיות'],'BMXAMO0410':['io','4 יציאות אנלוגיות'],'BMXART0414':['io','4 כניסות טמפרטורה RTD/TC']},
+ clx:{'1756-PA72':['ps','ספק כוח 120/240VAC'],'1756-PB72':['ps','ספק כוח 24VDC'],'1756-L83E':['cpu','מעבד ControlLogix 5580'],'1756-L73':['cpu','מעבד ControlLogix 5570'],
+  '1756-EN2T':['com','תקשורת EtherNet/IP'],'1756-EN2TR':['com','EtherNet/IP טבעת (DLR)'],
+  '1756-IB16':['io','16 כניסות 24VDC'],'1756-IB32':['io','32 כניסות 24VDC'],'1756-IA16':['io','16 כניסות 120VAC'],'1756-OB16E':['io','16 יציאות 24VDC'],'1756-OB32':['io','32 יציאות 24VDC'],
+  '1756-OW16I':['io','16 יציאות ממסר'],'1756-IF8':['io','8 כניסות אנלוגיות'],'1756-IF16':['io','16 כניסות אנלוגיות'],'1756-OF8':['io','8 יציאות אנלוגיות'],'1756-IR6I':['io','6 כניסות RTD'],'1756-IT6I':['io','6 כניסות צמד תרמי']}};
+// slot centres of a chassis, in its own frame: index 0 is the power-supply place
+function rackSlots(o,fam){const R=PLCR[fam],n=+o.p.slots,W=R.W[n],L=-W/2;const S=[];
+ if(fam==='m340'){S.push({x:L+R.m+R.ps/2,ps:1});for(let i=0;i<n;i++)S.push({x:L+R.m+R.ps+R.pitch*(i+.5),n:i===0?'00':String(i).padStart(2,'0')});}
+ else{S.push({x:L-28,ps:1});const m0=(W-n*R.pitch)/2;for(let i=0;i<n;i++)S.push({x:L+m0+R.pitch*(i+.5),n:String(i)});}
+ return S;}
+function rackDraw(o,fam){const {w,h}=sizeOf(o),S=rackSlots(o,fam);let s=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="3" fill="${fam==='m340'?'#b9bdc1':'#2c2f33'}" stroke="#555" stroke-width="1.2"/>`;
+ S.forEach(z=>{if(z.ps){if(fam==='m340')s+=`<rect x="${z.x-40}" y="${-h/2+8}" width="80" height="${h-16}" rx="2" fill="none" stroke="#7d8287" stroke-dasharray="4 3"/>`+txt(z.x,0,'PS',9,'#6b7075',700);return;}
+  const pw=PLCR[fam].pitch;s+=`<rect x="${z.x-pw/2+2}" y="${-h/2+6}" width="${pw-4}" height="${h-12}" rx="2" fill="${fam==='m340'?'#a3a8ad':'#3d4146'}" stroke="${fam==='m340'?'#8a8f94':'#555'}" stroke-width=".8"/><rect x="${z.x-3}" y="${-h/2+h*.3}" width="6" height="${h*.4}" rx="1" fill="${fam==='m340'?'#6d7378':'#1d1f22'}"/>`+txt(z.x,-h/2+4.5,z.n,5,fam==='m340'?'#333':'#ddd',700);});
+ s+=txt(0,h/2+9,PLCR[fam].name+(fam==='m340'?String(+o.p.slots).padStart(2,'0')+'00':String(+o.p.slots))+(o.p.tag?' · '+o.p.tag:''),7,'#9ca3af',700);
+ return s;}
+function plcModDraw(o,fam){const {w,h}=sizeOf(o),M=PLCM[fam][o.p.model]||['io',''],k=M[0],dark=fam==='m340'?'#2b2e31':'#2e3134',stripe=fam==='m340'?'#3dcd58':'#c8102e';
+ let s=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="2" fill="${dark}" stroke="#0e0e0e" stroke-width=".8"/><rect x="${-w/2+1}" y="${-h/2+1}" width="${w-2}" height="5" fill="${stripe}"/>`;
+ s+=`<rect x="${-w/2+3}" y="${-h/2+9}" width="${w-6}" height="${h*.13}" rx="1" fill="#15171a"/>`;
+ for(let i=0;i<(k==='ps'?2:4);i++)s+=`<circle cx="${-w/2+6+i*((w-12)/3)}" cy="${-h/2+9+h*.065}" r="1.3" fill="${i===0?'#22c55e':i===1&&k==='cpu'?'#f59e0b':'#3f6f4a'}"/>`;
+ if(k==='io')s+=`<rect x="${-w/2+2.5}" y="${-h/2+h*.3}" width="${w-5}" height="${h*.66}" rx="1.5" fill="#55595e" stroke="#333" stroke-width=".6"/>`+[...Array(fam==='m340'?10:9)].map((_,i)=>`<circle cx="${-w/4}" cy="${-h/2+h*.34+i*(h*.6/(fam==='m340'?10:9))}" r="1.2" fill="#c9cdd1"/><circle cx="${w/4}" cy="${-h/2+h*.37+i*(h*.6/(fam==='m340'?10:9))}" r="1.2" fill="#c9cdd1"/>`).join('');
+ if(k==='cpu'||k==='com'){s+=`<rect x="${-w/2+4}" y="${-h/2+h*.32}" width="${w-8}" height="${h*.12}" rx="1" fill="#0b2a3d" stroke="#3b82f6" stroke-width=".5"/>`;[0,1].forEach(i=>s+=`<rect x="${-6}" y="${-h/2+h*(.55+i*.14)}" width="12" height="9" rx="1" fill="#c9cdd1" stroke="#444" stroke-width=".5"/><rect x="${-3}" y="${-h/2+h*(.55+i*.14)+5}" width="6" height="4" fill="#333"/>`);}
+ if(k==='ps')s+=`<rect x="${-w/2+5}" y="${-h/2+h*.62}" width="${w-10}" height="${h*.3}" rx="1.5" fill="#55595e"/>`+[0,1,2].map(i=>`<circle cx="${-w/2+12+i*((w-24)/2)}" cy="${-h/2+h*.77}" r="2.2" fill="#c9cdd1"/>`).join('')+txt(0,-h/2+h*.45,'POWER',Math.min(6,w/8),'#e5e7eb',800);
+ s+=`<g transform="translate(${k==='ps'?0:0} ${k==='ps'?-h/2+h*.33:-h/2+h*.27}) rotate(${k==='ps'?0:-90})">${k==='ps'?'':''}</g>`;
+ s+=`<text x="0" y="0" transform="translate(0 ${k==='io'?h*.12:h*.4}) rotate(-90)" font-size="${Math.min(5.2,w*.16)}" fill="#f1f5f9" font-weight="700" font-family="Arial" text-anchor="middle" dominant-baseline="central" ${k==='ps'?'style="display:none"':''}>${esc(o.p.model)}</text>`;
+ if(k==='ps')s+=txt(0,-h/2+h*.55,o.p.model,Math.min(5.5,w/9),'#f1f5f9',700);
+ if(o.p.tag)s+=txt(0,h/2+7,o.p.tag,6,'#7dd3fc',700);return s;}
 function sBody(w,h,b){return `<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="2" fill="#2e3235" stroke="#0d0d0d" stroke-width=".7"/><rect x="${-w/2+.4}" y="${-h/2+.4}" width="${w-.8}" height="${b}" fill="#383d41"/><rect x="${-w/2+.4}" y="${h/2-b-.4}" width="${w-.8}" height="${b}" fill="#383d41"/>`;}
 function sTerms(o,r,c){let s='';termsOf(o).forEach(([x,y,l])=>{s+=screw(x,y,r);if(l)s+=txt(x,y<0?y+r+3.6:y-r-3.6,l,2.5,c,700);});return s;}
 const ATVR=[['ATV630U07N4 0.75kW',1],['ATV630U15N4 1.5kW',1],['ATV630U22N4 2.2kW',1],['ATV630U30N4 3kW',1],['ATV630U40N4 4kW',1],['ATV630U55N4 5.5kW',1],['ATV630U75N4 7.5kW',2],['ATV630D11N4 11kW',2],['ATV630D15N4 15kW',3],['ATV630D18N4 18.5kW',3],['ATV630D22N4 22kW',3],['ATV630D30N4 30kW',4],['ATV630D37N4 37kW',4],['ATV630D45N4 45kW',4],['ATV630D55N4 55kW',5],['ATV630D75N4 75kW',5],['ATV630D90N4 90kW',5]];
@@ -812,6 +846,12 @@ const DEF={
    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>s+=`<circle cx="${a*(W/2-20)}" cy="${b*(H/2-20)}" r="4" fill="#dcdcd6" stroke="#8d8d88" stroke-width=".8"/><path d="M${a*(W/2-20)-2.5} ${b*(H/2-20)}h5" stroke="#8d8d88" stroke-width=".8"/>`);
    if(o.p.tag)s+=txt(0,y0+28,o.p.tag,10,'#333',700);else s+=txt(0,y0+28,`${r}×${m}`,9,'#888',700);
    return s;}},
+ /* ---- PLCs: Schneider Modicon M340 (BMX) and Allen-Bradley ControlLogix (1756): a chassis with numbered
+    slots, and modules (power supply, CPU, communication, I/O) that snap into its slots ---- */
+ m340rack:{layer:3.5,edit:['tag','slots'],def:{slots:8,tag:''},size:o=>({w:PLCR.m340.W[+o.p.slots]||372.8,h:104}),draw:o=>rackDraw(o,'m340')},
+ clxrack:{layer:3.5,edit:['tag','slots'],def:{slots:10,tag:''},size:o=>({w:PLCR.clx.W[+o.p.slots]||483,h:145}),draw:o=>rackDraw(o,'clx')},
+ m340mod:{layer:4,plc:'m340',edit:['tag','model'],def:{model:'BMXDDI1602',tag:''},size:o=>({w:PLCM.m340[o.p.model]?.[0]==='ps'?64:32,h:100}),draw:o=>plcModDraw(o,'m340')},
+ clxmod:{layer:4,plc:'clx',edit:['tag','model'],def:{model:'1756-IB16',tag:''},size:o=>({w:PLCM.clx[o.p.model]?.[0]==='ps'?55:35,h:140}),draw:o=>plcModDraw(o,'clx')},
  gv2:{layer:4,rail:true,edit:['tag','rating'],ratings:['GV2ME06 1-1.6A','GV2ME07 1.6-2.5A','GV2ME08 2.5-4A','GV2ME10 4-6.3A','GV2ME14 6-10A','GV2ME16 9-14A','GV2ME20 13-18A','GV2ME21 17-23A','GV2ME22 20-25A','GV2ME32 24-32A'],
   def:{rating:'GV2ME10 4-6.3A'},size:()=>({w:45,h:89}),terms:()=>[...spread(45,3).map((x,i)=>[x,-37,['1','3','5'][i]]),...spread(45,3).map((x,i)=>[x,37,['2','4','6'][i]])],
   draw:o=>{let s=sBody(45,89,15);s+=`<rect x="-19" y="-27" width="38" height="54" rx="2" fill="#41474c"/><circle cx="0" cy="-17" r="6.5" fill="#e5e7eb" stroke="#555" stroke-width=".5"/><path d="M0 -17L4 -21" stroke="#c62828" stroke-width="1.1"/>`;
@@ -1379,6 +1419,15 @@ const LIB=[
    {g:'מסרקים ופסי צבירה',items:I('מסרק 1P','מסרק 3P','פס צבירה L1','פס צבירה N','פס הארקה PE')}]},
   {tab:'לחצנים ונוריות',icon:'◉',hint:all['לחצן']?LIB.find(T=>T.groups.some(g=>g.items.includes(all['לחצן']))).hint:'',groups:[
    {g:'אביזרי 22 מ"מ לחזית — בחר צבע ואז אביזר',colors:true,items:I('חור 22 מ"מ','לחצן','לחצן מואר','נורית 22','בורר 2 מצבים','בורר 3 מצבים','בורר מפתח','לחצן חירום','פוטנציומטר','זמזם')}]},
+  {tab:'בקרים (PLC)',icon:'▣',hint:'מוסיפים קודם שאסי (Rack), ואז ספק, מעבד וכרטיסים — כל אחד נתפס לחריץ הקרוב בשאסי (הספק לחריץ PS). הדגם נבחר במאפיינים.',groups:[
+   {g:'Schneider Modicon M340 — שאסי',items:[{t:'m340rack',n:'שאסי M340 BMXXBP0400 (4 חריצים)',p:{slots:4}},{t:'m340rack',n:'שאסי M340 BMXXBP0600 (6 חריצים)',p:{slots:6}},{t:'m340rack',n:'שאסי M340 BMXXBP0800 (8 חריצים)',p:{slots:8}},{t:'m340rack',n:'שאסי M340 BMXXBP1200 (12 חריצים)',p:{slots:12}}]},
+   {g:'M340 — ספקי כוח',items:[{t:'m340mod',n:'BMXCPS2000 — ספק 100-240VAC 20W',p:{model:'BMXCPS2000'}},{t:'m340mod',n:'BMXCPS3500 — ספק 100-240VAC 36W',p:{model:'BMXCPS3500'}},{t:'m340mod',n:'BMXCPS2010 — ספק 24VDC',p:{model:'BMXCPS2010'}}]},
+   {g:'M340 — מעבדים ותקשורת',items:[{t:'m340mod',n:'BMXP341000 — מעבד Modbus',p:{model:'BMXP341000'}},{t:'m340mod',n:'BMXP342020 — מעבד Ethernet',p:{model:'BMXP342020'}},{t:'m340mod',n:'BMXP342030 — מעבד CANopen',p:{model:'BMXP342030'}},{t:'m340mod',n:'BMXNOE0100 — תקשורת Ethernet',p:{model:'BMXNOE0100'}},{t:'m340mod',n:'BMXNOM0200 — תקשורת טורית',p:{model:'BMXNOM0200'}}]},
+   {g:'M340 — כרטיסי כניסות / יציאות',items:[{t:'m340mod',n:'BMXDDI1602 — 16 DI 24VDC',p:{model:'BMXDDI1602'}},{t:'m340mod',n:'BMXDDI3202K — 32 DI 24VDC',p:{model:'BMXDDI3202K'}},{t:'m340mod',n:'BMXDAI1604 — 16 DI 120VAC',p:{model:'BMXDAI1604'}},{t:'m340mod',n:'BMXDDO1602 — 16 DO טרנזיסטור',p:{model:'BMXDDO1602'}},{t:'m340mod',n:'BMXDDO3202K — 32 DO טרנזיסטור',p:{model:'BMXDDO3202K'}},{t:'m340mod',n:'BMXDRA0805 — 8 DO ממסר',p:{model:'BMXDRA0805'}},{t:'m340mod',n:'BMXDRA1605 — 16 DO ממסר',p:{model:'BMXDRA1605'}},{t:'m340mod',n:'BMXAMI0410 — 4 AI',p:{model:'BMXAMI0410'}},{t:'m340mod',n:'BMXAMI0810 — 8 AI',p:{model:'BMXAMI0810'}},{t:'m340mod',n:'BMXAMO0210 — 2 AO',p:{model:'BMXAMO0210'}},{t:'m340mod',n:'BMXAMO0410 — 4 AO',p:{model:'BMXAMO0410'}},{t:'m340mod',n:'BMXART0414 — 4 RTD/TC',p:{model:'BMXART0414'}}]},
+   {g:'Allen-Bradley ControlLogix 1756 — שאסי',items:[{t:'clxrack',n:'שאסי ControlLogix 1756-A4',p:{slots:4}},{t:'clxrack',n:'שאסי ControlLogix 1756-A7',p:{slots:7}},{t:'clxrack',n:'שאסי ControlLogix 1756-A10',p:{slots:10}},{t:'clxrack',n:'שאסי ControlLogix 1756-A13',p:{slots:13}},{t:'clxrack',n:'שאסי ControlLogix 1756-A17',p:{slots:17}}]},
+   {g:'ControlLogix — ספקי כוח',items:[{t:'clxmod',n:'1756-PA72 — ספק 120/240VAC',p:{model:'1756-PA72'}},{t:'clxmod',n:'1756-PB72 — ספק 24VDC',p:{model:'1756-PB72'}}]},
+   {g:'ControlLogix — מעבדים ותקשורת',items:[{t:'clxmod',n:'1756-L83E — מעבד 5580',p:{model:'1756-L83E'}},{t:'clxmod',n:'1756-L73 — מעבד 5570',p:{model:'1756-L73'}},{t:'clxmod',n:'1756-EN2T — EtherNet/IP',p:{model:'1756-EN2T'}},{t:'clxmod',n:'1756-EN2TR — EtherNet/IP טבעת',p:{model:'1756-EN2TR'}}]},
+   {g:'ControlLogix — כרטיסי כניסות / יציאות',items:[{t:'clxmod',n:'1756-IB16 — 16 DI 24VDC',p:{model:'1756-IB16'}},{t:'clxmod',n:'1756-IB32 — 32 DI 24VDC',p:{model:'1756-IB32'}},{t:'clxmod',n:'1756-IA16 — 16 DI 120VAC',p:{model:'1756-IA16'}},{t:'clxmod',n:'1756-OB16E — 16 DO 24VDC',p:{model:'1756-OB16E'}},{t:'clxmod',n:'1756-OB32 — 32 DO 24VDC',p:{model:'1756-OB32'}},{t:'clxmod',n:'1756-OW16I — 16 DO ממסר',p:{model:'1756-OW16I'}},{t:'clxmod',n:'1756-IF8 — 8 AI',p:{model:'1756-IF8'}},{t:'clxmod',n:'1756-IF16 — 16 AI',p:{model:'1756-IF16'}},{t:'clxmod',n:'1756-OF8 — 8 AO',p:{model:'1756-OF8'}},{t:'clxmod',n:'1756-IR6I — 6 RTD',p:{model:'1756-IR6I'}},{t:'clxmod',n:'1756-IT6I — 6 TC',p:{model:'1756-IT6I'}}]}]},
   {tab:'ספקים ומדידה',icon:'⚡',groups:[
    {g:'ספקים ועזר',items:I('ספק כוח','שקע לפס DIN','נורת סימון')},
    {g:'מדידה',items:I('מונה אנרגיה')}]},
@@ -1399,7 +1448,7 @@ const LIB=[
    {g:'בניין וקנה מידה',items:[{t:'wall',n:'קיר אופקי'},{t:'wall',n:'קיר אנכי',p:{w:200,h:2000}},{t:'person',n:'אדם (קנה מידה)'}]}]}];
  const keep=LIB.filter(T=>T.sld);keep.forEach((T,i)=>T.icon=T.icon||['⚡','⏻','🎛','◎'][i]);const di=NEW.findIndex(T=>T.draw);if(di>1)NEW.splice(1,0,...NEW.splice(di,1));LIB.length=0;LIB.push(...keep,...NEW);})();
 const DUCTW=[25,40,60,80,100,120];
-const THUMBP={nplate:{fs:12},wall:{w:600,h:200},shline:{len:120,lw:6},shrect:{w:160,h:110,lw:6},shellipse:{w:140,h:140,lw:6},callout:{text:'הערה',fs:20,tip:{x:-40,y:-40}},wsbox:{tag:''},floor:{len:900,tag:''},traysh:{len:500},traymesh:{len:500},rail:{len:110},partition:{len:110},duct:{len:110},busbar:{len:110},comb:{mods:4},enclosure:{w:120,h:150},cabinet:{view:'front'}};
+const THUMBP={m340rack:{slots:4},clxrack:{slots:4},nplate:{fs:12},wall:{w:600,h:200},shline:{len:120,lw:6},shrect:{w:160,h:110,lw:6},shellipse:{w:140,h:140,lw:6},callout:{text:'הערה',fs:20,tip:{x:-40,y:-40}},wsbox:{tag:''},floor:{len:900,tag:''},traysh:{len:500},traymesh:{len:500},rail:{len:110},partition:{len:110},duct:{len:110},busbar:{len:110},comb:{mods:4},enclosure:{w:120,h:150},cabinet:{view:'front'}};
 
 /* ================= state ================= */
 let state={name:'לוח חדש',objs:[]};
@@ -1728,6 +1777,10 @@ if(forThumb&&THUMBP[e.t])Object.assign(p,THUMBP[e.t]);
 function railsFor(o){return state.objs.filter(r=>r.type==='rail'&&r.id!==o.id);}
 function onRail(q,r){if(!DEF[q.type]?.rail||(q.rot%180)!==(r.rot%180))return false;const [u,v]=toLocal(r,q.x,q.y);return Math.abs(v)<.6&&Math.abs(u)<=r.p.len/2+1;}
 function snapPos(o,x,y){const D=DEF[o.type];
+ if(D.plc){const rt=D.plc==='m340'?'m340rack':'clxrack',ps=PLCM[D.plc][o.p.model]?.[0]==='ps';let best=null;
+  for(const r of state.objs){if(r.type!==rt)continue;const {w,h}=sizeOf(r);if(Math.abs(y-r.y)>h/2+40||x<r.x-w/2-90||x>r.x+w/2+40)continue;
+   for(const z of rackSlots(r,D.plc)){if(!!z.ps!==ps)continue;if(state.objs.some(q=>q!==o&&q.type===o.type&&Math.abs(q.x-(r.x+z.x))<1&&Math.abs(q.y-r.y)<1))continue;const d=Math.abs(r.x+z.x-x)+Math.abs(r.y-y)*.3;if(!best||d<best.d)best={d,x:r.x+z.x,y:r.y};}}
+  if(best)return [r2(best.x),r2(best.y)];}
  if(o.type==='person'){const H=sizeOf(o).h,O=ORG(),fy=y+H/2;return [gs(x),Math.abs(fy-O.y)<30/view.s?r2(O.y-H/2):gs(y)];}
  if(D.front){const b=boxOf({x,y});return b?[r2(b.x+gs(x-b.x)),r2(b.y+gs(y-b.y))]:[gs(x),gs(y)];}
  if(D.rail&&!D.comb)return snapRail(o,x,y);
@@ -2324,7 +2377,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('#measBar [data-m
 /* ================= pointer interaction ================= */
 // A cabinet, box or CI enclosure carries what's mounted in it when dragged,
 // but never another one standing over it — each moves on its own.
-const isBox=o=>o.type==='enclosure'||o.type==='cibox'||o.type==='cabinet'||o.type==='hbox';
+const isBox=o=>o.type==='enclosure'||o.type==='cibox'||o.type==='cabinet'||o.type==='hbox'||o.type==='m340rack'||o.type==='clxrack';
 const P=new Map();let G=null,pinch=null;
 svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(e.pointerId,{x:e.clientX,y:e.clientY});
  if(P.size===2){if(G&&G.mode==='drag'&&G.moved)commit();G=null;const [a,b]=[...P.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),cx:(a.x+b.x)/2,cy:(a.y+b.y)/2,v:{...view}};return;}
@@ -2567,7 +2620,7 @@ function shDash(o){const w=Math.max(.2,+o.p.lw||2);return o.p.dash==='dash'?`str
 function shFill(o){const c=col(o,'blue');return o.p.fill==='light'?c+'33':o.p.fill==='solid'?c:'none';}
 function lblFs(o){return Math.max(1,+o.p.fs||6);}
 function lblLines(o){const ls=String(o.p.text??'').split('\n');return ls.length?ls:[''];}
-const FL={rows:'מספר שורות',mods:'מודולים בשורה',title:'שם הלוח',from:'מוזן מ',volt:'מתח',ic:'זרם קצר',main:'מפסק ראשי',notes:'שורות נוספות',pcol:'צבע השלט',feed:'סוג ההזנה',tn:'מספרי הדקים (למעלה-למטה)',wt:'עובי קיר (מ"מ)',lw:'עובי קו (מ"מ)',dash:'סוג קו',fill:'מילוי',head:'ראשי חץ',ang:'זווית (מעלות)',poles:'מספר קטבים',gang:'מספר שקעים',ip:'הגנה',cee:'סוג שקע',cfg:'הרכב הקופסה',sw:'סוג מפסק',lid:'מכסה',kind:'סוג',th:'עובי רצפה (מ"מ)',rh:'גובה רצפה כפולה (מ"מ)',rad:'רדיוס כיפוף מינימלי',ends:'פתיחת גידים',cores:'מספר גידים',sec:'חתך גיד (ממ"ר)',brk:'אורך פתיחת הגידים (מ"מ)',pump:'משאבה / ציוד מונע',tw:'רוחב תעלה (מ"מ)',set:'הרכב מהדקים',desc:'תיאור',fs:'גודל טקסט (מ"מ)',tag:'סימון (למשל Q1, K2)',rating:'דירוג / ערך',len:'אורך (מ"מ)',dw:'רוחב תעלה (מ"מ)',mods:'מספר מודולים',ph:'מספר פאזות',w:'רוחב (מ"מ)',h:'גובה (מ"מ)',text:'טקסט',kind:'סוג מהדק',color:'צבע',orient:'כיוון התקנה',coil:'מתח סליל',frame:'גודל / מבנה',door:'דלת',hinge:'צד צירים',closed:'תצוגה',size:'גודל קופסה',window:'חלון שקוף'};
+const FL={slots:'מספר חריצים',model:'דגם',rows:'מספר שורות',mods:'מודולים בשורה',title:'שם הלוח',from:'מוזן מ',volt:'מתח',ic:'זרם קצר',main:'מפסק ראשי',notes:'שורות נוספות',pcol:'צבע השלט',feed:'סוג ההזנה',tn:'מספרי הדקים (למעלה-למטה)',wt:'עובי קיר (מ"מ)',lw:'עובי קו (מ"מ)',dash:'סוג קו',fill:'מילוי',head:'ראשי חץ',ang:'זווית (מעלות)',poles:'מספר קטבים',gang:'מספר שקעים',ip:'הגנה',cee:'סוג שקע',cfg:'הרכב הקופסה',sw:'סוג מפסק',lid:'מכסה',kind:'סוג',th:'עובי רצפה (מ"מ)',rh:'גובה רצפה כפולה (מ"מ)',rad:'רדיוס כיפוף מינימלי',ends:'פתיחת גידים',cores:'מספר גידים',sec:'חתך גיד (ממ"ר)',brk:'אורך פתיחת הגידים (מ"מ)',pump:'משאבה / ציוד מונע',tw:'רוחב תעלה (מ"מ)',set:'הרכב מהדקים',desc:'תיאור',fs:'גודל טקסט (מ"מ)',tag:'סימון (למשל Q1, K2)',rating:'דירוג / ערך',len:'אורך (מ"מ)',dw:'רוחב תעלה (מ"מ)',mods:'מספר מודולים',ph:'מספר פאזות',w:'רוחב (מ"מ)',h:'גובה (מ"מ)',text:'טקסט',kind:'סוג מהדק',color:'צבע',orient:'כיוון התקנה',coil:'מתח סליל',frame:'גודל / מבנה',door:'דלת',hinge:'צד צירים',closed:'תצוגה',size:'גודל קופסה',window:'חלון שקוף'};
 function cabDialog(o,tmp){tmp=tmp||JSON.parse(JSON.stringify(o.p));const sel_=(f,opts,v)=>`<select data-f="${f}">${opts.map(([a,b])=>`<option value="${a}" ${String(a)===String(v)?'selected':''}>${b}</option>`).join('')}</select>`;
  const WS=[300,400,500,600,800,1000,1200].map(w=>[w,w+' מ"מ']),FS=[['door','דלת'],['double','דלת כפולה'],['cover','פאנלים מוברגים'],['none','ללא חזית']],HS=[['L','צירים שמאל'],['R','צירים ימין']];
  let h=`<div class="fld"><label>שם</label><input id="c_name" value="${esc(tmp.name||'')}"></div><div class="fld"><label>שלט על הדלת</label><input id="c_tag" value="${esc(tmp.tag||'')}"></div>`;
@@ -2633,6 +2686,8 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='notes')h+=`<div class="fld"><label>${FL[k]} (כל שורה בנפרד)</label><textarea id="f_notes" rows="2">${esc(v)}</textarea></div>`;
   else if(k==='rows')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_rows">${[1,2,3,4,5,6].map(a=>`<option value="${a}" ${a==v?'selected':''}>${a}</option>`).join('')}</select></div><div class="hint">שינוי שורות לא מזיז את פסי ה-DIN הקיימים — הוסף או הזז פסים לפי הצורך.</div>`;
   else if(k==='mods')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_mods">${[8,12,13,18,24].map(a=>`<option value="${a}" ${a==v?'selected':''}>${a} מודולים</option>`).join('')}</select></div>`;
+  else if(k==='slots')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_slots">${Object.keys(PLCR[o.type==='m340rack'?'m340':'clx'].W).map(a=>`<option value="${a}" ${a==v?'selected':''}>${a} חריצים</option>`).join('')}</select></div>`;
+  else if(k==='model'&&D.plc)h+=`<div class="fld"><label>${FL[k]}</label><select id="f_model">${Object.entries(PLCM[D.plc]).map(([a,[,d]])=>`<option value="${a}" ${a===v?'selected':''}>${a} — ${d}</option>`).join('')}</select></div>`;
   else if(k==='dash')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_dash">${[['solid','רציף'],['dash','מקווקו'],['dot','מנוקד'],['dashdot','קו-נקודה']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='fill')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_fill">${[['none','ללא'],['light','שקוף בצבע הקו'],['solid','מלא']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='head')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_head">${[['none','בלי חץ (קו)'],['end','חץ בקצה אחד'],['both','חץ בשני הקצוות']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
