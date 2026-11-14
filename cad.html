@@ -417,6 +417,7 @@ body.liblist #sheetBody .item .favstar{position:static;order:9;font-size:19px}
 #toast{top:calc(env(safe-area-inset-top) + var(--toph) + var(--toph2) + var(--toph3) + 10px)}
 @media (max-height:500px){:root{--toph3:42px}#favBar .item.fav{height:36px}#favBar .item.fav .th{height:28px}}
 @media (max-width:600px){:root{--toph3:48px}}
+#sbar button{font-family:var(--uif,Heebo),Arial,sans-serif!important}
 </style>
 </head>
 <body>
@@ -2076,6 +2077,29 @@ function uiLight(){try{return localStorage.getItem(UI_KEY)==='light';}catch(e){r
 function applyUI(){document.body.classList.toggle('uil',uiLight());}
 function toggleUI(){const l=!uiLight();try{localStorage.setItem(UI_KEY,l?'light':'dark');}catch(e){}applyUI();try{SH&&SH.applyUI&&SH.applyUI();}catch(e){}toast(l?'☀ האפליקציה במצב בהיר':'🌙 האפליקציה במצב כהה');}
 applyUI();addEventListener('storage',e=>{if(e.key===UI_KEY)applyUI();});
+
+/* ================= display settings: font and overall size =================
+   Kept per device. The font is applied here and in the shell; the size scales
+   the whole drawing tool from the shell (like a zoom), or this page itself when
+   it is opened on its own. */
+const UIFONTS=[['Heebo','Heebo (ברירת מחדל)'],['Rubik','Rubik — עגול ומודגש'],['Assistant','Assistant — דק ונקי'],['Alef','Alef — קלאסי'],['Varela Round','Varela Round — רך'],['Arial','Arial — מערכת']];
+function uiFont(){try{return localStorage.getItem('ohadcad.font')||'Heebo';}catch(e){return 'Heebo';}}
+function uiScale(){try{return +localStorage.getItem('ohadcad.uiscale')||1;}catch(e){return 1;}}
+function loadFont(f,doc){doc=doc||document;if(f==='Heebo'||f==='Arial'||doc.getElementById('gf-'+f.replace(/ /g,'')))return;const l=doc.createElement('link');l.id='gf-'+f.replace(/ /g,'');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+f.replace(/ /g,'+')+':wght@400;500;600;700;800&display=swap';doc.head.appendChild(l);}
+function applyFontScale(){const f=uiFont();loadFont(f);document.body.style.fontFamily=`'${f}',Heebo,system-ui,Arial,sans-serif`;document.documentElement.style.setProperty('--uif',`'${f}',Heebo,Arial,sans-serif`);
+ if(!SH){const z=uiScale();document.documentElement.style.zoom=z===1?'':String(z);}
+ try{SH&&SH.applyUI&&SH.applyUI();}catch(e){}}
+function displayDialog(){const f0=uiFont(),z0=uiScale();
+ modal('הגדרות תצוגה',`<div class="fld"><label>גופן כללי</label><select id="ds_f">${UIFONTS.map(([v,n])=>`<option value="${v}" ${v===f0?'selected':''}>${n}</option>`).join('')}</select></div>
+<div class="fld"><label>הגדלה כללית: <b id="ds_zl">${Math.round(z0*100)}%</b></label><input id="ds_z" type="range" min="0.8" max="1.5" step="0.05" value="${z0}" style="padding:0"></div>
+<div style="display:flex;gap:6px;flex-wrap:wrap">${[0.9,1,1.1,1.25,1.4].map(v=>`<button class="wbtn" data-z="${v}">${Math.round(v*100)}%</button>`).join('')}</div>
+<div class="hint" style="margin-top:10px">השינוי מוחל מיד ונשמר במכשיר הזה. ההגדלה מגדילה את כל הכפתורים, הכתב והחלונות.</div>`,
+  [{t:'סגור',cls:'pri'},{t:'ברירת מחדל',fn:()=>{try{localStorage.removeItem('ohadcad.font');localStorage.removeItem('ohadcad.uiscale');}catch(e){}applyFontScale();closeModal();toast('חזרה לברירת המחדל');return false;}}]);
+ const setZ=v=>{v=Math.max(.8,Math.min(1.5,+v));try{localStorage.setItem('ohadcad.uiscale',String(v));}catch(e){}$('ds_zl').textContent=Math.round(v*100)+'%';$('ds_z').value=v;applyFontScale();};
+ $('ds_f').onchange=e=>{try{localStorage.setItem('ohadcad.font',e.target.value);}catch(_){}applyFontScale();};
+ $('ds_z').onchange=e=>setZ(e.target.value);$('ds_z').oninput=e=>{$('ds_zl').textContent=Math.round(e.target.value*100)+'%';};
+ $('mBody').onclick=e=>{const b=e.target.closest('[data-z]');if(b)setZ(b.dataset.z);};}
+applyFontScale();
 /* ================= refresh =================
    The shell's ⟳ button and a pull down on the top bars both land here: any
    pending save goes out first, then the whole app reloads. */
@@ -2543,7 +2567,7 @@ function wireLen(w){const ps=w.pts.map(resolve).filter(Boolean);let L=0;for(let 
 
 /* ================= drawer / menu ================= */
 function openDrawer(){const items=[['פרויקט'],['📄 פרויקט חדש',newProject],['🗂 פרויקט חדש מתבנית (דוגמאות)',templatesDialog],...(SH?[['📂 פתח מהתיקייה המשותפת',openShared],['💾 שמור עכשיו (נשמר גם אוטומטית)',saveShared],['📑 שמור עותק בשם…',()=>saveSharedAs(true)]]:[['📂 פתח פרויקט שמור',openProjects],['💾 שמור בשם…',saveAs]]),
- ['תצוגה'],[uiLight()?'🌙 מצב כהה לאפליקציה':'☀ מצב בהיר לאפליקציה',toggleUI],['🧩 הסתרת כפתורים / איפוס הסרגלים…',tbEditor],['📄 דף ייצור (Layout)…',layoutDialog],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
+ ['תצוגה'],['⚙ הגדרות תצוגה — גופן והגדלה…',displayDialog],[uiLight()?'🌙 מצב כהה לאפליקציה':'☀ מצב בהיר לאפליקציה',toggleUI],['🧩 הסתרת כפתורים / איפוס הסרגלים…',tbEditor],['📄 דף ייצור (Layout)…',layoutDialog],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
  ['ייצוא ושיתוף'],['📋 רשימת ציוד (BOM)',bom],['📄 ייצוא PDF עם טבלת שרטוט',pdfDialog],['🖼️ ייצוא תמונה (PNG)',exportImage],['💾 הורד קובץ פרויקט (JSON)',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state))],['📤 העתק קובץ פרויקט',copyJSON],['📥 ייבוא קובץ פרויקט',importJSON],...(SH&&SH.menu?[['OhadCad'],...SH.menu()]:[])];
  $('dbox').innerHTML=`<div style="display:flex;align-items:center;justify-content:flex-end;margin:4px 8px 0"><img src="icons/wordmark-${uiLight()?'light':'dark'}.svg" alt="OhadCad" height="26"></div><h2>${esc(state.name)}</h2>`+items.map((it,i)=>it[1]?`<button data-i="${i}">${it[0]}</button>`:`<div style="color:#8a8a8a;font-size:13px;margin:12px 12px 2px">${it[0]}</div>`).join('');
  $('drawer').classList.remove('hidden');$('dbox').onclick=e=>{const b=e.target.closest('button');if(!b)return;$('drawer').classList.add('hidden');items[+b.dataset.i][1]();};}
