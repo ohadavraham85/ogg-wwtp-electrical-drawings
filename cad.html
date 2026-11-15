@@ -2172,7 +2172,13 @@ function wireTap(x,y){const tr=nearestTerm(x,y,Math.max(5,20/view.s));let pt=tr?
  draft.pts.push(pt);
  if(tr&&draft.pts.length>=2){finishWire();return;}
  renderNow();}
-function finishWire(){if(draft&&draft.pts.length>=2){const w={id:uid(),type:'wire',p:{color:wireColor,sec:wireSec,name:'חוט'},pts:draft.pts};state.objs.push(w);draft=null;commit();toast('החוט נוסף');}else draft=null;renderNow();updateBar();}
+/* a new wire's colour follows what it connects to: anything touching an N
+   terminal (or an N feed) is blue; branching off a terminal that already has a
+   wire takes that wire's colour. */
+function termLbl(p){if(!p||!p.r)return '';const o=get(p.r);if(!o)return '';if(o.type==='sfeed')return o.p.feed||'';if(o.type==='tb'&&o.p.kind==='blue')return 'N';const t=termsOf(o)[p.t];return t&&t[2]!=null?String(t[2]).trim():'';}
+function wireAutoColor(ends,def){if(ends.some(p=>/^N\d*$/.test(termLbl(p))))return 'blue';
+ for(const p of ends){if(!p||!p.r)continue;const w=state.objs.find(o=>o.type==='wire'&&o.pts.some(q=>q.r===p.r&&q.t===p.t));if(w)return w.p.color;}return def;}
+function finishWire(){if(draft&&draft.pts.length>=2){const w={id:uid(),type:'wire',p:{color:wireAutoColor([draft.pts[0],draft.pts[draft.pts.length-1]],wireColor),sec:wireSec,name:'חוט'},pts:draft.pts};state.objs.push(w);draft=null;commit();toast('החוט נוסף');}else draft=null;renderNow();updateBar();}
 
 /* A DIN-rail part goes onto the nearest rail it is held over (within about half
    its own height), next to its neighbours, and never on top of another part:
@@ -2561,7 +2567,7 @@ function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(DROPFULL&&g.mode==='drag'&&g.moved)toast('אין מקום פנוי בפס הזה לרכיב — פנה מקום או הארך את הפס');DROPR=null;DROPFULL=false;if(GUIDES.length){GUIDES=[];render();}
  if(g.mode==='cpt'){CGUIDE=[];const o=g.o,R=o.p.route;if(!g.moved){if(g.added){R.splice(g.i,1);}else if(g.i>0&&g.i<R.length-1){R.splice(g.i,1);toast('הכיפוף הוסר');}else{renderNow();return;}}
   cabRecentre(o);commit();renderNow();updateBar();return;}
- if(g.mode==='qwire'){svg.style.cursor='';if(g.to){const a=resolve(g.from),b=resolve(g.to);const w={id:uid(),type:'wire',p:{color:isSldObj(get(g.from.r))?'brown':wireColor,sec:wireSec,name:'חוט',auto:1},pts:[g.from,g.to]};
+ if(g.mode==='qwire'){svg.style.cursor='';if(g.to){const a=resolve(g.from),b=resolve(g.to);const w={id:uid(),type:'wire',p:{color:wireAutoColor([g.from,g.to],isSldObj(get(g.from.r))?'brown':wireColor),sec:wireSec,name:'חוט',auto:1},pts:[g.from,g.to]};
    state.objs.push(w);commit();renderNow();updateBar();toast('חובר');}else if(!g.moved){select(g.id||null);}else{renderNow();toast('שחרר ליד נקודת חיבור של רכיב אחר כדי לחבר');}return;}
  if(g.mode==='band'&&g.moved){const x0=Math.min(g.w0[0],g.w1[0]),x1=Math.max(g.w0[0],g.w1[0]),y0=Math.min(g.w0[1],g.w1[1]),y1=Math.max(g.w0[1],g.w1[1]);
   const hit=state.objs.filter(o=>!hiddenFront(o)&&boundsOf(o).every(([x,y])=>x>=x0&&x<=x1&&y>=y0&&y<=y1)).map(o=>o.id);
