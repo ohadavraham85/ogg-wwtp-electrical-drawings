@@ -447,7 +447,7 @@ body.iconsonly #docTabs button{padding:6px 11px}body.iconsonly #docTabs .lic{wid
 /* document-bar menus */
 .ddbtn{display:inline-flex!important;align-items:center;gap:6px}.ddbtn .caret{font-size:11px;opacity:.75}
 #bMeas.open{border-color:var(--acc)!important;background:#2a1a08!important}body.uil #bMeas.open{background:#fff1dc!important}
-#mMeas{width:min(330px,calc(100vw - 12px))}#mMeas .mh{font-size:11.5px;font-weight:400;color:var(--muted,#9ca3af);display:block;margin-top:2px;line-height:1.35}#mMeas button{align-items:flex-start!important}#mMeas .ml{display:flex;flex-direction:column}
+#mMeas{width:min(330px,calc(100vw - 12px))}#mMeas .mh{font-size:11.5px;font-weight:400;color:var(--muted,#9ca3af);display:block;margin-top:2px;line-height:1.35}#mMeas button{align-items:flex-start!important}#mMeas button.on .mh{color:#2b1600}#mMeas .ml{display:flex;flex-direction:column}
 #bDraw.open{border-color:var(--acc)!important;background:#2a1a08!important}body.uil #bDraw.open{background:#fff1dc!important}
 #mDraw{width:min(250px,calc(100vw - 12px));max-height:calc(100vh - 90px);overflow:auto}#mDraw .dgrid{display:grid;grid-template-columns:1fr;gap:1px}
 #mDraw .item{flex-direction:row;min-height:0;gap:8px;padding:5px 6px!important;font-size:13px!important;user-select:none;-webkit-user-select:none}#mDraw .item .th{width:38px;height:28px!important;flex:none;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:3px}#mDraw .item .th svg{max-width:100%;max-height:100%}#mDraw .item .nm{flex:1;line-height:1.2;direction:rtl;text-align:right;font-size:13px}#mDraw .item .th svg{max-height:26px}#mDraw .dhint{font-size:11.5px;color:var(--muted,#9ca3af);padding:6px 8px 2px;line-height:1.4}
@@ -2425,9 +2425,12 @@ function mdForObj(o){const {w,h}=sizeOf(o),gap=mdGap(),pt=(u,v)=>{const [x,y]=fr
  const TL=by(q=>-(q.x+q.y)),TR=by(q=>q.x-q.y),BR=by(q=>q.x+q.y);
  mdNew('h',TL,TR,Math.min(TL.y,TR.y)-gap-(TL.y+TR.y)/2);mdNew('v',TR,BR,Math.max(TR.x,BR.x)+gap-(TR.x+BR.x)/2);
  const W=Math.abs(TR.x-TL.x),H=Math.abs(BR.y-TR.y);commit();renderNow();toast(`${o.p.name||'רכיב'}: ${mdFmt(W)} × ${mdFmt(H)} מ"מ`);}
+const mdPick=(x,y)=>mdSnap(x,y)||{x:r2(gs(x)),y:r2(gs(y))};
 function tapeAt(a,wx,wy){let p=mdSnap(wx,wy)||{x:r2(gs(wx)),y:r2(gs(wy))};if(!a)return p;const th=10/view.s;p={x:p.x,y:p.y,of:p.of};
  if(Math.abs(p.x-a.x)<th)p.x=a.x;if(Math.abs(p.y-a.y)<th)p.y=a.y;return p;}
-function measUp(g,e){if(measMode==='tape'){const [wx,wy]=toWorld(e.clientX,e.clientY);
+function measUp(g,e){if(measMode!=='tape'&&measMode!=='obj'){const [wx,wy]=toWorld(e.clientX,e.clientY),p1=mdPick(wx,wy);
+  if(g.moved&&!MS.a){mdMake(g.p0,p1);return;}if(!g.moved&&!MS.a){MS.a=g.p0;MS.cur=g.p0;render();toast(measMode==='area'?'עכשיו הקש על הפינה הנגדית':'עכשיו הקש על הנקודה השנייה');return;}mdMake(MS.a,g.moved?p1:g.p0);return;}
+ if(measMode==='tape'){const [wx,wy]=toWorld(e.clientX,e.clientY);
   if(g.moved){MS.a=g.p0;MS.cur=tapeAt(g.p0,wx,wy);MS.frozen=true;}
   else if(!MS.a||MS.frozen){MS.a=g.p0;MS.cur=g.p0;MS.frozen=false;toast('הזז אל הנקודה השנייה והקש שוב');}
   else{MS.cur=tapeAt(MS.a,wx,wy);MS.frozen=true;}render();return;}
@@ -2458,7 +2461,7 @@ function measSVG(){if(!measMode)return '';if(measMode==='tape')return tapeSVG();
    `<path d="${hm?`M${a.x} ${a.y}V${my}M${b.x} ${b.y}V${my}`:`M${a.x} ${a.y}H${mx}M${b.x} ${b.y}H${mx}`}" stroke="#ff8c00" stroke-opacity=".6" stroke-width="${1.2*k}" stroke-dasharray="${3*k} ${3*k}"/><path d="${hm?`M${a.x} ${my}H${b.x}`:`M${mx} ${a.y}V${b.y}`}" stroke="#ff8c00" stroke-width="${2.2*k}"/>`;
   s+=`<g transform="translate(${b.x+10*k} ${b.y-14*k})"><rect x="0" y="${-10*k}" width="${(t.length*7.5+14)*k}" height="${20*k}" rx="${4*k}" fill="#000" stroke="#ff8c00" stroke-width="${1.4*k}"/><text x="${7*k}" y="0" font-size="${13*k}" fill="#ffb340" font-weight="700" dominant-baseline="central" font-family="Arial" direction="ltr">${t}</text></g>`;}
  return `<g pointer-events="none">${mk(a)}${mk(b)}${s}</g>`;}
-const MMODES=[['tape','📐','סרט מדידה','מקישים על נקודה והסרט נפתח עד המקום שעוצרים בו, עם קווים מנחים של 90 מעלות. לא נשמר בשרטוט.'],['dist','📏','מידה קבועה','שתי נקודות תפיסה — מידה אופקית או אנכית שנשארת בשרטוט וזזה עם הרכיב.'],['area','⬚','מידות אזור','שתי פינות נגדיות — מידות רוחב וגובה.'],['obj','🔲','מידות רכיב','הקשה על רכיב — מידות רוחב וגובה שזזות איתו.']];
+const MMODES=[['tape','📐','סרט מדידה','מקישים על נקודה והסרט נפתח עד המקום שעוצרים בו, עם קווים מנחים של 90 מעלות. לא נשמר בשרטוט.'],['dist','📏','מידה קבועה','שתי נקודות בכל מקום — מידה אופקית או אנכית שנשארת בשרטוט. ליד רכיב היא נתפסת לנקודה שלו וזזה איתו.'],['area','⬚','מידות אזור','שתי פינות נגדיות בכל מקום — מידות רוחב וגובה.'],['obj','🔲','מידות רכיב','הקשה על רכיב — מידות רוחב וגובה שזזות איתו.']];
 function buildMeasMenu(){$('mMeas').innerHTML='<div class="ddt">📏 מידות</div>'+MMODES.map(([k,i,t,h])=>`<button data-mm="${k}" class="${measMode===k?'on':''}"><span>${i}</span><span class="ml">${t}<span class="mh">${h}</span></span></button>`).join('')+(measMode?'<button data-mm=""><span>✓</span><span class="ml">סיום מדידה</span></button>':'');}
 document.addEventListener('click',e=>{const b=e.target.closest('#mMeas [data-mm]');if(b)setMeas(b.dataset.mm||null);});
 function setMeas(m){measMode=m;MS.a=MS.cur=MS.hov=null;MS.frozen=false;if(m){if(wireMode)setWire(false);if(pMode)closePanel();const t=MMODES.find(x=>x[0]===m);if(t)toast(`${t[2]}: ${t[3]} · לסיום — Esc או "סיום" בתפריט`);}
@@ -2477,7 +2480,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  if(P.size===2){if(G&&G.mode==='drag'&&G.moved)commit();G=null;const [a,b]=[...P.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),cx:(a.x+b.x)/2,cy:(a.y+b.y)/2,v:{...view}};return;}
  if(P.size>2)return;
  if(measMode){if(e.pointerType==='mouse'&&e.button!==0){G={sx:e.clientX,sy:e.clientY,t0:Date.now(),id:null,moved:false,mode:'pan',tx0:view.tx,ty0:view.ty};return;}
-  const [mx,my]=toWorld(e.clientX,e.clientY),ti=e.target.closest('[data-id]');G={sx:e.clientX,sy:e.clientY,t0:Date.now(),moved:false,mode:'meas',p0:measMode==='tape'?(MS.a&&!MS.frozen?tapeAt(MS.a,mx,my):tapeAt(null,mx,my)):mdSnap(mx,my),id:ti?ti.dataset.id:null};return;}
+  const [mx,my]=toWorld(e.clientX,e.clientY),ti=e.target.closest('[data-id]');G={sx:e.clientX,sy:e.clientY,t0:Date.now(),moved:false,mode:'meas',p0:measMode==='tape'?(MS.a&&!MS.frozen?tapeAt(MS.a,mx,my):tapeAt(null,mx,my)):measMode==='obj'?mdSnap(mx,my):mdPick(mx,my),id:ti?ti.dataset.id:null};return;}
  const t=e.target.closest('[data-id]'),id=t?t.dataset.id:null;
  G={sx:e.clientX,sy:e.clientY,t0:Date.now(),id,moved:false,mode:'pan',tx0:view.tx,ty0:view.ty,add:e.shiftKey||e.ctrlKey||e.metaKey};
  if(e.pointerType==='mouse'&&e.button!==0)return;
@@ -2504,7 +2507,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
   state.objs.forEach(q=>{if(q.type==='label'&&q.p.of&&ids.has(q.p.of)&&!moving.has(q))G.kids.push({q,x:q.x,y:q.y});});}
  if(G&&G.mode==='pan'&&e.pointerType==='mouse'&&e.button===0&&!wireMode){G.mode='band';G.w0=toWorld(e.clientX,e.clientY);G.w1=G.w0;}
 });
-svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.pointerType==='mouse'){const [x,y]=toWorld(e.clientX,e.clientY);if(measMode==='tape'){if(MS.a&&!MS.frozen)MS.cur=tapeAt(MS.a,x,y);else MS.hov=mdSnap(x,y);render();return;}MS.hov=mdSnap(x,y);if(MS.a)MS.cur=MS.hov;render();return;}if(!P.has(e.pointerId)){if(e.pointerType==='mouse'&&QW()){const [x,y]=toWorld(e.clientX,e.clientY),h=termAt(x,y,qRad('press',false));
+svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.pointerType==='mouse'){const [x,y]=toWorld(e.clientX,e.clientY);if(measMode==='tape'){if(MS.a&&!MS.frozen)MS.cur=tapeAt(MS.a,x,y);else MS.hov=mdSnap(x,y);render();return;}MS.hov=measMode==='obj'?mdSnap(x,y):mdPick(x,y);if(MS.a)MS.cur=MS.hov;render();return;}if(!P.has(e.pointerId)){if(e.pointerType==='mouse'&&QW()){const [x,y]=toWorld(e.clientX,e.clientY),h=termAt(x,y,qRad('press',false));
    if((h&&(!HOV||HOV.r!==h.r||HOV.t!==h.t))||(!h&&HOV)){HOV=h;svg.style.cursor=h?'crosshair':'';render();}}return;}P.set(e.pointerId,{x:e.clientX,y:e.clientY});
  if(pinch&&P.size>=2){const [a,b]=[...P.values()];const d=Math.hypot(a.x-b.x,a.y-b.y),cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;const r=svg.getBoundingClientRect();
   const s=Math.min(30,Math.max(.04,pinch.v.s*d/pinch.d));const wx=(pinch.cx-r.left-pinch.v.tx)/pinch.v.s,wy=(pinch.cy-r.top-pinch.v.ty)/pinch.v.s;
@@ -2517,7 +2520,7 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
  else if(G.mode==='rot'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY);let a=Math.atan2(wy-o.y,wx-o.x)*180/Math.PI+90;
   if(!e.altKey){a=Math.round(a/15)*15;}else{const n=Math.round(a/90)*90;if(Math.abs(a-n)<3)a=n;}o.rot=r2(((a%360)+360)%360);render();}
  else if(G.mode==='tip'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY),sp=mdSnap(wx,wy);o.p.tip=sp&&Math.hypot(sp.x-wx,sp.y-wy)<12/view.s?{...sp}:{x:r2(wx),y:r2(wy)};render();}
- else if(G.mode==='meas'){const [wx,wy]=toWorld(e.clientX,e.clientY);if(measMode==='tape'){if(!MS.a||MS.frozen){MS.a=G.p0;MS.frozen=false;}MS.cur=tapeAt(MS.a,wx,wy);}else MS.cur=mdSnap(wx,wy);render();}
+ else if(G.mode==='meas'){const [wx,wy]=toWorld(e.clientX,e.clientY);if(measMode==='tape'){if(!MS.a||MS.frozen){MS.a=G.p0;MS.frozen=false;}MS.cur=tapeAt(MS.a,wx,wy);}else MS.cur=mdPick(wx,wy);render();}
  else if(G.mode==='mdoff'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY),dx=wx-G.w0[0],dy=wy-G.w0[1];if(sel!==o.id){sel=o.id;updateBar();}
   const d=mdMode(o.p.mode,...mdPt(o.p.a),...mdPt(o.p.b))==='h'?dy:dx;
   o.p.off=r2(G.off0+d);render();}
