@@ -1701,7 +1701,7 @@ function termsSVG(){if(!showTerms||wireMode)return '';const k=1/view.s,used=new 
  return s+'</g>';}
 function toggleTerms(){showTerms=!showTerms;setTimeout(()=>window.sbSync&&sbSync());try{localStorage.setItem('epd.terms',showTerms?'1':'0');}catch(e){}renderNow();toast(showTerms?'נקודות החיבור מודגשות':'הדגשת נקודות החיבור כבויה');}
 let drawnS=0;
-function renderNow(){drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}let s=layoutSVG()+axesSVG()+content({sel:true})+termsSVG()+handlesSVG()+dimsSVG()+guidesSVG()+dropSVG()+measSVG()+rotSVG()+cableGuideSVG()+(DRAGNEW?`<g opacity=".8" pointer-events="none">${objSVG(DRAGNEW,true)}</g>`:'')+bandSVG()+qWireSVG();
+function renderNow(){drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}let s=layoutSVG()+axesSVG()+content({sel:true})+termsSVG()+handlesSVG()+dimsSVG()+guidesSVG()+dropSVG()+measSVG()+rotSVG()+layHandlesSVG()+cableGuideSVG()+(DRAGNEW?`<g opacity=".8" pointer-events="none">${objSVG(DRAGNEW,true)}</g>`:'')+bandSVG()+qWireSVG();
  if(wireMode){for(const o of state.objs){if(o.type==='wire')continue;termsOf(o).forEach(t=>{const [x,y]=fromLocal(o,t[0],t[1]);s+=`<circle cx="${x}" cy="${y}" r="2.8" fill="rgba(34,211,238,.25)" stroke="#22d3ee" stroke-width=".7" pointer-events="none"/>`;});}
   if(draft&&draft.pts.length){const c=WCOL[wireColor];const d=wirePath(null,draft.pts);if(d)s+=`<path d="${d}" fill="none" stroke="${c.base}" stroke-width="${SEC[wireSec]}" stroke-linecap="round" stroke-linejoin="round" opacity=".85" pointer-events="none"/>`;
    draft.pts.map(resolve).forEach((p,i)=>{if(p)s+=`<circle cx="${p.x}" cy="${p.y}" r="${i?2.2:3.4}" fill="#fff" stroke="#22d3ee" stroke-width="1" pointer-events="none"/>`;});}}
@@ -1742,7 +1742,7 @@ function syncLayoutBtn(){if(typeof buildLayTabs==='function')try{buildLayTabs();
 function layoutDialog(){const k=LKEY(),L=Object.assign({on:1,paper:'A3',orient:'L',scale:10},state[k]||{});const STD=[1,2,2.5,5,10,15,20,25,50,75,100,200];
  const S=(id,lbl,opts,v)=>`<div class="fld"><label>${lbl}</label><select id="l_${id}">${opts.map(([a,b])=>`<option value="${a}" ${String(a)===String(v)?'selected':''}>${b}</option>`).join('')}</select></div>`;
  modal('דף ייצור (Layout)',S('on','הצג את דף הייצור על השרטוט',[[1,'כן'],[0,'לא']],L.on?1:0)+`<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 10px">${S('paper','גודל דף',['A4','A3','A2','A1','A0'].map(a=>[a,a]),L.paper)}${S('orient','כיוון',[['L','לרוחב'],['P','לאורך']],L.orient)}</div>`+
-  S('scale','קנה מידה',STD.map(v=>[v,'1:'+v]),L.scale)+`<div class="hint">המסגרת מוצגת על השרטוט, כשהפינה השמאלית-תחתונה שלה בראשית הצירים: קצה הדף, מסגרת השרטוט וטבלת השרטוט בקנה המידה שנבחר. ה-PDF יוצא בדיוק כך.</div>`,
+  S('scale','קנה מידה',(STD.includes(+L.scale)?STD:[...STD,+L.scale].sort((a,b)=>a-b)).map(v=>[v,'1:'+v]),L.scale)+`<div class="hint">המסגרת מוצגת על השרטוט, כשהפינה השמאלית-תחתונה שלה בראשית הצירים: קצה הדף, מסגרת השרטוט וטבלת השרטוט בקנה המידה שנבחר. ה-PDF יוצא בדיוק כך.</div>`,
   [{t:'שמור',cls:'pri',fn:()=>{const v=id=>$('l_'+id).value;state[k]={on:v('on')==='1'?1:0,paper:v('paper'),orient:v('orient'),scale:+v('scale'),lid:(state[k]||{}).lid};placeOnSheet();laySync();commit();fit();renderNow();}},
    {t:'קנה מידה אוטומטי',fn:()=>{const v=id=>$('l_'+id).value,e=drawExt(),o=ORG();let [W,H]=PAPER[v('paper')];if(v('orient')==='P')[W,H]=[H,W];if(!e){toast('השרטוט ריק');return false;}
      const aw=W-46,ah=H-30-36-6,need=Math.max((Math.max(e.x1,o.x)-o.x)/aw,(o.y-Math.min(e.y0,o.y))/ah);const n=STD.find(x=>x>=need)||Math.ceil(need);$('l_scale').value=String(n);toast('קנה מידה מתאים: 1:'+n+' — לחץ "שמור"');return false;}},{t:'ביטול'}]);}
@@ -2426,6 +2426,24 @@ $('lyTabs').addEventListener('click',e=>{const b=e.target.closest('[data-ly]');i
  if(k===lyLast&&now-lyT<450&&k!=='add'&&!k.startsWith('m:')){lyLast=null;layEdit(k);return;}lyLast=k;lyT=now;
  if(k.startsWith('m:')){const d=k.slice(2);if(curDoc()!==d)switchDoc(d);layModel();}else if(k==='add'){const d=curDoc();if(d!=='both'){layAdd(d);return;}modal('דף ייצור חדש','<div class="hint">לאיזה מסמך?</div>',[{t:'🗄 חזית לוח',cls:'pri',fn:()=>{setTimeout(()=>layAdd('panel'),30);}},{t:'⚡ חד קווי',fn:()=>{setTimeout(()=>layAdd('sld'),30);}},{t:'ביטול'}]);}
  else layShow(k);});
+
+/* ================= resize the sheet by dragging =================
+   Squares on the corners and edges of the shown sheet: pull one and the sheet
+   grows or shrinks around the opposite side — the paper stays the same, so this
+   sets the scale (1:n), catching the standard scales (hold Alt for any). */
+const LYSTD=[1,1.5,2,2.5,3,4,5,7.5,10,15,20,25,30,40,50,75,100,150,200,250,500];
+function layHandlesSVG(){if(wireMode||measMode||globalLock||state.tab==='both')return '';const R=layoutRect();if(!R)return '';const {x0,y0,x1,y1}=R,xm=(x0+x1)/2,ym=(y0+y1)/2,k=1/view.s,a=6*k;
+ const H=[['tl',x0,y0,'nwse'],['t',xm,y0,'ns'],['tr',x1,y0,'nesw'],['r',x1,ym,'ew'],['br',x1,y1,'nwse'],['b',xm,y1,'ns'],['bl',x0,y1,'nesw'],['l',x0,ym,'ew']];
+ let s='<g>'+H.map(([h,x,y,c])=>`<g data-lyh="${h}" style="cursor:${c}-resize"><rect x="${x-a*2.2}" y="${y-a*2.2}" width="${a*4.4}" height="${a*4.4}" fill="transparent"/><rect x="${x-a}" y="${y-a}" width="${a*2}" height="${a*2}" fill="#ff8c00" stroke="#000" stroke-width="${1.2*k}"/></g>`).join('');
+ if(G&&G.mode==='lyr'){const t=`${R.L.paper} · 1:${+R.n.toFixed(2)}`;s+=`<g pointer-events="none" transform="translate(${x1+12*k} ${y0-14*k})"><rect x="0" y="${-11*k}" width="${(t.length*7.6+16)*k}" height="${22*k}" rx="${4*k}" fill="#000" stroke="#ff8c00" stroke-width="${1.4*k}"/><text x="${8*k}" y="0" font-size="${13*k}" fill="#ffb340" font-weight="700" dominant-baseline="central" font-family="Arial" direction="ltr">${t}</text></g>`;}
+ return s+'</g>';}
+function layResize(g,wx,wy,free){const R=g.R0,{W,H,x0,y0,x1,y1}=R,h=g.h;let n,ox=x0,oy=y1;
+ const fx=v=>Math.max(.1,v/W),fy=v=>Math.max(.1,v/H);
+ if(h==='r')n=fx(wx-x0);else if(h==='l')n=fx(x1-wx);else if(h==='t')n=fy(y1-wy);else if(h==='b')n=fy(wy-y0);
+ else if(h==='tr')n=Math.max(fx(wx-x0),fy(y1-wy));else if(h==='tl')n=Math.max(fx(x1-wx),fy(y1-wy));else if(h==='br')n=Math.max(fx(wx-x0),fy(wy-y0));else n=Math.max(fx(x1-wx),fy(wy-y0));
+ if(!free)n=LYSTD.reduce((b,v)=>Math.abs(Math.log(v/n))<Math.abs(Math.log(b/n))?v:b,LYSTD[0]);else n=Math.round(n*10)/10||.1;
+ if(h==='l'||h==='tl')ox=x1-W*n;if(h==='bl'){ox=x1-W*n;oy=y0+H*n;}if(h==='b'||h==='br')oy=y0+H*n;
+ state[LKEY()].scale=n;state[OKEY()]={x:r2(ox),y:r2(oy)};}
 /* ================= dimensions (סרט מדידה) =================
    A fixed dimension between two points. Each end may be pinned to a part (its
    id and a point in the part's own frame), so the dimension follows the part
@@ -2540,6 +2558,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  const t=e.target.closest('[data-id]'),id=t?t.dataset.id:null;
  G={sx:e.clientX,sy:e.clientY,t0:Date.now(),id,moved:false,mode:'pan',tx0:view.tx,ty0:view.ty,add:e.shiftKey||e.ctrlKey||e.metaKey};
  if(e.pointerType==='mouse'&&e.button!==0)return;
+ const lyEl=e.target.closest('[data-lyh]');if(lyEl&&!wireMode){const R=layoutRect();if(R){G.mode='lyr';G.h=lyEl.dataset.lyh;G.R0=R;return;}}
  const rEl=e.target.closest('[data-rot]');if(rEl&&!wireMode){const ro=get(rEl.dataset.rot);if(canRot(ro)){G.mode='rot';G.o=ro;G.r0=ro.rot;if(sel!==ro.id){sel=ro.id;multi.clear();updateBar();}return;}}
  const dEl=e.target.closest('[data-dim]');if(dEl){G.dim=dEl.dataset.dim;return;}
  const hEl=e.target.closest('[data-h]'),so=sel&&get(sel);
@@ -2573,6 +2592,7 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
  if(G.mode==='pan'){view.tx=G.tx0+dx;view.ty=G.ty0+dy;applyView();}
  else if(G.mode==='band'){G.w1=toWorld(e.clientX,e.clientY);render();}
  else if(G.mode==='wmid'){const o=G.o,[,wy]=toWorld(e.clientX,e.clientY);o.p.ym=gs(wy);if(sel!==o.id){sel=o.id;updateBar();}render();}
+ else if(G.mode==='lyr'){const [wx,wy]=toWorld(e.clientX,e.clientY);layResize(G,wx,wy,e.altKey);render();}
  else if(G.mode==='rot'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY);let a=Math.atan2(wy-o.y,wx-o.x)*180/Math.PI+90;
   if(!e.altKey){a=Math.round(a/15)*15;}else{const n=Math.round(a/90)*90;if(Math.abs(a-n)<3)a=n;}o.rot=r2(((a%360)+360)%360);render();}
  else if(G.mode==='tip'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY),sp=mdSnap(wx,wy);o.p.tip=sp&&Math.hypot(sp.x-wx,sp.y-wy)<12/view.s?{...sp}:{x:r2(wx),y:r2(wy)};render();}
@@ -2607,6 +2627,7 @@ function guidesSVG(){if(!GUIDES.length)return '';const k=1/view.s,ext=12*k;retur
 function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(pinch){if(P.size<2)pinch=null;G=null;return;}
  if(!G)return;const g=G;G=null;if(g.mode==='meas'){MS.cur=null;measUp(g,e);render();return;}
+ if(g.mode==='lyr'){if(g.moved){commit();renderNow();const L=state[LKEY()];toast(`דף ${L.paper} · קנה מידה 1:${+(+L.scale).toFixed(2)}`);}else renderNow();return;}
  if(g.mode==='rot'){if(g.moved){commit();renderNow();updateBar();toast(`סובב ל-${Math.round(g.o.rot)}°`);}else renderNow();return;}
  if(g.mode==='tip'){if(g.moved){commit();renderNow();}return;}
  if(g.mode==='wmid'){if(g.moved){commit();renderNow();updateBar();toast('החוט הוזז — הוא נשאר בגובה הזה');}else select(g.id,g.add);return;}
