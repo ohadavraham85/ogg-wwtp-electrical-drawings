@@ -2258,6 +2258,12 @@ document.addEventListener('click',e=>{const b=e.target.closest('.ddbtn');if(b){i
   const r=b.getBoundingClientRect();m.classList.remove('hidden');b.classList.add('open');const w=m.offsetWidth;m.style.top=(r.bottom+4)+'px';m.style.left=Math.max(6,Math.min(innerWidth-w-6,r.right-w))+'px';return;}
  if(!e.target.closest('.ddmenu'))ddClose();},true);
 addEventListener('resize',ddClose);document.addEventListener('keydown',e=>{if(e.key==='Escape')ddClose();});
+// with a mouse, resting on a menu button opens its list; leaving both the button and the list closes it
+function ddOpen(b){const m=$(b.dataset.dd);if(!m||!m.classList.contains('hidden'))return;ddClose();const r=b.getBoundingClientRect();m.classList.remove('hidden');b.classList.add('open');const w=m.offsetWidth;m.style.top=(r.bottom+4)+'px';m.style.left=Math.max(6,Math.min(innerWidth-w-6,r.right-w))+'px';}
+let ddT=0;const ddHover=matchMedia('(hover:hover) and (pointer:fine)');
+document.addEventListener('pointerover',e=>{if(!ddHover.matches||e.pointerType!=='mouse'||document.body.classList.contains('tbmoving'))return;const b=e.target.closest('.ddbtn'),m=e.target.closest('.ddmenu');
+ if(b){clearTimeout(ddT);ddT=setTimeout(()=>ddOpen(b),120);return;}if(m){clearTimeout(ddT);return;}
+ if(document.querySelector('.ddmenu:not(.hidden)')){clearTimeout(ddT);ddT=setTimeout(ddClose,250);}});
 /* ================= refresh =================
    The shell's ⟳ button and a pull down on the top bars both land here: any
    pending save goes out first, then the whole app reloads. */
