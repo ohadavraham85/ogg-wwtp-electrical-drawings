@@ -1772,7 +1772,10 @@ let showCross=true;try{showCross=localStorage.getItem('ohadcad.cross')!=='0';}ca
 function sbSync(){const S={cross:showCross,axes:showAxes,terms:showTerms};document.querySelectorAll('#sbar [data-sb]').forEach(b=>b.classList.toggle('on',!!S[b.dataset.sb]));svg.style.cursor=showCross?'crosshair':'';if(!showCross)xhHide();}
 function xhHide(){$('xh').style.display=$('yh').style.display='none';}
 function toggleCross(){showCross=!showCross;try{localStorage.setItem('ohadcad.cross',showCross?'1':'0');}catch(e){}sbSync();toast(showCross?'סמן צלב פעיל':'סמן צלב כבוי');}
-svg.addEventListener('pointermove',e=>{if(!showCross||e.pointerType!=='mouse'){xhHide();return;}const r=svg.getBoundingClientRect();
+// over a part that can be moved, the crosshair turns into a hand (grabbing while it is dragged)
+function grabAt(e){if(G&&G.mode==='drag')return 'grabbing';if(G||wireMode||measMode||globalLock||HOV||LD)return '';const t=e.target.closest('[data-id]'),o=t&&get(t.dataset.id);return o&&!o.locked&&o.type!=='cabinet'?'grab':'';}
+svg.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'){xhHide();return;}const gc=grabAt(e),cur=gc||(HOV||showCross?'crosshair':'');if(svg.style.cursor!==cur)svg.style.cursor=cur;
+ if(!showCross||gc){xhHide();return;}const r=svg.getBoundingClientRect();
  $('xh').style.display=$('yh').style.display='block';$('xh').style.top=(e.clientY-r.top+r.top)+'px';$('yh').style.left=e.clientX+'px';});
 svg.addEventListener('pointerleave',xhHide);
 $('sbar').addEventListener('click',e=>{const b=e.target.closest('[data-sb]');if(!b)return;({cross:toggleCross,axes:toggleAxes,terms:toggleTerms})[b.dataset.sb]();sbSync();});
