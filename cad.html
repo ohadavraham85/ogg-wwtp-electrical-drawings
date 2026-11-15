@@ -1685,7 +1685,7 @@ function termsSVG(){if(!showTerms||wireMode)return '';const k=1/view.s,used=new 
  return s+'</g>';}
 function toggleTerms(){showTerms=!showTerms;setTimeout(()=>window.sbSync&&sbSync());try{localStorage.setItem('epd.terms',showTerms?'1':'0');}catch(e){}renderNow();toast(showTerms?'נקודות החיבור מודגשות':'הדגשת נקודות החיבור כבויה');}
 let drawnS=0;
-function renderNow(){drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}let s=layoutSVG()+axesSVG()+content({sel:true})+termsSVG()+handlesSVG()+dimsSVG()+guidesSVG()+dropSVG()+measSVG()+(DRAGNEW?`<g opacity=".8" pointer-events="none">${objSVG(DRAGNEW,true)}</g>`:'')+bandSVG()+qWireSVG();
+function renderNow(){drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}let s=layoutSVG()+axesSVG()+content({sel:true})+termsSVG()+handlesSVG()+dimsSVG()+guidesSVG()+dropSVG()+measSVG()+rotSVG()+cableGuideSVG()+(DRAGNEW?`<g opacity=".8" pointer-events="none">${objSVG(DRAGNEW,true)}</g>`:'')+bandSVG()+qWireSVG();
  if(wireMode){for(const o of state.objs){if(o.type==='wire')continue;termsOf(o).forEach(t=>{const [x,y]=fromLocal(o,t[0],t[1]);s+=`<circle cx="${x}" cy="${y}" r="2.8" fill="rgba(34,211,238,.25)" stroke="#22d3ee" stroke-width=".7" pointer-events="none"/>`;});}
   if(draft&&draft.pts.length){const c=WCOL[wireColor];const d=wirePath(null,draft.pts);if(d)s+=`<path d="${d}" fill="none" stroke="${c.base}" stroke-width="${SEC[wireSec]}" stroke-linecap="round" stroke-linejoin="round" opacity=".85" pointer-events="none"/>`;
    draft.pts.map(resolve).forEach((p,i)=>{if(p)s+=`<circle cx="${p.x}" cy="${p.y}" r="${i?2.2:3.4}" fill="#fff" stroke="#22d3ee" stroke-width="1" pointer-events="none"/>`;});}}
@@ -2331,6 +2331,25 @@ function sldJoin(moving){const mv=new Set(moving.filter(Boolean)),ids=new Set([.
    for(const q of state.objs){if(q===m||mv.has(q)||q.type==='wire'||!(DEF[q.type]?.sld||isSldObj(q)))continue;
     termsOf(q).forEach((u,j)=>{const [X,Y]=fromLocal(q,u[0],u[1]);if(Math.hypot(X-x,Y-y)<.6&&!linked(m.id,i,q.id,j)){state.objs.push({id:uid(),type:'wire',p:{color:'brown',sec:'1.5',name:'חיבור',auto:1,joint:1},pts:[{r:m.id,t:i},{r:q.id,t:j}]});added++;}});}});}
  if(added)toast(`חובר אוטומטית (${added}) — לניתוק: סמן את החיבור ומחק אותו`);}
+
+/* ================= free rotation =================
+   A round handle above a part (shown when it is selected or the mouse rests on
+   it) turns it to any angle: 15° steps, catching 0/90/180/270; hold Alt for a
+   free angle. */
+let HOVID=null,hovT=0;
+const canRot=o=>o&&!['wire','mdim','callout','cabinet','sframe'].includes(o.type)&&!o.locked&&!globalLock;
+function rotHandle(o){if(!canRot(o))return '';const {h}=sizeOf(o),k=1/view.s,d=h/2+26*k,[hx,hy]=fromLocal(o,0,-d),[tx,ty]=fromLocal(o,0,-h/2),r=10*k;
+ return `<g data-rot="${o.id}" style="cursor:grab"><path d="M${tx} ${ty}L${hx} ${hy}" stroke="#ff8c00" stroke-width="${1.2*k}" stroke-dasharray="${3*k} ${2*k}"/><circle cx="${hx}" cy="${hy}" r="${r*1.8}" fill="transparent"/><circle cx="${hx}" cy="${hy}" r="${r}" fill="#ff8c00" stroke="#000" stroke-width="${1.2*k}"/>`+
+  `<path d="M${hx-r*.45} ${hy-r*.15}a${r*.5} ${r*.5} 0 1 1 ${r*.18} ${r*.55}" fill="none" stroke="#000" stroke-width="${1.6*k}" stroke-linecap="round"/><path d="M${hx-r*.62} ${hy-r*.5}l${r*.12} ${r*.42}l${r*.4} ${-r*.12}" fill="none" stroke="#000" stroke-width="${1.6*k}" stroke-linecap="round" stroke-linejoin="round"/>`+
+  (G&&G.mode==='rot'&&G.o===o?`<g transform="translate(${hx+16*k} ${hy-16*k})"><rect x="0" y="${-10*k}" width="${46*k}" height="${20*k}" rx="${4*k}" fill="#000" stroke="#ff8c00" stroke-width="${1.2*k}"/><text x="${23*k}" y="0" font-size="${12*k}" fill="#ffb340" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Arial" direction="ltr">${Math.round(o.rot)}°</text></g>`:'')+`</g>`;}
+function rotSVG(){if(wireMode||measMode)return '';const a=sel&&get(sel),b=HOVID&&HOVID!==sel&&get(HOVID);return (a&&!multi.size?rotHandle(a):'')+(b&&!G?rotHandle(b):'');}
+svg.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||P.has(e.pointerId))return;const t=e.target.closest('[data-id],[data-rot]'),id=t?(t.dataset.rot||t.dataset.id):null;
+ if(id){clearTimeout(hovT);if(id!==HOVID){HOVID=id;render();}}else if(HOVID){clearTimeout(hovT);hovT=setTimeout(()=>{HOVID=null;render();},700);}});
+/* ================= 90° guides while routing a cable =================
+   Dragging a cable's bend point, it lines up with the bends before and after it
+   (catching within a few pixels), and dashed guides show the straight runs. */
+let CGUIDE=[];
+function cableGuideSVG(){if(!CGUIDE.length)return '';const k=1/view.s;return '<g pointer-events="none">'+CGUIDE.map(g=>g.corner?`<path d="${g.corner}" fill="none" stroke="#22d3ee" stroke-width="${1.4*k}"/>`:`<line x1="${g.x1}" y1="${g.y1}" x2="${g.x2}" y2="${g.y2}" stroke="${g.on?'#ff8c00':'rgba(34,211,238,.55)'}" stroke-width="${(g.on?1.6:1)*k}" stroke-dasharray="${8*k} ${5*k}"/>`).join('')+'</g>';}
 /* ================= dimensions (סרט מדידה) =================
    A fixed dimension between two points. Each end may be pinned to a part (its
    id and a point in the part's own frame), so the dimension follows the part
@@ -2420,6 +2439,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  const t=e.target.closest('[data-id]'),id=t?t.dataset.id:null;
  G={sx:e.clientX,sy:e.clientY,t0:Date.now(),id,moved:false,mode:'pan',tx0:view.tx,ty0:view.ty,add:e.shiftKey||e.ctrlKey||e.metaKey};
  if(e.pointerType==='mouse'&&e.button!==0)return;
+ const rEl=e.target.closest('[data-rot]');if(rEl&&!wireMode){const ro=get(rEl.dataset.rot);if(canRot(ro)){G.mode='rot';G.o=ro;G.r0=ro.rot;if(sel!==ro.id){sel=ro.id;multi.clear();updateBar();}return;}}
  const dEl=e.target.closest('[data-dim]');if(dEl){G.dim=dEl.dataset.dim;return;}
  const hEl=e.target.closest('[data-h]'),so=sel&&get(sel);
  const cpEl=e.target.closest('[data-cp],[data-cm]');if(cpEl&&so&&so.type==='cable'&&!so.locked&&!wireMode&&!globalLock){so.p.route=cabRoute(so).map(p=>({...p}));let i;
@@ -2452,6 +2472,8 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
  if(G.mode==='pan'){view.tx=G.tx0+dx;view.ty=G.ty0+dy;applyView();}
  else if(G.mode==='band'){G.w1=toWorld(e.clientX,e.clientY);render();}
  else if(G.mode==='wmid'){const o=G.o,[,wy]=toWorld(e.clientX,e.clientY);o.p.ym=gs(wy);if(sel!==o.id){sel=o.id;updateBar();}render();}
+ else if(G.mode==='rot'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY);let a=Math.atan2(wy-o.y,wx-o.x)*180/Math.PI+90;
+  if(!e.altKey){a=Math.round(a/15)*15;}else{const n=Math.round(a/90)*90;if(Math.abs(a-n)<3)a=n;}o.rot=r2(((a%360)+360)%360);render();}
  else if(G.mode==='tip'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY),sp=mdSnap(wx,wy);o.p.tip=sp&&Math.hypot(sp.x-wx,sp.y-wy)<12/view.s?{...sp}:{x:r2(wx),y:r2(wy)};render();}
  else if(G.mode==='meas'){const [wx,wy]=toWorld(e.clientX,e.clientY);MS.cur=mdSnap(wx,wy);render();}
  else if(G.mode==='mdoff'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY),dx=wx-G.w0[0],dy=wy-G.w0[1];if(sel!==o.id){sel=o.id;updateBar();}
@@ -2459,7 +2481,14 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
   o.p.off=r2(G.off0+d);render();}
  else if(G.mode==='qwire'){const [x,y]=toWorld(e.clientX,e.clientY);G.cur=[x,y];G.to=termAt(x,y,qRad('snap',e.pointerType!=='mouse'),G.from.r);render();}
  else if(G.mode==='resize'){const [wx,wy]=toWorld(e.clientX,e.clientY);doResize(G,wx,wy);render();}
- else if(G.mode==='cpt'){const [wx,wy]=toWorld(e.clientX,e.clientY),[lx,ly]=toLocal(G.o,gs(wx),gs(wy));G.o.p.route[G.i]={x:r2(lx),y:r2(ly)};render();}
+ else if(G.mode==='cpt'){const o=G.o,R=o.p.route,i=G.i,[wx,wy]=toWorld(e.clientX,e.clientY);let [lx,ly]=toLocal(o,wx,wy);const th=10/view.s;
+  const nb=[R[i-1],R[i+1]].filter(Boolean);let sx=null,sy=null;nb.forEach(q=>{if(Math.abs(lx-q.x)<th&&(sx===null||Math.abs(lx-q.x)<Math.abs(lx-sx)))sx=q.x;if(Math.abs(ly-q.y)<th&&(sy===null||Math.abs(ly-q.y)<Math.abs(ly-sy)))sy=q.y;});
+  lx=sx!==null?sx:gs(lx);ly=sy!==null?sy:gs(ly);R[i]={x:r2(lx),y:r2(ly)};
+  const W=(u,v)=>fromLocal(o,u,v),far=4000;CGUIDE=[];const [px,py]=W(lx,ly);
+  CGUIDE.push({x1:W(lx-far,ly)[0],y1:W(lx-far,ly)[1],x2:W(lx+far,ly)[0],y2:W(lx+far,ly)[1],on:sy!==null},{x1:W(lx,ly-far)[0],y1:W(lx,ly-far)[1],x2:W(lx,ly+far)[0],y2:W(lx,ly+far)[1],on:sx!==null});
+  if(nb.length===2){const a=R[i-1],b=R[i+1],ax=Math.abs(a.x-lx)<.01||Math.abs(a.y-ly)<.01,bx=Math.abs(b.x-lx)<.01||Math.abs(b.y-ly)<.01;
+   if(ax&&bx&&!(Math.abs(a.x-b.x)<.01||Math.abs(a.y-b.y)<.01)){const k=8/view.s,ua=[Math.sign(a.x-lx),Math.sign(a.y-ly)],ub=[Math.sign(b.x-lx),Math.sign(b.y-ly)];const p1=W(lx+ua[0]*k,ly+ua[1]*k),p2=W(lx+(ua[0]+ub[0])*k,ly+(ua[1]+ub[1])*k),p3=W(lx+ub[0]*k,ly+ub[1]*k);CGUIDE.push({corner:`M${p1[0]} ${p1[1]}L${p2[0]} ${p2[1]}L${p3[0]} ${p3[1]}`});}}
+  render();}
  else{const [wx,wy]=toWorld(e.clientX,e.clientY);const o=G.o;DROPR=null;DROPFULL=false;const [sx,sy]=snapPos(o,G.ox+wx-G.w0[0],G.oy+wy-G.w0[1]);o.x=sx;o.y=sy;const onR=DEF[o.type].rail&&state.objs.some(r=>r.type==='rail'&&onRail(o,r));alignSnap(o,G.kids,!onR);if(DEF[o.type]?.sld||isSldObj(o))termMagnet(o,G.kids);const nx=o.x,ny=o.y;
   const ddx=nx-G.ox,ddy=ny-G.oy;G.kids.forEach(k=>{if(k.q.type==='mdim'){if(!k.e)k.e=[k.q.p.a,k.q.p.b].map(p=>[p,p.x,p.y]);k.e.forEach(([p,x,y])=>{if(!p.of||!get(p.of)){p.x=r2(x+ddx);p.y=r2(y+ddy);}});return;}k.q.x=r2(k.x+ddx);k.q.y=r2(k.y+ddy);});render();}});
 let GUIDES=[];
@@ -2477,11 +2506,12 @@ function guidesSVG(){if(!GUIDES.length)return '';const k=1/view.s,ext=12*k;retur
 function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(pinch){if(P.size<2)pinch=null;G=null;return;}
  if(!G)return;const g=G;G=null;if(g.mode==='meas'){MS.cur=null;measUp(g,e);render();return;}
+ if(g.mode==='rot'){if(g.moved){commit();renderNow();updateBar();toast(`סובב ל-${Math.round(g.o.rot)}°`);}else renderNow();return;}
  if(g.mode==='tip'){if(g.moved){commit();renderNow();}return;}
  if(g.mode==='wmid'){if(g.moved){commit();renderNow();updateBar();toast('החוט הוזז — הוא נשאר בגובה הזה');}else select(g.id,g.add);return;}
  if(g.mode==='mdoff'){if(g.moved){commit();renderNow();updateBar();}else select(g.id,g.add);return;}
  if(DROPFULL&&g.mode==='drag'&&g.moved)toast('אין מקום פנוי בפס הזה לרכיב — פנה מקום או הארך את הפס');DROPR=null;DROPFULL=false;if(GUIDES.length){GUIDES=[];render();}
- if(g.mode==='cpt'){const o=g.o,R=o.p.route;if(!g.moved){if(g.added){R.splice(g.i,1);}else if(g.i>0&&g.i<R.length-1){R.splice(g.i,1);toast('הכיפוף הוסר');}else{renderNow();return;}}
+ if(g.mode==='cpt'){CGUIDE=[];const o=g.o,R=o.p.route;if(!g.moved){if(g.added){R.splice(g.i,1);}else if(g.i>0&&g.i<R.length-1){R.splice(g.i,1);toast('הכיפוף הוסר');}else{renderNow();return;}}
   cabRecentre(o);commit();renderNow();updateBar();return;}
  if(g.mode==='qwire'){svg.style.cursor='';if(g.to){const a=resolve(g.from),b=resolve(g.to);const w={id:uid(),type:'wire',p:{color:isSldObj(get(g.from.r))?'brown':wireColor,sec:wireSec,name:'חוט',auto:1},pts:[g.from,g.to]};
    state.objs.push(w);commit();renderNow();updateBar();toast('חובר');}else if(!g.moved){select(g.id||null);}else{renderNow();toast('שחרר ליד נקודת חיבור של רכיב אחר כדי לחבר');}return;}
