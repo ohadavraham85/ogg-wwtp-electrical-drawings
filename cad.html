@@ -319,6 +319,10 @@ body.sld #xh,body.sld #yh{background:rgba(194,65,12,.5)}
 body.uil #sbar button{border-bottom-color:#6b7280}body.uil #sbar button.on{color:#000}
 body.noaxes #sbar{bottom:calc(10px + env(safe-area-inset-bottom))}body.noaxes #sbar #coord{display:none}
 body:has(#wireBar:not(.hidden)) #sbar,body:has(#measBar:not(.hidden)) #sbar,body.libdrag #sbar{display:none}
+body:has(#wireBar:not(.hidden)) #lyTabs,body.libdrag #lyTabs{display:none!important}
+#lyTabs{position:fixed;z-index:4;display:flex;align-items:center;gap:3px;padding:3px;background:var(--card);border:1.5px solid var(--acc);border-radius:4px;box-shadow:0 4px 14px rgba(0,0,0,.5);direction:rtl;overflow-x:auto;scrollbar-width:none}#lyTabs::-webkit-scrollbar{display:none}
+#lyTabs button{flex:none;padding:6px 10px;border-radius:4px;font:700 13px Heebo,Arial,sans-serif;background:var(--ctl);border:1px solid var(--ctl-bd);border-bottom:2px solid #6b7280;color:var(--txt);white-space:nowrap}#lyTabs button.on{background:linear-gradient(180deg,var(--acc-light),var(--acc));color:#000;border-color:var(--acc-light);border-bottom-color:#a35a00}#lyTabs button small{font-weight:400;opacity:.75;margin-right:7px;font-size:11px}#lyTabs .add{padding:6px 11px;font-size:15px}
+@media (max-width:600px){#lyTabs button{padding:5px 7px;font-size:12px}}
 @media (max-width:600px){#sbar button{padding:5px 7px;font-size:12px}#sbar #coord{font-size:11px;padding:3px 6px}}
 @media (pointer:coarse){#sbar [data-sb=cross]{display:none}}
 /* ---- bars docked to the edges, no gaps ---- */
@@ -470,6 +474,7 @@ body.iconsonly .ddbtn .lbl{display:none}
 <div id="stage"><svg id="svg"><g id="world"></g></svg></div>
 
 <div id="rulX"></div><div id="rulY"></div><div id="xh"></div><div id="yh"></div>
+<div id="lyTabs"></div>
 <div id="sbar"><span id="coord"></span><button data-sb="cross" title="סמן צלב X/Y שזז עם העכבר">✛ סמן צלב</button><button data-sb="axes" title="צירים וסרגלים">📏 צירים</button><button data-sb="terms" title="הדגשת נקודות החיבור">🔵 נקודות</button></div>
 <div id="docTabs"><button class="ddbtn" id="ddFile" data-dd="mFile" title="קובץ — פרויקט חדש, תבנית, פתח, שמור עותק"><i class="ico" data-ic="open"></i><span class="lbl">קובץ</span><span class="caret">▾</span></button><button class="ddbtn" id="ddExport" data-dd="mExport" title="ייצוא ודוחות — PDF, תמונה, DXF, רשימת ציוד"><i class="ico" data-ic="exp"></i><span class="lbl">ייצוא</span><span class="caret">▾</span></button><button class="ddbtn" id="ddView" data-dd="mView" title="תצוגה — חזית לוח / חד קווי / משולב, בהיר-כהה, דף ייצור"><i class="ico" data-ic="panel"></i><span class="lbl" id="ddViewLbl">חזית לוח</span><span class="caret">▾</span></button><span id="saveSt"></span></div>
 <div class="ddmenu hidden" id="mFile"><div class="ddt">קובץ</div><button id="bNewProj" title="פרויקט חדש">📄 פרויקט חדש</button><button id="bTemplates" title="פרויקט חדש מתבנית (דוגמאות)">🗂 תבנית</button><button id="bOpenProj" title="פתח פרויקט">📂 פתח</button><button id="bSaveCopy" title="שמור עותק בשם">📑 שמור עותק</button></div>
@@ -1733,12 +1738,12 @@ function placeOnSheet(){const R=layoutRect(),e=drawExt();if(!R||!e)return;const 
  const px=e.x0-(aL*n+(AW-dw)/2),py=e.y0-(aT*n+(AH-dh)/2);state[OKEY()]={x:r2(px),y:r2(py+H*n)};if(dw>AW||dh>AH)toast('השרטוט גדול מהמסגרת בקנה מידה 1:'+n+' — בחר קנה מידה קטן יותר או דף גדול יותר');}
 /* The sheet shown or hidden from the bar; the first time, its settings open. */
 function toggleLayout(){const k=LKEY(),L=state[k];if(!L){layoutDialog();return;}L.on=L.on?0:1;commit();renderNow();if(L.on)fit();syncLayoutBtn();toast(L.on?`דף ייצור מוצג — ${L.paper} 1:${L.scale}`:'דף ייצור מוסתר');}
-function syncLayoutBtn(){const b=$('bLayout');if(!b)return;const L=state[LKEY()];b.classList.toggle('on',!!(L&&L.on));b.title=L?(L.on?'הסתר את דף הייצור':'הצג את דף הייצור'):'הגדר דף ייצור (Layout)';}
+function syncLayoutBtn(){if(typeof buildLayTabs==='function')try{buildLayTabs();}catch(e){}const b=$('bLayout');if(!b)return;const L=state[LKEY()];b.classList.toggle('on',!!(L&&L.on));b.title=L?(L.on?'הסתר את דף הייצור':'הצג את דף הייצור'):'הגדר דף ייצור (Layout)';}
 function layoutDialog(){const k=LKEY(),L=Object.assign({on:1,paper:'A3',orient:'L',scale:10},state[k]||{});const STD=[1,2,2.5,5,10,15,20,25,50,75,100,200];
  const S=(id,lbl,opts,v)=>`<div class="fld"><label>${lbl}</label><select id="l_${id}">${opts.map(([a,b])=>`<option value="${a}" ${String(a)===String(v)?'selected':''}>${b}</option>`).join('')}</select></div>`;
  modal('דף ייצור (Layout)',S('on','הצג את דף הייצור על השרטוט',[[1,'כן'],[0,'לא']],L.on?1:0)+`<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 10px">${S('paper','גודל דף',['A4','A3','A2','A1','A0'].map(a=>[a,a]),L.paper)}${S('orient','כיוון',[['L','לרוחב'],['P','לאורך']],L.orient)}</div>`+
   S('scale','קנה מידה',STD.map(v=>[v,'1:'+v]),L.scale)+`<div class="hint">המסגרת מוצגת על השרטוט, כשהפינה השמאלית-תחתונה שלה בראשית הצירים: קצה הדף, מסגרת השרטוט וטבלת השרטוט בקנה המידה שנבחר. ה-PDF יוצא בדיוק כך.</div>`,
-  [{t:'שמור',cls:'pri',fn:()=>{const v=id=>$('l_'+id).value;state[k]={on:v('on')==='1'?1:0,paper:v('paper'),orient:v('orient'),scale:+v('scale')};placeOnSheet();commit();fit();renderNow();}},
+  [{t:'שמור',cls:'pri',fn:()=>{const v=id=>$('l_'+id).value;state[k]={on:v('on')==='1'?1:0,paper:v('paper'),orient:v('orient'),scale:+v('scale'),lid:(state[k]||{}).lid};placeOnSheet();laySync();commit();fit();renderNow();}},
    {t:'קנה מידה אוטומטי',fn:()=>{const v=id=>$('l_'+id).value,e=drawExt(),o=ORG();let [W,H]=PAPER[v('paper')];if(v('orient')==='P')[W,H]=[H,W];if(!e){toast('השרטוט ריק');return false;}
      const aw=W-46,ah=H-30-36-6,need=Math.max((Math.max(e.x1,o.x)-o.x)/aw,(o.y-Math.min(e.y0,o.y))/ah);const n=STD.find(x=>x>=need)||Math.ceil(need);$('l_scale').value=String(n);toast('קנה מידה מתאים: 1:'+n+' — לחץ "שמור"');return false;}},{t:'ביטול'}]);}
 let curW=null;
@@ -2383,6 +2388,44 @@ svg.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||P.has(e.point
    (catching within a few pixels), and dashed guides show the straight runs. */
 let CGUIDE=[];
 function cableGuideSVG(){if(!CGUIDE.length)return '';const k=1/view.s;return '<g pointer-events="none">'+CGUIDE.map(g=>g.corner?`<path d="${g.corner}" fill="none" stroke="#22d3ee" stroke-width="${1.4*k}"/>`:`<line x1="${g.x1}" y1="${g.y1}" x2="${g.x2}" y2="${g.y2}" stroke="${g.on?'#ff8c00':'rgba(34,211,238,.55)'}" stroke-width="${(g.on?1.6:1)*k}" stroke-dasharray="${8*k} ${5*k}"/>`).join('')+'</g>';}
+
+/* ================= layout tabs =================
+   Like the tabs along the bottom of a CAD program: "מודל" (just the drawing) and
+   every production sheet of the project — panel front and single-line alike —
+   each with its own paper, scale and place. Click one to show it (switching to
+   its document), double-click to rename / set up / delete, + to add one. The
+   PDF prints every sheet as a page. */
+const LAYDOC=[['panel','layout','origin'],['sld','layoutS','originS']];
+function laysInit(){if(state.lays)return;state.lays=[];LAYDOC.forEach(([d,lk,ok])=>{const L=state[lk];if(!L)return;const e={id:uid(),d,name:'דף 1',paper:L.paper,orient:L.orient,scale:L.scale,org:state[ok]?Object.assign({},state[ok]):null};state.lays.push(e);L.lid=e.id;});}
+function laySync(){laysInit();LAYDOC.forEach(([d,lk,ok])=>{const L=state[lk];if(!L)return;let e=L.lid&&state.lays.find(x=>x.id===L.lid);
+ if(!e){e={id:uid(),d,name:'דף '+(state.lays.filter(x=>x.d===d).length+1)};state.lays.push(e);L.lid=e.id;}
+ Object.assign(e,{paper:L.paper,orient:L.orient,scale:L.scale,org:state[ok]?Object.assign({},state[ok]):e.org||null});});}
+const curDoc=()=>state.tab==='sld'?'sld':state.tab==='both'?'both':'panel';
+function layActive(){const d=curDoc();if(d==='both')return null;const L=state[d==='sld'?'layoutS':'layout'];return L&&L.on?L.lid:null;}
+function layShow(id){laySync();const e=state.lays.find(x=>x.id===id);if(!e)return;if(curDoc()!==e.d)switchDoc(e.d);
+ const [,lk,ok]=LAYDOC.find(x=>x[0]===e.d);state[lk]={on:1,paper:e.paper,orient:e.orient,scale:e.scale,lid:e.id};if(e.org)state[ok]=Object.assign({},e.org);commit();renderNow();fit();}
+function layModel(){laySync();const d=curDoc();LAYDOC.forEach(([dd,lk])=>{if((d==='both'||dd===d)&&state[lk])state[lk].on=0;});commit();renderNow();}
+function layAdd(d){laySync();if(curDoc()!==d)switchDoc(d);const [,lk]=LAYDOC.find(x=>x[0]===d);const prev=state[lk]||{paper:'A3',orient:'L',scale:10};
+ const e={id:uid(),d,name:'דף '+(state.lays.filter(x=>x.d===d).length+1),paper:prev.paper||'A3',orient:prev.orient||'L',scale:prev.scale||10,org:null};state.lays.push(e);
+ state[lk]={on:1,paper:e.paper,orient:e.orient,scale:e.scale,lid:e.id};placeOnSheet();laySync();commit();renderNow();fit();layoutDialog();}
+function layEdit(id){laySync();const e=state.lays.find(x=>x.id===id);if(!e)return;
+ modal('דף ייצור — '+esc(e.name),`<div class="fld"><label>שם הדף</label><input id="ly_name" value="${esc(e.name)}"></div><div class="hint">${e.d==='sld'?'⚡ חד קווי':'🗄 חזית לוח'} · ${e.paper} ${e.orient==='P'?'לאורך':'לרוחב'} · 1:${e.scale}</div>`,
+  [{t:'שמור',cls:'pri',fn:()=>{e.name=$('ly_name').value.trim()||e.name;commit();buildLayTabs();}},
+   {t:'⚙ גודל וקנה מידה…',fn:()=>{e.name=$('ly_name').value.trim()||e.name;layShow(id);setTimeout(layoutDialog,30);}},
+   {t:'🗑 מחק דף',fn:()=>{state.lays=state.lays.filter(x=>x.id!==id);LAYDOC.forEach(([,lk])=>{if(state[lk]&&state[lk].lid===id){delete state[lk];const nx=state.lays.find(x=>x.d===e.d);if(nx){const [,lk2]=LAYDOC.find(x=>x[0]===nx.d);state[lk2]={on:0,paper:nx.paper,orient:nx.orient,scale:nx.scale,lid:nx.id};}}});commit();renderNow();toast('הדף נמחק');}},{t:'ביטול'}]);}
+function buildLayTabs(){const B=$('lyTabs');if(!B)return;laysInit();laySync();const a=layActive(),one=state.tab!=='both';
+ let h=`<button data-ly="model" class="${!a?'on':''}" title="מודל — השרטוט בלי דף">🖥 מודל</button>`;
+ state.lays.forEach(e=>{h+=`<button data-ly="${e.id}" class="${a===e.id?'on':''}" title="${esc(e.name)} — ${e.d==='sld'?'חד קווי':'חזית לוח'} · ${e.paper} 1:${e.scale}\nלחיצה כפולה: שם, הגדרות, מחיקה">${e.d==='sld'?'⚡':'🗄'} <bdi>${esc(e.name)}</bdi><small dir="ltr">${e.paper} 1:${e.scale}</small></button>`;});
+ h+=`<button class="add" data-ly="add" title="דף ייצור חדש">＋</button>`;B.innerHTML=h;layPos();}
+function layPos(){const B=$('lyTabs'),sb=$('sbar');if(!B||!sb)return;const r=sb.getBoundingClientRect(),cs=getComputedStyle(sb);
+ if(cs.display==='none'||!r.width){B.style.left='max(26px,env(safe-area-inset-left))';B.style.bottom=cs.bottom;}else{B.style.left=(r.right+6)+'px';B.style.bottom=cs.bottom;}
+ B.style.maxWidth=`calc(100vw - ${Math.round((r.width?r.right:26)+6+86)}px)`;}
+addEventListener('resize',layPos);
+let lyLast=null,lyT=0;
+$('lyTabs').addEventListener('click',e=>{const b=e.target.closest('[data-ly]');if(!b)return;const k=b.dataset.ly,now=Date.now();
+ if(k===lyLast&&now-lyT<450&&!['model','add'].includes(k)){lyLast=null;layEdit(k);return;}lyLast=k;lyT=now;
+ if(k==='model')layModel();else if(k==='add'){const d=curDoc();if(d!=='both'){layAdd(d);return;}modal('דף ייצור חדש','<div class="hint">לאיזה מסמך?</div>',[{t:'🗄 חזית לוח',cls:'pri',fn:()=>{setTimeout(()=>layAdd('panel'),30);}},{t:'⚡ חד קווי',fn:()=>{setTimeout(()=>layAdd('sld'),30);}},{t:'ביטול'}]);}
+ else layShow(k);});
 /* ================= dimensions (סרט מדידה) =================
    A fixed dimension between two points. Each end may be pinned to a part (its
    id and a point in the part's own frame), so the dimension follows the part
@@ -3087,21 +3130,25 @@ function loadJsPDF(){return window.jspdf?Promise.resolve():new Promise((res,rej)
 // Run fn with document d (panel / sld / both) showing, then put back what was showing.
 function withDoc(d,fn){const cur=state.tab==='sld'?'sld':state.tab==='both'?'both':'panel';if(cur===d)return fn();const s0=sel;sel=null;
  joinDocs(d,splitDocs());try{return fn();}finally{joinDocs(cur,splitDocs());sel=s0;}}
+// run fn with sheet l (or none) as its document's layout
+function layWith(l,fn){if(!l)return fn();const [,lk,ok]=LAYDOC.find(x=>x[0]===l.d);const a=state[lk],b=state[ok];state[lk]={on:1,paper:l.paper,orient:l.orient,scale:l.scale,lid:l.id};if(l.org)state[ok]=l.org;
+ try{return fn();}finally{state[lk]=a;if(b===undefined)delete state[ok];else state[ok]=b;}}
 async function makePdf(t){toast('מכין תצוגה…');
  // one drawing page for the panel front and one for the single-line diagram (each that has something on it)
  const docs=[];withDoc('panel',()=>{if(state.objs.length)docs.push('panel');});withDoc('sld',()=>{if(state.objs.length)docs.push('sld');});if(!docs.length)docs.push('panel');
- const LY0=withDoc(docs[0],()=>layoutRect());if(LY0){t.paper=LY0.L.paper;t.orient=LY0.L.orient;}let [W,H]=PAPER[t.paper]||PAPER.A3;if(t.orient==='P')[W,H]=[H,W];
- const BP=t.bomPage==='1'?[['רשימת ציוד — חזית לוח',bomData()],['רשימת ציוד — חד קווי',bomDataSld()]].filter(x=>x[1].length):[];const pages=docs.length+BP.length;const svgs=[],SZ=[];const DOCN={panel:'חזית לוח',sld:'חד קווי'};
- docs.forEach((d,di)=>withDoc(d,()=>{const LY=layoutRect(),PW=LY?LY.W:W,PH=LY?LY.H:H,tt=Object.assign({},t,{title:(t.title||state.name)+(docs.length>1?' — '+DOCN[d]:'')});
+ laySync();const PG=[];docs.forEach(d=>{const ls=state.lays.filter(x=>x.d===d);if(ls.length)ls.forEach(l=>PG.push([d,l,ls.length]));else PG.push([d,null,0]);});
+ const LY0=withDoc(PG[0][0],()=>layWith(PG[0][1],layoutRect));if(LY0){t.paper=LY0.L.paper;t.orient=LY0.L.orient;}let [W,H]=PAPER[t.paper]||PAPER.A3;if(t.orient==='P')[W,H]=[H,W];
+ const BP=t.bomPage==='1'?[['רשימת ציוד — חזית לוח',bomData()],['רשימת ציוד — חד קווי',bomDataSld()]].filter(x=>x[1].length):[];const pages=PG.length+BP.length;const svgs=[],SZ=[];const DOCN={panel:'חזית לוח',sld:'חד קווי'};
+ PG.forEach(([d,lay,nl],di)=>withDoc(d,()=>layWith(lay,()=>{const LY=layoutRect(),PW=LY?LY.W:W,PH=LY?LY.H:H,tt=Object.assign({},t,{title:(t.title||state.name)+(docs.length>1?' — '+DOCN[d]:'')+(nl>1?' — '+lay.name:'')});
   const tb=tbSVG(tt,PW,PH,di+1,pages,'');const ax0=30,ay0=20,ax1=PW-20,ay1=tb.y0-6,aw=ax1-ax0-28,ah=ay1-ay0-28;const b=boundsAll(),pad=4,bw=b.w+2*pad,bh=b.h+2*pad;
   const need=Math.max(bw/aw,bh/ah);const STD=[1,2,2.5,5,10,15,20,25,50,75,100,200];let n=LY?LY.n:(STD.find(v=>v>=need)||Math.ceil(need));const k=1/n;
   const scaleLbl=n===1?'1:1':`1:${n}`;const tb2=tbSVG(tt,PW,PH,di+1,pages,scaleLbl);
   const ox=ax0+(aw-bw*k)/2,oy=ay0+20+(ah-bh*k)/2;
   try{wireLayout();}catch(e){}EXPMIN=.3/k;const body=content({sel:false});EXPMIN=0;
   svgs.push(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${PW} ${PH}" width="${PW}mm" height="${PH}mm">${pageFrame(PW,PH,true)}<g transform="${LY?`translate(${-LY.x0*k} ${-LY.y0*k}) scale(${k})`:`translate(${ox} ${oy}) scale(${k}) translate(${-(b.x-pad)} ${-(b.y-pad)})`}">${body}${d==='panel'?pdfDims(k):''}</g>${scaleBar(32,tb2.y0-9,k,n)}${tb2.s}<text x="22" y="${PH-5}" font-size="2.2" font-family="Arial" fill="#777">OhadCad</text></svg>`);
-  SZ.push([PW,PH]);if(!di)t.__scale=scaleLbl;}));
+  SZ.push([PW,PH]);if(!di)t.__scale=scaleLbl;})));
  renderNow();
- BP.forEach(([bt,bd],bi)=>{const tb=tbSVG(Object.assign({},t,{title:(t.title||state.name)+' — '+bt}),W,H,docs.length+bi+1,pages,'-');let s='';const R=W-20,x0=30,rh=7;let y=26;
+ BP.forEach(([bt,bd],bi)=>{const tb=tbSVG(Object.assign({},t,{title:(t.title||state.name)+' — '+bt}),W,H,PG.length+bi+1,pages,'-');let s='';const R=W-20,x0=30,rh=7;let y=26;
   s+=`<text x="${R}" y="${y}" font-size="6" font-weight="700" font-family="Arial" text-anchor="start" direction="rtl">${bt}</text>`;y+=6;
   const colQ=x0+45,colN=R-14;s+=`<rect x="${x0}" y="${y}" width="${R-x0}" height="${rh}" fill="#e5e7eb" stroke="#000" stroke-width=".3"/>`;
   const T=(x,yy,str,sz,w=400,anc='end')=>`<text x="${x}" y="${yy}" font-size="${sz}" font-family="Arial" font-weight="${w}" ${anc==='end'?'text-anchor="start" direction="rtl"':`text-anchor="${anc}"`}>${esc(str)}</text>`;

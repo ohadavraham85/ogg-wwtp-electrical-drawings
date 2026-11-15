@@ -22,6 +22,7 @@ Live at https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/ (GitHub Pa
   - Autosave: `scheduleSave` / `doAutoSave`.
   - Drawer menu: `openDrawer`.
   - Dimensions: part type `mdim` (`mdGeom`, `setMeas`); ends may be pinned to a part (`of`, `u`, `v`).
+  - Layouts (production sheets): `state.lays` = `[{id,d:'panel'|'sld',name,paper,orient,scale,org}]`; the shown one per document mirrors into `state.layout` / `state.layoutS` (with `lid`) and its corner into `state.origin` / `state.originS` (`laySync`, `layShow`, `layWith`). Bottom tabs: `buildLayTabs`. The PDF prints every sheet as a page.
   - Toolbar order: `tbApply` / `tbStore`, kept per device in localStorage.
 - `sw.js`: offline cache. Pages are network-first with `cache: 'no-cache'`; other assets are stale-while-revalidate.
 - `manifest.webmanifest`, `icons/`, `favicon.ico`: the official OhadCad brand kit (amber "O" ring + crosshair icon, white/amber wordmark for dark backgrounds, amber/dark wordmark for light ones). Colors, fonts (Heebo/Inter/JetBrains Mono) and style are in `icons/wordmark-dark.svg` / `icons/wordmark-light.svg` and documented in the brand kit's own README (not kept in this repo) — the live palette is in both `index.html`'s and `cad.html`'s `:root` CSS variables.
