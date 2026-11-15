@@ -446,6 +446,11 @@ body.iconsonly #docTabs button{padding:6px 11px}body.iconsonly #docTabs .lic{wid
 .tb,.rb,.pb,.tab,.wbtn,#docTabs button,#sbar button{border-bottom-width:1px!important}
 /* document-bar menus */
 .ddbtn{display:inline-flex!important;align-items:center;gap:6px}.ddbtn .caret{font-size:11px;opacity:.75}
+#bMeas.open{border-color:var(--acc)!important;background:#2a1a08!important}body.uil #bMeas.open{background:#fff1dc!important}
+#mMeas{width:min(330px,calc(100vw - 12px))}#mMeas .mh{font-size:11.5px;font-weight:400;color:var(--muted,#9ca3af);display:block;margin-top:2px;line-height:1.35}#mMeas button{align-items:flex-start!important}#mMeas .ml{display:flex;flex-direction:column}
+#bDraw.open{border-color:var(--acc)!important;background:#2a1a08!important}body.uil #bDraw.open{background:#fff1dc!important}
+#mDraw{width:min(440px,calc(100vw - 12px));max-height:calc(100vh - 90px);overflow:auto}#mDraw .dgrid{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+#mDraw .item{flex-direction:row;min-height:0;gap:8px;padding:5px 6px!important;font-size:13px!important;user-select:none;-webkit-user-select:none}#mDraw .item .th{width:38px;height:28px!important;flex:none;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:3px}#mDraw .item .th svg{max-width:100%;max-height:100%}#mDraw .item .nm{flex:1;line-height:1.2;direction:rtl;text-align:right;font-size:13px}#mDraw .item .th svg{max-height:26px}#mDraw .dhint{font-size:11.5px;color:var(--muted,#9ca3af);padding:6px 8px 2px;line-height:1.4}
 .ddbtn.open{border-color:var(--acc)!important;background:#2a1a08!important}body.uil .ddbtn.open{background:#fff1dc!important}
 body.iconsonly .ddbtn .lbl{display:none}
 .ddmenu{position:fixed;z-index:31;min-width:230px;padding:6px;background:var(--card);border:1.5px solid var(--acc);border-radius:4px;box-shadow:0 10px 28px rgba(0,0,0,.55);display:flex;flex-direction:column;gap:3px}
@@ -466,6 +471,8 @@ body.iconsonly .ddbtn .lbl{display:none}
 <div class="ddmenu hidden" id="mFile"><div class="ddt">קובץ</div><button id="bNewProj" title="פרויקט חדש">📄 פרויקט חדש</button><button id="bTemplates" title="פרויקט חדש מתבנית (דוגמאות)">🗂 תבנית</button><button id="bOpenProj" title="פתח פרויקט">📂 פתח</button><button id="bSaveCopy" title="שמור עותק בשם">📑 שמור עותק</button></div>
 <div class="ddmenu hidden" id="mExport"><div class="ddt">ייצוא</div><button id="bPdf" title="ייצוא PDF עם טבלת שרטוט">📄 PDF</button><button id="bPng" title="ייצוא תמונה (PNG)">🖼️ PNG</button><button id="bDxf" title="ייצוא DXF ל-AutoCAD — שם שומרים כ-DWG">📐 DXF</button><div class="ddt">דוחות</div><button id="bBom" title="רשימת ציוד (BOM)">📋 BOM</button></div>
 <div class="ddmenu hidden" id="mView"><div class="ddt">מסמך</div><button data-doc="panel">🗄 חזית לוח</button><button data-doc="sld">⚡ חד קווי</button><button data-doc="both">◧ משולב</button><div class="ddt">תצוגה</div><button id="bDark" title="רקע השרטוט: כהה / בהיר">🌙</button><button id="bLayout" title="הצג / הסתר את דף הייצור (Layout)">📄</button></div>
+<div class="ddmenu hidden" id="mDraw"></div>
+<div class="ddmenu hidden" id="mMeas"></div>
 <div id="favBar"></div>
 <div id="top" class="card">
   <button class="tb" id="bMenu" title="תפריט"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
@@ -475,8 +482,8 @@ body.iconsonly .ddbtn .lbl{display:none}
     <button class="rb" id="rWire"><svg viewBox="0 0 24 24" style="stroke-width:2.4"><path d="M12 22v-8" stroke="#777" style="stroke-width:5"/><path d="M11 14c-1-5-4-8-7-10" stroke="#e53935"/><path d="M12 14c0-5 0-8 1-11" stroke="#43a047"/><path d="M13 14c1-5 4-8 7-9" stroke="#1e88e5"/></svg><span>חיווט</span></button>
     <button class="rb" id="rProps"><svg viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg><span>מאפיינים</span></button>
     <button class="rb" id="bText" title="הוסף תיבת טקסט לרכיב שנבחר"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 9.5h8M12 9.5v6"/></svg><span>טקסט</span></button>
-    <button class="rb" id="bMeas" title="סרט מדידה — מידות קבועות על רכיבים ואזורים"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="13" height="13" rx="3"/><circle cx="8.5" cy="11.5" r="2.4"/><path d="M15 14h7v4h-7M18 14v1.6M20.5 14v1.6"/></svg><span>מידה</span></button>
-    <button class="rb" id="bDraw" title="שרטוט וסימון: טקסט עם חץ, אדם, קיר, קו, חץ, מלבן, עיגול"><svg viewBox="0 0 24 24"><path d="M4 20l1.2-4.6L16.5 4.1a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/><path d="M14.5 6l3.5 3.5"/></svg><span>שרטוט</span></button>
+    <button class="rb" id="bMeas" data-dd="mMeas" title="מידות וסרט מדידה"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="13" height="13" rx="3"/><circle cx="8.5" cy="11.5" r="2.4"/><path d="M15 14h7v4h-7M18 14v1.6M20.5 14v1.6"/></svg><span>מידה</span></button>
+    <button class="rb" id="bDraw" data-dd="mDraw" title="שרטוט וסימון: טקסט עם חץ, שלטים, קווים, צורות, קיר, אדם"><svg viewBox="0 0 24 24"><path d="M4 20l1.2-4.6L16.5 4.1a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/><path d="M14.5 6l3.5 3.5"/></svg><span>שרטוט</span></button>
     <div class="sep"></div>
     <button class="rb" id="bDup"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="13" rx="1.5"/><path d="M5 16V4.5A1.5 1.5 0 0 1 6.5 3H16"/></svg><span>שכפול</span></button>
     <button class="rb" id="bRot"><svg viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4.6h-4.6"/></svg><span>סיבוב</span></button>
@@ -2041,11 +2048,11 @@ function lopenSave(){try{localStorage.setItem('ohadcad.libopen',JSON.stringify([
 let LIBLIST=true;try{LIBLIST=localStorage.getItem('ohadcad.libview')!=='grid';}catch(e){}document.body.classList.toggle('liblist',LIBLIST);
 function buildSheet(){buildTabs();const q=libQ.trim().toLowerCase();
  if(q){const res=[],seen=new Set(),words=q.split(/\s+/).filter(Boolean).map(w=>/[א-ת]/.test(w)&&w.length>3?w.replace(/(ות|ים|ה|ת)$/,''):w);
-  LIB.forEach((T,ti)=>inDoc(T)&&T.groups.forEach((g,gi)=>g.items.forEach((e,ii)=>{const tx=(e.n+' '+g.g+' '+T.tab).toLowerCase();if(!seen.has(e)&&words.every(w=>tx.includes(w))){seen.add(e);res.push([ti,gi,ii,e]);}})));
+  LIB.forEach((T,ti)=>inDoc(T)&&!T.draw&&T.groups.forEach((g,gi)=>g.items.forEach((e,ii)=>{const tx=(e.n+' '+g.g+' '+T.tab).toLowerCase();if(!seen.has(e)&&words.every(w=>tx.includes(w))){seen.add(e);res.push([ti,gi,ii,e]);}})));
   $('sheetBody').innerHTML=res.length?`<div class="grp">תוצאות (${res.length})</div><div class="grid">`+res.map(([ti,gi,ii,e])=>itemBtn(ti,gi,ii,e)).join('')+'</div>':'<div class="hint" style="margin-top:12px">לא נמצאו רכיבים.</div>';return;}
  const T=LIB[curTab]||{groups:[]};let h=`<div class="libview"><button data-lv="list" class="${LIBLIST?'on':''}">☰ רשימה</button><button data-lv="grid" class="${LIBLIST?'':'on'}">▦ משבצות</button></div><div class="hint ldhint">✋ ${matchMedia('(pointer:coarse)').matches?'החזק רגע על רכיב וגרור אותו':'גרור רכיב'} אל השרטוט כדי למקם אותו בדיוק — או ${matchMedia('(pointer:coarse)').matches?'הקש':'לחץ'} עליו להוספה אוטומטית</div>`+`<div class="libtools"><button data-fold="open">פתח הכל</button><button data-fold="close">סגור הכל</button></div>`;
  // every section of this view as a folding heading; open ones show their groups
- const tabs=LIB.map((t,i)=>[t,i]).filter(([t])=>inDoc(t));
+ const tabs=LIB.map((t,i)=>[t,i]).filter(([t])=>inDoc(t)&&!t.draw);
  tabs.forEach(([T2,ti])=>{const open=LOPEN.has(T2.tab),cnt=T2.groups.reduce((n,g)=>n+g.items.length,0);
   h+=`<button class="tabhead${open?' open':''}" data-sec="${esc(T2.tab)}"><span class="chev">${open?'▾':'◂'}</span><span class="tt">${T2.icon||''} ${T2.tab}</span><span class="cnt">${cnt}</span></button>`;
   if(!open)return;if(T2.hint)h+=`<div class="hint" style="margin:4px 2px 2px">${T2.hint}</div>`;
@@ -2091,11 +2098,11 @@ $('wireBar').addEventListener('change',e=>{if(e.target.id==='wSec'){wireSec=e.ta
    hold it a moment first, so the list still scrolls): it shows where it will
    land, catching rails, boxes and the grid like a part being moved, and drops
    there. A plain click / tap still adds it in the automatic place. */
-var LD=null,LDSW=false,DRAGNEW=null;
+var LD=null,LDSW=false,DRAGNEW=null,DRAWOPEN=false;
 function ldOverCanvas(x,y){const el=document.elementFromPoint(x,y);return !!el&&!!el.closest('#stage')&&!el.closest('#top,#docTabs');}
 function ldStart(){const d=LD,it=d.it,e=LIB[+it.dataset.t].groups[+it.dataset.g].items[+it.dataset.ii];d.on=true;d.name=e.n;d.o=mkObj(e);
  const g=document.createElement('div');g.id='ldGhost';g.innerHTML=it.querySelector('.th').innerHTML+`<span>${esc(e.n)}</span>`;document.body.appendChild(g);d.g=g;
- document.body.classList.add('libdrag');toast('שחרר במקום הרצוי בשרטוט · לביטול — שחרר על הסרגל העליון');if(navigator.vibrate&&d.touch)try{navigator.vibrate(15);}catch(_){}ldMove(d.x,d.y);}
+ if(d.it.closest('#mDraw'))ddClose();document.body.classList.add('libdrag');toast('שחרר במקום הרצוי בשרטוט · לביטול — שחרר על הסרגל העליון');if(navigator.vibrate&&d.touch)try{navigator.vibrate(15);}catch(_){}ldMove(d.x,d.y);}
 function ldMove(x,y){const d=LD;d.g.style.left=x+'px';d.g.style.top=y+'px';
  if(ldOverCanvas(x,y)){const [wx,wy]=toWorld(x,y),[sx,sy]=snapPos(d.o,wx,wy);d.o.x=sx;d.o.y=sy;DRAGNEW=d.o;d.g.classList.add('over');}
  else{DRAGNEW=null;d.g.classList.remove('over');}render();}
@@ -2112,6 +2119,18 @@ addEventListener('pointerup',e=>{if(!LD||e.pointerId!==LD.id)return;clearTimeout
 addEventListener('pointercancel',e=>{if(!LD||e.pointerId!==LD.id)return;clearTimeout(LD.t);const d=LD;LD=null;if(d.on)ldEnd(d,false);},true);
 addEventListener('touchmove',e=>{if(LD&&LD.on&&e.cancelable)e.preventDefault();},{passive:false,capture:true});
 $('sheetBody').addEventListener('contextmenu',e=>{if(e.target.closest('.item'))e.preventDefault();});
+
+/* ================= drawing & marking menu =================
+   The "שרטוט" button opens (on hover with a mouse, on tap otherwise) every
+   markup part: text, callouts, plates, lines, shapes, wall, person. Click adds
+   one in the automatic place; drag one out onto the drawing to put it exactly. */
+function buildDrawMenu(){const ti=LIB.findIndex(T=>T.draw),T=LIB[ti];if(!T)return;let h='<div class="ddt">✎ שרטוט וסימון</div>';
+ T.groups.forEach((g,gi)=>{h+=`<div class="ddt">${g.g}</div><div class="dgrid">`+g.items.map((e,ii)=>`<button class="item" data-t="${ti}" data-g="${gi}" data-ii="${ii}" title="${esc(e.n)} — לחיצה מוסיפה · גרירה ממקמת"><div class="th">${thumbSVG(mkObj(e,true))}</div><span class="nm">${esc(e.n)}</span></button>`).join('')+'</div>';});
+ $('mDraw').innerHTML=h+`<div class="dhint">${T.hint}</div>`;}
+$('mDraw').addEventListener('click',e=>{const it=e.target.closest('.item');if(!it||LDSW)return;if(wireMode)setWire(false);if(measMode)setMeas(null);addItem(LIB[+it.dataset.t].groups[+it.dataset.g].items[+it.dataset.ii]);});
+$('mDraw').addEventListener('pointerdown',e=>{const it=e.target.closest('.item');if(!it||LD||(e.pointerType==='mouse'&&e.button!==0))return;
+ LD={it,x:e.clientX,y:e.clientY,id:e.pointerId,touch:e.pointerType!=='mouse',on:false};if(LD.touch)LD.t=setTimeout(()=>{if(LD&&!LD.on)ldStart();},320);});
+$('mDraw').addEventListener('contextmenu',e=>{if(e.target.closest('.item'))e.preventDefault();});
 /* ================= favourites bar =================
    Up to 10 parts per view (panel front / single-line), starred in the library;
    a strip under the document bar adds them with a click or a drag. Kept per device. */
@@ -2253,15 +2272,16 @@ applyFontScale();
 /* ================= grouped menus in the document bar =================
    File / Export / View open a small menu under their button; a choice runs and
    closes it, a click anywhere else closes it. */
-function ddClose(){document.querySelectorAll('.ddmenu').forEach(m=>m.classList.add('hidden'));document.querySelectorAll('.ddbtn.open').forEach(b=>b.classList.remove('open'));}
-document.addEventListener('click',e=>{const b=e.target.closest('.ddbtn');if(b){if(typeof swallowBar!=='undefined'&&swallowBar)return;const m=$(b.dataset.dd),was=!m.classList.contains('hidden');ddClose();if(was)return;
-  const r=b.getBoundingClientRect();m.classList.remove('hidden');b.classList.add('open');const w=m.offsetWidth;m.style.top=(r.bottom+4)+'px';m.style.left=Math.max(6,Math.min(innerWidth-w-6,r.right-w))+'px';return;}
+function ddClose(){document.querySelectorAll('.ddmenu').forEach(m=>m.classList.add('hidden'));document.querySelectorAll('[data-dd].open').forEach(b=>b.classList.remove('open'));}
+function ddPlace(b,m){if(m.id==='mDraw')buildDrawMenu();if(m.id==='mMeas')buildMeasMenu();const r=b.getBoundingClientRect();m.classList.remove('hidden');b.classList.add('open');const w=m.offsetWidth,h=m.offsetHeight;m.style.top=(r.bottom+4+h>innerHeight-4&&r.top-4-h>4?r.top-4-h:r.bottom+4)+'px';m.style.left=Math.max(6,Math.min(innerWidth-w-6,r.right-w))+'px';}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-dd]');if(b){if(typeof swallowBar!=='undefined'&&swallowBar)return;const m=$(b.dataset.dd),was=!m.classList.contains('hidden');ddClose();if(was)return;
+  ddPlace(b,m);return;}
  if(!e.target.closest('.ddmenu'))ddClose();},true);
 addEventListener('resize',ddClose);document.addEventListener('keydown',e=>{if(e.key==='Escape')ddClose();});
 // with a mouse, resting on a menu button opens its list; leaving both the button and the list closes it
-function ddOpen(b){const m=$(b.dataset.dd);if(!m||!m.classList.contains('hidden'))return;ddClose();const r=b.getBoundingClientRect();m.classList.remove('hidden');b.classList.add('open');const w=m.offsetWidth;m.style.top=(r.bottom+4)+'px';m.style.left=Math.max(6,Math.min(innerWidth-w-6,r.right-w))+'px';}
+function ddOpen(b){const m=$(b.dataset.dd);if(!m||!m.classList.contains('hidden'))return;ddClose();ddPlace(b,m);}
 let ddT=0;const ddHover=matchMedia('(hover:hover) and (pointer:fine)');
-document.addEventListener('pointerover',e=>{if(!ddHover.matches||e.pointerType!=='mouse'||document.body.classList.contains('tbmoving'))return;const b=e.target.closest('.ddbtn'),m=e.target.closest('.ddmenu');
+document.addEventListener('pointerover',e=>{if(!ddHover.matches||e.pointerType!=='mouse'||document.body.classList.contains('tbmoving'))return;const b=e.target.closest('[data-dd]'),m=e.target.closest('.ddmenu');if(LD&&LD.on)return;
  if(b){clearTimeout(ddT);ddT=setTimeout(()=>ddOpen(b),120);return;}if(m){clearTimeout(ddT);return;}
  if(document.querySelector('.ddmenu:not(.hidden)')){clearTimeout(ddT);ddT=setTimeout(ddClose,250);}});
 /* ================= refresh =================
@@ -2405,13 +2425,32 @@ function mdForObj(o){const {w,h}=sizeOf(o),gap=mdGap(),pt=(u,v)=>{const [x,y]=fr
  const TL=by(q=>-(q.x+q.y)),TR=by(q=>q.x-q.y),BR=by(q=>q.x+q.y);
  mdNew('h',TL,TR,Math.min(TL.y,TR.y)-gap-(TL.y+TR.y)/2);mdNew('v',TR,BR,Math.max(TR.x,BR.x)+gap-(TR.x+BR.x)/2);
  const W=Math.abs(TR.x-TL.x),H=Math.abs(BR.y-TR.y);commit();renderNow();toast(`${o.p.name||'רכיב'}: ${mdFmt(W)} × ${mdFmt(H)} מ"מ`);}
-function measUp(g,e){const [wx,wy]=toWorld(e.clientX,e.clientY),p1=mdSnap(wx,wy);
+function tapeAt(a,wx,wy){let p=mdSnap(wx,wy)||{x:r2(gs(wx)),y:r2(gs(wy))};if(!a)return p;const th=10/view.s;p={x:p.x,y:p.y,of:p.of};
+ if(Math.abs(p.x-a.x)<th)p.x=a.x;if(Math.abs(p.y-a.y)<th)p.y=a.y;return p;}
+function measUp(g,e){if(measMode==='tape'){const [wx,wy]=toWorld(e.clientX,e.clientY);
+  if(g.moved){MS.a=g.p0;MS.cur=tapeAt(g.p0,wx,wy);MS.frozen=true;}
+  else if(!MS.a||MS.frozen){MS.a=g.p0;MS.cur=g.p0;MS.frozen=false;toast('הזז אל הנקודה השנייה והקש שוב');}
+  else{MS.cur=tapeAt(MS.a,wx,wy);MS.frozen=true;}render();return;}
+const [wx,wy]=toWorld(e.clientX,e.clientY),p1=mdSnap(wx,wy);
  if(measMode==='obj'){if(g.moved)return;const o=g.id&&get(g.id);if(!o||o.type==='wire'||o.type==='mdim'||o.type==='label'){toast('הקש על רכיב כדי להוסיף לו מידות רוחב וגובה');return;}mdForObj(o);return;}
  if(g.moved&&!MS.a){if(!g.p0||!p1){toast(MD_NOSNAP);return;}mdMake(g.p0,p1);return;}
  const pt=g.moved?p1:g.p0;if(!pt){toast(MD_NOSNAP);return;}
  if(!g.moved&&!MS.a){MS.a=g.p0;MS.cur=g.p0;render();toast(measMode==='area'?'עכשיו הקש על הפינה הנגדית':'עכשיו הקש על הנקודה השנייה');return;}
  mdMake(MS.a,pt);}
-function measSVG(){if(!measMode)return '';const k=1/view.s;let s='';const mk=p=>p?`<circle cx="${p.x}" cy="${p.y}" r="${5*k}" fill="none" stroke="#ff8c00" stroke-width="${2*k}"/>`+(p.of?`<circle cx="${p.x}" cy="${p.y}" r="${1.8*k}" fill="#ff8c00"/>`:''):'';
+function tapeSVG(){const k=1/view.s,a=MS.a,b=MS.cur,F=4000;let s='';const mk=p=>p?`<circle cx="${p.x}" cy="${p.y}" r="${5*k}" fill="none" stroke="#ff8c00" stroke-width="${2*k}"/>`+(p.of?`<circle cx="${p.x}" cy="${p.y}" r="${1.8*k}" fill="#ff8c00"/>`:''):'';
+ if(!a)return `<g pointer-events="none">${mk(MS.hov)}</g>`;const gl=(x1,y1,x2,y2,on)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${on?'#ff8c00':'rgba(34,211,238,.6)'}" stroke-width="${(on?1.5:1)*k}" stroke-dasharray="${8*k} ${5*k}"/>`;
+ const onH=b&&Math.abs(b.y-a.y)<.01&&Math.abs(b.x-a.x)>.01,onV=b&&Math.abs(b.x-a.x)<.01&&Math.abs(b.y-a.y)>.01;
+ s+=gl(a.x-F,a.y,a.x+F,a.y,onH)+gl(a.x,a.y-F,a.x,a.y+F,onV);
+ if(b&&(b.x!==a.x||b.y!==a.y)){const dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy);
+  if(!onH&&!onV){s+=gl(b.x-F,b.y,b.x+F,b.y,false)+gl(b.x,b.y-F,b.x,b.y+F,false)+`<path d="M${a.x} ${a.y}H${b.x}V${b.y}" fill="none" stroke="#22d3ee" stroke-width="${1.2*k}" stroke-dasharray="${3*k} ${3*k}"/>`;
+   const c=7*k,sx=Math.sign(a.x-b.x)||1,sy=Math.sign(b.y-a.y)||1;s+=`<path d="M${b.x+sx*c} ${a.y}V${a.y+sy*c}H${b.x}" fill="none" stroke="#22d3ee" stroke-width="${1.2*k}"/>`;}
+  const ux=dx/L,uy=dy/L,nx=-uy,ny=ux,w=6*k;s+=`<path d="M${a.x} ${a.y}L${b.x} ${b.y}" stroke="#facc15" stroke-width="${w*2}" stroke-opacity=".85" stroke-linecap="butt"/><path d="M${a.x} ${a.y}L${b.x} ${b.y}" stroke="#000" stroke-width="${1*k}"/>`;
+  const step=10*view.s<4?100:10;let tk='';if(step*view.s>=4)for(let d=step;d<L&&tk.length<60000;d+=step){const big=Math.round(d)%100===0,h=(big?w:w*.55),px=a.x+ux*d,py=a.y+uy*d;tk+=`M${px+nx*w} ${py+ny*w}L${px+nx*(w-h)} ${py+ny*(w-h)}`;}
+  if(tk)s+=`<path d="${tk}" stroke="#000" stroke-width="${.8*k}"/>`;
+  const ang=Math.round(Math.atan2(-dy,dx)*180/Math.PI*10)/10,t1=mdFmt(L)+' mm',t2=onH||onV?(onH?'0° אופקי':'90° אנכי'):`↔ ${mdFmt(Math.abs(dx))}  ↕ ${mdFmt(Math.abs(dy))}  ∠ ${ang}°`;
+  const wd=Math.max(t1.length*9,t2.length*6.6)+16;s+=`<g transform="translate(${b.x+12*k} ${b.y-26*k})"><rect x="0" y="${-12*k}" width="${wd*k}" height="${38*k}" rx="${4*k}" fill="#000" stroke="#ff8c00" stroke-width="${1.4*k}"/><text x="${8*k}" y="${1*k}" font-size="${15*k}" fill="#ffb340" font-weight="800" dominant-baseline="central" font-family="Arial" direction="ltr">${t1}</text><text x="${8*k}" y="${17*k}" font-size="${11*k}" fill="#e5e7eb" dominant-baseline="central" font-family="Arial" direction="ltr">${t2}</text></g>`;}
+ return `<g pointer-events="none">${s}${mk(a)}${mk(b)}</g>`;}
+function measSVG(){if(!measMode)return '';if(measMode==='tape')return tapeSVG();const k=1/view.s;let s='';const mk=p=>p?`<circle cx="${p.x}" cy="${p.y}" r="${5*k}" fill="none" stroke="#ff8c00" stroke-width="${2*k}"/>`+(p.of?`<circle cx="${p.x}" cy="${p.y}" r="${1.8*k}" fill="#ff8c00"/>`:''):'';
  const a=MS.a||(G&&G.mode==='meas'&&G.moved?G.p0:null),b=MS.cur||MS.hov;
  if(a&&b&&measMode!=='obj'){const t=measMode==='area'?`${mdFmt(Math.abs(b.x-a.x))} × ${mdFmt(Math.abs(b.y-a.y))}`:mdFmt(mdMode(null,a.x,a.y,b.x,b.y)==='h'?Math.abs(b.x-a.x):Math.abs(b.y-a.y));
   const hm=mdMode(null,a.x,a.y,b.x,b.y)==='h',my=(a.y+b.y)/2,mx=(a.x+b.x)/2;
@@ -2419,8 +2458,11 @@ function measSVG(){if(!measMode)return '';const k=1/view.s;let s='';const mk=p=>
    `<path d="${hm?`M${a.x} ${a.y}V${my}M${b.x} ${b.y}V${my}`:`M${a.x} ${a.y}H${mx}M${b.x} ${b.y}H${mx}`}" stroke="#ff8c00" stroke-opacity=".6" stroke-width="${1.2*k}" stroke-dasharray="${3*k} ${3*k}"/><path d="${hm?`M${a.x} ${my}H${b.x}`:`M${mx} ${a.y}V${b.y}`}" stroke="#ff8c00" stroke-width="${2.2*k}"/>`;
   s+=`<g transform="translate(${b.x+10*k} ${b.y-14*k})"><rect x="0" y="${-10*k}" width="${(t.length*7.5+14)*k}" height="${20*k}" rx="${4*k}" fill="#000" stroke="#ff8c00" stroke-width="${1.4*k}"/><text x="${7*k}" y="0" font-size="${13*k}" fill="#ffb340" font-weight="700" dominant-baseline="central" font-family="Arial" direction="ltr">${t}</text></g>`;}
  return `<g pointer-events="none">${mk(a)}${mk(b)}${s}</g>`;}
-function setMeas(m){measMode=m;MS.a=MS.cur=MS.hov=null;if(m){if(wireMode)setWire(false);if(pMode)closePanel();}
- const B=$('measBar');B.classList.toggle('hidden',!m);
+const MMODES=[['tape','📐','סרט מדידה','מקישים על נקודה והסרט נפתח עד המקום שעוצרים בו, עם קווים מנחים של 90 מעלות. לא נשמר בשרטוט.'],['dist','📏','מידה קבועה','שתי נקודות תפיסה — מידה אופקית או אנכית שנשארת בשרטוט וזזה עם הרכיב.'],['area','⬚','מידות אזור','שתי פינות נגדיות — מידות רוחב וגובה.'],['obj','🔲','מידות רכיב','הקשה על רכיב — מידות רוחב וגובה שזזות איתו.']];
+function buildMeasMenu(){$('mMeas').innerHTML='<div class="ddt">📏 מידות</div>'+MMODES.map(([k,i,t,h])=>`<button data-mm="${k}" class="${measMode===k?'on':''}"><span>${i}</span><span class="ml">${t}<span class="mh">${h}</span></span></button>`).join('')+(measMode?'<button data-mm=""><span>✓</span><span class="ml">סיום מדידה</span></button>':'');}
+document.addEventListener('click',e=>{const b=e.target.closest('#mMeas [data-mm]');if(b)setMeas(b.dataset.mm||null);});
+function setMeas(m){measMode=m;MS.a=MS.cur=MS.hov=null;MS.frozen=false;if(m){if(wireMode)setWire(false);if(pMode)closePanel();const t=MMODES.find(x=>x[0]===m);if(t)toast(`${t[2]}: ${t[3]} · לסיום — Esc או "סיום" בתפריט`);}
+ const B=$('measBar');B.classList.add('hidden');if(0)
  if(m)B.innerHTML=`<div class="row">${[['dist','📏 מרחק'],['area','⬚ אזור'],['obj','🔲 רכיב']].map(([k,t])=>`<button class="wbtn${k===m?' pri':''}" data-mm="${k}">${t}</button>`).join('')}<button class="wbtn" data-mm="">✓ סיום</button></div>
   <div class="hint" style="margin:8px 2px 0">${{dist:'הקש על שתי נקודות תפיסה (או גרור מאחת לשנייה). המידה תמיד אופקית או אנכית (90°) — לפי הכיוון הארוך. נתפס רק לפינות, אמצעי צלעות, מרכזים ונקודות חיבור של רכיבים, וזז עם הרכיב.',area:'הקש על שתי נקודות תפיסה בפינות נגדיות (או גרור מלבן) — יתווספו מידות רוחב וגובה.',obj:'הקש על רכיב — יתווספו לו מידות רוחב וגובה שזזות איתו.'}[m]}</div>`;
  renderNow();updateBar();}
@@ -2435,7 +2477,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  if(P.size===2){if(G&&G.mode==='drag'&&G.moved)commit();G=null;const [a,b]=[...P.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),cx:(a.x+b.x)/2,cy:(a.y+b.y)/2,v:{...view}};return;}
  if(P.size>2)return;
  if(measMode){if(e.pointerType==='mouse'&&e.button!==0){G={sx:e.clientX,sy:e.clientY,t0:Date.now(),id:null,moved:false,mode:'pan',tx0:view.tx,ty0:view.ty};return;}
-  const [mx,my]=toWorld(e.clientX,e.clientY),ti=e.target.closest('[data-id]');G={sx:e.clientX,sy:e.clientY,t0:Date.now(),moved:false,mode:'meas',p0:mdSnap(mx,my),id:ti?ti.dataset.id:null};return;}
+  const [mx,my]=toWorld(e.clientX,e.clientY),ti=e.target.closest('[data-id]');G={sx:e.clientX,sy:e.clientY,t0:Date.now(),moved:false,mode:'meas',p0:measMode==='tape'?(MS.a&&!MS.frozen?tapeAt(MS.a,mx,my):tapeAt(null,mx,my)):mdSnap(mx,my),id:ti?ti.dataset.id:null};return;}
  const t=e.target.closest('[data-id]'),id=t?t.dataset.id:null;
  G={sx:e.clientX,sy:e.clientY,t0:Date.now(),id,moved:false,mode:'pan',tx0:view.tx,ty0:view.ty,add:e.shiftKey||e.ctrlKey||e.metaKey};
  if(e.pointerType==='mouse'&&e.button!==0)return;
@@ -2462,7 +2504,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
   state.objs.forEach(q=>{if(q.type==='label'&&q.p.of&&ids.has(q.p.of)&&!moving.has(q))G.kids.push({q,x:q.x,y:q.y});});}
  if(G&&G.mode==='pan'&&e.pointerType==='mouse'&&e.button===0&&!wireMode){G.mode='band';G.w0=toWorld(e.clientX,e.clientY);G.w1=G.w0;}
 });
-svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.pointerType==='mouse'){const [x,y]=toWorld(e.clientX,e.clientY);MS.hov=mdSnap(x,y);if(MS.a)MS.cur=MS.hov;render();return;}if(!P.has(e.pointerId)){if(e.pointerType==='mouse'&&QW()){const [x,y]=toWorld(e.clientX,e.clientY),h=termAt(x,y,qRad('press',false));
+svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.pointerType==='mouse'){const [x,y]=toWorld(e.clientX,e.clientY);if(measMode==='tape'){if(MS.a&&!MS.frozen)MS.cur=tapeAt(MS.a,x,y);else MS.hov=mdSnap(x,y);render();return;}MS.hov=mdSnap(x,y);if(MS.a)MS.cur=MS.hov;render();return;}if(!P.has(e.pointerId)){if(e.pointerType==='mouse'&&QW()){const [x,y]=toWorld(e.clientX,e.clientY),h=termAt(x,y,qRad('press',false));
    if((h&&(!HOV||HOV.r!==h.r||HOV.t!==h.t))||(!h&&HOV)){HOV=h;svg.style.cursor=h?'crosshair':'';render();}}return;}P.set(e.pointerId,{x:e.clientX,y:e.clientY});
  if(pinch&&P.size>=2){const [a,b]=[...P.values()];const d=Math.hypot(a.x-b.x,a.y-b.y),cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;const r=svg.getBoundingClientRect();
   const s=Math.min(30,Math.max(.04,pinch.v.s*d/pinch.d));const wx=(pinch.cx-r.left-pinch.v.tx)/pinch.v.s,wy=(pinch.cy-r.top-pinch.v.ty)/pinch.v.s;
@@ -2475,7 +2517,7 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
  else if(G.mode==='rot'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY);let a=Math.atan2(wy-o.y,wx-o.x)*180/Math.PI+90;
   if(!e.altKey){a=Math.round(a/15)*15;}else{const n=Math.round(a/90)*90;if(Math.abs(a-n)<3)a=n;}o.rot=r2(((a%360)+360)%360);render();}
  else if(G.mode==='tip'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY),sp=mdSnap(wx,wy);o.p.tip=sp&&Math.hypot(sp.x-wx,sp.y-wy)<12/view.s?{...sp}:{x:r2(wx),y:r2(wy)};render();}
- else if(G.mode==='meas'){const [wx,wy]=toWorld(e.clientX,e.clientY);MS.cur=mdSnap(wx,wy);render();}
+ else if(G.mode==='meas'){const [wx,wy]=toWorld(e.clientX,e.clientY);if(measMode==='tape'){if(!MS.a||MS.frozen){MS.a=G.p0;MS.frozen=false;}MS.cur=tapeAt(MS.a,wx,wy);}else MS.cur=mdSnap(wx,wy);render();}
  else if(G.mode==='mdoff'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY),dx=wx-G.w0[0],dy=wy-G.w0[1];if(sel!==o.id){sel=o.id;updateBar();}
   const d=mdMode(o.p.mode,...mdPt(o.p.a),...mdPt(o.p.b))==='h'?dy:dx;
   o.p.off=r2(G.off0+d);render();}
@@ -2569,7 +2611,7 @@ $('bText').onclick=()=>{if(wireMode||globalLock)return;const o=sel&&get(sel);con
     state.objs.push(L);sel=L.id;commit();renderNow();updateBar();}},{t:'ביטול'}]);
  setTimeout(()=>$('f_newtxt')&&$('f_newtxt').focus(),60);};
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;
-$('bDraw').onclick=()=>{if(wireMode)setWire(false);if(measMode)setMeas(null);const D=LIB.find(T=>T.draw);if(pMode==='lib'&&DRAWOPEN){DRAWOPEN=false;closePanel();return;}LOPEN.add(D.tab);lopenSave();libQ='';$('search').value='';DRAWOPEN=true;openPanel('lib','הוספת רכיב');updateBar();setTimeout(()=>{const el=[...$('sheetBody').querySelectorAll('[data-sec]')].find(b=>b.dataset.sec===D.tab);if(el)el.scrollIntoView({block:'start'});},30);};let DRAWOPEN=false;$('bMeas').onclick=()=>setMeas(measMode?null:'dist');$('bFit').onclick=fit;$('bGrid').onclick=()=>gridDialog();
+$('bFit').onclick=fit;$('bGrid').onclick=()=>gridDialog();
 $('bDoor').onclick=()=>{toggleDoors();updateBar();};$('bLockAll').onclick=toggleLockAll;
 /* Keyboard: Delete removes what's selected, Esc lets go, Ctrl+Z / Ctrl+Y undo and redo, Ctrl+A takes all. */
 document.addEventListener('keydown',e=>{const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;if(!$('modal').classList.contains('hidden'))return;
