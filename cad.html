@@ -449,7 +449,7 @@ body.iconsonly #docTabs button{padding:6px 11px}body.iconsonly #docTabs .lic{wid
 #pvOv{position:fixed;inset:0;z-index:25;background:#2f3237;display:flex;flex-direction:column}#pvOv.hidden{display:none}
 .pvbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;background:var(--card);border-bottom:2px solid var(--acc)}.pvbar .pvt{font-size:16px;color:var(--acc-light)}.pvbar .pvinfo{font-size:13px;opacity:.8}.pvbar .wbtn{padding:8px 12px;font-size:14px;font-weight:700}
 .pvpages{flex:1;overflow:auto;padding:18px 20px 34px;display:flex;flex-direction:column;align-items:safe center;gap:30px}
-.pvpage{position:relative;flex:none;width:var(--fw);background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.55)}#pvOv.big .pvpage{width:calc(var(--fw) * 2.2)}.pvpage>svg{display:block;width:100%;height:auto}.pvn{position:absolute;bottom:-22px;right:0;font-size:12px;color:#d1d5db}
+.pvpage{position:relative;flex:none;width:var(--fw);background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.55)}#pvOv.big .pvpage{width:calc(var(--fw) * 2.2)}.pvpage>svg{display:block;width:100%;height:auto;direction:ltr}.pvn{position:absolute;bottom:-22px;right:0;font-size:12px;color:#d1d5db}
 #bMeas.open{border-color:var(--acc)!important;background:#2a1a08!important}body.uil #bMeas.open{background:#fff1dc!important}
 #mMeas{width:min(330px,calc(100vw - 12px))}#mMeas .mh{font-size:11.5px;font-weight:400;color:var(--muted,#9ca3af);display:block;margin-top:2px;line-height:1.35}#mMeas button{align-items:flex-start!important}#mMeas button.on .mh{color:#2b1600}#mMeas .ml{display:flex;flex-direction:column}
 #bDraw.open{border-color:var(--acc)!important;background:#2a1a08!important}body.uil #bDraw.open{background:#fff1dc!important}
@@ -3091,15 +3091,15 @@ async function makePdf(t){toast('מכין תצוגה…');
  // one drawing page for the panel front and one for the single-line diagram (each that has something on it)
  const docs=[];withDoc('panel',()=>{if(state.objs.length)docs.push('panel');});withDoc('sld',()=>{if(state.objs.length)docs.push('sld');});if(!docs.length)docs.push('panel');
  const LY0=withDoc(docs[0],()=>layoutRect());if(LY0){t.paper=LY0.L.paper;t.orient=LY0.L.orient;}let [W,H]=PAPER[t.paper]||PAPER.A3;if(t.orient==='P')[W,H]=[H,W];
- const BP=t.bomPage==='1'?[['רשימת ציוד — חזית לוח',bomData()],['רשימת ציוד — חד קווי',bomDataSld()]].filter(x=>x[1].length):[];const pages=docs.length+BP.length;const svgs=[];const DOCN={panel:'חזית לוח',sld:'חד קווי'};
- docs.forEach((d,di)=>withDoc(d,()=>{const LY=layoutRect(),tt=Object.assign({},t,{title:(t.title||state.name)+(docs.length>1?' — '+DOCN[d]:'')});
-  const tb=tbSVG(tt,W,H,di+1,pages,'');const ax0=30,ay0=20,ax1=W-20,ay1=tb.y0-6,aw=ax1-ax0-28,ah=ay1-ay0-28;const b=boundsAll(),pad=4,bw=b.w+2*pad,bh=b.h+2*pad;
+ const BP=t.bomPage==='1'?[['רשימת ציוד — חזית לוח',bomData()],['רשימת ציוד — חד קווי',bomDataSld()]].filter(x=>x[1].length):[];const pages=docs.length+BP.length;const svgs=[],SZ=[];const DOCN={panel:'חזית לוח',sld:'חד קווי'};
+ docs.forEach((d,di)=>withDoc(d,()=>{const LY=layoutRect(),PW=LY?LY.W:W,PH=LY?LY.H:H,tt=Object.assign({},t,{title:(t.title||state.name)+(docs.length>1?' — '+DOCN[d]:'')});
+  const tb=tbSVG(tt,PW,PH,di+1,pages,'');const ax0=30,ay0=20,ax1=PW-20,ay1=tb.y0-6,aw=ax1-ax0-28,ah=ay1-ay0-28;const b=boundsAll(),pad=4,bw=b.w+2*pad,bh=b.h+2*pad;
   const need=Math.max(bw/aw,bh/ah);const STD=[1,2,2.5,5,10,15,20,25,50,75,100,200];let n=LY?LY.n:(STD.find(v=>v>=need)||Math.ceil(need));const k=1/n;
-  const scaleLbl=n===1?'1:1':`1:${n}`;const tb2=tbSVG(tt,W,H,di+1,pages,scaleLbl);
+  const scaleLbl=n===1?'1:1':`1:${n}`;const tb2=tbSVG(tt,PW,PH,di+1,pages,scaleLbl);
   const ox=ax0+(aw-bw*k)/2,oy=ay0+20+(ah-bh*k)/2;
   try{wireLayout();}catch(e){}EXPMIN=.3/k;const body=content({sel:false});EXPMIN=0;
-  svgs.push(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${W} ${H}" width="${W}mm" height="${H}mm">${pageFrame(W,H,true)}<g transform="${LY?`translate(${-LY.x0*k} ${-LY.y0*k}) scale(${k})`:`translate(${ox} ${oy}) scale(${k}) translate(${-(b.x-pad)} ${-(b.y-pad)})`}">${body}${d==='panel'?pdfDims(k):''}</g>${scaleBar(32,tb2.y0-9,k,n)}${tb2.s}<text x="22" y="${H-5}" font-size="2.2" font-family="Arial" fill="#777">OhadCad</text></svg>`);
-  if(!di)t.__scale=scaleLbl;}));
+  svgs.push(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${PW} ${PH}" width="${PW}mm" height="${PH}mm">${pageFrame(PW,PH,true)}<g transform="${LY?`translate(${-LY.x0*k} ${-LY.y0*k}) scale(${k})`:`translate(${ox} ${oy}) scale(${k}) translate(${-(b.x-pad)} ${-(b.y-pad)})`}">${body}${d==='panel'?pdfDims(k):''}</g>${scaleBar(32,tb2.y0-9,k,n)}${tb2.s}<text x="22" y="${PH-5}" font-size="2.2" font-family="Arial" fill="#777">OhadCad</text></svg>`);
+  SZ.push([PW,PH]);if(!di)t.__scale=scaleLbl;}));
  renderNow();
  BP.forEach(([bt,bd],bi)=>{const tb=tbSVG(Object.assign({},t,{title:(t.title||state.name)+' — '+bt}),W,H,docs.length+bi+1,pages,'-');let s='';const R=W-20,x0=30,rh=7;let y=26;
   s+=`<text x="${R}" y="${y}" font-size="6" font-weight="700" font-family="Arial" text-anchor="start" direction="rtl">${bt}</text>`;y+=6;
@@ -3108,12 +3108,12 @@ async function makePdf(t){toast('מכין תצוגה…');
   s+=T(R-2,y+4.8,'מס׳',3.2,700)+T(colN-2,y+4.8,'פריט',3.2,700)+T(colQ-2,y+4.8,'כמות',3.2,700);y+=rh;
   const maxY=tb.y0-6;bd.forEach(([k,q],i)=>{if(y+rh>maxY)return;s+=`<rect x="${x0}" y="${y}" width="${R-x0}" height="${rh}" fill="${i%2?'#f8f8f8':'#fff'}" stroke="#000" stroke-width=".2"/>`+T(R-2,y+4.8,String(i+1),3)+T(colN-2,y+4.8,k,3)+T(colQ-2,y+4.8,q,3);y+=rh;});
   s+=`<line x1="${colN}" y1="${32}" x2="${colN}" y2="${y}" stroke="#000" stroke-width=".2"/><line x1="${colQ}" y1="${32}" x2="${colQ}" y2="${y}" stroke="#000" stroke-width=".2"/>`;
-  svgs.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}mm" height="${H}mm">${pageFrame(W,H,true)}${s}${tb.s}</svg>`);});
+  svgs.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}mm" height="${H}mm">${pageFrame(W,H,true)}${s}${tb.s}</svg>`);SZ.push([W,H]);});
  const fname=((t.dwgno?t.dwgno+'_':'')+(t.title||'panel')).replace(/[\\/:*?"<>|]+/g,'_')+'.pdf';
- showPreview({svgs,W,H,fname,t});}
-async function pdfDownload(P){const {svgs,W,H,fname}=P;toast('מכין PDF…');
- try{const dpi=Math.max(150,Math.min(300,Math.floor(25.4*Math.sqrt(32e6/(W*H)))));const imgs=[];for(const sv of svgs)imgs.push(await svgToJpeg(sv,W,H,dpi));
-  await loadJsPDF();const {jsPDF}=window.jspdf;const pdf=new jsPDF({orientation:W>H?'landscape':'portrait',unit:'mm',format:[W,H]});imgs.forEach((im,i)=>{if(i)pdf.addPage([W,H],W>H?'landscape':'portrait');pdf.addImage(im,'JPEG',0,0,W,H);});
+ showPreview({svgs,SZ,W,H,fname,t});}
+async function pdfDownload(P){const {svgs,SZ,fname}=P;toast('מכין PDF…');
+ try{const imgs=[];for(let i=0;i<svgs.length;i++){const [w,h]=SZ[i],dpi=Math.max(150,Math.min(300,Math.floor(25.4*Math.sqrt(32e6/(w*h)))));imgs.push(await svgToJpeg(svgs[i],w,h,dpi));}
+  await loadJsPDF();const {jsPDF}=window.jspdf;const [w0,h0]=SZ[0];const pdf=new jsPDF({orientation:w0>h0?'landscape':'portrait',unit:'mm',format:[w0,h0]});imgs.forEach((im,i)=>{const [w,h]=SZ[i];if(i)pdf.addPage([w,h],w>h?'landscape':'portrait');pdf.addImage(im,'JPEG',0,0,w,h);});
   saveFile(fname,pdf.output('blob'));toast('ה-PDF הורד: '+fname);}
  catch(e){toast('לא ניתן היה ליצור PDF — נסה "הדפס / PDF חד"');}}
 /* ================= print preview =================
@@ -3124,20 +3124,20 @@ function pdfDefaults(){return Object.assign({paper:'A3',orient:'L',company:'',pr
 function printPreview(){if(!state.objs.length&&!(state.alt||[]).length){toast('הלוח ריק');return;}makePdf(pdfDefaults());}
 let PV=null;
 function showPreview(P){PV=P;let ov=$('pvOv');if(!ov){ov=document.createElement('div');ov.id='pvOv';document.body.appendChild(ov);ov.addEventListener('click',pvClick);}
- const r=P.W/P.H,n=P.svgs.length;
+ const n=P.svgs.length;
  ov.innerHTML=`<div class="pvbar"><b class="pvt">👁 תצוגה לפני הדפסה</b><span class="pvinfo">${P.t.paper} ${P.t.orient==='P'?'לגובה':'לרוחב'} · ${n} ${n===1?'עמוד':'עמודים'} · קנה מידה ${P.t.__scale||''}</span><span style="flex:1"></span>
   <button class="wbtn" data-pv="zoom">🔍 הגדל</button><button class="wbtn" data-pv="edit">✏ פרטי טבלת שרטוט</button><button class="wbtn" data-pv="print">🖨 הדפס / PDF חד</button><button class="wbtn pri" data-pv="pdf">⬇ הורד PDF</button><button class="wbtn" data-pv="close" title="סגור (Esc)">✕</button></div>
-  <div class="pvpages">${P.svgs.map((sv,i)=>`<div class="pvpage" style="--fw:min(calc(100vw - 40px),calc((100vh - 130px) * ${r.toFixed(4)}))">${sv}<span class="pvn">עמוד ${i+1} מתוך ${n}</span></div>`).join('')}</div>`;
+  <div class="pvpages">${P.svgs.map((sv,i)=>`<div class="pvpage" style="--fw:min(calc(100vw - 40px),calc((100vh - 130px) * ${(P.SZ[i][0]/P.SZ[i][1]).toFixed(4)}))">${sv}<span class="pvn">עמוד ${i+1} מתוך ${n}</span></div>`).join('')}</div>`;
  ov.classList.remove('hidden','big');}
 function pvClose(){const ov=$('pvOv');if(ov)ov.classList.add('hidden');}
 function pvClick(e){const b=e.target.closest('[data-pv]');if(!b||!PV)return;const k=b.dataset.pv,ov=$('pvOv');
  if(k==='close')pvClose();else if(k==='zoom'){ov.classList.toggle('big');b.textContent=ov.classList.contains('big')?'🔍 התאם למסך':'🔍 הגדל';}
- else if(k==='edit'){pvClose();pdfDialog();}else if(k==='print')printVector(PV.svgs,PV.W,PV.H,PV.fname);else if(k==='pdf')pdfDownload(PV);}
+ else if(k==='edit'){pvClose();pdfDialog();}else if(k==='print')printVector(PV.svgs,PV.SZ,PV.fname);else if(k==='pdf')pdfDownload(PV);}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){const ov=$('pvOv');if(ov&&!ov.classList.contains('hidden')){pvClose();e.stopPropagation();}}},true);
 /* Vector PDF: the pages go to the browser's own print (choose "Save as PDF"),
    which keeps every line and letter sharp at any zoom. */
-function printVector(svgs,W,H,fname){const fr=document.createElement('iframe');fr.style.cssText='position:fixed;width:0;height:0;border:0;right:0;bottom:0';document.body.appendChild(fr);
- const d=fr.contentDocument;d.open();d.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(fname.replace(/\.pdf$/,''))}</title><style>@page{size:${W}mm ${H}mm;margin:0}html,body{margin:0;padding:0}svg{display:block;width:${W}mm;height:${H}mm;page-break-after:always;break-after:page}svg:last-child{page-break-after:auto;break-after:auto}</style></head><body>${svgs.join('')}</body></html>`);d.close();
+function printVector(svgs,SZ,fname){const fr=document.createElement('iframe');fr.style.cssText='position:fixed;width:0;height:0;border:0;right:0;bottom:0';document.body.appendChild(fr);
+ const d=fr.contentDocument;d.open();d.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(fname.replace(/\.pdf$/,''))}</title><style>@page{margin:0}${SZ.map(([w,h],i)=>`@page p${i}{size:${w}mm ${h}mm;margin:0}.pg${i}{page:p${i};width:${w}mm;height:${h}mm}`).join('')}html,body{margin:0;padding:0}.pg{break-after:page;overflow:hidden}.pg:last-child{break-after:auto}.pg svg{display:block;width:100%;height:100%;direction:ltr}</style></head><body dir="ltr">${svgs.map((sv,i)=>`<div class="pg pg${i}">${sv}</div>`).join('')}</body></html>`);d.close();
  toast('בחלון ההדפסה בחר "שמור כ-PDF" (Save as PDF)');
  setTimeout(()=>{try{fr.contentWindow.focus();fr.contentWindow.print();}catch(e){toast('ההדפסה נחסמה בדפדפן');}setTimeout(()=>fr.remove(),60000);},400);}
 /* ================= DXF export (opens in AutoCAD; save there as DWG) =================
