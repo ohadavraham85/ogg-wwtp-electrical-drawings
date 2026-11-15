@@ -451,7 +451,7 @@ body.iconsonly #docTabs button{padding:6px 11px}body.iconsonly #docTabs .lic{wid
 
 <div id="rulX"></div><div id="rulY"></div><div id="xh"></div><div id="yh"></div>
 <div id="sbar"><span id="coord"></span><button data-sb="cross" title="סמן צלב X/Y שזז עם העכבר">✛ סמן צלב</button><button data-sb="axes" title="צירים וסרגלים">📏 צירים</button><button data-sb="terms" title="הדגשת נקודות החיבור">🔵 נקודות</button></div>
-<div id="docTabs"><button id="bNewProj" title="פרויקט חדש">📄 פרויקט חדש</button><button id="bTemplates" title="פרויקט חדש מתבנית (דוגמאות)">🗂 תבנית</button><button id="bOpenProj" title="פתח פרויקט">📂 פתח</button><button id="bSaveCopy" title="שמור עותק בשם">📑 שמור עותק</button><div class="sep"></div><button id="bBom" title="רשימת ציוד (BOM)">📋 BOM</button><button id="bPdf" title="ייצוא PDF עם טבלת שרטוט">📄 PDF</button><button id="bPng" title="ייצוא תמונה (PNG)">🖼️ PNG</button><div class="sep"></div><button data-doc="panel">🗄 חזית לוח</button><button data-doc="sld">⚡ חד קווי</button><button data-doc="both">◧ משולב</button><button id="bDark" title="חד קווי: רקע שחור / דף לבן">🌙</button><button id="bLayout" title="הצג / הסתר את דף הייצור (Layout)">📄</button><span id="saveSt"></span></div>
+<div id="docTabs"><button id="bNewProj" title="פרויקט חדש">📄 פרויקט חדש</button><button id="bTemplates" title="פרויקט חדש מתבנית (דוגמאות)">🗂 תבנית</button><button id="bOpenProj" title="פתח פרויקט">📂 פתח</button><button id="bSaveCopy" title="שמור עותק בשם">📑 שמור עותק</button><div class="sep"></div><button id="bBom" title="רשימת ציוד (BOM)">📋 BOM</button><button id="bPdf" title="ייצוא PDF עם טבלת שרטוט">📄 PDF</button><button id="bPng" title="ייצוא תמונה (PNG)">🖼️ PNG</button><button id="bDxf" title="ייצוא DXF ל-AutoCAD — שם שומרים כ-DWG">📐 DXF</button><div class="sep"></div><button data-doc="panel">🗄 חזית לוח</button><button data-doc="sld">⚡ חד קווי</button><button data-doc="both">◧ משולב</button><button id="bDark" title="חד קווי: רקע שחור / דף לבן">🌙</button><button id="bLayout" title="הצג / הסתר את דף הייצור (Layout)">📄</button><span id="saveSt"></span></div>
 <div id="favBar"></div>
 <div id="top" class="card">
   <button class="tb" id="bMenu" title="תפריט"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
@@ -1905,6 +1905,7 @@ document.addEventListener('click',e=>{if(!e.target.closest('#docTabs,#rail'))ret
  if(e.target.closest('#bBom')){bom();return;}
  if(e.target.closest('#bPdf')){pdfDialog();return;}
  if(e.target.closest('#bPng')){exportImage();return;}
+ if(e.target.closest('#bDxf')){dxfExport();return;}
  const b=e.target.closest('[data-doc]');if(b)switchDoc(b.dataset.doc);
 });
 /* The panel's parts, whichever document is showing. */
@@ -2192,6 +2193,7 @@ const IC={
  bom:'<path d="M3 6l1.5 1.5L7 5M3 12l1.5 1.5L7 11M3 18l1.5 1.5L7 17M11 6h10M11 12h10M11 18h10"/>',
  pdf:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><text x="12" y="17.2" font-size="5.6" font-weight="800" text-anchor="middle" fill="currentColor" stroke="none" font-family="Arial">PDF</text>',
  png:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="1.8"/><path d="M21 15l-5-5L5 21"/>',
+ dxf:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><text x="12" y="17.2" font-size="5.4" font-weight="800" text-anchor="middle" fill="currentColor" stroke="none" font-family="Arial">DXF</text>',
  panel:'<rect x="5" y="2.5" width="14" height="19" rx="1"/><path d="M8 6.5h8M8 10h8M8 13.5h4"/><circle cx="15.5" cy="17" r=".9"/>',
  sld:'<path d="M12 2v5M12 7l-4.5 5.5M12 13v3M5 16h14M8 16v5M16 16v5"/>',
  both:'<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M12 4v16M6 8h3M6 11h3M15 8l1.5 3M15 14h3"/>',
@@ -2203,9 +2205,9 @@ const IC={
  dots:'<circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><path d="M8 12h2M14 12h2"/>',
  ruler:'<path d="M3 16.5L16.5 3 21 7.5 7.5 21z"/><path d="M7 12.5l2 2M10 9.5l1.5 1.5M13 6.5l2 2"/>'};
 const ico=k=>`<svg viewBox="0 0 24 24" class="lic">${IC[k]}</svg>`;
-function setIcons(){const M={bNewProj:'newp',bTemplates:'tpl',bOpenProj:'open',bSaveCopy:'save',bBom:'bom',bPdf:'pdf',bPng:'png',bLayout:'page'};
+function setIcons(){const M={bNewProj:'newp',bTemplates:'tpl',bOpenProj:'open',bSaveCopy:'save',bBom:'bom',bPdf:'pdf',bPng:'png',bDxf:'dxf',bLayout:'page'};
  const lab=b=>(b.querySelector('.lbl')?.textContent||b.title||b.textContent).trim().replace(/^\S+\s+(?=\S)/u,m=>/[\p{L}\d]/u.test(m)?m:'');
- const SL={bNewProj:'פרויקט חדש',bTemplates:'תבנית',bOpenProj:'פתח',bSaveCopy:'שמור עותק',bBom:'BOM',bPdf:'PDF',bPng:'PNG',bLayout:''};
+ const SL={bNewProj:'פרויקט חדש',bTemplates:'תבנית',bOpenProj:'פתח',bSaveCopy:'שמור עותק',bBom:'BOM',bPdf:'PDF',bPng:'PNG',bDxf:'DXF',bLayout:''};
  Object.entries(M).forEach(([id,k])=>{const b=$(id);if(!b||b.dataset.ic)return;const L=SL[id]??lab(b);b.innerHTML=`<i class="ico">${ico(k)}</i>`+(L?`<span class="lbl">${esc(L)}</span>`:'');b.dataset.ic=1;if(L&&!b.title)b.title=L;});
  document.querySelectorAll('button[data-doc]').forEach(b=>{if(b.dataset.ic)return;const L={panel:'חזית לוח',sld:'חד קווי',both:'משולב'}[b.dataset.doc];b.innerHTML=`<i class="ico">${ico(b.dataset.doc)}</i><span class="lbl">${L}</span>`;b.title=L;b.dataset.ic=1;});
  const S={cross:['cross','סמן צלב'],axes:['axes','צירים'],terms:['dots','נקודות']};document.querySelectorAll('#sbar [data-sb]').forEach(b=>{if(b.dataset.ic)return;const [k,L]=S[b.dataset.sb];b.innerHTML=`<i class="ico">${ico(k)}</i><span class="lbl">${L}</span>`;b.dataset.ic=1;});
@@ -2703,7 +2705,7 @@ function wireLen(w){const ps=w.pts.map(resolve).filter(Boolean);let L=0;for(let 
 /* ================= drawer / menu ================= */
 function openDrawer(){const items=[['פרויקט'],['📄 פרויקט חדש',newProject],['🗂 פרויקט חדש מתבנית (דוגמאות)',templatesDialog],...(SH?[['📂 פתח מהתיקייה המשותפת',openShared],['💾 שמור עכשיו (נשמר גם אוטומטית)',saveShared],['📑 שמור עותק בשם…',()=>saveSharedAs(true)]]:[['📂 פתח פרויקט שמור',openProjects],['💾 שמור בשם…',saveAs]]),
  ['תצוגה'],['⚙ הגדרות תצוגה — גופן והגדלה…',displayDialog],[uiLight()?'🌙 מצב כהה לאפליקציה':'☀ מצב בהיר לאפליקציה',toggleUI],['🧩 הסתרת כפתורים / איפוס הסרגלים…',tbEditor],['📄 דף ייצור (Layout)…',layoutDialog],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
- ['ייצוא ושיתוף'],['📋 רשימת ציוד (BOM)',bom],['📄 ייצוא PDF עם טבלת שרטוט',pdfDialog],['🖼️ ייצוא תמונה (PNG)',exportImage],['💾 הורד קובץ פרויקט (JSON)',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state))],['📤 העתק קובץ פרויקט',copyJSON],['📥 ייבוא קובץ פרויקט',importJSON],...(SH&&SH.menu?[['OhadCad'],...SH.menu()]:[])];
+ ['ייצוא ושיתוף'],['📋 רשימת ציוד (BOM)',bom],['📄 ייצוא PDF עם טבלת שרטוט',pdfDialog],['🖼️ ייצוא תמונה (PNG)',exportImage],['📐 ייצוא DXF ל-AutoCAD (נשמר כ-DWG)',dxfExport],['💾 הורד קובץ פרויקט (JSON)',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state))],['📤 העתק קובץ פרויקט',copyJSON],['📥 ייבוא קובץ פרויקט',importJSON],...(SH&&SH.menu?[['OhadCad'],...SH.menu()]:[])];
  $('dbox').innerHTML=`<div style="display:flex;align-items:center;justify-content:flex-end;margin:4px 8px 0"><img src="icons/wordmark-${uiLight()?'light':'dark'}.svg" alt="OhadCad" height="26"></div><h2>${esc(state.name)}</h2>`+items.map((it,i)=>it[1]?`<button data-i="${i}">${it[0]}</button>`:`<div style="color:#8a8a8a;font-size:13px;margin:12px 12px 2px">${it[0]}</div>`).join('');
  $('drawer').classList.remove('hidden');$('dbox').onclick=e=>{const b=e.target.closest('button');if(!b)return;$('drawer').classList.add('hidden');items[+b.dataset.i][1]();};}
 $('drawer').addEventListener('click',e=>{if(e.target.id==='drawer')$('drawer').classList.add('hidden');});
@@ -2990,6 +2992,45 @@ function printVector(svgs,W,H,fname){const fr=document.createElement('iframe');f
  const d=fr.contentDocument;d.open();d.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(fname.replace(/\.pdf$/,''))}</title><style>@page{size:${W}mm ${H}mm;margin:0}html,body{margin:0;padding:0}svg{display:block;width:${W}mm;height:${H}mm;page-break-after:always;break-after:page}svg:last-child{page-break-after:auto;break-after:auto}</style></head><body>${svgs.join('')}</body></html>`);d.close();
  toast('בחלון ההדפסה בחר "שמור כ-PDF" (Save as PDF)');
  setTimeout(()=>{try{fr.contentWindow.focus();fr.contentWindow.print();}catch(e){toast('ההדפסה נחסמה בדפדפן');}setTimeout(()=>fr.remove(),60000);},400);}
+/* ================= DXF export (opens in AutoCAD; save there as DWG) =================
+   The drawing is laid out as for an image (panel front and single-line side by
+   side), put into a hidden SVG, and every visible stroke or filled outline is
+   written as an R12 DXF entity in millimetres: straight runs as polylines,
+   circles as circles, curves sampled, texts as TEXT (Hebrew as \U+ codes, in
+   reading order). One layer per part type. */
+function dxfExport(){const hasP=withDoc('panel',()=>state.objs.length>0),hasS=withDoc('sld',()=>state.objs.length>0);if(!hasP&&!hasS){toast('הלוח ריק');return;}
+ let body='';withDoc(hasP&&hasS?'both':hasP?'panel':'sld',()=>{try{wireLayout();}catch(e){}body=content({sel:false});});renderNow();
+ const NS='http://www.w3.org/2000/svg',host=document.createElementNS(NS,'svg');host.setAttribute('style','position:fixed;left:-99999px;top:0;width:10px;height:10px;overflow:visible');host.innerHTML=body;document.body.appendChild(host);
+ const out=[],root=host.getScreenCTM().inverse();let n=0;
+ const ACI=[[1,255,0,0],[2,255,255,0],[3,0,255,0],[4,0,255,255],[5,0,0,255],[6,255,0,255],[7,255,255,255],[8,128,128,128],[9,192,192,192],[30,255,127,0],[34,153,76,0],[250,51,51,51],[252,130,130,130],[254,190,190,190],[7,0,0,0]];
+ const aci=c=>{const m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c||'');if(!m)return 7;const [r,g,b]=[+m[1],+m[2],+m[3]];let best=7,bd=1e9;ACI.forEach(([i,R,G,B])=>{const d=(R-r)**2+(G-g)**2+(B-b)**2;if(d<bd){bd=d;best=i;}});return best;};
+ const vis=c=>c&&c!=='none'&&!/rgba\([^)]*,\s*0\)/.test(c)&&c!=='transparent';
+ const f=v=>(+v).toFixed(3);
+ const layerOf=el=>{const g=el.closest('[data-id]');const o=g&&get(g.dataset.id);return (o?(o.type==='wire'?'WIRES':String(o.type).toUpperCase()):'DRAWING').replace(/[^A-Z0-9_-]/g,'_');};
+ const P=(m,x,y)=>{const p=host.createSVGPoint();p.x=x;p.y=y;const q=p.matrixTransform(m);return [q.x,-q.y];};
+ const poly=(L,col,pts,closed)=>{if(pts.length<2)return;out.push('0','POLYLINE','8',L,'62',col,'66','1','70',closed?'1':'0','10','0','20','0','30','0');pts.forEach(([x,y])=>out.push('0','VERTEX','8',L,'10',f(x),'20',f(y),'30','0'));out.push('0','SEQEND','8',L);n++;};
+ const simplify=pts=>pts.filter((p,i)=>{if(i===0||i===pts.length-1)return true;const a=pts[i-1],b=pts[i+1];return Math.abs((p[0]-a[0])*(b[1]-a[1])-(p[1]-a[1])*(b[0]-a[0]))>1e-3*Math.hypot(b[0]-a[0],b[1]-a[1])||Math.hypot(b[0]-a[0],b[1]-a[1])<1e-6;});
+ const uni=t=>{let s=t;if(/[֐-׿]/.test(s)){s=[...s].reverse().join('').replace(/[A-Za-z0-9.,:\/+%×\-]+/g,w=>[...w].reverse().join(''));}return [...s].map(ch=>{const c=ch.codePointAt(0);return c>126?'\\U+'+c.toString(16).toUpperCase().padStart(4,'0'):ch;}).join('');};
+ host.querySelectorAll('line,rect,circle,ellipse,path,polyline,polygon,text').forEach(el=>{if(el.closest('defs,mask,pattern,clipPath,title'))return;
+  const cs=getComputedStyle(el);if(cs.display==='none'||cs.visibility==='hidden')return;const m=root.multiply(el.getScreenCTM());const L=layerOf(el);
+  if(el.tagName==='text'){const t=el.textContent.trim();if(!t)return;const x=+el.getAttribute('x')||0,y=+el.getAttribute('y')||0,[X,Y]=P(m,x,y),sc=Math.hypot(m.b,m.d),h=parseFloat(cs.fontSize)*sc*.72,rot=-Math.atan2(m.b,m.a)*180/Math.PI;
+   const anc=el.getAttribute('text-anchor')||cs.textAnchor,rtl=(el.getAttribute('direction')||cs.direction)==='rtl',ha=anc==='middle'?1:(anc==='end')!==rtl&&anc!=='start'?2:(anc==='start'&&rtl?2:(anc==='end'&&rtl?0:0)),va=/central|middle/.test(el.getAttribute('dominant-baseline')||'')?2:0;
+   out.push('0','TEXT','8',L,'62',aci(cs.fill),'10',f(X),'20',f(Y),'30','0','40',f(h),'1',uni(t),'50',f(rot));if(ha||va)out.push('72',String(ha),'11',f(X),'21',f(Y),'31','0','73',String(va));n++;return;}
+  const sc=vis(cs.stroke)&&parseFloat(cs.strokeWidth)>0,fc=vis(cs.fill);if(!sc&&!fc)return;const col=aci(sc?cs.stroke:cs.fill);
+  if(el.tagName==='line'){poly(L,col,[P(m,+el.getAttribute('x1'),+el.getAttribute('y1')),P(m,+el.getAttribute('x2'),+el.getAttribute('y2'))]);return;}
+  if(el.tagName==='rect'&&!(+el.getAttribute('rx'))){const x=+el.getAttribute('x')||0,y=+el.getAttribute('y')||0,w=+el.getAttribute('width'),h=+el.getAttribute('height');poly(L,col,[P(m,x,y),P(m,x+w,y),P(m,x+w,y+h),P(m,x,y+h)],true);return;}
+  if(el.tagName==='circle'&&Math.abs(Math.hypot(m.a,m.b)-Math.hypot(m.c,m.d))<1e-6){const [X,Y]=P(m,+el.getAttribute('cx')||0,+el.getAttribute('cy')||0);out.push('0','CIRCLE','8',L,'62',col,'10',f(X),'20',f(Y),'30','0','40',f((+el.getAttribute('r'))*Math.hypot(m.a,m.b)));n++;return;}
+  if(el.tagName==='polyline'||el.tagName==='polygon'){const pts=[...el.points].map(p=>P(m,p.x,p.y));poly(L,col,pts,el.tagName==='polygon');return;}
+  // anything else (paths, rounded rects, ellipses): follow the outline, one polyline per subpath
+  let shapes=[el];if(el.tagName==='path'){const d=el.getAttribute('d')||'';const parts=d.match(/[Mm][^Mm]*/g)||[];if(parts.length>1){let cx=0,cy=0;shapes=parts.map((pd,i)=>{const t=document.createElementNS(NS,'path');let dd=pd;
+    if(i&&pd[0]==='m'){const nums=pd.slice(1).trim().split(/[\s,]+|(?=-)/).filter(Boolean);dd='M'+(cx+ +nums[0])+' '+(cy+ +nums[1])+' l'+nums.slice(2).join(' ');if(nums.length<=2)dd='M'+(cx+ +nums[0])+' '+(cy+ +nums[1]);}
+    t.setAttribute('d',dd);el.parentNode.appendChild(t);try{const L2=t.getTotalLength(),e=t.getPointAtLength(L2);const z=/[zZ]\s*$/.test(pd);const st=t.getPointAtLength(0);cx=z?st.x:e.x;cy=z?st.y:e.y;}catch(_){}t.setAttribute('transform',el.getAttribute('transform')||'');return t;});}}
+  shapes.forEach(sh=>{let len=0;try{len=sh.getTotalLength();}catch(e){return;}if(!(len>0))return;const k=Math.max(2,Math.min(400,Math.ceil(len/.8)));const pts=[];for(let i=0;i<=k;i++){const q=sh.getPointAtLength(len*i/k);pts.push(P(m,q.x,q.y));}
+   const closed=/[zZ]\s*$/.test(sh.getAttribute?.('d')||'')||el.tagName!=='path';poly(L,col,simplify(pts),closed);if(sh!==el)sh.remove();});});
+ host.remove();
+ const dxf=['0','SECTION','2','HEADER','9','$ACADVER','1','AC1009','9','$INSUNITS','70','4','9','$MEASUREMENT','70','1','0','ENDSEC','0','SECTION','2','ENTITIES',...out,'0','ENDSEC','0','EOF'].join('\r\n');
+ const fname=safeName(state.name||'drawing')+'.dxf';saveFile(fname,new Blob([dxf],{type:'application/dxf'}));
+ toast(`DXF מוכן (${n} ישויות) — פתח ב-AutoCAD ושמור בשם כ-DWG`);}
 function exportImage(){const hasP=withDoc('panel',()=>state.objs.length>0),hasS=withDoc('sld',()=>state.objs.length>0);if(!hasP&&!hasS){toast('הלוח ריק');return;}withDoc(hasP&&hasS?'both':hasP?'panel':'sld',exportImage0);renderNow();}
 function exportImage0(){try{wireLayout();}catch(e){}const b=boundsAll(),pad=12;const x=b.x-pad,y=b.y-pad,w=b.w+2*pad,h=b.h+2*pad;const k=Math.min(10,9000/Math.max(w,h),Math.sqrt(48e6/(w*h)));
  EXPMIN=1.6/k;const body=content({sel:false});EXPMIN=0;
