@@ -2434,7 +2434,10 @@ $('lyTabs').addEventListener('click',e=>{const b=e.target.closest('[data-ly]');i
 const LYSTD=[1,1.5,2,2.5,3,4,5,7.5,10,15,20,25,30,40,50,75,100,150,200,250,500];
 function layHandlesSVG(){if(wireMode||measMode||globalLock||state.tab==='both')return '';const R=layoutRect();if(!R)return '';const {x0,y0,x1,y1}=R,xm=(x0+x1)/2,ym=(y0+y1)/2,k=1/view.s,a=6*k;
  const H=[['tl',x0,y0,'nwse'],['t',xm,y0,'ns'],['tr',x1,y0,'nesw'],['r',x1,ym,'ew'],['br',x1,y1,'nwse'],['b',xm,y1,'ns'],['bl',x0,y1,'nesw'],['l',x0,ym,'ew']];
- let s='<g>'+H.map(([h,x,y,c])=>`<g data-lyh="${h}" style="cursor:${c}-resize"><rect x="${x-a*2.2}" y="${y-a*2.2}" width="${a*4.4}" height="${a*4.4}" fill="transparent"/><rect x="${x-a}" y="${y-a}" width="${a*2}" height="${a*2}" fill="#ff8c00" stroke="#000" stroke-width="${1.2*k}"/></g>`).join('');
+ const gx=x0+18*k,gy=y0-24*k,r=11*k;
+ let s=`<g><path data-lymv="1" d="M${x0} ${y0}H${x1}V${y1}H${x0}Z" fill="none" stroke="transparent" stroke-width="${14*k}" style="cursor:move"><title>גרור את המסגרת כדי להזיז את הדף</title></path>`+
+  `<g data-lymv="1" style="cursor:move"><title>גרור כדי להזיז את הדף</title><path d="M${x0} ${y0}L${gx} ${gy+r}" stroke="#ff8c00" stroke-width="${1.2*k}" stroke-dasharray="${3*k} ${2*k}"/><circle cx="${gx}" cy="${gy}" r="${r*1.7}" fill="transparent"/><circle cx="${gx}" cy="${gy}" r="${r}" fill="#ff8c00" stroke="#000" stroke-width="${1.2*k}"/>`+
+  `<path d="M${gx} ${gy-r*.7}V${gy+r*.7}M${gx-r*.7} ${gy}H${gx+r*.7}M${gx-r*.25} ${gy-r*.45}L${gx} ${gy-r*.7}L${gx+r*.25} ${gy-r*.45}M${gx-r*.25} ${gy+r*.45}L${gx} ${gy+r*.7}L${gx+r*.25} ${gy+r*.45}M${gx-r*.45} ${gy-r*.25}L${gx-r*.7} ${gy}L${gx-r*.45} ${gy+r*.25}M${gx+r*.45} ${gy-r*.25}L${gx+r*.7} ${gy}L${gx+r*.45} ${gy+r*.25}" fill="none" stroke="#000" stroke-width="${1.5*k}" stroke-linecap="round" stroke-linejoin="round"/></g>`+H.map(([h,x,y,c])=>`<g data-lyh="${h}" style="cursor:${c}-resize"><rect x="${x-a*2.2}" y="${y-a*2.2}" width="${a*4.4}" height="${a*4.4}" fill="transparent"/><rect x="${x-a}" y="${y-a}" width="${a*2}" height="${a*2}" fill="#ff8c00" stroke="#000" stroke-width="${1.2*k}"/></g>`).join('');
  if(G&&G.mode==='lyr'){const t=`${R.L.paper} · 1:${+R.n.toFixed(2)}`;s+=`<g pointer-events="none" transform="translate(${x1+12*k} ${y0-14*k})"><rect x="0" y="${-11*k}" width="${(t.length*7.6+16)*k}" height="${22*k}" rx="${4*k}" fill="#000" stroke="#ff8c00" stroke-width="${1.4*k}"/><text x="${8*k}" y="0" font-size="${13*k}" fill="#ffb340" font-weight="700" dominant-baseline="central" font-family="Arial" direction="ltr">${t}</text></g>`;}
  return s+'</g>';}
 function layResize(g,wx,wy,free){const R=g.R0,{W,H,x0,y0,x1,y1}=R,h=g.h;let n,ox=x0,oy=y1;
@@ -2558,6 +2561,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  const t=e.target.closest('[data-id]'),id=t?t.dataset.id:null;
  G={sx:e.clientX,sy:e.clientY,t0:Date.now(),id,moved:false,mode:'pan',tx0:view.tx,ty0:view.ty,add:e.shiftKey||e.ctrlKey||e.metaKey};
  if(e.pointerType==='mouse'&&e.button!==0)return;
+ const lmEl=e.target.closest('[data-lymv]');if(lmEl&&!wireMode&&layoutRect()){G.mode='lymv';G.o0=Object.assign({},ORG());G.w0=toWorld(e.clientX,e.clientY);return;}
  const lyEl=e.target.closest('[data-lyh]');if(lyEl&&!wireMode){const R=layoutRect();if(R){G.mode='lyr';G.h=lyEl.dataset.lyh;G.R0=R;return;}}
  const rEl=e.target.closest('[data-rot]');if(rEl&&!wireMode){const ro=get(rEl.dataset.rot);if(canRot(ro)){G.mode='rot';G.o=ro;G.r0=ro.rot;if(sel!==ro.id){sel=ro.id;multi.clear();updateBar();}return;}}
  const dEl=e.target.closest('[data-dim]');if(dEl){G.dim=dEl.dataset.dim;return;}
@@ -2592,6 +2596,7 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
  if(G.mode==='pan'){view.tx=G.tx0+dx;view.ty=G.ty0+dy;applyView();}
  else if(G.mode==='band'){G.w1=toWorld(e.clientX,e.clientY);render();}
  else if(G.mode==='wmid'){const o=G.o,[,wy]=toWorld(e.clientX,e.clientY);o.p.ym=gs(wy);if(sel!==o.id){sel=o.id;updateBar();}render();}
+ else if(G.mode==='lymv'){const [wx,wy]=toWorld(e.clientX,e.clientY);state[OKEY()]={x:r2(gs(G.o0.x+wx-G.w0[0])),y:r2(gs(G.o0.y+wy-G.w0[1]))};render();}
  else if(G.mode==='lyr'){const [wx,wy]=toWorld(e.clientX,e.clientY);layResize(G,wx,wy,e.altKey);render();}
  else if(G.mode==='rot'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY);let a=Math.atan2(wy-o.y,wx-o.x)*180/Math.PI+90;
   if(!e.altKey){a=Math.round(a/15)*15;}else{const n=Math.round(a/90)*90;if(Math.abs(a-n)<3)a=n;}o.rot=r2(((a%360)+360)%360);render();}
@@ -2627,6 +2632,7 @@ function guidesSVG(){if(!GUIDES.length)return '';const k=1/view.s,ext=12*k;retur
 function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(pinch){if(P.size<2)pinch=null;G=null;return;}
  if(!G)return;const g=G;G=null;if(g.mode==='meas'){MS.cur=null;measUp(g,e);render();return;}
+ if(g.mode==='lymv'){if(g.moved){commit();renderNow();toast('הדף הוזז');}else renderNow();return;}
  if(g.mode==='lyr'){if(g.moved){commit();renderNow();const L=state[LKEY()];toast(`דף ${L.paper} · קנה מידה 1:${+(+L.scale).toFixed(2)}`);}else renderNow();return;}
  if(g.mode==='rot'){if(g.moved){commit();renderNow();updateBar();toast(`סובב ל-${Math.round(g.o.rot)}°`);}else renderNow();return;}
  if(g.mode==='tip'){if(g.moved){commit();renderNow();}return;}
