@@ -444,6 +444,17 @@ body.uil .tb svg,body.uil .rb svg,body.uil .pb svg,body.uil .tbc svg{stroke-widt
 body.iconsonly #docTabs button{padding:6px 11px}body.iconsonly #docTabs .lic{width:22px;height:22px}
 #docTabs button.on .lic,#sbar button.on .lic{stroke:#000}
 .tb,.rb,.pb,.tab,.wbtn,#docTabs button,#sbar button{border-bottom-width:1px!important}
+/* document-bar menus */
+.ddbtn{display:inline-flex!important;align-items:center;gap:6px}.ddbtn .caret{font-size:11px;opacity:.75}
+.ddbtn.open{border-color:var(--acc)!important;background:#2a1a08!important}body.uil .ddbtn.open{background:#fff1dc!important}
+body.iconsonly .ddbtn .lbl{display:none}
+.ddmenu{position:fixed;z-index:31;min-width:230px;padding:6px;background:var(--card);border:1.5px solid var(--acc);border-radius:4px;box-shadow:0 10px 28px rgba(0,0,0,.55);display:flex;flex-direction:column;gap:3px}
+.ddmenu.hidden{display:none}
+.ddmenu .ddt{font-size:11.5px;font-weight:800;color:var(--acc-light);padding:6px 8px 2px}body.uil .ddmenu .ddt{color:#c2410c}
+.ddmenu button{display:flex!important;align-items:center;gap:10px;width:100%;padding:9px 10px!important;font-size:14px!important;font-weight:700;text-align:right;border-radius:4px;background:none!important;border:1px solid transparent!important;box-shadow:none!important;color:var(--txt)}
+.ddmenu button .lbl{display:inline!important}.ddmenu button .lic{width:20px;height:20px}
+@media (hover:hover){.ddmenu button:hover{background:#2a1a08!important;border-color:var(--acc)!important}body.uil .ddmenu button:hover{background:#fff1dc!important}}
+.ddmenu button.on{background:linear-gradient(180deg,var(--acc-light),var(--acc))!important;color:#000}.ddmenu button.on .lic{stroke:#000}
 </style>
 </head>
 <body>
@@ -451,7 +462,10 @@ body.iconsonly #docTabs button{padding:6px 11px}body.iconsonly #docTabs .lic{wid
 
 <div id="rulX"></div><div id="rulY"></div><div id="xh"></div><div id="yh"></div>
 <div id="sbar"><span id="coord"></span><button data-sb="cross" title="סמן צלב X/Y שזז עם העכבר">✛ סמן צלב</button><button data-sb="axes" title="צירים וסרגלים">📏 צירים</button><button data-sb="terms" title="הדגשת נקודות החיבור">🔵 נקודות</button></div>
-<div id="docTabs"><button id="bNewProj" title="פרויקט חדש">📄 פרויקט חדש</button><button id="bTemplates" title="פרויקט חדש מתבנית (דוגמאות)">🗂 תבנית</button><button id="bOpenProj" title="פתח פרויקט">📂 פתח</button><button id="bSaveCopy" title="שמור עותק בשם">📑 שמור עותק</button><div class="sep"></div><button id="bBom" title="רשימת ציוד (BOM)">📋 BOM</button><button id="bPdf" title="ייצוא PDF עם טבלת שרטוט">📄 PDF</button><button id="bPng" title="ייצוא תמונה (PNG)">🖼️ PNG</button><button id="bDxf" title="ייצוא DXF ל-AutoCAD — שם שומרים כ-DWG">📐 DXF</button><div class="sep"></div><button data-doc="panel">🗄 חזית לוח</button><button data-doc="sld">⚡ חד קווי</button><button data-doc="both">◧ משולב</button><button id="bDark" title="חד קווי: רקע שחור / דף לבן">🌙</button><button id="bLayout" title="הצג / הסתר את דף הייצור (Layout)">📄</button><span id="saveSt"></span></div>
+<div id="docTabs"><button class="ddbtn" id="ddFile" data-dd="mFile" title="קובץ — פרויקט חדש, תבנית, פתח, שמור עותק"><i class="ico" data-ic="open"></i><span class="lbl">קובץ</span><span class="caret">▾</span></button><button class="ddbtn" id="ddExport" data-dd="mExport" title="ייצוא ודוחות — PDF, תמונה, DXF, רשימת ציוד"><i class="ico" data-ic="exp"></i><span class="lbl">ייצוא</span><span class="caret">▾</span></button><button class="ddbtn" id="ddView" data-dd="mView" title="תצוגה — חזית לוח / חד קווי / משולב, בהיר-כהה, דף ייצור"><i class="ico" data-ic="panel"></i><span class="lbl" id="ddViewLbl">חזית לוח</span><span class="caret">▾</span></button><span id="saveSt"></span></div>
+<div class="ddmenu hidden" id="mFile"><div class="ddt">קובץ</div><button id="bNewProj" title="פרויקט חדש">📄 פרויקט חדש</button><button id="bTemplates" title="פרויקט חדש מתבנית (דוגמאות)">🗂 תבנית</button><button id="bOpenProj" title="פתח פרויקט">📂 פתח</button><button id="bSaveCopy" title="שמור עותק בשם">📑 שמור עותק</button></div>
+<div class="ddmenu hidden" id="mExport"><div class="ddt">ייצוא</div><button id="bPdf" title="ייצוא PDF עם טבלת שרטוט">📄 PDF</button><button id="bPng" title="ייצוא תמונה (PNG)">🖼️ PNG</button><button id="bDxf" title="ייצוא DXF ל-AutoCAD — שם שומרים כ-DWG">📐 DXF</button><div class="ddt">דוחות</div><button id="bBom" title="רשימת ציוד (BOM)">📋 BOM</button></div>
+<div class="ddmenu hidden" id="mView"><div class="ddt">מסמך</div><button data-doc="panel">🗄 חזית לוח</button><button data-doc="sld">⚡ חד קווי</button><button data-doc="both">◧ משולב</button><div class="ddt">תצוגה</div><button id="bDark" title="רקע השרטוט: כהה / בהיר">🌙</button><button id="bLayout" title="הצג / הסתר את דף הייצור (Layout)">📄</button></div>
 <div id="favBar"></div>
 <div id="top" class="card">
   <button class="tb" id="bMenu" title="תפריט"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
@@ -1876,7 +1890,7 @@ function isSldObj(o){if(!o)return false;if(state.tab==='sld')return true;if(stat
  if(o.type==='wire')return o.pts.some(p=>p.r&&isSldObj(get(p.r)))||(!o.pts.some(p=>p.r)&&o.pts[0].x>=(state.sldBx??1e9));return false;}
 function syncDoc(){const d=state.tab==='sld'?'sld':state.tab==='both'?'both':'panel';sldDark=!isLight();const key=d+(sldDark?'D':'L');if(key===shownDoc)return;const docChanged=!shownDoc||shownDoc[0]!==key[0]||shownDoc.slice(0,-1)!==d;shownDoc=key;
  document.body.classList.toggle('sld',isLight());
- document.querySelectorAll('button[data-doc]').forEach(b=>b.classList.toggle('on',b.dataset.doc===d));$('bDark').innerHTML=`<i class="ico">${ico(isLight()?'sun':'moon')}</i>`;$('bDark').title=isLight()?'תצוגה בהירה — לחץ לכהה':'תצוגה כהה — לחץ לבהירה';$('bDark').classList.toggle('on',!isLight());
+ document.querySelectorAll('button[data-doc]').forEach(b=>b.classList.toggle('on',b.dataset.doc===d));$('bDark').innerHTML=`<i class="ico">${ico(isLight()?'sun':'moon')}</i><span class="lbl">${isLight()?'רקע בהיר':'רקע כהה'}</span>`;{const v=state.tab==='sld'?'sld':state.tab==='both'?'both':'panel';const L=$('ddViewLbl');if(L)L.textContent={panel:'חזית לוח',sld:'חד קווי',both:'משולב'}[v];const I=document.querySelector('#ddView [data-ic]');if(I&&typeof ico==='function'){I.dataset.ic=v;I.innerHTML=ico(v);}}$('bDark').title=isLight()?'תצוגה בהירה — לחץ לכהה':'תצוגה כהה — לחץ לבהירה';$('bDark').classList.toggle('on',!isLight());
  if(d==='sld'){if(wireColor!=='black'){window._panelWire=wireColor;wireColor='black';}}else if(window._panelWire){wireColor=window._panelWire;window._panelWire=null;}
  if(docChanged){if(curTab!==-1)curTab=LIB.findIndex(inDoc);try{buildFav();}catch(e){}if(pMode==='lib')buildSheet();}applyView();}
 /* Both documents apart: the panel's parts and the diagram's, as they're kept. */
@@ -1895,7 +1909,7 @@ function switchDoc(d){const cur=state.tab==='sld'?'sld':state.tab==='both'?'both
  if(d==='sld'&&!state.objs.length)toast('תרשים חד קווי ריק — הוסף סמלים, או "צור טיוטה מרכיבי הלוח" בהוספת רכיב');
  if(d==='both')toast('משולב: חזית הלוח משמאל, החד קווי מימין — אפשר לערוך את שניהם');}
 function toggleDark(){const v=curView();themes[v]=isLight()?'dark':'light';try{localStorage.setItem('epd.themes',JSON.stringify(themes));}catch(e){}syncDoc();renderNow();toast((isLight()?'תצוגה בהירה':'תצוגה כהה')+' — '+{panel:'חזית לוח',sld:'חד קווי',both:'משולב'}[v]);}
-document.addEventListener('click',e=>{if(!e.target.closest('#docTabs,#rail'))return;
+document.addEventListener('click',e=>{if(!e.target.closest('#docTabs,#rail,.ddmenu'))return;if(e.target.closest('.ddmenu button'))setTimeout(ddClose);
  if(e.target.closest('#bDark')){toggleDark();return;}
  if(e.target.closest('#bLayout')){toggleLayout();return;}
  if(e.target.closest('#bNewProj')){newProject();return;}
@@ -2193,6 +2207,7 @@ const IC={
  bom:'<path d="M3 6l1.5 1.5L7 5M3 12l1.5 1.5L7 11M3 18l1.5 1.5L7 17M11 6h10M11 12h10M11 18h10"/>',
  pdf:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><text x="12" y="17.2" font-size="5.6" font-weight="800" text-anchor="middle" fill="currentColor" stroke="none" font-family="Arial">PDF</text>',
  png:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="1.8"/><path d="M21 15l-5-5L5 21"/>',
+ exp:'<path d="M12 3v11M7.5 9.5L12 14l4.5-4.5"/><path d="M4 16v4h16v-4"/>',
  dxf:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><text x="12" y="17.2" font-size="5.4" font-weight="800" text-anchor="middle" fill="currentColor" stroke="none" font-family="Arial">DXF</text>',
  panel:'<rect x="5" y="2.5" width="14" height="19" rx="1"/><path d="M8 6.5h8M8 10h8M8 13.5h4"/><circle cx="15.5" cy="17" r=".9"/>',
  sld:'<path d="M12 2v5M12 7l-4.5 5.5M12 13v3M5 16h14M8 16v5M16 16v5"/>',
@@ -2207,12 +2222,13 @@ const IC={
 const ico=k=>`<svg viewBox="0 0 24 24" class="lic">${IC[k]}</svg>`;
 function setIcons(){const M={bNewProj:'newp',bTemplates:'tpl',bOpenProj:'open',bSaveCopy:'save',bBom:'bom',bPdf:'pdf',bPng:'png',bDxf:'dxf',bLayout:'page'};
  const lab=b=>(b.querySelector('.lbl')?.textContent||b.title||b.textContent).trim().replace(/^\S+\s+(?=\S)/u,m=>/[\p{L}\d]/u.test(m)?m:'');
- const SL={bNewProj:'פרויקט חדש',bTemplates:'תבנית',bOpenProj:'פתח',bSaveCopy:'שמור עותק',bBom:'BOM',bPdf:'PDF',bPng:'PNG',bDxf:'DXF',bLayout:''};
+ const SL={bNewProj:'פרויקט חדש',bTemplates:'פרויקט חדש מתבנית',bOpenProj:'פתח פרויקט',bSaveCopy:'שמור עותק בשם',bBom:'רשימת ציוד (BOM)',bPdf:'PDF עם טבלת שרטוט',bPng:'תמונה (PNG)',bDxf:'DXF ל-AutoCAD (DWG)',bLayout:'דף ייצור (Layout)'};
+ document.querySelectorAll('.ddbtn [data-ic]').forEach(i=>{i.innerHTML=ico(i.dataset.ic);});
  Object.entries(M).forEach(([id,k])=>{const b=$(id);if(!b||b.dataset.ic)return;const L=SL[id]??lab(b);b.innerHTML=`<i class="ico">${ico(k)}</i>`+(L?`<span class="lbl">${esc(L)}</span>`:'');b.dataset.ic=1;if(L&&!b.title)b.title=L;});
  document.querySelectorAll('button[data-doc]').forEach(b=>{if(b.dataset.ic)return;const L={panel:'חזית לוח',sld:'חד קווי',both:'משולב'}[b.dataset.doc];b.innerHTML=`<i class="ico">${ico(b.dataset.doc)}</i><span class="lbl">${L}</span>`;b.title=L;b.dataset.ic=1;});
  const S={cross:['cross','סמן צלב'],axes:['axes','צירים'],terms:['dots','נקודות']};document.querySelectorAll('#sbar [data-sb]').forEach(b=>{if(b.dataset.ic)return;const [k,L]=S[b.dataset.sb];b.innerHTML=`<i class="ico">${ico(k)}</i><span class="lbl">${L}</span>`;b.dataset.ic=1;});
  const m=$('bMeas');if(m&&!m.dataset.ic){m.querySelector('svg').outerHTML=`<svg viewBox="0 0 24 24">${IC.ruler}</svg>`;m.dataset.ic=1;}
- const d=$('bDark');if(d)d.innerHTML=`<i class="ico">${ico(isLight()?'sun':'moon')}</i>`;}
+ const d=$('bDark');if(d)d.innerHTML=`<i class="ico">${ico(isLight()?'sun':'moon')}</i><span class="lbl">${isLight()?'רקע בהיר':'רקע כהה'}</span>`;}
 const UIFONTS=[['Heebo','Heebo (ברירת מחדל)'],['Rubik','Rubik — עגול ומודגש'],['Assistant','Assistant — דק ונקי'],['Alef','Alef — קלאסי'],['Varela Round','Varela Round — רך'],['Arial','Arial — מערכת']];
 function uiFont(){try{return localStorage.getItem('ohadcad.font')||'Heebo';}catch(e){return 'Heebo';}}
 function uiScale(){try{return +localStorage.getItem('ohadcad.uiscale')||1;}catch(e){return 1;}}
@@ -2233,6 +2249,15 @@ function displayDialog(){const f0=uiFont(),z0=uiScale();
  $('ds_z').onchange=e=>setZ(e.target.value);$('ds_z').oninput=e=>{$('ds_zl').textContent=Math.round(e.target.value*100)+'%';};
  $('mBody').onclick=e=>{const b=e.target.closest('[data-z]');if(b)setZ(b.dataset.z);};}
 applyFontScale();
+
+/* ================= grouped menus in the document bar =================
+   File / Export / View open a small menu under their button; a choice runs and
+   closes it, a click anywhere else closes it. */
+function ddClose(){document.querySelectorAll('.ddmenu').forEach(m=>m.classList.add('hidden'));document.querySelectorAll('.ddbtn.open').forEach(b=>b.classList.remove('open'));}
+document.addEventListener('click',e=>{const b=e.target.closest('.ddbtn');if(b){if(typeof swallowBar!=='undefined'&&swallowBar)return;const m=$(b.dataset.dd),was=!m.classList.contains('hidden');ddClose();if(was)return;
+  const r=b.getBoundingClientRect();m.classList.remove('hidden');b.classList.add('open');const w=m.offsetWidth;m.style.top=(r.bottom+4)+'px';m.style.left=Math.max(6,Math.min(innerWidth-w-6,r.right-w))+'px';return;}
+ if(!e.target.closest('.ddmenu'))ddClose();},true);
+addEventListener('resize',ddClose);document.addEventListener('keydown',e=>{if(e.key==='Escape')ddClose();});
 /* ================= refresh =================
    The shell's ⟳ button and a pull down on the top bars both land here: any
    pending save goes out first, then the whole app reloads. */
