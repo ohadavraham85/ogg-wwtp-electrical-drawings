@@ -1109,6 +1109,14 @@ const SDEF={
   draw:o=>sL(-10,-30,-10,-14)+sL(10,-30,10,-14)+sL(-10,-14,-6,-9)+sL(10,-14,6,-9)+sC(0,1,11)+sT(0,1,'PT',8)+sL(0,12,0,24)+sL(-6,24,6,24)+sLbl(o,30)},
  spi:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'PI1',rating:'0-10 bar',desc:'מד לחץ (מנומטר)'},ratings:['0-2.5 bar','0-6 bar','0-10 bar','0-16 bar'],size:()=>({w:40,h:60}),terms:()=>[],
   draw:o=>sC(0,-6,11)+sT(0,-6,'PI',8)+sL(0,5,0,24)+sL(-6,24,6,24)+sLbl(o,30)},
+ sfe:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'FE1',rating:'DN100',desc:'מד ספיקה (חיישן)'},ratings:['DN50','DN80','DN100','DN150','DN200'],size:()=>({w:50,h:60}),
+  terms:()=>['1','2','3','7','8'].map((l,i)=>[(i-2)*10,-30,l]),
+  draw:o=>{let s=['1','2','3','7','8'].map((l,i)=>sL((i-2)*10,-30,(i-2)*10,-16,1.4)).join('')+sL(-20,-16,20,-16,1.4)+sL(0,-16,0,-11)+sC(0,0,11)+sT(0,0,'FE',8)+sL(-25,22,25,22,2.4)+sL(-8,11,-8,22,1.4)+sL(8,11,8,22,1.4);return s+sLbl(o,40);}},
+ sfit:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'FIT1',rating:'KROHNE IFC 300 W',desc:'ממיר ספיקה (צג נשלף)'},size:()=>({w:60,h:120}),
+  terms:()=>[...['L','N','PE','1','2','3','7','8'].map((l,i)=>[-30,-40+i*10,l]),...['I+','I−','P+','P−'].map((l,i)=>[30,-40+i*10,l])],
+  draw:o=>{let s=sR(-18,-60,36,120)+sT(0,-50,'FIT',8)+sL(-18,-44,18,-44,1);['L','N','PE','1','2','3','7','8'].forEach((l,i)=>{const y=-40+i*10;s+=sL(-30,y,-18,y,1.4)+txt(-16,y,l,4.2,SK,700,'start');});
+   ['I+','I−','P+','P−'].forEach((l,i)=>{const y=-40+i*10;s+=sL(18,y,30,y,1.4)+txt(16,y,l,4.2,SK,700,'end');});
+   const ls=[[o.p.tag,9,700],[o.p.rating,7,400],[o.p.desc,7,400]].filter(l=>l[0]);return s+ls.map((l,i)=>txt(0,-64-(ls.length-1-i)*9.5,l[0],l[1],SK,l[2])).join('');}},
  slamp:{layer:4,sld:true,edit:['tag','rating','desc','color'],def:{tag:'H1',rating:'230V',desc:'נורית סימון',color:'green'},size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sL(0,-30,0,-9)+sL(0,9,0,30)+sC(0,0,9,o.p.color&&o.p.color!=='white'?COLORS[o.p.color]+'55':'#fff')+sL(-6.4,-6.4,6.4,6.4)+sL(-6.4,6.4,6.4,-6.4)+sLbl(o,40)},
  shorn:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'H5',rating:'230V',desc:'צופר / זמזם'},size:()=>({w:40,h:60}),terms:IO,
@@ -1317,6 +1325,8 @@ function cardDraw(o){const kp=o.p.rdr==='kp',{w,h}=cardBody(o),y0=-h/2;
    if(kp){const K=['1','2','3','4','5','6','7','8','9','*','0','#'];K.forEach((k,i)=>{const c=i%3,r=Math.floor(i/3),x=(c-1)*22,y=y0+52+r*17;s+=`<rect x="${x-9}" y="${y-6.5}" width="18" height="13" rx="3" fill="#374151" stroke="#4b5563" stroke-width=".7"/>`+txt(x,y,k,6.5,'#e5e7eb',700);});}
    else s+=txt(0,y0+h-22,'RFID',6,'#94a3b8',700);
    return s;}
+// KROHNE OPTIFLUX installation length / flange outside diameter (mm) by DN
+const KFDN={DN50:[200,165],DN80:[200,200],DN100:[250,220],DN150:[300,285],DN200:[350,340],DN250:[450,405],DN300:[500,460]};
 const MAGL={'180':{w:170,h:40},'280':{w:250,h:48},'500':{w:266,h:73}};
 function wallBox(w,h,r=8){return `<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${r}" fill="${WALLW}" stroke="#8d8d85" stroke-width="1.4"/><rect x="${-w/2+4}" y="${-h/2+4}" width="${w-8}" height="${h-8}" rx="${r-2}" fill="none" stroke="#d6d6cd" stroke-width="1"/>`;}
 function ceeFace(cx,cy,R,poles,col){const pts=poles===5?[[0,-.55],[.52,-.17],[.32,.45],[-.32,.45],[-.52,-.17]]:[[0,-.5],[.45,.3],[-.45,.3]];
@@ -1411,6 +1421,26 @@ const WDEF={
    for(let i=0;i<=10;i++){const a=(-225+i*27)*Math.PI/180,r1=44,r2=i%5?40:36;s+=`<path d="M${r1*Math.cos(a)} ${-5+r1*Math.sin(a)}L${r2*Math.cos(a)} ${-5+r2*Math.sin(a)}" stroke="#111827" stroke-width="${i%5?1:1.8}"/>`;if(i%2===0)s+=txt(30*Math.cos(a),-5+30*Math.sin(a),String(+(mx*i/10).toFixed(1)),6,'#111827',700);}
    const a=(-225+6*27)*Math.PI/180;s+=`<path d="M0 -5L${40*Math.cos(a)} ${-5+40*Math.sin(a)}" stroke="#dc2626" stroke-width="2.4" stroke-linecap="round"/><circle cx="0" cy="-5" r="4" fill="#111827"/>`+txt(0,20,'bar',7,'#374151',700);
    return s+(o.p.tag?txt(0,-68,o.p.tag,8,'#1d4ed8',700):'');}},
+ /* KROHNE electromagnetic flowmeter, remote version: the sensor on the pipe (installation length and flange by DN)
+    and the signal converter with its display on the wall, joined by the signal (1, 2, 3) and field-current (7, 8) cables */
+ kflow:{layer:4,edit:['tag','rating'],def:{tag:'FE1',rating:'DN100'},ratings:['DN50','DN80','DN100','DN150','DN200','DN250','DN300'],
+  size:o=>{const d=KFDN[o.p.rating]||KFDN.DN100;return {w:d[0],h:d[1]+90};},
+  terms:o=>{const d=KFDN[o.p.rating]||KFDN.DN100,H=d[1]+90;return ['1','2','3','7','8'].map((l,i)=>[(i-2)*11,-H/2,l]);},
+  draw:o=>{const [L,D]=KFDN[o.p.rating]||KFDN.DN100,H=D+90,yc=-H/2+90+D/2,fw=Math.max(16,L*.09),bh=D*.86;
+   let s=`<rect x="${-L/2-40}" y="${yc-D*.28}" width="${L+80}" height="${D*.56}" fill="#d1d5db" opacity=".55"/>`;
+   [-1,1].forEach(a=>s+=`<rect x="${a<0?-L/2:L/2-fw}" y="${yc-D/2}" width="${fw}" height="${D}" rx="2" fill="#9ca3af" stroke="#374151" stroke-width="1.3"/>`+[-.36,.36].map(f=>`<circle cx="${a*(L/2-fw/2)}" cy="${yc+f*D}" r="${Math.max(2.5,D*.025)}" fill="#4b5563"/>`).join(''));
+   s+=`<rect x="${-L/2+fw}" y="${yc-bh/2}" width="${L-2*fw}" height="${bh}" rx="6" fill="#1e5aa8" stroke="#0f2f5c" stroke-width="1.4"/><rect x="${-L/2+fw+4}" y="${yc-bh/2+4}" width="${(L-2*fw)*.3}" height="${bh-8}" rx="4" fill="#3b82f6" opacity=".35"/>`+
+    txt(0,yc+bh*.12,'KROHNE',Math.min(14,L*.07),'#fff',800)+txt(0,yc+bh*.3,o.p.rating,Math.min(9,L*.045),'#dbeafe',700);
+   s+=`<rect x="-14" y="${-H/2+66}" width="28" height="${yc-bh/2-(-H/2+66)+2}" fill="#9ca3af" stroke="#374151" stroke-width="1"/><rect x="-40" y="${-H/2+6}" width="80" height="62" rx="5" fill="#1e5aa8" stroke="#0f2f5c" stroke-width="1.3"/><rect x="-34" y="${-H/2+12}" width="68" height="50" rx="3" fill="#2563eb" opacity=".45"/>`+txt(0,-H/2+37,'F',10,'#fff',800);
+   s+=[-20,20].map(x=>`<circle cx="${x}" cy="${-H/2+6}" r="5" fill="#374151"/>`).join('');
+   return s+(o.p.tag?txt(46,-H/2+14,o.p.tag,9,'#1d4ed8',700,'start'):'');}},
+ kconv:{layer:4,edit:['tag','rating'],def:{tag:'FIT1',rating:'IFC 300 W · 230VAC'},ratings:['IFC 300 W · 230VAC','IFC 300 W · 24VDC','IFC 100 W · 230VAC','IFC 100 W · 24VDC'],size:()=>({w:200,h:260}),
+  terms:()=>['L','N','PE','1','2','3','7','8','I+','I−','P+','P−'].map((l,i)=>[-88+i*16,130,l]),
+  draw:o=>{let s=`<rect x="-100" y="-130" width="200" height="260" rx="12" fill="#e5e7eb" stroke="#374151" stroke-width="1.6"/><rect x="-92" y="-122" width="184" height="168" rx="9" fill="#1e5aa8" stroke="#0f2f5c" stroke-width="1.2"/>`+
+   `<rect x="-74" y="-100" width="148" height="86" rx="4" fill="#0b1220"/><rect x="-68" y="-94" width="136" height="74" rx="3" fill="#cfe3f5"/>`+txt(-60,-82,'Q',8,'#0f2f5c',800,'start')+txt(48,-58,'125.4',22,'#0f2f5c',800,'end')+txt(52,-52,'m³/h',8,'#0f2f5c',700,'start')+
+   `<rect x="-60" y="-36" width="120" height="6" rx="2" fill="none" stroke="#0f2f5c" stroke-width="1"/><rect x="-60" y="-36" width="74" height="6" rx="2" fill="#0f2f5c"/>`+[-45,-15,15,45].map(x=>`<circle cx="${x}" cy="16" r="9" fill="#2563eb" stroke="#dbeafe" stroke-width="1.2"/>`).join('')+txt(0,-108,'KROHNE',9,'#fff',800);
+   s+=txt(0,66,(o.p.rating||'').split('·')[0].trim(),9,'#111827',800)+txt(0,80,'צג נשלף · התקנה נפרדת',6.5,'#4b5563',700)+[-60,-20,20,60].map(x=>`<circle cx="${x}" cy="112" r="8" fill="#374151" stroke="#111827" stroke-width="1"/><circle cx="${x}" cy="112" r="3.4" fill="#6b7280"/>`).join('');
+   return s+(o.p.tag?txt(-100,-138,o.p.tag,9,'#1d4ed8',700,'start'):'');}},
  wjb:{layer:4,edit:['tag'],def:{tag:''},size:()=>({w:110,h:110}),
   terms:()=>[...['L1','L2','L3','N','PE'].map((l,i)=>[(i-2)*14,-55,l]),...['L1','L2','L3','N','PE'].map((l,i)=>[(i-2)*14,55,''])],
   draw:o=>{let s=`<rect x="-55" y="-55" width="110" height="110" rx="8" fill="#9ca3af" stroke="#374151" stroke-width="1.6"/><rect x="-46" y="-46" width="92" height="92" rx="6" fill="#b8bec6" stroke="#4b5563" stroke-width="1"/>`;
@@ -1467,7 +1497,7 @@ const LIB=[
   {g:'חיישנים ומפסקי תהליך',items:[{t:'sfloat',n:'מצוף'},{t:'spress',n:'מפסק לחץ'},{t:'sthermo',n:'תרמוסטט'},{t:'slimit',n:'מפסק גבול'}]},
   {g:'סימון',items:[{t:'slamp',n:'נורית ירוקה',p:{color:'green',tag:'H1'}},{t:'slamp',n:'נורית אדומה',p:{color:'red',tag:'H2'}},{t:'slamp',n:'נורית כתומה',p:{color:'orange',tag:'H3'}},{t:'shorn',n:'צופר / זמזם'}]}]},
  {tab:'מדידה וצרכנים',sld:true,groups:[
-  {g:'מדי גובה ולחץ',items:[{t:'sfloat',n:'מצוף (סמל)'},{t:'spt',n:'משדר לחץ (סמל)'},{t:'spi',n:'מד לחץ — מנומטר (סמל)'},{t:'slvlh',n:'מד גובה הידרוסטטי (סמל)'},{t:'sultra',n:'בקר מפלס Pulsar Ultra 4 (סמל)'},{t:'sudb',n:'מתמר אולטרסוני (סמל)'}]},
+  {g:'מדי גובה, לחץ וספיקה',items:[{t:'sfe',n:'מד ספיקה KROHNE — חיישן (סמל)'},{t:'sfit',n:'ממיר ספיקה KROHNE עם צג (סמל)'},{t:'sfloat',n:'מצוף (סמל)'},{t:'spt',n:'משדר לחץ (סמל)'},{t:'spi',n:'מד לחץ — מנומטר (סמל)'},{t:'slvlh',n:'מד גובה הידרוסטטי (סמל)'},{t:'sultra',n:'בקר מפלס Pulsar Ultra 4 (סמל)'},{t:'sudb',n:'מתמר אולטרסוני (סמל)'}]},
   {g:'מדידה',items:[{t:'sct',n:'משנה זרם (CT)'},{t:'svt',n:'משנה מתח (VT)'},{t:'skwh',n:'מונה kWh'},{t:'spm',n:'רב-מודד'},{t:'samm',n:'מד זרם'},{t:'svm',n:'מד מתח'}]},
   {g:'צרכנים',items:[{t:'smot',n:'מנוע תלת-פאזי (U V W)',p:{poles:3}},{t:'smot',n:'מנוע כוכב-משולש (6 הדקים)',p:{poles:6,rating:'30kW'}},{t:'smot',n:'מנוע (קו אחד)'},{t:'slight',n:'תאורה'},{t:'ssock',n:'שקעים'},{t:'sheat',n:'גוף חימום'},{t:'scap',n:'סוללת קבלים'},{t:'sload',n:'לוח משנה / עומס'}]},
   {g:'טקסט',items:[{t:'label',n:'תיבת טקסט',p:{text:'טקסט',fs:9}}]}]},
@@ -1566,8 +1596,9 @@ const LIB=[
    {g:'מפסקים על הקיר',items:[{t:'wsw',n:'מפסק יחיד',p:{sw:'1'}},{t:'wsw',n:'מפסק כפול',p:{sw:'2'}},{t:'wsw',n:'מחליף',p:{sw:'tw'}},{t:'wsw',n:'לחצן',p:{sw:'push'}},{t:'wiso',n:'מפסק בטחון 3P 25A',p:{poles:3,rating:'25A'}},{t:'wiso',n:'מפסק בטחון 4P 63A',p:{poles:4,rating:'63A'}}]},
    {g:'קופסת חיבורים',items:[{t:'wjb',n:'קופסת חיבורים IP65'}]},
    {g:'בקרת כניסה לדלת',items:[{t:'wmag',n:'אלקטרומגנט לנעילת דלת 280 ק"ג',p:{hold:'280'}},{t:'wmag',n:'אלקטרומגנט לנעילת דלת 500 ק"ג',p:{hold:'500'}},{t:'wmag',n:'אלקטרומגנט עם מגע מצב',p:{hold:'280',mon:'1'}},{t:'wcard',n:'קורא כרטיסים',p:{rdr:'card'}},{t:'wcard',n:'קורא כרטיסים + קודן',p:{rdr:'kp'}}]}]},
-  {tab:'מכשור ומדי גובה',icon:'📟',hint:'מצוף: 3 גידים — C, NO, NC. משדר לחץ: 2 גידים 4-20mA. מנומטר: מד מכני בלי חיבור חשמלי. מד גובה הידרוסטטי: גשש שטובלים בבור, 2 גידים 4-20mA. Pulsar Ultra 4: בקר מפלס אולטרסוני על הקיר — הזנה, מתמר (TX, TX0, SC), 4 ממסרים ויציאת 4-20mA בתחתית. המתמר (dB) מותקן מעל המים ומחובר לבקר בכבל.',groups:[
+  {tab:'מכשור ומדי גובה',icon:'📟',hint:'מד ספיקה KROHNE בגרסה מרוחקת: החיישן על הצינור (אורך ואוגן לפי DN), והממיר עם הצג על הקיר — מחברים ביניהם כבל אות (1, 2, 3) וכבל זרם שדה (7, 8). מצוף: 3 גידים — C, NO, NC. משדר לחץ: 2 גידים 4-20mA. מנומטר: מד מכני בלי חיבור חשמלי. מד גובה הידרוסטטי: גשש שטובלים בבור, 2 גידים 4-20mA. Pulsar Ultra 4: בקר מפלס אולטרסוני על הקיר — הזנה, מתמר (TX, TX0, SC), 4 ממסרים ויציאת 4-20mA בתחתית. המתמר (dB) מותקן מעל המים ומחובר לבקר בכבל.',groups:[
    {g:'מדי גובה',items:[{t:'lvlh',n:'מד גובה הידרוסטטי 0-4m'},{t:'lvlh',n:'מד גובה הידרוסטטי 0-10m',p:{rating:'0-10 mH₂O · 4-20mA'}},{t:'ultra4',n:'בקר מפלס Pulsar Ultra 4'},{t:'udb',n:'מתמר אולטרסוני dB6'},{t:'udb',n:'מתמר אולטרסוני dB10',p:{rating:'dB10 · 0.3-10m'}},{t:'lfloat',n:'מצוף מפלס'}]},
+   {g:'מדי ספיקה KROHNE (גרסה מרוחקת — צג נשלף)',items:[{t:'kflow',n:'מד ספיקה KROHNE DN50',p:{rating:'DN50'}},{t:'kflow',n:'מד ספיקה KROHNE DN100'},{t:'kflow',n:'מד ספיקה KROHNE DN150',p:{rating:'DN150'}},{t:'kflow',n:'מד ספיקה KROHNE DN200',p:{rating:'DN200'}},{t:'kconv',n:'ממיר KROHNE IFC 300 עם צג (על הקיר)'}]},
    {g:'מדי לחץ',items:[{t:'ptx',n:'משדר לחץ 0-6 bar'},{t:'ptx',n:'משדר לחץ 0-10 bar',p:{rating:'0-10 bar · 4-20mA'}},{t:'pgauge',n:'מד לחץ (מנומטר) 0-10 bar'},{t:'pgauge',n:'מד לחץ (מנומטר) 0-6 bar',p:{rating:'0-6 bar'}}]}]},
   {tab:'מנועים וכבלים',icon:'⟲',hint:'מנוע: את ההספק ואת מה שמותקן עליו (משאבה צנטריפוגלית, בורג, מפוח, טבולה) בוחרים במאפיינים. כבל: בוחרים אותו כדי לנתב — גוררים קצה, ומה-+ שבאמצע קטע יוצרים כיפוף; את הפתיחה בצד אחד או בשניהם בוחרים במאפיינים.',groups:[
    {g:'מנועים ומשאבות',items:I('מנוע חשמלי','מנוע + משאבה צנטריפוגלית','מנוע + משאבת בורג','מנוע + מפוח','משאבה טבולה')},
@@ -1988,7 +2019,7 @@ function inCab(c,x,y){const g=cabG(c);return x>g.x0&&x<g.x0+g.W&&y>g.y0&&y<g.y0+
 /* Designations by IEC 81346 letter, numbered as parts are added: the next free
    number for that letter in this document (H1, H2… lamps; Q1, Q2… breakers…). A
    designation typed by hand stays as it is. */
-const SERIAL={lfloat:'LS',ptx:'PT',pgauge:'PI',spt:'PT',spi:'PI',lvlh:'LT',ultra4:'LIC',udb:'LE',slvlh:'LT',sultra:'LIC',sudb:'LE',smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
+const SERIAL={kflow:'FE',kconv:'FIT',sfe:'FE',sfit:'FIT',lfloat:'LS',ptx:'PT',pgauge:'PI',spt:'PT',spi:'PI',lvlh:'LT',ultra4:'LIC',udb:'LE',slvlh:'LT',sultra:'LIC',sudb:'LE',smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
  sbrk:'Q',smpcb:'Q',siso:'Q',slbs:'Q',sfsd:'Q',sats:'Q',srcd:'F',sfuse:'F',sol:'F',sspd:'F',scont:'K',svfd:'U',sss:'U',sups:'U',sgen:'G',sbatt:'G',strafo:'T',sct:'T',svt:'T',skwh:'P',spm:'P',samm:'P',svm:'P',scap:'C',smot:'M',stb:'X',scable:'W'};
 function autoTag(o){const pre=SERIAL[o.type];if(!pre||!o.p||!DEF[o.type].edit?.includes('tag'))return;const re=new RegExp('^'+pre+'(\\d+)$');if(o.p.tag&&!re.test(o.p.tag))return;
  const mine=isSldObj(o),used=new Set();state.objs.forEach(q=>{if(q===o||isSldObj(q)!==mine)return;const m=re.exec(q.p?.tag||'');if(m)used.add(+m[1]);});let n=1;while(used.has(n))n++;o.p.tag=pre+n;}
