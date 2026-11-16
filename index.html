@@ -179,11 +179,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 113;
+const VERSION = 114;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'תיקונים מהסריקה: אייקון תצוגה לפני הדפסה, טקסט רמז בלשוניות, שם כפול בספרייה, ושורת הלשוניות בטלפון';
+const WHATS_NEW = 'ממשק מסודר: בלי כפתורים כפולים, שמות ברורים (דלת, התאם למסך, נעל רכיב, מצב צפייה), משולב ורקע כהה/בהיר בשורה התחתונה';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);

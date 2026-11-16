@@ -454,6 +454,8 @@ body.iconsonly #docTabs button{padding:6px 11px}body.iconsonly #docTabs .lic{wid
 .pvbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;background:var(--card);border-bottom:2px solid var(--acc)}.pvbar .pvt{font-size:16px;color:var(--acc-light)}.pvbar .pvinfo{font-size:13px;opacity:.8}.pvbar .wbtn{padding:8px 12px;font-size:14px;font-weight:700}
 .pvpages{flex:1;overflow:auto;padding:18px 20px 34px;display:flex;flex-direction:column;align-items:safe center;gap:30px}
 .pvpage{position:relative;flex:none;width:var(--fw);background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.55)}#pvOv.big .pvpage{width:calc(var(--fw) * 2.2)}.pvpage>svg{display:block;width:100%;height:auto;direction:ltr}.pvn{position:absolute;bottom:-22px;right:0;font-size:12px;color:#d1d5db}
+#rAdd,#bText,#ddView{display:none!important}
+#rail.more{-webkit-mask-image:linear-gradient(to left,#000 82%,transparent);mask-image:linear-gradient(to left,#000 82%,transparent)}
 #bMeas.open{border-color:var(--acc)!important;background:#2a1a08!important}body.uil #bMeas.open{background:#fff1dc!important}
 #mMeas{width:min(330px,calc(100vw - 12px))}#mMeas .mh{font-size:11.5px;font-weight:400;color:var(--muted,#9ca3af);display:block;margin-top:2px;line-height:1.35}#mMeas button{align-items:flex-start!important}#mMeas button.on .mh{color:#2b1600}#mMeas .ml{display:flex;flex-direction:column}
 #bDraw.open{border-color:var(--acc)!important;background:#2a1a08!important}body.uil #bDraw.open{background:#fff1dc!important}
@@ -475,11 +477,11 @@ body.iconsonly .ddbtn .lbl{display:none}
 
 <div id="rulX"></div><div id="rulY"></div><div id="xh"></div><div id="yh"></div>
 <div id="lyTabs"></div>
-<div id="sbar"><span id="coord"></span><button data-sb="cross" title="סמן צלב X/Y שזז עם העכבר">✛ סמן צלב</button><button data-sb="axes" title="צירים וסרגלים">📏 צירים</button><button data-sb="terms" title="הדגשת נקודות החיבור">🔵 נקודות</button></div>
+<div id="sbar"><button id="bDark" title="רקע השרטוט: כהה / בהיר"></button><span id="coord"></span><button data-sb="cross" title="סמן צלב X/Y שזז עם העכבר">✛ סמן צלב</button><button data-sb="axes" title="צירים וסרגלים">📏 צירים</button><button data-sb="terms" title="הדגשת נקודות החיבור">🔵 נקודות</button></div>
 <div id="docTabs"><button class="ddbtn" id="ddFile" data-dd="mFile" title="קובץ — פרויקט חדש, תבנית, פתח, שמור עותק"><i class="ico" data-ic="open"></i><span class="lbl">קובץ</span><span class="caret">▾</span></button><button class="ddbtn" id="ddExport" data-dd="mExport" title="ייצוא ודוחות — PDF, תמונה, DXF, רשימת ציוד"><i class="ico" data-ic="exp"></i><span class="lbl">ייצוא</span><span class="caret">▾</span></button><button class="ddbtn" id="ddView" data-dd="mView" title="תצוגה — חזית לוח / חד קווי / משולב, בהיר-כהה, דף ייצור"><i class="ico" data-ic="panel"></i><span class="lbl" id="ddViewLbl">חזית לוח</span><span class="caret">▾</span></button><span id="saveSt"></span></div>
 <div class="ddmenu hidden" id="mFile"><div class="ddt">קובץ</div><button id="bNewProj" title="פרויקט חדש">📄 פרויקט חדש</button><button id="bTemplates" title="פרויקט חדש מתבנית (דוגמאות)">🗂 תבנית</button><button id="bOpenProj" title="פתח פרויקט">📂 פתח</button><button id="bSaveCopy" title="שמור עותק בשם">📑 שמור עותק</button><div class="ddt">רקע לשרטוט</div><button id="bUlImp" title="ייבוא תמונה, עמוד PDF או קובץ DXF כרקע לשרטוט מעליו">🖼 ייבוא תמונה / PDF / DXF</button><button id="bUlMgr" title="נעילה, שקיפות, כיול ומחיקה של תמונות הרקע">🗂 תמונות רקע…</button></div>
 <div class="ddmenu hidden" id="mExport"><div class="ddt">ייצוא</div><button id="bPreview" title="תצוגה לפני הדפסה — רואים את הדפים לפני שמורידים או מדפיסים">👁 תצוגה לפני הדפסה</button><button id="bPdf" title="ייצוא PDF עם טבלת שרטוט">📄 PDF</button><button id="bPng" title="ייצוא תמונה (PNG)">🖼️ PNG</button><button id="bDxf" title="ייצוא DXF ל-AutoCAD — שם שומרים כ-DWG">📐 DXF</button><div class="ddt">דוחות</div><button id="bBom" title="רשימת ציוד (BOM)">📋 BOM</button></div>
-<div class="ddmenu hidden" id="mView"><div class="ddt">מסמך</div><button data-doc="panel">🗄 חזית לוח</button><button data-doc="sld">⚡ חד קווי</button><button data-doc="both">◧ משולב</button><div class="ddt">תצוגה</div><button id="bDark" title="רקע השרטוט: כהה / בהיר">🌙</button><button id="bLayout" title="הצג / הסתר את דף הייצור (Layout)">📄</button></div>
+
 <div class="ddmenu hidden" id="mDraw"></div>
 <div class="ddmenu hidden" id="mMeas"></div>
 <div id="favBar"></div>
@@ -496,14 +498,14 @@ body.iconsonly .ddbtn .lbl{display:none}
     <div class="sep"></div>
     <button class="rb" id="bDup"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="13" rx="1.5"/><path d="M5 16V4.5A1.5 1.5 0 0 1 6.5 3H16"/></svg><span>שכפול</span></button>
     <button class="rb" id="bRot"><svg viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4.6h-4.6"/></svg><span>סיבוב</span></button>
-    <button class="rb" id="bLock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1.5" fill="#fff"/><path id="lockShackle" d="M8 11V8a4 4 0 0 1 7.6-1.7"/></svg><span id="lockLbl">נעילה</span></button>
+    <button class="rb" id="bLock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1.5" fill="#fff"/><path id="lockShackle" d="M8 11V8a4 4 0 0 1 7.6-1.7"/></svg><span id="lockLbl">נעל רכיב</span></button>
     <button class="rb dng" id="bDel"><svg viewBox="0 0 24 24"><path d="M5 7h14M9 7V4.5h6V7M7 7l1 13h8l1-13"/></svg><span>מחיקה</span></button>
     <div class="sep"></div>
-    <button class="rb" id="bFit"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>הכל</span></button>
+    <button class="rb" id="bFit"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>התאם למסך</span></button>
     <button class="rb" id="bGrid"><b id="gridLbl"></b><span>גריד</span></button>
     <div class="sep"></div>
-    <button class="rb" id="bDoor" title="דלת הלוח: פנים / חזית"><svg viewBox="0 0 24 24"><path d="M6 21V3.5h12V21"/><path d="M3.5 21h17"/><circle cx="15" cy="12.5" r="1" fill="#fff"/></svg><span id="doorLbl">חזית</span></button>
-    <button class="rb" id="bLockAll" title="נעל עריכה (צפייה בלבד)"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg><span>צפייה</span></button>
+    <button class="rb" id="bDoor" title="דלת הלוח: פנים / חזית"><svg viewBox="0 0 24 24"><path d="M6 21V3.5h12V21"/><path d="M3.5 21h17"/><circle cx="15" cy="12.5" r="1" fill="#fff"/></svg><span id="doorLbl">דלת</span></button>
+    <button class="rb" id="bLockAll" title="נעל עריכה (צפייה בלבד)"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg><span>מצב צפייה</span></button>
     <button class="rb" id="bHelp" title="עזרה"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7v.5"/><circle cx="12" cy="17.2" r=".6" fill="#fff"/></svg><span>עזרה</span></button>
   </div>
   <div class="sep"></div>
@@ -1520,7 +1522,7 @@ const WDEF={
  /* level measurement: hydrostatic probe, Pulsar Ultra 4 controller and its ultrasonic transducer (sizes in mm) */
  lvlh:{layer:4,edit:['tag','rating'],def:{tag:'LT1',rating:'0-4 mH₂O · 4-20mA'},ratings:['0-1 mH₂O · 4-20mA','0-4 mH₂O · 4-20mA','0-10 mH₂O · 4-20mA','0-20 mH₂O · 4-20mA'],size:()=>({w:40,h:230}),
   terms:()=>[[-6,-115,'+'],[6,-115,'−']],
-  draw:o=>{let s=`<path d="M0 -112V-60" stroke="#111827" stroke-width="6" stroke-linecap="round"/><rect x="-12.5" y="-62" width="25" height="150" rx="5" fill="#cbd5e1" stroke="#475569" stroke-width="1.3"/><rect x="-12.5" y="-62" width="8" height="150" rx="4" fill="#e2e8f0" opacity=".8"/>`+
+  draw:o=>{let s=`<path d="M0 -112V-60" stroke="#4b5563" stroke-width="6" stroke-linecap="round"/><rect x="-12.5" y="-62" width="25" height="150" rx="5" fill="#cbd5e1" stroke="#475569" stroke-width="1.3"/><rect x="-12.5" y="-62" width="8" height="150" rx="4" fill="#e2e8f0" opacity=".8"/>`+
    `<rect x="-14" y="-66" width="28" height="12" rx="2" fill="#94a3b8" stroke="#475569" stroke-width="1"/><path d="M-12.5 86h25v20a12.5 6 0 0 1 -25 0z" fill="#64748b" stroke="#334155" stroke-width="1"/>`+[-6,0,6].map(x=>`<circle cx="${x}" cy="98" r="1.8" fill="#1e293b"/>`).join('');
    s+=`<g transform="rotate(-90 3 14)">${txt(3,14,(o.p.rating||'').split('·')[0].trim(),6.5,'#1e293b',800)}</g>`+txt(0,-90,'4-20mA',4.5,'#475569',700);
    return s+(o.p.tag?txt(16,-100,o.p.tag,8,'#1d4ed8',700,'start'):'');}},
@@ -1534,14 +1536,14 @@ const WDEF={
    return s+(o.p.tag?txt(-117.5,-100,o.p.tag,9,'#1d4ed8',700,'start'):'');}},
  udb:{layer:4,edit:['tag','rating'],def:{tag:'LE1',rating:'dB6 · 0.3-6m'},ratings:['dB3 · 0.125-3m','dB6 · 0.3-6m','dB10 · 0.3-10m','dB15 · 0.5-15m'],size:()=>({w:96,h:190}),
   terms:()=>[[-12,-95,'TX'],[0,-95,'TX0'],[12,-95,'SC']],
-  draw:o=>{let s=`<path d="M0 -92V-62" stroke="#111827" stroke-width="7" stroke-linecap="round"/><path d="M-14 -64h28l3 10h-34z" fill="#475569" stroke="#1f2937" stroke-width="1"/>`+
+  draw:o=>{let s=`<path d="M0 -92V-62" stroke="#4b5563" stroke-width="7" stroke-linecap="round"/><path d="M-14 -64h28l3 10h-34z" fill="#475569" stroke="#1f2937" stroke-width="1"/>`+
    `<rect x="-22" y="-54" width="44" height="30" fill="#6b7280" stroke="#1f2937" stroke-width="1"/>`+[-44,-38,-32].map(y=>`<path d="M-22 ${y}h44" stroke="#374151" stroke-width="1.4"/>`).join('')+
    `<path d="M-40 -24h80v44a8 8 0 0 1 -8 8h-64a8 8 0 0 1 -8 -8z" fill="#9ca3af" stroke="#1f2937" stroke-width="1.3"/><rect x="-36" y="24" width="72" height="5" rx="2" fill="#1f2937"/>`+txt(0,-2,(o.p.rating||'').split('·')[0].trim(),9,'#111827',800)+
    `<g fill="none" stroke="#3b82f6" stroke-width="1.6" stroke-dasharray="5 4" opacity=".8">${[14,30,46].map(r=>`<path d="M${-r*1.4} ${32+r*.6}q${r*1.4} ${r*.8} ${r*2.8} 0"/>`).join('')}</g>`;
    return s+(o.p.tag?txt(28,-80,o.p.tag,8,'#1d4ed8',700,'start'):'');}},
  lfloat:{layer:4,edit:['tag','rating'],def:{tag:'LS1',rating:'NO/NC 10A 250V'},ratings:['NO/NC 10A 250V','NO 10A 250V','NC 10A 250V'],size:()=>({w:110,h:210}),
   terms:()=>[[-10,-105,'C'],[0,-105,'NO'],[10,-105,'NC']],
-  draw:o=>{let s=`<path d="M0 -102V-20" stroke="#111827" stroke-width="6" stroke-linecap="round"/><rect x="-7" y="-28" width="14" height="14" rx="2" fill="#374151"/>`+
+  draw:o=>{let s=`<path d="M0 -102V-20" stroke="#4b5563" stroke-width="6" stroke-linecap="round"/><rect x="-7" y="-28" width="14" height="14" rx="2" fill="#374151"/>`+
    `<path d="M0 -16C30 -16 52 20 52 52C52 84 30 104 0 104C-30 104 -52 84 -52 52C-52 20 -30 -16 0 -16Z" fill="#374151" stroke="#111827" stroke-width="1.6"/><path d="M-30 6C-42 24 -46 44 -44 60" fill="none" stroke="#6b7280" stroke-width="5" stroke-linecap="round" opacity=".7"/>`+txt(0,56,'מצוף',11,'#e5e7eb',800)+txt(0,72,(o.p.rating||'').split(' ')[0],7,'#cbd5e1',700);
    return s+(o.p.tag?txt(10,-90,o.p.tag,8,'#1d4ed8',700,'start'):'');}},
  ptx:{layer:4,edit:['tag','rating'],def:{tag:'PT1',rating:'0-6 bar · 4-20mA'},ratings:['0-1 bar · 4-20mA','0-6 bar · 4-20mA','0-10 bar · 4-20mA','0-16 bar · 4-20mA','0-25 bar · 4-20mA'],size:()=>({w:44,h:150}),
@@ -1632,7 +1634,7 @@ const WDEF={
   size:o=>{const m=proxM(o);return {w:m+16,h:m*3.2+70+cabX(o)};},
   terms:o=>{const {h}=(DEF.prox.size0||DEF.prox.size)(o);return [[-8,-h/2,'+'],[0,-h/2,'−'],[8,-h/2,'OUT']];},
   draw:o=>{const m=proxM(o),{h}=(DEF.prox.size0||DEF.prox.size)(o),T=-h/2,cap=o.p.px==='cap',bl=m*3.2,y0=T+60+cabX(o),y1=y0+bl;
-   let s=`<path d="M0 ${T+4}V${y0}" stroke="#1f2937" stroke-width="${Math.max(4,m*.3)}" stroke-linecap="round"/>`+[['#92400e',-8],['#2563eb',0],['#111827',8]].map(([c,x])=>`<path d="M${x} ${T+2}V${T+14}" stroke="${c}" stroke-width="2.2"/>`).join('')+
+   let s=`<path d="M0 ${T+4}V${y0}" stroke="#4b5563" stroke-width="${Math.max(4,m*.3)}" stroke-linecap="round"/>`+[['#92400e',-8],['#2563eb',0],['#111827',8]].map(([c,x])=>`<path d="M${x} ${T+2}V${T+14}" stroke="${c}" stroke-width="2.2"/>`).join('')+
     `<rect x="${-m/2}" y="${y0}" width="${m}" height="${bl}" fill="${cap?'#d1d5db':'#c0c4c8'}" stroke="#4b5563" stroke-width="1"/>`;
    for(let y=y0+4;y<y1-6;y+=3)s+=`<path d="M${-m/2} ${y}h${m}" stroke="#6b7280" stroke-width=".5" opacity=".7"/>`;
    [y0+bl*.18,y0+bl*.62].forEach(y=>s+=`<rect x="${-m/2-6}" y="${y}" width="${m+12}" height="${m*.35}" rx="1" fill="#9ca3af" stroke="#4b5563" stroke-width=".8"/>`);
@@ -2300,7 +2302,7 @@ function switchDoc(d){const cur=state.tab==='sld'?'sld':state.tab==='both'?'both
  if(d==='sld'&&!state.objs.length)toast('תרשים חד קווי ריק — הוסף סמלים, או "צור טיוטה מרכיבי הלוח" בהוספת רכיב');
  if(d==='both')toast('משולב: חזית הלוח משמאל, החד קווי מימין — אפשר לערוך את שניהם');}
 function toggleDark(){const v=curView();themes[v]=isLight()?'dark':'light';try{localStorage.setItem('epd.themes',JSON.stringify(themes));}catch(e){}syncDoc();renderNow();toast((isLight()?'תצוגה בהירה':'תצוגה כהה')+' — '+{panel:'חזית לוח',sld:'חד קווי',both:'משולב'}[v]);}
-document.addEventListener('click',e=>{if(!e.target.closest('#docTabs,#rail,.ddmenu'))return;if(e.target.closest('.ddmenu button'))setTimeout(ddClose);
+document.addEventListener('click',e=>{if(!e.target.closest('#docTabs,#rail,.ddmenu,#sbar'))return;if(e.target.closest('.ddmenu button'))setTimeout(ddClose);
  if(e.target.closest('#bDark')){toggleDark();return;}
  if(e.target.closest('#bLayout')){toggleLayout();return;}
  if(e.target.closest('#bNewProj')){newProject();return;}
@@ -2398,7 +2400,7 @@ function saveProjects(p){try{localStorage.setItem('epd.projects',JSON.stringify(
 
 /* ================= UI: top bar ================= */
 function updateBar(){const o=sel&&get(sel);{const df=doorsFront();$('bDoor').disabled=df===null;$('bDoor').classList.toggle('on',df===true);$('bDoor').title=df?'הצג את פנים הלוח':'הצג את חזית הלוח (דלת סגורה)';}$('bLockAll').classList.toggle('on',globalLock);$('bText').disabled=wireMode||globalLock;{const o2=sel&&get(sel);$('bText').title=o2&&o2.type!=='wire'&&o2.type!=='label'?'הוסף תיבת טקסט ל'+o2.p.name:'הוסף תיבת טקסט';}$('bLockAll').title=globalLock?'פתח עריכה':'נעל עריכה (צפייה בלבד)';['bDel','bLock','bRot','bDup'].forEach(b=>$(b).disabled=!o||wireMode);$('rWire').classList.toggle('on',wireMode);$('bMeas').classList.toggle('on',!!measMode);if(pMode!=='lib')DRAWOPEN=false;$('rAdd').classList.toggle('on',pMode==='lib'&&!DRAWOPEN);$('bDraw').classList.toggle('on',pMode==='lib'&&DRAWOPEN);$('rProps').classList.toggle('on',pMode==='props');$('libStrip').classList.toggle('on',pMode==='lib');
- if(o)$('lockLbl').textContent=o.locked?'שחרור':'נעילה';
+ if(o)$('lockLbl').textContent=o.locked?'שחרר רכיב':'נעל רכיב';
  if(o){$('selName').textContent=o.type==='wire'?`חוט ${WCOL[o.p.color]?.n||''} ${o.p.sec} ממ"ר`:(o.p.name+(o.p.tag&&o.type!=='label'?' · '+o.p.tag:''));
   $('selThumb').innerHTML=o.type==='wire'?`<svg viewBox="0 0 24 24"><path d="M3 18C9 18 9 6 21 6" stroke="${WCOL[o.p.color]?.base}" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>`:thumbSVG(Object.assign({},o,{p:Object.assign({},o.p,THUMBP[o.type]||{})}));
   $('lockShackle').setAttribute('d',o.locked?'M8 11V8a4 4 0 0 1 8 0v3':'M8 11V8a4 4 0 0 1 7.6-1.7');
@@ -2528,7 +2530,7 @@ function favFind(k,n){for(let ti=0;ti<LIB.length;ti++){const T=LIB[ti];if(!!T.sl
 function buildFav(){const B=$('favBar');if(!B)return;const ks=state.tab==='both'?['panel','sld']:[state.tab==='sld'?'sld':'panel'];let h='<span class="favlbl">★ מועדפים</span>',n=0;
  ks.forEach(k=>favList(k).forEach(name=>{const f=favFind(k,name);if(!f)return;const [ti,gi,ii,e]=f;n++;
   h+=`<button class="item fav" data-t="${ti}" data-g="${gi}" data-ii="${ii}" title="${esc(e.n)}\nלחיצה מוסיפה · גרירה ממקמת" aria-label="${esc(e.n)}"><div class="th${DEF[e.t]?.sld?' lt':''}">${thumbOf(e)}</div><div class="nm">${esc(e.n)}</div><span class="favx" data-unfav="${esc(e.n)}" data-fk="${k}" title="הסר מהמועדפים">×</span></button>`;}));
- if(!n)h+=`<span class="favhint">סמן ☆ ליד רכיבים בחלון "הוסף רכיב" כדי להוסיף אותם לכאן (עד ${FAVMAX})</span>`;
+ if(!n)h+=`<span class="favhint">סמן ☆ ברכיבים בספרייה כדי להוסיף לכאן (עד ${FAVMAX})</span>`;
  B.innerHTML=h;}
 $('favBar').addEventListener('click',e=>{const x=e.target.closest('[data-unfav]');if(x){e.stopPropagation();favToggle(x.dataset.fk,x.dataset.unfav);if(pMode==='lib')buildSheet();return;}
  const it=e.target.closest('.item');if(it&&!LDSW)addItem(LIB[+it.dataset.t].groups[+it.dataset.g].items[+it.dataset.ii]);});
@@ -2806,14 +2808,16 @@ function layEdit(id){laySync();const e=state.lays.find(x=>x.id===id);if(!e)retur
    {t:'⚙ גודל וקנה מידה…',fn:()=>{e.name=$('ly_name').value.trim()||e.name;layShow(id);setTimeout(layoutDialog,30);}},
    {t:'🗑 מחק דף',fn:()=>{state.lays=state.lays.filter(x=>x.id!==id);LAYDOC.forEach(([,lk])=>{if(state[lk]&&state[lk].lid===id){delete state[lk];const nx=state.lays.find(x=>x.d===e.d);if(nx){const [,lk2]=LAYDOC.find(x=>x[0]===nx.d);state[lk2]={on:0,paper:nx.paper,orient:nx.orient,scale:nx.scale,lid:nx.id};}}});commit();renderNow();toast('הדף נמחק');}},{t:'ביטול'}]);}
 let LYSIG='';function buildLayTabs(){const B=$('lyTabs');if(!B)return;laysInit();laySync();const a=layActive(),one=state.tab!=='both';const sig=JSON.stringify([a,curDoc(),state.lays.map(e=>[e.id,e.d,e.name,e.paper,e.scale])]);if(sig===LYSIG&&B.firstChild)return;LYSIG=sig;
- const cd=curDoc();let h=[['panel','🗄 חזית לוח'],['sld','⚡ חד קווי']].map(([d,l])=>`<button data-ly="m:${d}" class="doc${cd===d&&!a?' on':''}${cd===d&&a?' cur':''}" title="${d==='sld'?'חד קווי':'חזית לוח'} — השרטוט עצמו (מודל), בלי דף">${l}</button>`).join('')+'<span class="lysep"></span>';
+ const cd=curDoc();let h=[['panel','🗄 חזית לוח'],['sld','⚡ חד קווי'],['both','◧ משולב']].map(([d,l])=>`<button data-ly="m:${d}" class="doc${cd===d&&!a?' on':''}${cd===d&&a?' cur':''}" title="${{panel:'חזית לוח',sld:'חד קווי',both:'חזית וחד קווי יחד'}[d]} — השרטוט עצמו, בלי דף">${l}</button>`).join('')+'<span class="lysep"></span>';
  state.lays.forEach(e=>{h+=`<button data-ly="${e.id}" class="${a===e.id?'on':''}" title="${esc(e.name)} — ${e.d==='sld'?'חד קווי':'חזית לוח'} · ${e.paper} 1:${e.scale}\nלחיצה כפולה: שם, הגדרות, מחיקה">${e.d==='sld'?'⚡':'🗄'} <bdi>${esc(e.name)}</bdi><small dir="ltr">${e.paper} 1:${e.scale}</small></button>`;});
  h+=`<button class="add" data-ly="add" title="דף ייצור חדש">＋</button>`;B.innerHTML=h;layPos();}
 function layPos(){const B=$('lyTabs'),sb=$('sbar');if(!B||!sb)return;const r=sb.getBoundingClientRect(),cs=getComputedStyle(sb);
  if(cs.display==='none'||!r.width){B.style.left='max(26px,env(safe-area-inset-left))';B.style.bottom=cs.bottom;B.style.height='';B.classList.remove('glued');}
  else if(innerWidth<700){B.style.left=r.left+'px';B.style.bottom=(parseFloat(cs.bottom)+r.height+4)+'px';B.style.height='';B.classList.remove('glued');B.style.maxWidth=`calc(100vw - ${Math.round(r.left)+70}px)`;return;}else{B.style.left=(r.right-1.5)+'px';B.style.bottom=cs.bottom;B.style.height=r.height+'px';B.classList.add('glued');}
  B.style.maxWidth=`calc(100vw - ${Math.round((r.width?r.right:26)+6+86)}px)`;}
-addEventListener('resize',layPos);try{document.fonts.ready.then(layPos);}catch(e){}setTimeout(layPos,800);
+addEventListener('resize',layPos);
+function railHint(){const r=$('rail');if(!r)return;const over=r.scrollWidth-r.clientWidth;r.classList.toggle('more',over>4&&Math.abs(r.scrollLeft)<over-4);}
+try{$('rail').addEventListener('scroll',railHint,{passive:true});addEventListener('resize',railHint);setTimeout(railHint,600);setTimeout(railHint,2000);}catch(e){}try{document.fonts.ready.then(layPos);}catch(e){}setTimeout(layPos,800);
 let lyLast=null,lyT=0;
 $('lyTabs').addEventListener('click',e=>{const b=e.target.closest('[data-ly]');if(!b)return;const k=b.dataset.ly,now=Date.now();
  if(k===lyLast&&now-lyT<450&&k!=='add'&&!k.startsWith('m:')){lyLast=null;layEdit(k);return;}lyLast=k;lyT=now;
@@ -2844,7 +2848,7 @@ function layResize(g,wx,wy,free){const R=g.R0,{W,H,x0,y0,x1,y1}=R,h=g.h;let n,ox
 // probes drawn at a fixed size: the extra cable is added above them
 [['lvlh',6],['lfloat',6],['udb',7]].forEach(([k,cw])=>{const D=DEF[k];if(!D)return;const s0=D.size,t0=D.terms,d0=D.draw;D.edit=[...D.edit,'cl'];
  D.size=o=>{const z=s0(o);return {w:z.w,h:z.h+cabX(o)};};D.terms=o=>t0(o).map(([x,y,l])=>[x,r2(y-cabX(o)/2),l]);
- D.draw=o=>{const E=cabX(o);if(!E)return d0(o);const h0=s0(o).h;return `<path d="M0 ${-h0/2-E/2+3}V${-h0/2+E/2+6}" stroke="#111827" stroke-width="${cw}" stroke-linecap="round"/><g transform="translate(0 ${E/2})">${d0(o)}</g>`;};});
+ D.draw=o=>{const E=cabX(o);if(!E)return d0(o);const h0=s0(o).h;return `<path d="M0 ${-h0/2-E/2+3}V${-h0/2+E/2+6}" stroke="#4b5563" stroke-width="${cw}" stroke-linecap="round"/><g transform="translate(0 ${E/2})">${d0(o)}</g>`;};});
 
 /* Sensors with a moulded cable (proximity, hydrostatic, float, ultrasonic): the body stays at the part's
    centre and the cable leaves its top along a route of points, bent like a cable (rounded bends); its cores
@@ -2859,7 +2863,7 @@ Object.keys(CABRT).forEach(k=>{const D=DEF[k];if(!D)return;const s0=D.size,t0=D.
  D.terms=o=>{const {e,nx,ny}=senEnd(o),h0=s0(o).h;return t0(o).map(([x,y,l])=>[r2(e.x+nx*x),r2(e.y+ny*x),l]);};
  D.size=o=>{const z=s0(o),R=cabRoute(o),m=CABRT[k]+4;let X=z.w/2,Y=z.h/2;R.forEach(p=>{X=Math.max(X,Math.abs(p.x)+m);Y=Math.max(Y,Math.abs(p.y)+m);});D.terms(o).forEach(([x,y])=>{X=Math.max(X,Math.abs(x)+6);Y=Math.max(Y,Math.abs(y)+6);});return {w:r2(2*X),h:r2(2*Y)};};
  D.draw=o=>{const R=cabRoute(o),{e,dx,dy,nx,ny}=senEnd(o),cw=CABRT[k],T=t0(o),C=SCORE[k]||[];let s=d0(o);
-  if(senLen(o)>.5)s+=`<path d="${cabPathD(o)}" fill="none" stroke="#111827" stroke-width="${cw}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  if(senLen(o)>.5)s+=`<path d="${cabPathD(o)}" fill="none" stroke="#4b5563" stroke-width="${cw}" stroke-linecap="round" stroke-linejoin="round"/>`;
   T.forEach(([x],i)=>{const tx=e.x+nx*x,ty=e.y+ny*x,bx=e.x-dx*8+nx*x*.25,by=e.y-dy*8+ny*x*.25;s+=`<path d="M${r2(e.x-dx*10)} ${r2(e.y-dy*10)}L${r2(bx)} ${r2(by)}L${r2(tx)} ${r2(ty)}" fill="none" stroke="${C[i]||'#374151'}" stroke-width="2" stroke-linejoin="round"/>`;});
   return s;};});
 /* ================= background picture (underlay) =================
@@ -3426,7 +3430,7 @@ function wireLen(w){const ps=w.pts.map(resolve).filter(Boolean);let L=0;for(let 
 
 /* ================= drawer / menu ================= */
 function openDrawer(){const items=[['פרויקט'],['📄 פרויקט חדש',newProject],['🗂 פרויקט חדש מתבנית (דוגמאות)',templatesDialog],...(SH?[['📂 פתח מהתיקייה המשותפת',openShared],['💾 שמור עכשיו (נשמר גם אוטומטית)',saveShared],['📑 שמור עותק בשם…',()=>saveSharedAs(true)]]:[['📂 פתח פרויקט שמור',openProjects],['💾 שמור בשם…',saveAs]]),
- ['תצוגה'],['⚙ הגדרות תצוגה — גופן והגדלה…',displayDialog],[uiLight()?'🌙 מצב כהה לאפליקציה':'☀ מצב בהיר לאפליקציה',toggleUI],['🧩 הסתרת כפתורים / איפוס הסרגלים…',tbEditor],['📄 דף ייצור (Layout)…',layoutDialog],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
+ ['תצוגה'],['⚙ הגדרות תצוגה — גופן והגדלה…',displayDialog],[uiLight()?'🌙 מצב כהה לאפליקציה':'☀ מצב בהיר לאפליקציה',toggleUI],['🧩 הסתרת כפתורים / איפוס הסרגלים…',tbEditor],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
  ['רקע לשרטוט'],['🖼 ייבוא תמונה / PDF / DXF כרקע',ulImport],['🗂 תמונות רקע — נעילה, שקיפות, כיול…',ulManager],['ייצוא ושיתוף'],['📋 רשימת ציוד (BOM)',bom],['👁 תצוגה לפני הדפסה',printPreview],['📄 ייצוא PDF עם טבלת שרטוט',pdfDialog],['🖼️ ייצוא תמונה (PNG)',exportImage],['📐 ייצוא DXF ל-AutoCAD (נשמר כ-DWG)',dxfExport],['💾 הורד קובץ פרויקט (JSON)',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state))],['📤 העתק קובץ פרויקט',copyJSON],['📥 ייבוא קובץ פרויקט',importJSON],...(SH&&SH.menu?[['OhadCad'],...SH.menu()]:[])];
  $('dbox').innerHTML=`<div style="display:flex;align-items:center;justify-content:flex-end;margin:4px 8px 0"><img src="icons/wordmark-${uiLight()?'light':'dark'}.svg" alt="OhadCad" height="26"></div><h2>${esc(state.name)}</h2>`+items.map((it,i)=>it[1]?`<button data-i="${i}">${it[0]}</button>`:`<div style="color:#8a8a8a;font-size:13px;margin:12px 12px 2px">${it[0]}</div>`).join('');
  $('drawer').classList.remove('hidden');$('dbox').onclick=e=>{const b=e.target.closest('button');if(!b)return;$('drawer').classList.add('hidden');items[+b.dataset.i][1]();};}
