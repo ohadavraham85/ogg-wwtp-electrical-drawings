@@ -456,6 +456,7 @@ body.iconsonly #docTabs button{padding:6px 11px}body.iconsonly #docTabs .lic{wid
 .pvpage{position:relative;flex:none;width:var(--fw);background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.55)}#pvOv.big .pvpage{width:calc(var(--fw) * 2.2)}.pvpage>svg{display:block;width:100%;height:auto;direction:ltr}.pvn{position:absolute;bottom:-22px;right:0;font-size:12px;color:#d1d5db}
 #rAdd,#bText,#ddView{display:none!important}
 #rail.more{-webkit-mask-image:linear-gradient(to left,#000 82%,transparent);mask-image:linear-gradient(to left,#000 82%,transparent)}
+#bOrder.open{border-color:var(--acc)!important;background:#2a1a08!important}body.uil #bOrder.open{background:#fff1dc!important}
 #bMeas.open{border-color:var(--acc)!important;background:#2a1a08!important}body.uil #bMeas.open{background:#fff1dc!important}
 #mMeas{width:min(330px,calc(100vw - 12px))}#mMeas .mh{font-size:11.5px;font-weight:400;color:var(--muted,#9ca3af);display:block;margin-top:2px;line-height:1.35}#mMeas button{align-items:flex-start!important}#mMeas button.on .mh{color:#2b1600}#mMeas .ml{display:flex;flex-direction:column}
 #bDraw.open{border-color:var(--acc)!important;background:#2a1a08!important}body.uil #bDraw.open{background:#fff1dc!important}
@@ -484,6 +485,7 @@ body.iconsonly .ddbtn .lbl{display:none}
 
 <div class="ddmenu hidden" id="mDraw"></div>
 <div class="ddmenu hidden" id="mMeas"></div>
+<div class="ddmenu hidden" id="mOrder"><div class="ddt">סדר הרכיבים</div><button data-zo="front" title="Ctrl+Shift+]">⬆ הבא לחזית — מעל כולם</button><button data-zo="up" title="Ctrl+]">↑ קדימה צעד אחד</button><button data-zo="down" title="Ctrl+[">↓ אחורה צעד אחד</button><button data-zo="back" title="Ctrl+Shift+[">⬇ שלח לרקע — מתחת לכולם</button></div>
 <div id="favBar"></div>
 <div id="top" class="card">
   <button class="tb" id="bMenu" title="תפריט"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
@@ -497,6 +499,7 @@ body.iconsonly .ddbtn .lbl{display:none}
     <button class="rb" id="bDraw" data-dd="mDraw" title="שרטוט וסימון: טקסט עם חץ, שלטים, קווים, צורות, קיר, אדם"><svg viewBox="0 0 24 24"><path d="M4 20l1.2-4.6L16.5 4.1a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/><path d="M14.5 6l3.5 3.5"/></svg><span>שרטוט</span></button>
     <div class="sep"></div>
     <button class="rb" id="bDup"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="13" rx="1.5"/><path d="M5 16V4.5A1.5 1.5 0 0 1 6.5 3H16"/></svg><span>שכפול</span></button>
+    <button class="rb" id="bOrder" data-dd="mOrder" title="סדר: מעל / מתחת לרכיבים אחרים"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 16l9 5 9-5"/></svg><span>סדר</span></button>
     <button class="rb" id="bRot"><svg viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4.6h-4.6"/></svg><span>סיבוב</span></button>
     <button class="rb" id="bLock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1.5" fill="#fff"/><path id="lockShackle" d="M8 11V8a4 4 0 0 1 7.6-1.7"/></svg><span id="lockLbl">נעל רכיב</span></button>
     <button class="rb dng" id="bDel"><svg viewBox="0 0 24 24"><path d="M5 7h14M9 7V4.5h6V7M7 7l1 13h8l1-13"/></svg><span>מחיקה</span></button>
@@ -1957,7 +1960,7 @@ function content0(opt={},pick){const list=state.objs.filter(o=>!hiddenFront(o)&&
   if(PIECES&&!pick)PIECES.push([(o.__cab?'c:'+o.__cab.id:o.__cabGhost?'g:'+o.__cabGhost.id:o.__doorGhost?'h:'+o.__doorGhost.id:o.__lid?'l:'+o.__lid.id:o.__door?'d:'+o.__door.id:'o:'+o.id),str]);s+=str;}
  return s;}
 function selBox(o){const {w,h}=sizeOf(o);return `<rect x="${-w/2-2.5}" y="${-h/2-2.5}" width="${w+5}" height="${h+5}" rx="2" fill="none" stroke="#3b82f6" stroke-width="1.6" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"/>`;}
-const rank=o=>o.__door||o.__cab||o.__lid||o.__cabGhost||o.__doorGhost?6.5:o.type==='wire'?6:DEF[o.type].layer;
+const rank=o=>o.__door||o.__cab||o.__lid||o.__cabGhost||o.__doorGhost?6.5:(o.type==='wire'?6:DEF[o.type].layer)+(+o.z||0);
 let rq=0;function render(){if(rq)return;rq=requestAnimationFrame(()=>{rq=0;renderNow();});}
 function handlesSVG(){const o=sel&&get(sel);if(!o||o.type==='wire'||o.locked||wireMode)return '';const D=DEF[o.type];
  if(o.type==='cable'||o.type==='conduit'||CABRT[o.type]){const R=cabRoute(o),r=9/view.s;let s='',cps='';const BB=cabBends(o);R.forEach((p,i)=>{const [x,y]=fromLocal(o,p.x,p.y),tight=i>0&&i<R.length-1&&BB[i-1]&&BB[i-1].tight;cps+=`<g data-cp="${i}" style="cursor:move"><title>${tight?`הכיפוף צר מהרדיוס הנדרש (${Math.round(BB[i-1].r)} מתוך ${Math.round(BB[i-1].need)} מ"מ) — האריכו את הקטעים`:''}</title><circle cx="${x}" cy="${y}" r="${r*2}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r}" fill="${tight?'#ef4444':'#3b82f6'}" stroke="#fff" stroke-width="${r*.28}"/></g>`;});
@@ -2416,7 +2419,7 @@ function loadProjects(){try{return JSON.parse(localStorage.getItem('epd.projects
 function saveProjects(p){try{localStorage.setItem('epd.projects',JSON.stringify(p));return true;}catch(e){return false;}}
 
 /* ================= UI: top bar ================= */
-function updateBar(){const o=sel&&get(sel);{const df=doorsFront();$('bDoor').disabled=df===null;$('bDoor').classList.toggle('on',df===true);$('bDoor').title=df?'הצג את פנים הלוח':'הצג את חזית הלוח (דלת סגורה)';}$('bLockAll').classList.toggle('on',globalLock);$('bText').disabled=wireMode||globalLock;{const o2=sel&&get(sel);$('bText').title=o2&&o2.type!=='wire'&&o2.type!=='label'?'הוסף תיבת טקסט ל'+o2.p.name:'הוסף תיבת טקסט';}$('bLockAll').title=globalLock?'פתח עריכה':'נעל עריכה (צפייה בלבד)';['bDel','bLock','bRot','bDup'].forEach(b=>$(b).disabled=!o||wireMode);$('bLock').disabled=!selIds().length||wireMode;$('rWire').classList.toggle('on',wireMode);$('bMeas').classList.toggle('on',!!measMode);if(pMode!=='lib')DRAWOPEN=false;$('rAdd').classList.toggle('on',pMode==='lib'&&!DRAWOPEN);$('bDraw').classList.toggle('on',pMode==='lib'&&DRAWOPEN);$('rProps').classList.toggle('on',pMode==='props');$('libStrip').classList.toggle('on',pMode==='lib');
+function updateBar(){const o=sel&&get(sel);{const df=doorsFront();$('bDoor').disabled=df===null;$('bDoor').classList.toggle('on',df===true);$('bDoor').title=df?'הצג את פנים הלוח':'הצג את חזית הלוח (דלת סגורה)';}$('bLockAll').classList.toggle('on',globalLock);$('bText').disabled=wireMode||globalLock;{const o2=sel&&get(sel);$('bText').title=o2&&o2.type!=='wire'&&o2.type!=='label'?'הוסף תיבת טקסט ל'+o2.p.name:'הוסף תיבת טקסט';}$('bLockAll').title=globalLock?'פתח עריכה':'נעל עריכה (צפייה בלבד)';['bDel','bLock','bRot','bDup'].forEach(b=>$(b).disabled=!o||wireMode);$('bOrder').disabled=!selIds().length||wireMode||globalLock;$('bLock').disabled=!selIds().length||wireMode;$('rWire').classList.toggle('on',wireMode);$('bMeas').classList.toggle('on',!!measMode);if(pMode!=='lib')DRAWOPEN=false;$('rAdd').classList.toggle('on',pMode==='lib'&&!DRAWOPEN);$('bDraw').classList.toggle('on',pMode==='lib'&&DRAWOPEN);$('rProps').classList.toggle('on',pMode==='props');$('libStrip').classList.toggle('on',pMode==='lib');
  {const ids=selIds(),many=ids.length>1||(o&&isBox(o)),lk=ids.length&&ids.every(i=>get(i)?.locked);if(ids.length)$('lockLbl').textContent=lk?(many?'שחרר הכל':'שחרר רכיב'):(many?'נעל הכל':'נעל רכיב');}
  if(o){$('selName').textContent=o.type==='wire'?`חוט ${WCOL[o.p.color]?.n||''} ${o.p.sec} ממ"ר`:(o.p.name+(o.p.tag&&o.type!=='label'?' · '+o.p.tag:''));
   $('selThumb').innerHTML=o.type==='wire'?`<svg viewBox="0 0 24 24"><path d="M3 18C9 18 9 6 21 6" stroke="${WCOL[o.p.color]?.base}" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>`:thumbSVG(Object.assign({},o,{p:Object.assign({},o.p,THUMBP[o.type]||{})}));
@@ -2974,6 +2977,25 @@ function ulManager(){const U=state.objs.filter(o=>o.type==='underlay');
   if(k==='lock')o.locked=!o.locked;else if(k==='hide')o.p.hide=o.p.hide==='1'?'0':'1';else if(k==='exp')o.p.exp=o.p.exp==='1'?'0':'1';
   else if(k==='del'){state.objs=state.objs.filter(q=>q!==o);if(sel===o.id)sel=null;}else if(k==='cal'){$('modal').classList.add('hidden');calStart(o.id);return;}
   commit();renderNow();updateBar();ulManager();};}
+
+/* ================= drawing order =================
+   Bring the selected parts over, or put them under, the parts they overlap: to the
+   front / back of all of them, or one step past the next one. The order is kept as
+   an offset (o.z) on the part's layer. */
+function zOrder(mode){const ids=selIds(),S=new Set(ids);if(!ids.length){toast('בחר רכיב קודם');return;}
+ const ov=(a,b)=>{const A=bbW(a),B=bbW(b);return A.x0<B.x1&&B.x0<A.x1&&A.y0<B.y1&&B.y0<A.y1;};let moved=0;
+ ids.map(get).filter(o=>o&&o.type!=='underlay').sort((a,b)=>(mode==='front'||mode==='up'?1:-1)*(rank(a)-rank(b))).forEach((o,i)=>{
+  const others=state.objs.filter(q=>!S.has(q.id)&&q.type!=='underlay'&&ov(o,q)),base=rank(o)-(+o.z||0),r=rank(o);if(!others.length)return;
+  const R=others.map(rank);let t=null;
+  if(mode==='front'){const m=Math.max(...R);if(m>=r)t=m+.01+i*.001;}
+  else if(mode==='back'){const m=Math.min(...R);if(m<=r)t=m-.01-i*.001;}
+  else{// one step: the next overlapping part in the drawn order (the same layer is drawn in list order)
+   const ord=state.objs.map((q,j)=>[q,j]).sort((x,y)=>rank(x[0])-rank(y[0])||x[1]-y[1]).map(x=>x[0]),me=ord.indexOf(o),ot=new Set(others);
+   if(mode==='up'){const n=ord.slice(me+1).find(q=>ot.has(q));if(n)t=rank(n)+.005;}else{const n=ord.slice(0,me).reverse().find(q=>ot.has(q));if(n)t=rank(n)-.005;}}
+  if(t!==null){o.z=r2((t-base)*1000)/1000;moved++;}});
+ if(!moved){toast({front:'כבר מעל כולם',back:'כבר מתחת לכולם',up:'אין רכיב מעליו',down:'אין רכיב מתחתיו'}[mode]);return;}
+ commit();renderNow();toast({front:'הובא לחזית',back:'נשלח לרקע',up:'הועלה צעד אחד',down:'הורד צעד אחד'}[mode]);}
+document.addEventListener('click',e=>{const b=e.target.closest('#mOrder [data-zo]');if(b)zOrder(b.dataset.zo);});
 /* ================= dimensions (סרט מדידה) =================
    A fixed dimension between two points. Each end may be pinned to a part (its
    id and a point in the part's own frame), so the dimension follows the part
@@ -3242,6 +3264,7 @@ $('bDoor').onclick=()=>{toggleDoors();updateBar();};$('bLockAll').onclick=toggle
 document.addEventListener('keydown',e=>{const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;if(!$('modal').classList.contains('hidden'))return;
  const k=e.key,mod=e.ctrlKey||e.metaKey;
  if((k==='Delete'||k==='Backspace')&&!globalLock&&!wireMode&&selIds().length){e.preventDefault();deleteSelected();}
+ else if(mod&&(e.code==='BracketRight'||e.code==='BracketLeft')&&selIds().length&&!globalLock){e.preventDefault();zOrder(e.code==='BracketRight'?(e.shiftKey?'front':'up'):(e.shiftKey?'back':'down'));}
  else if(k==='Escape'){if(measMode){if(MS.a){MS.a=MS.cur=null;render();}else setMeas(null);return;}if(wireMode)return;clearSel();}
  else if(mod&&(k==='z'||k==='Z')&&!e.shiftKey){e.preventDefault();undo();}
  else if(mod&&(k==='y'||k==='Y'||((k==='z'||k==='Z')&&e.shiftKey))){e.preventDefault();redo();}
