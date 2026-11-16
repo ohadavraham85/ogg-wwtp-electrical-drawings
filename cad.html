@@ -1221,14 +1221,14 @@ Object.assign(DEF,SDEF);
 // Core colours by IEC 60445: L1 brown, L2 black, L3 grey, N blue, PE green-yellow.
 const CORESETS={'2':[['L','#8b5a2b'],['N','#2563eb']],'3':[['L','#8b5a2b'],['N','#2563eb'],['PE','pe']],'4':[['L1','#8b5a2b'],['L2','#1d1d1d'],['L3','#8f8f8f'],['PE','pe']],'5':[['L1','#8b5a2b'],['L2','#1d1d1d'],['L3','#8f8f8f'],['N','#2563eb'],['PE','pe']]};
 const CSECS=['1.5','2.5','4','6','10','16','25','35','50','70','95','120','150','185','240'];
-function cabG2(o){const C=CORESETS[o.p.cores]||CORESETS['5'],n=C.length,sec=+o.p.sec||2.5,D=Math.round(6+2.2*Math.sqrt(sec*n)),cw=Math.max(1.8,Math.sqrt(sec)*1.25),pitch=Math.max(cw+5,10),span=(n-1)*pitch;
+function cabG2(o){if(o.type==='conduit'){const D=+o.p.dn||20,len=Math.max(20,+o.p.len||1000);return {C:[],n:0,sec:0,D,cw:2,pitch:10,span:0,len,brk:0,w:D+6,h:len};}const C=CORESETS[o.p.cores]||CORESETS['5'],n=C.length,sec=+o.p.sec||2.5,D=Math.round(6+2.2*Math.sqrt(sec*n)),cw=Math.max(1.8,Math.sqrt(sec)*1.25),pitch=Math.max(cw+5,10),span=(n-1)*pitch;
  const len=Math.max(20,+o.p.len||200),brk=Math.max(30,+o.p.brk||120),w=Math.max(D,span+cw)+6,h=len+brk;return {C,n,sec,D,cw,pitch,span,len,brk,w,h};}
 /* A cable runs along a route of points (its own, relative to it) and can be opened
    at either end: there its cores fan out, in the direction it arrives from, each
    ending in a terminal. Cables from before routes had a straight run with the
    cores opening at the top, which is what cabRoute() gives them. */
 function cabRoute(o){if(o.p.route&&o.p.route.length>1)return o.p.route;const g=cabG2(o);return [{x:0,y:r2(g.h/2-g.len)},{x:0,y:r2(g.h/2)}];}
-function cabEnds(o){const e=o.p.ends||'A';return {A:e==='A'||e==='AB',B:e==='B'||e==='AB'};}
+function cabEnds(o){if(o.type==='conduit')return {A:false,B:false};const e=o.p.ends||'A';return {A:e==='A'||e==='AB',B:e==='B'||e==='AB'};}
 function cabGeo(o){const g=cabG2(o),R=cabRoute(o),E=cabEnds(o),outs=[],terms=[];
  const fan=(P,Q,tag)=>{let dx=P.x-Q.x,dy=P.y-Q.y,l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;const nx=-dy,ny=dx;
   const cores=g.C.map(([lb,c],i)=>{const o0=-g.D/2+g.D*(i+.5)/g.n,o1=-g.span/2+i*g.pitch,a={x:P.x+nx*o0,y:P.y+ny*o0},t={x:r2(P.x+dx*g.brk+nx*o1),y:r2(P.y+dy*g.brk+ny*o1)};
@@ -1247,12 +1247,21 @@ function cabLength(o){const G=cabGeo(o);let L=0;for(let i=1;i<G.R.length;i++)L+=
 /* Bends follow an arc of at least the cable's bending radius (a multiple of its
    diameter, 6× by default as for PVC cables); where the runs either side are too
    short for it the arc is as wide as they allow, and that bend is flagged. */
-function cabBends(o){const G=cabGeo(o),R=G.R,need=(+o.p.rad||6)*G.g.D,out=[];
+function cabBends(o){const G=cabGeo(o),R=G.R,need=(+o.p.rad||(o.type==='conduit'?4:6))*G.g.D,out=[];
  for(let i=1;i<R.length-1;i++){const a=R[i-1],P=R[i],b=R[i+1];let ux=P.x-a.x,uy=P.y-a.y,vx=b.x-P.x,vy=b.y-P.y;const lu=Math.hypot(ux,uy),lv=Math.hypot(vx,vy);if(lu<.01||lv<.01){out.push(null);continue;}
   ux/=lu;uy/=lu;vx/=lv;vy/=lv;const cr=ux*vy-uy*vx,dot=ux*vx+uy*vy,phi=Math.atan2(Math.abs(cr),dot);if(phi<.01){out.push(null);continue;}
   const tn=Math.tan(phi/2),tMax=Math.min(lu,lv)/2,t=Math.min(need*tn,tMax),r=t/tn;out.push({P,A:{x:P.x-ux*t,y:P.y-uy*t},B:{x:P.x+vx*t,y:P.y+vy*t},r,sweep:cr>0?1:0,tight:r<need-.5,need});}
  return out;}
 function cabPathD(o){const R=cabGeo(o).R,B=cabBends(o);let d=`M${R[0].x} ${R[0].y}`;for(let i=1;i<R.length-1;i++){const b=B[i-1];if(!b){d+=`L${R[i].x} ${R[i].y}`;continue;}d+=`L${r2(b.A.x)} ${r2(b.A.y)}A${r2(b.r)} ${r2(b.r)} 0 0 ${b.sweep} ${r2(b.B.x)} ${r2(b.B.y)}`;}return d+`L${R[R.length-1].x} ${R[R.length-1].y}`;}
+/* מרירון: rigid grey PVC conduit, 20 or 25 mm, along a route of points like a cable; every turn is a bend
+   (קשת) of at least 4× its diameter with its two sockets marked, and couplings every 3 m of straight run. */
+function conduitSVG(o){const G=cabGeo(o),D=G.g.D,R=G.R,B=cabBends(o),d=cabPathD(o);
+ let s=`<path d="${d}" fill="none" stroke="#4b5563" stroke-width="${D+1.4}" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="#b8bec6" stroke-width="${D}" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="${D*.25}" stroke-linejoin="round"/>`;
+ const ring=(x,y,ux,uy)=>{const nx=-uy,ny=ux,h=D/2+1.6;return `<path d="M${r2(x+nx*h)} ${r2(y+ny*h)}L${r2(x-nx*h)} ${r2(y-ny*h)}" stroke="#374151" stroke-width="${Math.max(1.4,D*.12)}"/>`;};
+ B.forEach((b,i)=>{if(!b)return;const a=R[i],c=R[i+2];let ux=b.P.x-a.x,uy=b.P.y-a.y,l=Math.hypot(ux,uy)||1;s+=ring(b.A.x,b.A.y,ux/l,uy/l);ux=c.x-b.P.x;uy=c.y-b.P.y;l=Math.hypot(ux,uy)||1;s+=ring(b.B.x,b.B.y,ux/l,uy/l);});
+ for(let i=1;i<R.length;i++){const a=i>1&&B[i-2]?B[i-2].B:R[i-1],e=i<R.length-1&&B[i-1]?B[i-1].A:R[i],L=Math.hypot(e.x-a.x,e.y-a.y);if(L<10)continue;const ux=(e.x-a.x)/L,uy=(e.y-a.y)/L;for(let t=3000;t<L-50;t+=3000)s+=ring(a.x+ux*t,a.y+uy*t,ux,uy);}
+ [R[0],R[R.length-1]].forEach((p,k)=>{const q=k?R[R.length-2]:R[1];let ux=p.x-q.x,uy=p.y-q.y,l=Math.hypot(ux,uy)||1;s+=ring(p.x,p.y,ux/l,uy/l);});
+ if(o.p.tag){const m=R[0];s+=txt(m.x+D,m.y-D,o.p.tag,Math.max(8,D*.6),'#374151',700,'start');}return s;}
 function cabSVG(o){const G=cabGeo(o),g=G.g,R=G.R,sh=CSHEATH[o.p.color]||COLORS[o.p.color]||CSHEATH.green,d=cabPathD(o);
  let s=`<path d="${d}" fill="none" stroke="#111" stroke-width="${g.D+1.6}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${sh}" stroke-width="${g.D}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="${g.D*.16}" stroke-linejoin="round"/>`;
  G.outs.forEach(f=>{f.cores.forEach(c=>{const pd=`M${c.a.x} ${c.a.y}C${c.c1.x} ${c.c1.y} ${c.c2.x} ${c.c2.y} ${c.t.x} ${c.t.y}`;
@@ -1272,6 +1281,7 @@ function motG(o){const kw=parseFloat(o.p.rating)||7.5,L=Math.round(Math.min(1100
 const FDEF={
  cable:{layer:5,edit:['tag','cores','sec','color','ends','rad','brk'],def:{tag:'W1',cores:'5',sec:'16',color:'green',len:250,brk:120,ends:'A'},size:o=>{const G=cabGeo(o);return {w:G.w,h:G.h};},
   terms:o=>cabGeo(o).terms,draw:o=>cabSVG(o)},
+ conduit:{layer:5,edit:['tag','dn','rad'],def:{tag:'',dn:'20',len:1000,rad:4},size:o=>{const G=cabGeo(o);return {w:G.w,h:G.h};},terms:()=>[],draw:o=>conduitSVG(o)},
  traysh:{layer:.5,resize:'len',minLen:200,edit:['tag','tw','len','orient'],def:{tw:200,len:1500,tag:''},size:o=>({w:o.p.len,h:+o.p.tw}),
   draw:o=>{const L=o.p.len,W=+o.p.tw;let s=`<rect x="${-L/2}" y="${-W/2}" width="${L}" height="${W}" fill="#c7cbd0" stroke="#5f6670" stroke-width="1.6"/><rect x="${-L/2}" y="${-W/2}" width="${L}" height="9" fill="#a9aeb5"/><rect x="${-L/2}" y="${W/2-9}" width="${L}" height="9" fill="#a9aeb5"/>`;
    for(let x=-L/2+40;x<L/2-30;x+=55)s+=`<rect x="${x}" y="${-W*.18}" width="22" height="${W*.36}" rx="${Math.min(11,W*.18)}" fill="#9aa0a7"/>`;
@@ -1676,6 +1686,7 @@ const LIB=[
    {g:'מדי לחץ',items:[{t:'ptx',n:'משדר לחץ 0-6 bar'},{t:'ptx',n:'משדר לחץ 0-10 bar',p:{rating:'0-10 bar · 4-20mA'}},{t:'pgauge',n:'מד לחץ (מנומטר) 0-10 bar'},{t:'pgauge',n:'מד לחץ (מנומטר) 0-6 bar',p:{rating:'0-6 bar'}}]}]},
   {tab:'מנועים וכבלים',icon:'⟲',hint:'מנוע: את ההספק ואת מה שמותקן עליו (משאבה צנטריפוגלית, בורג, מפוח, טבולה) בוחרים במאפיינים. כבל: בוחרים אותו כדי לנתב — גוררים קצה, ומה-+ שבאמצע קטע יוצרים כיפוף; את הפתיחה בצד אחד או בשניהם בוחרים במאפיינים.',groups:[
    {g:'מנועים ומשאבות',items:I('מנוע חשמלי','מנוע + משאבה צנטריפוגלית','מנוע + משאבת בורג','מנוע + מפוח','משאבה טבולה')},
+   {g:'צנרת מרירון (20 / 25 מ"מ) — גוררים את העיגולים להוספת קשתות',items:[{t:'conduit',n:'צינור מרירון 20 מ"מ',p:{dn:'20'}},{t:'conduit',n:'צינור מרירון 25 מ"מ',p:{dn:'25'}},{t:'conduit',n:'מרירון 20 עם קשת 90°',p:{dn:'20',route:[{x:-200,y:-300},{x:-200,y:300},{x:300,y:300}]}},{t:'conduit',n:'מרירון 25 עם קשת 90°',p:{dn:'25',route:[{x:-200,y:-300},{x:-200,y:300},{x:300,y:300}]}},{t:'conduit',n:'מרירון 20 עם 2 קשתות (U)',p:{dn:'20',route:[{x:-300,y:-300},{x:-300,y:300},{x:300,y:300},{x:300,y:-300}]}},{t:'conduit',n:'מרירון 25 עם 2 קשתות (U)',p:{dn:'25',route:[{x:-300,y:-300},{x:-300,y:300},{x:300,y:300},{x:300,y:-300}]}}]},
    {g:'בור שאיבה — משאבה טבולה עם מצופים',items:[{t:'subpit',n:'בור שאיבה + 3 מצופים'},{t:'subpit',n:'בור שאיבה + 2 מצופים',p:{nf:'2'}},{t:'subpit',n:'בור שאיבה + 4 מצופים',p:{nf:'4'}}]},
    {g:'כבלים — פתיחת גידים',items:I('כבל ירוק 2×1.5','כבל ירוק 3×2.5','כבל ירוק 5×2.5','כבל ירוק 5×6','כבל ירוק 5×16','כבל ירוק 4×35','כבל שחור 5×16')}]},
   {tab:'שרטוט וסימון',icon:'✎',draw:true,any:true,hint:'תיבת טקסט עם חץ: אחרי ההוספה גוררים את העיגול הכתום שבקצה החץ אל מה שרוצים להצביע עליו. אדם: נכנס ליד הרכיב הנבחר, עם הרגליים על ציר X. קו / חץ: אורך בגרירת העיגולים, וזווית במאפיינים.',groups:[
@@ -1800,7 +1811,7 @@ function selBox(o){const {w,h}=sizeOf(o);return `<rect x="${-w/2-2.5}" y="${-h/2
 const rank=o=>o.__door||o.__cab||o.__lid||o.__cabGhost||o.__doorGhost?6.5:o.type==='wire'?6:DEF[o.type].layer;
 let rq=0;function render(){if(rq)return;rq=requestAnimationFrame(()=>{rq=0;renderNow();});}
 function handlesSVG(){const o=sel&&get(sel);if(!o||o.type==='wire'||o.locked||wireMode)return '';const D=DEF[o.type];
- if(o.type==='cable'){const R=cabRoute(o),r=9/view.s;let s='';const BB=cabBends(o);R.forEach((p,i)=>{const [x,y]=fromLocal(o,p.x,p.y),tight=i>0&&i<R.length-1&&BB[i-1]&&BB[i-1].tight;s+=`<g data-cp="${i}" style="cursor:move"><title>${tight?`הכיפוף צר מהרדיוס הנדרש (${Math.round(BB[i-1].r)} מתוך ${Math.round(BB[i-1].need)} מ"מ) — האריכו את הקטעים`:''}</title><circle cx="${x}" cy="${y}" r="${r*2}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r}" fill="${tight?'#ef4444':'#3b82f6'}" stroke="#fff" stroke-width="${r*.28}"/></g>`;});
+ if(o.type==='cable'||o.type==='conduit'){const R=cabRoute(o),r=9/view.s;let s='';const BB=cabBends(o);R.forEach((p,i)=>{const [x,y]=fromLocal(o,p.x,p.y),tight=i>0&&i<R.length-1&&BB[i-1]&&BB[i-1].tight;s+=`<g data-cp="${i}" style="cursor:move"><title>${tight?`הכיפוף צר מהרדיוס הנדרש (${Math.round(BB[i-1].r)} מתוך ${Math.round(BB[i-1].need)} מ"מ) — האריכו את הקטעים`:''}</title><circle cx="${x}" cy="${y}" r="${r*2}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r}" fill="${tight?'#ef4444':'#3b82f6'}" stroke="#fff" stroke-width="${r*.28}"/></g>`;});
   for(let i=1;i<R.length;i++){const [x,y]=fromLocal(o,(R[i].x+R[i-1].x)/2,(R[i].y+R[i-1].y)/2);s+=`<g data-cm="${i-1}" style="cursor:copy"><circle cx="${x}" cy="${y}" r="${r*1.6}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r*.7}" fill="#fff" stroke="#3b82f6" stroke-width="${r*.3}"/><path d="M${x-r*.4} ${y}h${r*.8}M${x} ${y-r*.4}v${r*.8}" stroke="#3b82f6" stroke-width="${r*.22}"/></g>`;}
   return s;}
  if(o.type==='callout'){const r=9/view.s,[x,y]=ctTip(o);return `<g data-tip="1" style="cursor:move"><circle cx="${x}" cy="${y}" r="${r*2}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r}" fill="#ff8c00" stroke="#fff" stroke-width="${r*.28}"/></g>`;}
@@ -2885,7 +2896,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  const rEl=e.target.closest('[data-rot]');if(rEl&&!wireMode){const ro=get(rEl.dataset.rot);if(canRot(ro)){G.mode='rot';G.o=ro;G.r0=ro.rot;if(sel!==ro.id){sel=ro.id;multi.clear();updateBar();}return;}}
  const dEl=e.target.closest('[data-dim]');if(dEl){G.dim=dEl.dataset.dim;return;}
  const hEl=e.target.closest('[data-h]'),so=sel&&get(sel);
- const cpEl=e.target.closest('[data-cp],[data-cm]');if(cpEl&&so&&so.type==='cable'&&!so.locked&&!wireMode&&!globalLock){so.p.route=cabRoute(so).map(p=>({...p}));let i;
+ const cpEl=e.target.closest('[data-cp],[data-cm]');if(cpEl&&so&&(so.type==='cable'||so.type==='conduit')&&!so.locked&&!wireMode&&!globalLock){so.p.route=cabRoute(so).map(p=>({...p}));let i;
   if(cpEl.dataset.cm!==undefined){const [wx,wy]=toWorld(e.clientX,e.clientY),[lx,ly]=toLocal(so,wx,wy);i=+cpEl.dataset.cm+1;so.p.route.splice(i,0,{x:r2(lx),y:r2(ly)});G.added=1;}else i=+cpEl.dataset.cp;
   G.mode='cpt';G.o=so;G.i=i;return;}
  if(e.target.closest('[data-tip]')&&so&&so.type==='callout'&&!so.locked&&!globalLock){G.mode='tip';G.o=so;return;}
@@ -3185,6 +3196,7 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='dcv')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_dcv"><option value="12" ${v!=='24'?'selected':''}>12V DC</option><option value="24" ${v==='24'?'selected':''}>24V DC</option></select></div>`;
   else if(k==='op')h+=`<div class="fld"><label>שקיפות</label><select id="f_op">${[.2,.3,.4,.5,.6,.7,.8,1].map(a=>`<option value="${a}" ${Math.abs(a-(+v||.6))<.01?'selected':''}>${Math.round(a*100)}%</option>`).join('')}</select></div>`;
   else if(k==='exp')h+=`<div class="fld"><label>בייצוא</label><select id="f_exp"><option value="0" ${v!=='1'?'selected':''}>לא מופיעה ב-PDF / תמונה</option><option value="1" ${v==='1'?'selected':''}>מופיעה בייצוא</option></select></div>`;
+  else if(k==='dn'&&o.type==='conduit')h+=`<div class="fld"><label>קוטר</label><select id="f_dn">${['16','20','25','32'].map(a=>`<option value="${a}" ${a===String(v)?'selected':''}>${a} מ"מ</option>`).join('')}</select></div>`;
   else if(k==='vt')h+=`<div class="fld"><label>סוג המגוף</label><select id="f_vt">${[['bfly','פרפר (Butterfly)'],['gate','טריז (Gate)'],['ball','כדורי (Ball)']].map(([a,b])=>`<option value="${a}" ${a===(v||'bfly')?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='act')h+=`<div class="fld"><label>מפעיל</label><select id="f_act">${[['3ph','תלת-פאזי 400V — פתח / סגור'],['1ph','חד-פאזי 230V — פתח / סגור'],['mod','מווסת 4-20mA'],['auma','AUMA SA + AUMA MATIC AM — פתח / סגור 400V'],['aumac','AUMA SA + AUMATIC AC — מווסת 4-20mA 400V']].map(([a,b])=>`<option value="${a}" ${a===(v||'3ph')?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='nf')h+=`<div class="fld"><label>מצופים</label><select id="f_nf">${[['2','2 — עצירה, הפעלה'],['3','3 — עצירה, הפעלה, גלישה'],['4','4 — יבש, עצירה, הפעלה, גלישה']].map(([a,b])=>`<option value="${a}" ${a===String(v||'3')?'selected':''}>${b}</option>`).join('')}</select></div>`;
@@ -3218,7 +3230,7 @@ function editDialog(){const o=sel&&get(sel);
  if(o.type==='underlay')h+=`<div class="row" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0"><button class="wbtn pri" type="button" onclick="calStart('${o.id}')">📏 כיול קנה מידה</button><button class="wbtn" type="button" onclick="ulManager()">🖼 ניהול תמונות רקע</button></div><div class="hint">גודל: גוררים את הפינות. אחרי הכיול התמונה ננעלת.</div>`;
  if(D.ratings)h+=`<datalist id="dl_r">${D.ratings.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>`;
  panelForm(o.p.name,h,()=>{const k0=o.p.kind;if(o.type==='floor')o._top=o.y-sizeOf(o).h/2;o.p.name=$('f_name').value||o.p.name;D.edit.forEach(k=>{const el=$('f_'+k);if(!el)return;let v=el.value;if(k==='orient'){const want=v==='v'?1:0;if((o.rot%180?1:0)!==want)o.rot=want?90:0;return;}if(k==='ang'){o.rot=(((Math.round(+v)||0)%360)+360)%360;return;}if(k==='lw'){o.p.lw=Math.max(.2,+v||2);return;}if(k==='fs'){o.p.fs=Math.max(1,+v||o.p.fs);return;}
-   if(k==='pw'||k==='pd'){o.p[k]=Math.round(+v)||o.p[k];return;}if(['len','dw','mods','w','h','ph','brk'].includes(k)){v=Math.max(k==='mods'?1:k==='ph'?1:10,Math.round(+v)||o.p[k]);}o.p[k]=v;});if(o.type==='cable')cabRecentre(o);if(o.type==='floor'&&o._top!=null){o.y=r2(o._top+sizeOf(o).h/2);delete o._top;}if(o.type==='floor'&&o.p.kind!==k0)setTimeout(editDialog,0);if(o.type==='cibox'&&/^(CI-K|Ci )/.test(o.p.name))o.p.name=CISZ[o.p.size].n+(o.p.window==='1'?' עם חלון':'');commit();renderNow();updateBar();});}
+   if(k==='pw'||k==='pd'){o.p[k]=Math.round(+v)||o.p[k];return;}if(['len','dw','mods','w','h','ph','brk'].includes(k)){v=Math.max(k==='mods'?1:k==='ph'?1:10,Math.round(+v)||o.p[k]);}o.p[k]=v;});if(o.type==='cable'||o.type==='conduit')cabRecentre(o);if(o.type==='floor'&&o._top!=null){o.y=r2(o._top+sizeOf(o).h/2);delete o._top;}if(o.type==='floor'&&o.p.kind!==k0)setTimeout(editDialog,0);if(o.type==='cibox'&&/^(CI-K|Ci )/.test(o.p.name))o.p.name=CISZ[o.p.size].n+(o.p.window==='1'?' עם חלון':'');commit();renderNow();updateBar();});}
 function wireLen(w){const ps=w.pts.map(resolve).filter(Boolean);let L=0;for(let i=1;i<ps.length;i++)L+=Math.hypot(ps[i].x-ps[i-1].x,ps[i].y-ps[i-1].y);return L;}
 
 /* ================= drawer / menu ================= */
@@ -3391,6 +3403,7 @@ function bomDataSld(){return withDoc('sld',()=>{const rows={},SKIP=['wire','sfra
   const k=(o.p.name||o.type)+(o.p.rating?' '+o.p.rating:'');const r=rows[k]=rows[k]||{n:0,tags:[]};r.n++;if(o.p.tag)r.tags.push(o.p.tag);});
  return Object.keys(rows).map(k=>{const r=rows[k],tg=r.tags.sort((a,b)=>a.localeCompare(b,'he',{numeric:true}));return [k+(tg.length?` (${tg.length>6?tg.slice(0,6).join(', ')+'…':tg.join(', ')})`:''),`${r.n} יח'`];});});}
 function bomData0(){const rows={};state.objs.forEach(o=>{if(o.type==='underlay')return;if(o.type==='wire'){const k=`חוט ${WCOL[o.p.color]?.n} ${o.p.sec} ממ"ר`;rows[k]=rows[k]||{n:0,len:0,w:1};rows[k].len+=wireLen(o);return;}
+  if(o.type==='conduit'){const D=+o.p.dn||20,kl=`צינור מרירון ${D} מ"מ`,kb=`קשת מרירון ${D} מ"מ`,nb=cabBends(o).filter(Boolean).length;rows[kl]=rows[kl]||{n:0,len:0};rows[kl].len+=cabLength(o);rows[kl].n++;if(nb){rows[kb]=rows[kb]||{n:0};rows[kb].n+=nb;}return;}
   let k=o.p.name+(o.p.rating&&!['label'].includes(o.type)?' '+o.p.rating:'');if(o.type==='cable'||o.type==='traysh'||o.type==='traymesh'){const g=o.type==='cable'?cabG2(o):null;k=o.type==='cable'?`כבל ${CNAME[o.p.color]||''} ${g.n}×${o.p.sec} ממ"ר`:`${o.type==='traysh'?'תעלת פח':'תעלת רשת'} ${o.p.tw} מ"מ`;rows[k]=rows[k]||{n:0,len:0};rows[k].len+=o.type==='cable'?cabLength(o):o.p.len;rows[k].n++;return;}
   if(o.type==='rail'||o.type==='duct'||o.type==='busbar'||o.type==='partition'){k=o.p.name+(o.type==='duct'?` ${o.p.dw}מ"מ`:'');rows[k]=rows[k]||{n:0,len:0};rows[k].len+=o.p.len;rows[k].n++;return;}
   if(o.type==='cabinet'){const g=cabG(o),FN={door:'דלת',double:'דלת כפולה',cover:'פאנלים מוברגים',none:'ללא חזית'};g.S.forEach(sc=>{const kk=`שדה ארון ${sc.w}×${g.H} — ${FN[sc.f]}`;rows[kk]=rows[kk]||{n:0};rows[kk].n++;});if(g.P){const kk=`סוקל ${g.P} מ"מ`;rows[kk]=rows[kk]||{n:0,len:0};rows[kk].len+=g.W;rows[kk].n++;}return;}
