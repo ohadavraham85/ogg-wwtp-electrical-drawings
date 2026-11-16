@@ -1082,8 +1082,11 @@ const SDEF={
  sauxq:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Q1',rating:'13-14',desc:'מגע עזר מפסק'},size:()=>({w:40,h:60}),terms:IO,draw:o=>cNO()+sL(-4,-16,4,-8,1.6)+sL(-4,-8,4,-16,1.6)+sLbl(o,40)},
  smaglock:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Y1',rating:'24VDC 280kg',desc:'מנעול אלקטרומגנטי'},ratings:['12VDC 180kg','12VDC 280kg','24VDC 280kg','24VDC 500kg'],size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sL(0,-30,0,-9)+sR(-12,-9,24,18)+sT(0,0,'EM',8)+sL(0,9,0,30)+`<path d="M16 -3v-4a4 4 0 0 1 8 0v4" fill="none" stroke="${SK}" stroke-width="1.5"/>`+sR(14.5,-3,11,9,'#fff',1.5)+sLbl(o,52)},
- scardr:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'B1',rating:'Wiegand 26',desc:'קורא כרטיסים'},ratings:['Wiegand 26','Wiegand 34','OSDP / RS485'],size:()=>({w:40,h:60}),terms:IO,
-  draw:o=>sL(0,-30,0,-12)+sR(-13,-12,26,24)+sR(-10,-4,10,8,'#fff',1.4)+`<path d="M3.5 -4.5a6 6 0 0 1 0 9M7.5 -7.5a9 9 0 0 1 0 15" fill="none" stroke="${SK}" stroke-width="1.4" stroke-linecap="round"/>`+sL(0,12,0,30)+sLbl(o,40)},
+ scardr:{layer:4,sld:true,edit:['tag','rating','bus','desc'],def:{tag:'B1',rating:'Wiegand 26',bus:'wg',desc:'קורא כרטיסים'},ratings:['Wiegand 26','Wiegand 34','OSDP / RS485'],size:o=>({w:cardWires(o).length*10+10,h:60}),
+  terms:o=>{const L=cardWires(o);return L.map(([l],i)=>[(i-(L.length-1)/2)*10,30,l]);},
+  draw:o=>{const L=cardWires(o),bw=L.length*10+4;let s=sR(-bw/2,-22,bw,24)+sR(-12,-14,10,8,'#fff',1.4)+`<path d="M1.5 -14.5a6 6 0 0 1 0 9M5.5 -17.5a9 9 0 0 1 0 15" fill="none" stroke="${SK}" stroke-width="1.4" stroke-linecap="round"/>`;
+   L.forEach(([l],i)=>{const x=(i-(L.length-1)/2)*10;s+=sL(x,2,x,30,1.4)+`<text x="${x-1.3}" y="5" font-size="4.2" font-weight="700" fill="${SK}" font-family="Arial" transform="rotate(-90 ${x-1.3} 5)" text-anchor="end">${l}</text>`;});
+   return s+sLbl(o,bw);}},
  slamp:{layer:4,sld:true,edit:['tag','rating','desc','color'],def:{tag:'H1',rating:'230V',desc:'נורית סימון',color:'green'},size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sL(0,-30,0,-9)+sL(0,9,0,30)+sC(0,0,9,o.p.color&&o.p.color!=='white'?COLORS[o.p.color]+'55':'#fff')+sL(-6.4,-6.4,6.4,6.4)+sL(-6.4,6.4,6.4,-6.4)+sLbl(o,40)},
  shorn:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'H5',rating:'230V',desc:'צופר / זמזם'},size:()=>({w:40,h:60}),terms:IO,
@@ -1281,6 +1284,17 @@ const WALLW='#f4f4ef';
 function ilFace(cx,cy){// an Israeli (type H) socket: two flat pins and an earth, in a round face
  return `<circle cx="${cx}" cy="${cy}" r="21" fill="#fff" stroke="#9a9a92" stroke-width="1"/><circle cx="${cx}" cy="${cy}" r="17" fill="#f7f7f2" stroke="#c9c9c0" stroke-width=".8"/>`+
   `<rect x="${cx-9.5}" y="${cy-8}" width="3" height="8" rx="1" fill="#333" transform="rotate(-30 ${cx-8} ${cy-4})"/><rect x="${cx+6.5}" y="${cy-8}" width="3" height="8" rx="1" fill="#333" transform="rotate(30 ${cx+8} ${cy-4})"/><circle cx="${cx}" cy="${cy+7}" r="2.4" fill="#333"/>`;}
+// card reader: body size, its cores (Wiegand or OSDP / RS485) and the body drawing
+const cardBody=o=>o.p.rdr==='kp'?{w:86,h:126}:{w:50,h:120};
+function cardWires(o){return o.p.bus==='osdp'?[['+12V','#dc2626'],['0V','#111827'],['A','#2563eb'],['B','#9ca3af'],['TMP','#7c3aed']]:
+ [['+12V','#dc2626'],['0V','#111827'],['D0','#16a34a'],['D1','#f9fafb'],['LED','#f97316'],['BZ','#eab308'],['TMP','#7c3aed']];}
+function cardDraw(o){const kp=o.p.rdr==='kp',{w,h}=cardBody(o),y0=-h/2;
+   let s=`<rect x="${-w/2}" y="${y0}" width="${w}" height="${h}" rx="9" fill="#1f2937" stroke="#0b0f17" stroke-width="1.4"/><rect x="${-w/2+4}" y="${y0+4}" width="${w-8}" height="${h-8}" rx="6" fill="#273244" stroke="#3b4659" stroke-width=".8"/>`;
+   s+=`<rect x="${-w/2+12}" y="${y0+10}" width="${w-24}" height="3.5" rx="1.75" fill="#22c55e"/>`;
+   const cy=kp?y0+30:y0+h*.42;s+=`<g fill="none" stroke="#cbd5e1" stroke-width="1.6" stroke-linecap="round">${[6,11,16].map(r=>`<path d="M${-r*.7} ${cy-r*.7}a${r} ${r} 0 0 1 ${r*1.4} 0"/>`).join('')}</g><rect x="-5" y="${cy-1}" width="10" height="7" rx="1.5" fill="#cbd5e1"/>`;
+   if(kp){const K=['1','2','3','4','5','6','7','8','9','*','0','#'];K.forEach((k,i)=>{const c=i%3,r=Math.floor(i/3),x=(c-1)*22,y=y0+52+r*17;s+=`<rect x="${x-9}" y="${y-6.5}" width="18" height="13" rx="3" fill="#374151" stroke="#4b5563" stroke-width=".7"/>`+txt(x,y,k,6.5,'#e5e7eb',700);});}
+   else s+=txt(0,y0+h-22,'RFID',6,'#94a3b8',700);
+   return s;}
 const MAGL={'180':{w:170,h:40},'280':{w:250,h:48},'500':{w:266,h:73}};
 function wallBox(w,h,r=8){return `<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${r}" fill="${WALLW}" stroke="#8d8d85" stroke-width="1.4"/><rect x="${-w/2+4}" y="${-h/2+4}" width="${w-8}" height="${h-8}" rx="${r-2}" fill="none" stroke="#d6d6cd" stroke-width="1"/>`;}
 function ceeFace(cx,cy,R,poles,col){const pts=poles===5?[[0,-.55],[.52,-.17],[.32,.45],[-.32,.45],[-.52,-.17]]:[[0,-.5],[.45,.3],[-.45,.3]];
@@ -1328,15 +1342,13 @@ const WDEF={
    s+=`<circle cx="${w/2-28}" cy="${y0+M.h/2}" r="3" fill="#ef4444" stroke="#7f1d1d" stroke-width=".7"/>`+txt(-8,y0+M.h/2-5,`${o.p.hold||280} ק"ג`,Math.min(9,M.h*.2),'#1f2937',700)+txt(-8,y0+M.h/2+6,`${o.p.dcv==='24'?24:12}V DC`,Math.min(6,M.h*.14),'#374151',600);
    s+=`<rect x="${-w/2+15}" y="${yb+4}" width="${w-30}" height="14" rx="2" fill="#e5e7eb" stroke="#4b5563" stroke-width="1.1" stroke-dasharray="4 2"/>`+txt(0,yb+11,'פלטת עוגן (על הדלת)',4.5,'#4b5563',600);
    if(o.p.tag)s+=txt(0,y0-8,o.p.tag,8,'#1d4ed8',700);return s;}},
- wcard:{layer:4,edit:['tag','rdr','dcv'],def:{rdr:'card',dcv:'12',tag:''},size:o=>o.p.rdr==='kp'?{w:86,h:126}:{w:50,h:120},
-  terms:o=>{const {h}=DEF.wcard.size(o);return ['+','−','D0','D1'].map((l,i)=>[(i-1.5)*10,-h/2,l]);},
-  draw:o=>{const kp=o.p.rdr==='kp',{w,h}=DEF.wcard.size(o),y0=-h/2;
-   let s=`<rect x="${-w/2}" y="${y0}" width="${w}" height="${h}" rx="9" fill="#1f2937" stroke="#0b0f17" stroke-width="1.4"/><rect x="${-w/2+4}" y="${y0+4}" width="${w-8}" height="${h-8}" rx="6" fill="#273244" stroke="#3b4659" stroke-width=".8"/>`;
-   s+=`<rect x="${-w/2+12}" y="${y0+10}" width="${w-24}" height="3.5" rx="1.75" fill="#22c55e"/>`;
-   const cy=kp?y0+30:y0+h*.42;s+=`<g fill="none" stroke="#cbd5e1" stroke-width="1.6" stroke-linecap="round">${[6,11,16].map(r=>`<path d="M${-r*.7} ${cy-r*.7}a${r} ${r} 0 0 1 ${r*1.4} 0"/>`).join('')}</g><rect x="-5" y="${cy-1}" width="10" height="7" rx="1.5" fill="#cbd5e1"/>`;
-   if(kp){const K=['1','2','3','4','5','6','7','8','9','*','0','#'];K.forEach((k,i)=>{const c=i%3,r=Math.floor(i/3),x=(c-1)*22,y=y0+52+r*17;s+=`<rect x="${x-9}" y="${y-6.5}" width="18" height="13" rx="3" fill="#374151" stroke="#4b5563" stroke-width=".7"/>`+txt(x,y,k,6.5,'#e5e7eb',700);});}
-   else s+=txt(0,y0+h-22,'RFID',6,'#94a3b8',700);
-   if(o.p.tag)s+=txt(0,y0-8,o.p.tag,8,'#1d4ed8',700);return s;}},
+ wcard:{layer:4,edit:['tag','rdr','bus','dcv'],def:{rdr:'card',bus:'wg',dcv:'12',tag:''},size:o=>{const b=cardBody(o);return {w:Math.max(b.w,cardWires(o).length*10+8),h:b.h+24};},
+  terms:o=>{const L=cardWires(o),{h}=DEF.wcard.size(o);return L.map(([l],i)=>[(i-(L.length-1)/2)*10,-h/2,l]);},
+  draw:o=>{const L=cardWires(o),S=DEF.wcard.size(o),Y=-S.h/2,sw=L.length*10+4;
+   // the reader's pigtail: its cable up to a terminal strip, every core with its colour and name
+   let t=`<path d="M0 ${Y+12}V${Y+24}" stroke="#4b5563" stroke-width="5" stroke-linecap="round"/><rect x="${-sw/2}" y="${Y}" width="${sw}" height="12" rx="2" fill="#f3f4f6" stroke="#4b5563" stroke-width="1"/>`;
+   L.forEach(([l,c],i)=>{const x=(i-(L.length-1)/2)*10;t+=`<circle cx="${x}" cy="${Y+4.2}" r="2.1" fill="${c}" stroke="#111827" stroke-width=".5"/>`+txt(x,Y+9.4,l,l.length>3?2.5:3,'#111827',700);});
+   return t+`<g transform="translate(0 12)">`+cardDraw(o)+`</g>`+(o.p.tag?txt(-sw/2-4,Y+6,o.p.tag,8,'#1d4ed8',700,'end'):'');}},
  wjb:{layer:4,edit:['tag'],def:{tag:''},size:()=>({w:110,h:110}),
   terms:()=>[...['L1','L2','L3','N','PE'].map((l,i)=>[(i-2)*14,-55,l]),...['L1','L2','L3','N','PE'].map((l,i)=>[(i-2)*14,55,''])],
   draw:o=>{let s=`<rect x="-55" y="-55" width="110" height="110" rx="8" fill="#9ca3af" stroke="#374151" stroke-width="1.6"/><rect x="-46" y="-46" width="92" height="92" rx="6" fill="#b8bec6" stroke="#4b5563" stroke-width="1"/>`;
@@ -2835,7 +2847,7 @@ function shDash(o){const w=Math.max(.2,+o.p.lw||2);return o.p.dash==='dash'?`str
 function shFill(o){const c=col(o,'blue');return o.p.fill==='light'?c+'33':o.p.fill==='solid'?c:'none';}
 function lblFs(o){return Math.max(1,+o.p.fs||6);}
 function lblLines(o){const ls=String(o.p.text??'').split('\n');return ls.length?ls:[''];}
-const FL={slots:'מספר חריצים',model:'דגם',rows:'מספר שורות',mods:'מודולים בשורה',title:'שם הלוח',from:'מוזן מ',volt:'מתח',ic:'זרם קצר',main:'מפסק ראשי',notes:'שורות נוספות',pcol:'צבע השלט',feed:'סוג ההזנה',tn:'מספרי הדקים (למעלה-למטה)',wt:'עובי קיר (מ"מ)',lw:'עובי קו (מ"מ)',dash:'סוג קו',fill:'מילוי',head:'ראשי חץ',ang:'זווית (מעלות)',poles:'מספר קטבים',gang:'מספר שקעים',ip:'הגנה',cee:'סוג שקע',cfg:'הרכב הקופסה',sw:'סוג מפסק',hold:'כוח החזקה',mon:'מגע מצב (דלת נעולה)',dcv:'מתח הפעלה',rdr:'סוג קורא',lid:'מכסה',kind:'סוג',th:'עובי רצפה (מ"מ)',rh:'גובה רצפה כפולה (מ"מ)',rad:'רדיוס כיפוף מינימלי',ends:'פתיחת גידים',cores:'מספר גידים',sec:'חתך גיד (ממ"ר)',brk:'אורך פתיחת הגידים (מ"מ)',pump:'משאבה / ציוד מונע',tw:'רוחב תעלה (מ"מ)',set:'הרכב מהדקים',desc:'תיאור',fs:'גודל טקסט (מ"מ)',tag:'סימון (למשל Q1, K2)',rating:'דירוג / ערך',len:'אורך (מ"מ)',dw:'רוחב תעלה (מ"מ)',mods:'מספר מודולים',ph:'מספר פאזות',w:'רוחב (מ"מ)',h:'גובה (מ"מ)',text:'טקסט',kind:'סוג מהדק',color:'צבע',orient:'כיוון התקנה',coil:'מתח סליל',frame:'גודל / מבנה',door:'דלת',hinge:'צד צירים',closed:'תצוגה',size:'גודל קופסה',window:'חלון שקוף'};
+const FL={bus:'חיווט',slots:'מספר חריצים',model:'דגם',rows:'מספר שורות',mods:'מודולים בשורה',title:'שם הלוח',from:'מוזן מ',volt:'מתח',ic:'זרם קצר',main:'מפסק ראשי',notes:'שורות נוספות',pcol:'צבע השלט',feed:'סוג ההזנה',tn:'מספרי הדקים (למעלה-למטה)',wt:'עובי קיר (מ"מ)',lw:'עובי קו (מ"מ)',dash:'סוג קו',fill:'מילוי',head:'ראשי חץ',ang:'זווית (מעלות)',poles:'מספר קטבים',gang:'מספר שקעים',ip:'הגנה',cee:'סוג שקע',cfg:'הרכב הקופסה',sw:'סוג מפסק',hold:'כוח החזקה',mon:'מגע מצב (דלת נעולה)',dcv:'מתח הפעלה',rdr:'סוג קורא',lid:'מכסה',kind:'סוג',th:'עובי רצפה (מ"מ)',rh:'גובה רצפה כפולה (מ"מ)',rad:'רדיוס כיפוף מינימלי',ends:'פתיחת גידים',cores:'מספר גידים',sec:'חתך גיד (ממ"ר)',brk:'אורך פתיחת הגידים (מ"מ)',pump:'משאבה / ציוד מונע',tw:'רוחב תעלה (מ"מ)',set:'הרכב מהדקים',desc:'תיאור',fs:'גודל טקסט (מ"מ)',tag:'סימון (למשל Q1, K2)',rating:'דירוג / ערך',len:'אורך (מ"מ)',dw:'רוחב תעלה (מ"מ)',mods:'מספר מודולים',ph:'מספר פאזות',w:'רוחב (מ"מ)',h:'גובה (מ"מ)',text:'טקסט',kind:'סוג מהדק',color:'צבע',orient:'כיוון התקנה',coil:'מתח סליל',frame:'גודל / מבנה',door:'דלת',hinge:'צד צירים',closed:'תצוגה',size:'גודל קופסה',window:'חלון שקוף'};
 function cabDialog(o,tmp){tmp=tmp||JSON.parse(JSON.stringify(o.p));const sel_=(f,opts,v)=>`<select data-f="${f}">${opts.map(([a,b])=>`<option value="${a}" ${String(a)===String(v)?'selected':''}>${b}</option>`).join('')}</select>`;
  const WS=[300,400,500,600,800,1000,1200].map(w=>[w,w+' מ"מ']),FS=[['door','דלת'],['double','דלת כפולה'],['cover','פאנלים מוברגים'],['none','ללא חזית']],HS=[['L','צירים שמאל'],['R','צירים ימין']];
  let h=`<div class="fld"><label>שם</label><input id="c_name" value="${esc(tmp.name||'')}"></div><div class="fld"><label>שלט על הדלת</label><input id="c_tag" value="${esc(tmp.tag||'')}"></div>`;
@@ -2888,6 +2900,7 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='hold')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_hold">${[['180','180 ק"ג'],['280','280 ק"ג'],['500','500 ק"ג']].map(([a,b])=>`<option value="${a}" ${a===String(v)?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='mon')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_mon"><option value="0" ${v!=='1'?'selected':''}>בלי</option><option value="1" ${v==='1'?'selected':''}>עם מגע מצב (NO / C / NC)</option></select></div>`;
   else if(k==='dcv')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_dcv"><option value="12" ${v!=='24'?'selected':''}>12V DC</option><option value="24" ${v==='24'?'selected':''}>24V DC</option></select></div>`;
+  else if(k==='bus')h+=`<div class="fld"><label>חיווט</label><select id="f_bus"><option value="wg" ${v!=='osdp'?'selected':''}>Wiegand — +12V 0V D0 D1 LED BZ TMP</option><option value="osdp" ${v==='osdp'?'selected':''}>OSDP / RS485 — +12V 0V A B TMP</option></select></div>`;
   else if(k==='rdr')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_rdr"><option value="card" ${v!=='kp'?'selected':''}>קורא כרטיסים (צר)</option><option value="kp" ${v==='kp'?'selected':''}>קורא כרטיסים + קודן</option></select></div>`;
   else if(k==='sw')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_sw">${[['1','מפסק יחיד'],['2','מפסק כפול'],['tw','מחליף'],['push','לחצן']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='lid')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_lid"><option value="1" ${v!=='0'?'selected':''}>עם מכסה — עבודה על החזית (לחצנים, נוריות)</option><option value="0" ${v==='0'?'selected':''}>בלי מכסה — עבודה על החלק הפנימי</option></select></div>`;
