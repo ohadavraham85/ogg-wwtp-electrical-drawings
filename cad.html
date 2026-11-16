@@ -692,6 +692,8 @@ function poleLabels(n,top){const L=top?['1','3','5','7']:['2','4','6','8'];if(n=
 
 /* ================= object definitions ================= */
 const DIN=(w)=>({w,h:90});
+// cable glands: thread Ø, hex across flats, thread length, hex height, dome height, [cable range min, max] (mm)
+const GLAND={M12:[12,15,8,5,13,[3,6.5]],M16:[16,20,8,6,16,[4,8]],M20:[20,24,9,6,19,[6,12]],M25:[25,29,10,7,22,[9,17]],M32:[32,36,11,8,26,[13,21]],M40:[40,46,12,9,30,[19,28]],M50:[50,57,12,10,34,[27,35]],M63:[63,68,13,11,40,[34,45]]};
 const DEF={
  mcb:{layer:4,rail:true,edit:['tag','rating','color'],ratings:['B6','B10','B16','B20','C6','C10','C16','C20','C25','C32','C40','C50','C63','D16','D25','D32'],
   def:{poles:1,rating:'C16'},
@@ -828,6 +830,22 @@ const DEF={
    const a=o.p.pos==='I'?0:-90,L=R*1.55;s+=`<g transform="translate(0 ${cy}) rotate(${a})"><rect x="${-b*.09}" y="${-L/2}" width="${b*.18}" height="${L}" rx="${b*.08}" fill="${em?'#dc2626':'#111'}" stroke="#000" stroke-width="1"/><circle cx="0" cy="${-L/2+b*.1}" r="${b*.04}" fill="#9ca3af"/><path d="M0 ${-L/2+b*.2}V${-L*.1}" stroke="${em?'#fca5a5':'#4b5563'}" stroke-width="1.2"/></g><circle cx="0" cy="${cy}" r="${b*.07}" fill="#6b7280" stroke="#000" stroke-width=".6"/>`;
    s+=txt(0,h/2-7,(o.p.rating||'').split('·')[0].trim(),Math.min(6,w*.08),'#e5e7eb',700);
    return s+(o.p.tag?txt(0,h/2+5,o.p.tag,6,'#7dd3fc',700):'');}},
+ /* cable gland (אנטיגרון), metric M12-M63: seen from the side (thread through the wall, hex, dome cap) for the
+    top / bottom of a panel, or from the front (hex and dome) for a gland plate; plastic grey / black or nickel brass */
+ gland:{layer:5,edit:['tag','rating','gv','gm'],def:{tag:'',rating:'M20',gv:'side',gm:'grey'},ratings:Object.keys(GLAND),
+  size:o=>{const g=GLAND[o.p.rating]||GLAND.M20,c=g[1]*1.155;return o.p.gv==='front'?{w:c,h:c}:{w:c,h:g[2]+g[3]+g[4]};},
+  draw:o=>{const g=GLAND[o.p.rating]||GLAND.M20,[d,af,th,hx,dm]=g,c=af*1.155,col={grey:['#9ca3af','#6b7280','#4b5563'],black:['#374151','#1f2937','#000'],brass:['#d1d5db','#9ca3af','#4b5563']}[o.p.gm]||['#9ca3af','#6b7280','#4b5563'];
+   const hex=(cx,cy,r)=>[0,1,2,3,4,5].map(i=>{const a=(i*60+30)*Math.PI/180;return `${r2(cx+r*Math.cos(a))},${r2(cy+r*Math.sin(a))}`;}).join(' ');
+   if(o.p.gv==='front'){let s=`<polygon points="${hex(0,0,c/2)}" fill="${col[1]}" stroke="${col[2]}" stroke-width="1"/><circle cx="0" cy="0" r="${af*.46}" fill="${col[0]}" stroke="${col[2]}" stroke-width=".8"/>`;
+    for(let i=0;i<12;i++){const a=i*30*Math.PI/180;s+=`<path d="M${r2(Math.cos(a)*af*.22)} ${r2(Math.sin(a)*af*.22)}L${r2(Math.cos(a)*af*.42)} ${r2(Math.sin(a)*af*.42)}" stroke="${col[2]}" stroke-width=".6" opacity=".7"/>`;}
+    s+=`<circle cx="0" cy="0" r="${g[5][1]/2}" fill="#1f2937" stroke="#000" stroke-width=".6"/>`+txt(0,c/2+4,o.p.rating,Math.max(3,af*.18),'#e5e7eb',700);return s+(o.p.tag?txt(c/2+2,-c/2,o.p.tag,4,'#7dd3fc',700,'start'):'');}
+   // side view: cap on top, hex, thread at the bottom (rotate it to point up)
+   const H=th+hx+dm,y0=-H/2;let s=`<path d="M${-af*.42} ${y0+dm}C${-af*.42} ${y0+dm*.25} ${-af*.3} ${y0} 0 ${y0}C${af*.3} ${y0} ${af*.42} ${y0+dm*.25} ${af*.42} ${y0+dm}Z" fill="${col[0]}" stroke="${col[2]}" stroke-width="1"/>`;
+   for(let i=1;i<4;i++)s+=`<path d="M${-af*.42+i*af*.21} ${y0+dm}V${y0+dm*.35}" stroke="${col[2]}" stroke-width=".6" opacity=".6"/>`;
+   s+=`<rect x="${-c/2}" y="${y0+dm}" width="${c}" height="${hx}" fill="${col[1]}" stroke="${col[2]}" stroke-width="1"/><path d="M${-c/4} ${y0+dm}v${hx}M${c/4} ${y0+dm}v${hx}" stroke="${col[2]}" stroke-width=".7"/>`;
+   s+=`<rect x="${-d/2}" y="${y0+dm+hx}" width="${d}" height="${th}" fill="${col[0]}" stroke="${col[2]}" stroke-width="1"/>`;for(let y=y0+dm+hx+1.5;y<H/2-.5;y+=1.6)s+=`<path d="M${-d/2} ${y}h${d}" stroke="${col[2]}" stroke-width=".4"/>`;
+   s+=`<rect x="${-g[5][1]/2}" y="${y0-6}" width="${g[5][1]}" height="7" fill="#1f2937" opacity=".85"/>`+txt(c/2+2,y0+dm+hx/2,o.p.rating,Math.max(3,af*.2),'#e5e7eb',700,'start');
+   return s+(o.p.tag?txt(-c/2-2,y0+dm+hx/2,o.p.tag,4,'#7dd3fc',700,'end'):'');}},
  hole22:{layer:6.7,front:true,edit:['tag'],def:{tag:''},size:()=>({w:30,h:30}),
   draw:o=>`<circle r="14.85" fill="none" stroke="#777" stroke-width=".5" stroke-dasharray="2 1.5"/><circle r="11.15" fill="#151515" stroke="#555" stroke-width=".5"/><path d="M-4 0H4M0 -4V4" stroke="#888" stroke-width=".5"/>`+lg(o)},
  cutdin:{layer:6.7,front:true,cut:true,edit:['mods','tag'],def:{mods:12,tag:''},size:o=>({w:Math.max(1,+o.p.mods||1)*18+16,h:61}),hole:o=>({w:Math.max(1,+o.p.mods||1)*18,h:45}),
@@ -1683,6 +1701,8 @@ const LIB=[
    {g:'קופסאות לחצנים CI-K (גובה×רוחב מ"מ)',items:I('CI-K1 131×80','CI-K2 181×100','CI-K3 222×120','CI-K4 240×160','CI-K5 280×200')},
    {g:'קופסאות Ci מודולריות',items:I('Ci 250×187.5','Ci 375×250','Ci 250×375','Ci 375×375','Ci 250×375 עם חלון')},
    {g:'מחיצות פח',items:I('מחיצה אופקית','מחיצה אנכית')},
+   {g:'כניסות כבל — אנטיגרונים (מבט מהצד; לבראש הלוח — מסובבים 180°)',items:['M12','M16','M20','M25','M32','M40','M50','M63'].map(m=>({t:'gland',n:`אנטיגרון ${m} (כבל ${GLAND[m][5].join('-')} מ"מ)`,p:{rating:m}}))},
+   {g:'אנטיגרונים — מבט מלפנים (לפלטת כניסות)',items:['M16','M20','M25','M32','M40','M50'].map(m=>({t:'gland',n:`אנטיגרון ${m} — מלפנים`,p:{rating:m,gv:'front'}}))},
    {g:'פתחים בחזית למפסקים',items:I('פתח למאמ"תים 12 מודולים','פתח למאמ"תים 24 מודולים','פתח למפסק כוח (MCCB)','פתח למפסק כוח גדול')},
    {g:'רצפה (חתך) — נכנסת מתחת לארון הנבחר או לכל הארונות',items:[{t:'floor',n:'רצפת בטון',p:{kind:'concrete'}},{t:'floor',n:'רצפה כפולה (צפה)',p:{kind:'raised'}}]}]},
   {tab:'פסי DIN ותעלות',icon:'▤',hint:'לשינוי אורך: בוחרים את הפס או התעלה וגוררים את העיגולים הכחולים שבקצוות.',groups:[
@@ -3283,6 +3303,8 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='px')h+=`<div class="fld"><label>סוג הגשש</label><select id="f_px"><option value="ind" ${v!=='cap'?'selected':''}>אינדוקטיבי (מתכת)</option><option value="cap" ${v==='cap'?'selected':''}>קיבולי (כל חומר — נוזל, אבקה, פלסטיק)</option></select></div>`;
   else if(k==='hcol')h+=`<div class="fld"><label>צבע הידית</label><select id="f_hcol"><option value="black" ${v!=='red'?'selected':''}>שחורה (רגילה)</option><option value="red" ${v==='red'?'selected':''}>אדומה על צהוב (חירום)</option></select></div>`;
   else if(k==='pos')h+=`<div class="fld"><label>מצב מצויר</label><select id="f_pos"><option value="O" ${v!=='I'?'selected':''}>O — מופסק</option><option value="I" ${v==='I'?'selected':''}>I — מחובר</option></select></div>`;
+  else if(k==='gv')h+=`<div class="fld"><label>מבט</label><select id="f_gv"><option value="side" ${v!=='front'?'selected':''}>מהצד (בתחתית / בראש הלוח)</option><option value="front" ${v==='front'?'selected':''}>מלפנים (על פלטת כניסות)</option></select></div>`;
+  else if(k==='gm')h+=`<div class="fld"><label>חומר</label><select id="f_gm">${[['grey','פלסטיק אפור'],['black','פלסטיק שחור'],['brass','פליז מצופה ניקל']].map(([a,b])=>`<option value="${a}" ${a===(v||'grey')?'selected':''}>${b}</option>`).join('')}</select></div><div class="hint">טווח כבל: ${(GLAND[o.p.rating]||GLAND.M20)[5].join('–')} מ"מ</div>`;
   else if(k==='vt')h+=`<div class="fld"><label>סוג המגוף</label><select id="f_vt">${[['bfly','פרפר (Butterfly)'],['gate','טריז (Gate)'],['ball','כדורי (Ball)']].map(([a,b])=>`<option value="${a}" ${a===(v||'bfly')?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='act')h+=`<div class="fld"><label>מפעיל</label><select id="f_act">${[['3ph','תלת-פאזי 400V — פתח / סגור'],['1ph','חד-פאזי 230V — פתח / סגור'],['mod','מווסת 4-20mA'],['auma','AUMA SA + AUMA MATIC AM — פתח / סגור 400V'],['aumac','AUMA SA + AUMATIC AC — מווסת 4-20mA 400V']].map(([a,b])=>`<option value="${a}" ${a===(v||'3ph')?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='nf')h+=`<div class="fld"><label>מצופים</label><select id="f_nf">${[['2','2 — עצירה, הפעלה'],['3','3 — עצירה, הפעלה, גלישה'],['4','4 — יבש, עצירה, הפעלה, גלישה']].map(([a,b])=>`<option value="${a}" ${a===String(v||'3')?'selected':''}>${b}</option>`).join('')}</select></div>`;
