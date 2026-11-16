@@ -1080,9 +1080,9 @@ const SDEF={
  sclockc:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'KT3',rating:'',desc:'מגע שעון'},size:()=>({w:60,h:60}),terms:IO,
   draw:o=>cNO()+`<line x1="-5.5" y1="0" x2="-17" y2="0" stroke="${SK}" stroke-width="1.4" stroke-dasharray="3 2"/>`+sC(-24,0,7,'#fff',1.6)+sL(-24,0,-24,-4.5,1.4)+sL(-24,0,-21,1,1.4)+sLbl(o,40)},
  sauxq:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Q1',rating:'13-14',desc:'מגע עזר מפסק'},size:()=>({w:40,h:60}),terms:IO,draw:o=>cNO()+sL(-4,-16,4,-8,1.6)+sL(-4,-8,4,-16,1.6)+sLbl(o,40)},
- smaglock:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Y1',rating:'24VDC 280kg',desc:'מנעול אלקטרומגנטי'},ratings:['12VDC 180kg','24VDC 280kg','24VDC 500kg'],size:()=>({w:40,h:60}),terms:IO,
+ smaglock:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Y1',rating:'24VDC 280kg',desc:'מנעול אלקטרומגנטי'},ratings:['12VDC 180kg','12VDC 280kg','24VDC 280kg','24VDC 500kg'],size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sL(0,-30,0,-9)+sR(-12,-9,24,18)+sT(0,0,'EM',8)+sL(0,9,0,30)+`<path d="M16 -3v-4a4 4 0 0 1 8 0v4" fill="none" stroke="${SK}" stroke-width="1.5"/>`+sR(14.5,-3,11,9,'#fff',1.5)+sLbl(o,52)},
- scardr:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'CR1',rating:'Wiegand 26',desc:'קורא כרטיסים'},ratings:['Wiegand 26','Wiegand 34','OSDP / RS485'],size:()=>({w:40,h:60}),terms:IO,
+ scardr:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'B1',rating:'Wiegand 26',desc:'קורא כרטיסים'},ratings:['Wiegand 26','Wiegand 34','OSDP / RS485'],size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sL(0,-30,0,-12)+sR(-13,-12,26,24)+sR(-10,-4,10,8,'#fff',1.4)+`<path d="M3.5 -4.5a6 6 0 0 1 0 9M7.5 -7.5a9 9 0 0 1 0 15" fill="none" stroke="${SK}" stroke-width="1.4" stroke-linecap="round"/>`+sL(0,12,0,30)+sLbl(o,40)},
  slamp:{layer:4,sld:true,edit:['tag','rating','desc','color'],def:{tag:'H1',rating:'230V',desc:'נורית סימון',color:'green'},size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sL(0,-30,0,-9)+sL(0,9,0,30)+sC(0,0,9,o.p.color&&o.p.color!=='white'?COLORS[o.p.color]+'55':'#fff')+sL(-6.4,-6.4,6.4,6.4)+sL(-6.4,6.4,6.4,-6.4)+sLbl(o,40)},
@@ -1281,6 +1281,7 @@ const WALLW='#f4f4ef';
 function ilFace(cx,cy){// an Israeli (type H) socket: two flat pins and an earth, in a round face
  return `<circle cx="${cx}" cy="${cy}" r="21" fill="#fff" stroke="#9a9a92" stroke-width="1"/><circle cx="${cx}" cy="${cy}" r="17" fill="#f7f7f2" stroke="#c9c9c0" stroke-width=".8"/>`+
   `<rect x="${cx-9.5}" y="${cy-8}" width="3" height="8" rx="1" fill="#333" transform="rotate(-30 ${cx-8} ${cy-4})"/><rect x="${cx+6.5}" y="${cy-8}" width="3" height="8" rx="1" fill="#333" transform="rotate(30 ${cx+8} ${cy-4})"/><circle cx="${cx}" cy="${cy+7}" r="2.4" fill="#333"/>`;}
+const MAGL={'180':{w:170,h:40},'280':{w:250,h:48},'500':{w:266,h:73}};
 function wallBox(w,h,r=8){return `<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${r}" fill="${WALLW}" stroke="#8d8d85" stroke-width="1.4"/><rect x="${-w/2+4}" y="${-h/2+4}" width="${w-8}" height="${h-8}" rx="${r-2}" fill="none" stroke="#d6d6cd" stroke-width="1"/>`;}
 function ceeFace(cx,cy,R,poles,col){const pts=poles===5?[[0,-.55],[.52,-.17],[.32,.45],[-.32,.45],[-.52,-.17]]:[[0,-.5],[.45,.3],[-.45,.3]];
  let s=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="${col}" stroke="#222" stroke-width="1.2"/><circle cx="${cx}" cy="${cy}" r="${R*.72}" fill="#2b2b2b" stroke="#111" stroke-width="1"/>`;
@@ -1319,21 +1320,23 @@ const WDEF={
   draw:o=>{let s=`<rect x="-63" y="-85" width="126" height="170" rx="10" fill="#c9cccf" stroke="#444" stroke-width="1.6"/><rect x="-42" y="-48" width="84" height="84" rx="6" fill="#facc15" stroke="#333" stroke-width="1.2"/>`;
    s+=`<circle cx="0" cy="-6" r="30" fill="#e11d48" stroke="#111" stroke-width="1.4"/><rect x="-36" y="-14" width="72" height="16" rx="7" fill="#be123c" stroke="#111" stroke-width="1.2" transform="rotate(-45 0 -6)"/>`+txt(-30,-40,'0',8,'#111',700)+txt(30,-40,'I',8,'#111',700);
    s+=txt(0,58,`${+o.p.poles||3}P ${o.p.rating||''}`,9,'#111',700)+txt(0,72,'מפסק בטחון',7,'#333',700);if(o.p.tag)s+=txt(0,-96,o.p.tag,8,'#1d4ed8',700);return s;}},
- maglock:{layer:4,edit:['tag','rating'],def:{tag:'',rating:'12/24VDC 280kg'},ratings:['12/24VDC 180kg','12/24VDC 280kg','12/24VDC 500kg'],
-  size:o=>/500/.test(o.p.rating)?{w:265,h:68}:/180/.test(o.p.rating)?{w:220,h:40}:{w:250,h:48},
-  terms:o=>{const {h}=DEF.maglock.size(o);return [[-8,h/2,'+'],[8,h/2,'−']];},
-  draw:o=>{const {w,h}=DEF.maglock.size(o);let s=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="3" fill="#cfd4da" stroke="#4b5563" stroke-width="1.4"/><rect x="${-w/2+4}" y="${-h/2+4}" width="${w-8}" height="${h*.3}" rx="2" fill="#e5e8ec" stroke="#9ca3af" stroke-width=".6"/>`;
-   [-1,1].forEach(a=>s+=`<circle cx="${a*(w/2-12)}" cy="${h*.12}" r="3.4" fill="#9ca3af" stroke="#4b5563" stroke-width=".8"/><path d="M${a*(w/2-12)-2.2} ${h*.12}h4.4" stroke="#4b5563" stroke-width=".9"/>`);
-   s+=`<circle cx="${w/2-26}" cy="${-h/2+4+h*.15}" r="2.6" fill="#ef4444" stroke="#7f1d1d" stroke-width=".6"/>`+txt(0,h*.12,'EM LOCK',Math.min(11,h*.24),'#374151',800)+txt(w/2-34,h/2-7,(o.p.rating||'').replace('12/24VDC ',''),Math.min(7,h*.15),'#4b5563',700);
-   return s+(o.p.tag?txt(-w/2+8,-h/2-6,o.p.tag,8,'#111',700,'start'):'');}},
- creader:{layer:4,edit:['tag','rating','kp'],def:{tag:'',rating:'MIFARE 13.56MHz',kp:'0'},ratings:['RFID 125kHz','MIFARE 13.56MHz','RFID + MIFARE'],
-  size:o=>o.p.kp==='1'?{w:86,h:140}:{w:86,h:120},
-  terms:o=>{const {h}=DEF.creader.size(o);return ['+','−','D0','D1'].map((l,i)=>[(i-1.5)*14,h/2,l]);},
-  draw:o=>{const {w,h}=DEF.creader.size(o),kp=o.p.kp==='1';let s=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="9" fill="#1f2937" stroke="#0b0f14" stroke-width="1.4"/><rect x="${-w/2+5}" y="${-h/2+5}" width="${w-10}" height="${h-10}" rx="6" fill="#273444" stroke="#3b4a5c" stroke-width=".8"/>`;
-   const cy=kp?-h/2+34:-8;s+=`<g transform="translate(0 ${cy})" fill="none" stroke="#e5e7eb" stroke-width="2.2" stroke-linecap="round"><path d="M-6 -10a14 14 0 0 1 0 20"/><path d="M1 -15a21 21 0 0 1 0 30"/><path d="M8 -20a28 28 0 0 1 0 40"/></g><circle cx="${-12}" cy="${cy}" r="3" fill="#e5e7eb"/>`;
-   if(kp){const k0=-h/2+66;for(let r=0;r<4;r++)for(let c=0;c<3;c++)s+=`<rect x="${-24+c*17}" y="${k0+r*15}" width="13" height="11" rx="2" fill="#374151" stroke="#64748b" stroke-width=".6"/>`+txt(-17.5+c*17,k0+5.5+r*15,['1','2','3','4','5','6','7','8','9','*','0','#'][r*3+c],6.5,'#e5e7eb',700);}
-   s+=`<circle cx="0" cy="${h/2-(kp?8:16)}" r="3" fill="#22c55e" stroke="#14532d" stroke-width=".6"/>`;if(!kp)s+=txt(0,h/2-30,(o.p.rating||'').split(' ')[0],6.5,'#9ca3af',700);
-   return s+(o.p.tag?txt(0,-h/2-6,o.p.tag,8,'#111',700):'');}},
+ wmag:{layer:4,edit:['tag','hold','mon','dcv'],def:{hold:'280',mon:'0',dcv:'12',tag:''},size:o=>{const M=MAGL[o.p.hold]||MAGL['280'];return {w:M.w,h:M.h+18};},
+  terms:o=>{const L=o.p.mon==='1'?['+','−','NO','C','NC']:['+','−'],{h}=DEF.wmag.size(o);return L.map((l,i)=>[(i-(L.length-1)/2)*12,-h/2,l]);},
+  draw:o=>{const M=MAGL[o.p.hold]||MAGL['280'],{w,h}=DEF.wmag.size(o),y0=-h/2,yb=y0+M.h;
+   let s=`<rect x="${-w/2}" y="${y0}" width="${w}" height="${M.h}" rx="3" fill="#c3c8ce" stroke="#4b5563" stroke-width="1.4"/><rect x="${-w/2+5}" y="${y0+5}" width="${w-10}" height="${M.h-10}" rx="2" fill="#d5d9de" stroke="#9aa1aa" stroke-width=".8"/>`;
+   [-1,1].forEach(d=>s+=`<circle cx="${d*(w/2-12)}" cy="${y0+M.h/2}" r="3.2" fill="#9aa1aa" stroke="#4b5563" stroke-width=".8"/>`);
+   s+=`<circle cx="${w/2-28}" cy="${y0+M.h/2}" r="3" fill="#ef4444" stroke="#7f1d1d" stroke-width=".7"/>`+txt(-8,y0+M.h/2-5,`${o.p.hold||280} ק"ג`,Math.min(9,M.h*.2),'#1f2937',700)+txt(-8,y0+M.h/2+6,`${o.p.dcv==='24'?24:12}V DC`,Math.min(6,M.h*.14),'#374151',600);
+   s+=`<rect x="${-w/2+15}" y="${yb+4}" width="${w-30}" height="14" rx="2" fill="#e5e7eb" stroke="#4b5563" stroke-width="1.1" stroke-dasharray="4 2"/>`+txt(0,yb+11,'פלטת עוגן (על הדלת)',4.5,'#4b5563',600);
+   if(o.p.tag)s+=txt(0,y0-8,o.p.tag,8,'#1d4ed8',700);return s;}},
+ wcard:{layer:4,edit:['tag','rdr','dcv'],def:{rdr:'card',dcv:'12',tag:''},size:o=>o.p.rdr==='kp'?{w:86,h:126}:{w:50,h:120},
+  terms:o=>{const {h}=DEF.wcard.size(o);return ['+','−','D0','D1'].map((l,i)=>[(i-1.5)*10,-h/2,l]);},
+  draw:o=>{const kp=o.p.rdr==='kp',{w,h}=DEF.wcard.size(o),y0=-h/2;
+   let s=`<rect x="${-w/2}" y="${y0}" width="${w}" height="${h}" rx="9" fill="#1f2937" stroke="#0b0f17" stroke-width="1.4"/><rect x="${-w/2+4}" y="${y0+4}" width="${w-8}" height="${h-8}" rx="6" fill="#273244" stroke="#3b4659" stroke-width=".8"/>`;
+   s+=`<rect x="${-w/2+12}" y="${y0+10}" width="${w-24}" height="3.5" rx="1.75" fill="#22c55e"/>`;
+   const cy=kp?y0+30:y0+h*.42;s+=`<g fill="none" stroke="#cbd5e1" stroke-width="1.6" stroke-linecap="round">${[6,11,16].map(r=>`<path d="M${-r*.7} ${cy-r*.7}a${r} ${r} 0 0 1 ${r*1.4} 0"/>`).join('')}</g><rect x="-5" y="${cy-1}" width="10" height="7" rx="1.5" fill="#cbd5e1"/>`;
+   if(kp){const K=['1','2','3','4','5','6','7','8','9','*','0','#'];K.forEach((k,i)=>{const c=i%3,r=Math.floor(i/3),x=(c-1)*22,y=y0+52+r*17;s+=`<rect x="${x-9}" y="${y-6.5}" width="18" height="13" rx="3" fill="#374151" stroke="#4b5563" stroke-width=".7"/>`+txt(x,y,k,6.5,'#e5e7eb',700);});}
+   else s+=txt(0,y0+h-22,'RFID',6,'#94a3b8',700);
+   if(o.p.tag)s+=txt(0,y0-8,o.p.tag,8,'#1d4ed8',700);return s;}},
  wjb:{layer:4,edit:['tag'],def:{tag:''},size:()=>({w:110,h:110}),
   terms:()=>[...['L1','L2','L3','N','PE'].map((l,i)=>[(i-2)*14,-55,l]),...['L1','L2','L3','N','PE'].map((l,i)=>[(i-2)*14,55,''])],
   draw:o=>{let s=`<rect x="-55" y="-55" width="110" height="110" rx="8" fill="#9ca3af" stroke="#374151" stroke-width="1.6"/><rect x="-46" y="-46" width="92" height="92" rx="6" fill="#b8bec6" stroke="#4b5563" stroke-width="1"/>`;
@@ -1386,7 +1389,7 @@ const LIB=[
   {g:'מגעים',items:[{t:'sno',n:'מגע פתוח (NO)'},{t:'snc',n:'מגע סגור (NC)'},{t:'sauxq',n:'מגע עזר מפסק'}]},
   {g:'סלילים וממסרים',items:[{t:'scoil',n:'סליל מגען / ממסר'},{t:'splc',n:'כניסה / יציאה PLC'}]},
   {g:'טיימרים ושעונים',items:[{t:'stcoil',n:'טיימר השהיה בהפעלה'},{t:'stcoiloff',n:'טיימר השהיה בניתוק'},{t:'stno',n:'מגע טיימר NO'},{t:'stnc',n:'מגע טיימר NC'},{t:'sclock',n:'שעון שבת / שעון זמן'},{t:'sclockc',n:'מגע שעון'}]},
-  {g:'בקרת כניסה לדלת',items:[{t:'smaglock',n:'מנעול אלקטרומגנטי (אלקטרומגנט)'},{t:'scardr',n:'קורא כרטיסים'}]},
+  {g:'בקרת כניסה לדלת',items:[{t:'smaglock',n:'מנעול אלקטרומגנטי (אלקטרומגנט)'},{t:'scardr',n:'קורא כרטיסים (סמל)'}]},
   {g:'חיישנים ומפסקי תהליך',items:[{t:'sfloat',n:'מצוף'},{t:'spress',n:'מפסק לחץ'},{t:'sthermo',n:'תרמוסטט'},{t:'slimit',n:'מפסק גבול'}]},
   {g:'סימון',items:[{t:'slamp',n:'נורית ירוקה',p:{color:'green',tag:'H1'}},{t:'slamp',n:'נורית אדומה',p:{color:'red',tag:'H2'}},{t:'slamp',n:'נורית כתומה',p:{color:'orange',tag:'H3'}},{t:'shorn',n:'צופר / זמזם'}]}]},
  {tab:'מדידה וצרכנים',sld:true,groups:[
@@ -1481,13 +1484,13 @@ const LIB=[
   {tab:'ספקים ומדידה',icon:'⚡',groups:[
    {g:'ספקים ועזר',items:I('ספק כוח','שקע לפס DIN','נורת סימון')},
    {g:'מדידה',items:I('מונה אנרגיה')}]},
-  {tab:'שקעים ומפסקי קיר',icon:'🔌',hint:'ציוד על הטיח. במאפיינים: מספר שקעים, הגנה (IP44 עם מכסה), סוג שקע תעשייתי, הרכב קופסת שקעים וסוג מפסק. החיבור (L, N, PE) בראש כל אביזר.',groups:[
+  {tab:'שקעים ומפסקי קיר',icon:'🔌',hint:'ציוד על הטיח. במאפיינים: מספר שקעים, הגנה (IP44 עם מכסה), סוג שקע תעשייתי, הרכב קופסת שקעים וסוג מפסק; לבקרת כניסה — כוח החזקה של האלקטרומגנט, מגע מצב, מתח הפעלה וסוג הקורא. החיבור (L, N, PE) בראש כל אביזר.',groups:[
    {g:'שקעים על הטיח',items:[{t:'wsock',n:'שקע יחיד',p:{gang:1}},{t:'wsock',n:'שקע כפול',p:{gang:2}},{t:'wsock',n:'שקע משולש',p:{gang:3}},{t:'wsock',n:'שקע מוגן מים IP44',p:{gang:1,ip:'44'}},{t:'wsock',n:'שקע כפול IP44',p:{gang:2,ip:'44'}}]},
    {g:'שקעים תעשייתיים (CEE)',items:[{t:'wcee',n:'שקע CEE 16A חד-פאזי',p:{cee:'16-3'}},{t:'wcee',n:'שקע CEE 16A תלת-פאזי',p:{cee:'16-5'}},{t:'wcee',n:'שקע CEE 32A תלת-פאזי',p:{cee:'32-5'}},{t:'wcee',n:'שקע CEE 63A תלת-פאזי',p:{cee:'63-5'}}]},
    {g:'קופסאות שקעים',items:[{t:'wsbox',n:'קופסת שקעים 16A + 2×230V',p:{cfg:'A'}},{t:'wsbox',n:'קופסת שקעים 32A + 16A + 2×230V',p:{cfg:'B'}},{t:'wsbox',n:'קופסת שקעים 2×16A + 16A חד + 3×230V',p:{cfg:'C'}}]},
    {g:'מפסקים על הקיר',items:[{t:'wsw',n:'מפסק יחיד',p:{sw:'1'}},{t:'wsw',n:'מפסק כפול',p:{sw:'2'}},{t:'wsw',n:'מחליף',p:{sw:'tw'}},{t:'wsw',n:'לחצן',p:{sw:'push'}},{t:'wiso',n:'מפסק בטחון 3P 25A',p:{poles:3,rating:'25A'}},{t:'wiso',n:'מפסק בטחון 4P 63A',p:{poles:4,rating:'63A'}}]},
    {g:'קופסת חיבורים',items:[{t:'wjb',n:'קופסת חיבורים IP65'}]},
-   {g:'בקרת כניסה לדלת',items:[{t:'maglock',n:'אלקטרומגנט לדלת 180kg',p:{rating:'12/24VDC 180kg'}},{t:'maglock',n:'אלקטרומגנט לדלת 280kg'},{t:'maglock',n:'אלקטרומגנט לדלת 500kg',p:{rating:'12/24VDC 500kg'}},{t:'creader',n:'קורא כרטיסים לדלת'},{t:'creader',n:'קורא כרטיסים לדלת + מקלדת',p:{kp:'1',rating:'RFID + MIFARE'}}]}]},
+   {g:'בקרת כניסה לדלת',items:[{t:'wmag',n:'אלקטרומגנט לנעילת דלת 280 ק"ג',p:{hold:'280'}},{t:'wmag',n:'אלקטרומגנט לנעילת דלת 500 ק"ג',p:{hold:'500'}},{t:'wmag',n:'אלקטרומגנט עם מגע מצב',p:{hold:'280',mon:'1'}},{t:'wcard',n:'קורא כרטיסים',p:{rdr:'card'}},{t:'wcard',n:'קורא כרטיסים + קודן',p:{rdr:'kp'}}]}]},
   {tab:'מנועים וכבלים',icon:'⟲',hint:'מנוע: את ההספק ואת מה שמותקן עליו (משאבה צנטריפוגלית, בורג, מפוח, טבולה) בוחרים במאפיינים. כבל: בוחרים אותו כדי לנתב — גוררים קצה, ומה-+ שבאמצע קטע יוצרים כיפוף; את הפתיחה בצד אחד או בשניהם בוחרים במאפיינים.',groups:[
    {g:'מנועים ומשאבות',items:I('מנוע חשמלי','מנוע + משאבה צנטריפוגלית','מנוע + משאבת בורג','מנוע + מפוח','משאבה טבולה')},
    {g:'כבלים — פתיחת גידים',items:I('כבל ירוק 2×1.5','כבל ירוק 3×2.5','כבל ירוק 5×2.5','כבל ירוק 5×6','כבל ירוק 5×16','כבל ירוק 4×35','כבל שחור 5×16')}]},
@@ -1889,7 +1892,7 @@ function inCab(c,x,y){const g=cabG(c);return x>g.x0&&x<g.x0+g.W&&y>g.y0&&y<g.y0+
 /* Designations by IEC 81346 letter, numbered as parts are added: the next free
    number for that letter in this document (H1, H2… lamps; Q1, Q2… breakers…). A
    designation typed by hand stays as it is. */
-const SERIAL={smaglock:'Y',scardr:'CR',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
+const SERIAL={smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
  sbrk:'Q',smpcb:'Q',siso:'Q',slbs:'Q',sfsd:'Q',sats:'Q',srcd:'F',sfuse:'F',sol:'F',sspd:'F',scont:'K',svfd:'U',sss:'U',sups:'U',sgen:'G',sbatt:'G',strafo:'T',sct:'T',svt:'T',skwh:'P',spm:'P',samm:'P',svm:'P',scap:'C',smot:'M',stb:'X',scable:'W'};
 function autoTag(o){const pre=SERIAL[o.type];if(!pre||!o.p||!DEF[o.type].edit?.includes('tag'))return;const re=new RegExp('^'+pre+'(\\d+)$');if(o.p.tag&&!re.test(o.p.tag))return;
  const mine=isSldObj(o),used=new Set();state.objs.forEach(q=>{if(q===o||isSldObj(q)!==mine)return;const m=re.exec(q.p?.tag||'');if(m)used.add(+m[1]);});let n=1;while(used.has(n))n++;o.p.tag=pre+n;}
@@ -2832,7 +2835,7 @@ function shDash(o){const w=Math.max(.2,+o.p.lw||2);return o.p.dash==='dash'?`str
 function shFill(o){const c=col(o,'blue');return o.p.fill==='light'?c+'33':o.p.fill==='solid'?c:'none';}
 function lblFs(o){return Math.max(1,+o.p.fs||6);}
 function lblLines(o){const ls=String(o.p.text??'').split('\n');return ls.length?ls:[''];}
-const FL={kp:'מקלדת',slots:'מספר חריצים',model:'דגם',rows:'מספר שורות',mods:'מודולים בשורה',title:'שם הלוח',from:'מוזן מ',volt:'מתח',ic:'זרם קצר',main:'מפסק ראשי',notes:'שורות נוספות',pcol:'צבע השלט',feed:'סוג ההזנה',tn:'מספרי הדקים (למעלה-למטה)',wt:'עובי קיר (מ"מ)',lw:'עובי קו (מ"מ)',dash:'סוג קו',fill:'מילוי',head:'ראשי חץ',ang:'זווית (מעלות)',poles:'מספר קטבים',gang:'מספר שקעים',ip:'הגנה',cee:'סוג שקע',cfg:'הרכב הקופסה',sw:'סוג מפסק',lid:'מכסה',kind:'סוג',th:'עובי רצפה (מ"מ)',rh:'גובה רצפה כפולה (מ"מ)',rad:'רדיוס כיפוף מינימלי',ends:'פתיחת גידים',cores:'מספר גידים',sec:'חתך גיד (ממ"ר)',brk:'אורך פתיחת הגידים (מ"מ)',pump:'משאבה / ציוד מונע',tw:'רוחב תעלה (מ"מ)',set:'הרכב מהדקים',desc:'תיאור',fs:'גודל טקסט (מ"מ)',tag:'סימון (למשל Q1, K2)',rating:'דירוג / ערך',len:'אורך (מ"מ)',dw:'רוחב תעלה (מ"מ)',mods:'מספר מודולים',ph:'מספר פאזות',w:'רוחב (מ"מ)',h:'גובה (מ"מ)',text:'טקסט',kind:'סוג מהדק',color:'צבע',orient:'כיוון התקנה',coil:'מתח סליל',frame:'גודל / מבנה',door:'דלת',hinge:'צד צירים',closed:'תצוגה',size:'גודל קופסה',window:'חלון שקוף'};
+const FL={slots:'מספר חריצים',model:'דגם',rows:'מספר שורות',mods:'מודולים בשורה',title:'שם הלוח',from:'מוזן מ',volt:'מתח',ic:'זרם קצר',main:'מפסק ראשי',notes:'שורות נוספות',pcol:'צבע השלט',feed:'סוג ההזנה',tn:'מספרי הדקים (למעלה-למטה)',wt:'עובי קיר (מ"מ)',lw:'עובי קו (מ"מ)',dash:'סוג קו',fill:'מילוי',head:'ראשי חץ',ang:'זווית (מעלות)',poles:'מספר קטבים',gang:'מספר שקעים',ip:'הגנה',cee:'סוג שקע',cfg:'הרכב הקופסה',sw:'סוג מפסק',hold:'כוח החזקה',mon:'מגע מצב (דלת נעולה)',dcv:'מתח הפעלה',rdr:'סוג קורא',lid:'מכסה',kind:'סוג',th:'עובי רצפה (מ"מ)',rh:'גובה רצפה כפולה (מ"מ)',rad:'רדיוס כיפוף מינימלי',ends:'פתיחת גידים',cores:'מספר גידים',sec:'חתך גיד (ממ"ר)',brk:'אורך פתיחת הגידים (מ"מ)',pump:'משאבה / ציוד מונע',tw:'רוחב תעלה (מ"מ)',set:'הרכב מהדקים',desc:'תיאור',fs:'גודל טקסט (מ"מ)',tag:'סימון (למשל Q1, K2)',rating:'דירוג / ערך',len:'אורך (מ"מ)',dw:'רוחב תעלה (מ"מ)',mods:'מספר מודולים',ph:'מספר פאזות',w:'רוחב (מ"מ)',h:'גובה (מ"מ)',text:'טקסט',kind:'סוג מהדק',color:'צבע',orient:'כיוון התקנה',coil:'מתח סליל',frame:'גודל / מבנה',door:'דלת',hinge:'צד צירים',closed:'תצוגה',size:'גודל קופסה',window:'חלון שקוף'};
 function cabDialog(o,tmp){tmp=tmp||JSON.parse(JSON.stringify(o.p));const sel_=(f,opts,v)=>`<select data-f="${f}">${opts.map(([a,b])=>`<option value="${a}" ${String(a)===String(v)?'selected':''}>${b}</option>`).join('')}</select>`;
  const WS=[300,400,500,600,800,1000,1200].map(w=>[w,w+' מ"מ']),FS=[['door','דלת'],['double','דלת כפולה'],['cover','פאנלים מוברגים'],['none','ללא חזית']],HS=[['L','צירים שמאל'],['R','צירים ימין']];
  let h=`<div class="fld"><label>שם</label><input id="c_name" value="${esc(tmp.name||'')}"></div><div class="fld"><label>שלט על הדלת</label><input id="c_tag" value="${esc(tmp.tag||'')}"></div>`;
@@ -2867,7 +2870,6 @@ function editDialog(){const o=sel&&get(sel);
   if(k==='color')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_color">${Object.keys(COLORS).map(c=>`<option value="${c}" ${c===o.p.color?'selected':''}>${CNAME[c]}</option>`).join('')}</select></div>`;
   else if(k==='kind'&&o.type!=='floor')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_kind">${[['grey','אפור'],['blue','כחול (N)'],['pe','צהוב-ירוק (PE)'],['red','אדום']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='size'){const fam=String(v)[0];h+=`<div class="fld"><label>${FL[k]}</label><select id="f_size">${Object.keys(CISZ).filter(z=>z[0]===fam).map(z=>`<option value="${z}" ${z===v?'selected':''}>${CISZ[z].n}</option>`).join('')}</select></div>`;}
-  else if(k==='kp')h+=`<div class="fld"><label>מקלדת</label><select id="f_kp"><option value="0" ${v!=='1'?'selected':''}>כרטיס בלבד</option><option value="1" ${v==='1'?'selected':''}>כרטיס + מקלדת קוד</option></select></div>`;
   else if(k==='window')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_window"><option value="0" ${v!=='1'?'selected':''}>ללא</option><option value="1" ${v==='1'?'selected':''}>עם חלון (למפסקים)</option></select></div>`;
   else if(k==='door'){const dv=v||'none';h+=`<div class="fld"><label>${FL[k]}</label><select id="f_door">${[['none','ללא דלת'],['key','דלת עם מנעול מפתח'],['handle','דלת עם ידית ומנעול']].map(([a,b])=>`<option value="${a}" ${a===dv?'selected':''}>${b}</option>`).join('')}</select></div>`;}
   else if(k==='hinge')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_hinge"><option value="L" ${v!=='R'?'selected':''}>צירים משמאל</option><option value="R" ${v==='R'?'selected':''}>צירים מימין</option></select></div>`;
@@ -2883,6 +2885,10 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='ip')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_ip"><option value="20" ${v!=='44'?'selected':''}>רגיל (פנים)</option><option value="44" ${v==='44'?'selected':''}>IP44 מוגן מים, עם מכסה</option></select></div>`;
   else if(k==='cee')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_cee">${[['16-3','16A 230V חד-פאזי (כחול)'],['16-5','16A 400V תלת-פאזי (אדום)'],['32-5','32A 400V תלת-פאזי'],['63-5','63A 400V תלת-פאזי']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='cfg')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_cfg">${[['A','שקע 16A תלת-פאזי + 2 שקעים 230V'],['B','שקע 32A + שקע 16A תלת-פאזי + 2 שקעים 230V'],['C','2 שקעים 16A תלת-פאזי + 16A חד-פאזי + 3 שקעים 230V']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
+  else if(k==='hold')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_hold">${[['180','180 ק"ג'],['280','280 ק"ג'],['500','500 ק"ג']].map(([a,b])=>`<option value="${a}" ${a===String(v)?'selected':''}>${b}</option>`).join('')}</select></div>`;
+  else if(k==='mon')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_mon"><option value="0" ${v!=='1'?'selected':''}>בלי</option><option value="1" ${v==='1'?'selected':''}>עם מגע מצב (NO / C / NC)</option></select></div>`;
+  else if(k==='dcv')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_dcv"><option value="12" ${v!=='24'?'selected':''}>12V DC</option><option value="24" ${v==='24'?'selected':''}>24V DC</option></select></div>`;
+  else if(k==='rdr')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_rdr"><option value="card" ${v!=='kp'?'selected':''}>קורא כרטיסים (צר)</option><option value="kp" ${v==='kp'?'selected':''}>קורא כרטיסים + קודן</option></select></div>`;
   else if(k==='sw')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_sw">${[['1','מפסק יחיד'],['2','מפסק כפול'],['tw','מחליף'],['push','לחצן']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='lid')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_lid"><option value="1" ${v!=='0'?'selected':''}>עם מכסה — עבודה על החזית (לחצנים, נוריות)</option><option value="0" ${v==='0'?'selected':''}>בלי מכסה — עבודה על החלק הפנימי</option></select></div>`;
   else if(k==='kind'&&o.type==='floor')h+=`<div class="fld"><label>סוג רצפה</label><select id="f_kind"><option value="concrete" ${v!=='raised'?'selected':''}>רצפת בטון</option><option value="raised" ${v==='raised'?'selected':''}>רצפה כפולה (צפה) מעל בטון</option></select></div>`;
@@ -3086,7 +3092,7 @@ function bomData0(){const rows={};state.objs.forEach(o=>{if(o.type==='wire'){con
   let k=o.p.name+(o.p.rating&&!['label'].includes(o.type)?' '+o.p.rating:'');if(o.type==='cable'||o.type==='traysh'||o.type==='traymesh'){const g=o.type==='cable'?cabG2(o):null;k=o.type==='cable'?`כבל ${CNAME[o.p.color]||''} ${g.n}×${o.p.sec} ממ"ר`:`${o.type==='traysh'?'תעלת פח':'תעלת רשת'} ${o.p.tw} מ"מ`;rows[k]=rows[k]||{n:0,len:0};rows[k].len+=o.type==='cable'?cabLength(o):o.p.len;rows[k].n++;return;}
   if(o.type==='rail'||o.type==='duct'||o.type==='busbar'||o.type==='partition'){k=o.p.name+(o.type==='duct'?` ${o.p.dw}מ"מ`:'');rows[k]=rows[k]||{n:0,len:0};rows[k].len+=o.p.len;rows[k].n++;return;}
   if(o.type==='cabinet'){const g=cabG(o),FN={door:'דלת',double:'דלת כפולה',cover:'פאנלים מוברגים',none:'ללא חזית'};g.S.forEach(sc=>{const kk=`שדה ארון ${sc.w}×${g.H} — ${FN[sc.f]}`;rows[kk]=rows[kk]||{n:0};rows[kk].n++;});if(g.P){const kk=`סוקל ${g.P} מ"מ`;rows[kk]=rows[kk]||{n:0,len:0};rows[kk].len+=g.W;rows[kk].n++;}return;}
-  if(DRAWT.has(o.type))return;if(o.type==='enclosure')k=`לוח ${o.p.w}×${o.p.h} `+({key:'עם דלת ומנעול',handle:'עם ידית ומנעול'}[o.p.door]||'ללא דלת');if(o.type==='cibox')k='קופסה '+CISZ[o.p.size].n+(o.p.window==='1'?' עם חלון':'');if(DEF[o.type].front&&DEF[o.type].edit.includes('color'))k=o.p.name+' '+CNAME[o.p.color];rows[k]=rows[k]||{n:0};rows[k].n++;});
+  if(DRAWT.has(o.type))return;if(o.type==='enclosure')k=`לוח ${o.p.w}×${o.p.h} `+({key:'עם דלת ומנעול',handle:'עם ידית ומנעול'}[o.p.door]||'ללא דלת');if(o.type==='cibox')k='קופסה '+CISZ[o.p.size].n+(o.p.window==='1'?' עם חלון':'');if(o.type==='wmag')k=`אלקטרומגנט לנעילת דלת ${o.p.hold||280} ק"ג ${o.p.dcv==='24'?24:12}V DC`+(o.p.mon==='1'?' עם מגע מצב':'');if(o.type==='wcard')k=(o.p.rdr==='kp'?'קורא כרטיסים + קודן':'קורא כרטיסים')+` ${o.p.dcv==='24'?24:12}V DC`;if(DEF[o.type].front&&DEF[o.type].edit.includes('color'))k=o.p.name+' '+CNAME[o.p.color];rows[k]=rows[k]||{n:0};rows[k].n++;});
  const ks=Object.keys(rows);const line=k=>{const r=rows[k];return r.len!==undefined?`${(r.len/1000).toFixed(2)} מ'`+(r.n?` (${r.n} יח')`:''):`${r.n} יח'`;};
  return ks.map(k=>[k,line(k)]);}
 function bom(){const d=bomData(),ds=bomDataSld(),ks=d.map(r=>r[0]),L=Object.fromEntries(d),line=k=>L[k];
