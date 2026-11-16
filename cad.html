@@ -471,13 +471,13 @@ body.iconsonly .ddbtn .lbl{display:none}
 </style>
 </head>
 <body>
-<div id="stage"><svg id="svg"><g id="world"></g></svg></div>
+<div id="stage"><svg id="svg"><g id="ulay"></g><g id="world"></g></svg></div>
 
 <div id="rulX"></div><div id="rulY"></div><div id="xh"></div><div id="yh"></div>
 <div id="lyTabs"></div>
 <div id="sbar"><span id="coord"></span><button data-sb="cross" title="סמן צלב X/Y שזז עם העכבר">✛ סמן צלב</button><button data-sb="axes" title="צירים וסרגלים">📏 צירים</button><button data-sb="terms" title="הדגשת נקודות החיבור">🔵 נקודות</button></div>
 <div id="docTabs"><button class="ddbtn" id="ddFile" data-dd="mFile" title="קובץ — פרויקט חדש, תבנית, פתח, שמור עותק"><i class="ico" data-ic="open"></i><span class="lbl">קובץ</span><span class="caret">▾</span></button><button class="ddbtn" id="ddExport" data-dd="mExport" title="ייצוא ודוחות — PDF, תמונה, DXF, רשימת ציוד"><i class="ico" data-ic="exp"></i><span class="lbl">ייצוא</span><span class="caret">▾</span></button><button class="ddbtn" id="ddView" data-dd="mView" title="תצוגה — חזית לוח / חד קווי / משולב, בהיר-כהה, דף ייצור"><i class="ico" data-ic="panel"></i><span class="lbl" id="ddViewLbl">חזית לוח</span><span class="caret">▾</span></button><span id="saveSt"></span></div>
-<div class="ddmenu hidden" id="mFile"><div class="ddt">קובץ</div><button id="bNewProj" title="פרויקט חדש">📄 פרויקט חדש</button><button id="bTemplates" title="פרויקט חדש מתבנית (דוגמאות)">🗂 תבנית</button><button id="bOpenProj" title="פתח פרויקט">📂 פתח</button><button id="bSaveCopy" title="שמור עותק בשם">📑 שמור עותק</button></div>
+<div class="ddmenu hidden" id="mFile"><div class="ddt">קובץ</div><button id="bNewProj" title="פרויקט חדש">📄 פרויקט חדש</button><button id="bTemplates" title="פרויקט חדש מתבנית (דוגמאות)">🗂 תבנית</button><button id="bOpenProj" title="פתח פרויקט">📂 פתח</button><button id="bSaveCopy" title="שמור עותק בשם">📑 שמור עותק</button><div class="ddt">רקע לשרטוט</div><button id="bUlImp" title="ייבוא תמונה, עמוד PDF או קובץ DXF כרקע לשרטוט מעליו">🖼 ייבוא תמונה / PDF / DXF</button><button id="bUlMgr" title="נעילה, שקיפות, כיול ומחיקה של תמונות הרקע">🗂 תמונות רקע…</button></div>
 <div class="ddmenu hidden" id="mExport"><div class="ddt">ייצוא</div><button id="bPreview" title="תצוגה לפני הדפסה — רואים את הדפים לפני שמורידים או מדפיסים">👁 תצוגה לפני הדפסה</button><button id="bPdf" title="ייצוא PDF עם טבלת שרטוט">📄 PDF</button><button id="bPng" title="ייצוא תמונה (PNG)">🖼️ PNG</button><button id="bDxf" title="ייצוא DXF ל-AutoCAD — שם שומרים כ-DWG">📐 DXF</button><div class="ddt">דוחות</div><button id="bBom" title="רשימת ציוד (BOM)">📋 BOM</button></div>
 <div class="ddmenu hidden" id="mView"><div class="ddt">מסמך</div><button data-doc="panel">🗄 חזית לוח</button><button data-doc="sld">⚡ חד קווי</button><button data-doc="both">◧ משולב</button><div class="ddt">תצוגה</div><button id="bDark" title="רקע השרטוט: כהה / בהיר">🌙</button><button id="bLayout" title="הצג / הסתר את דף הייצור (Layout)">📄</button></div>
 <div class="ddmenu hidden" id="mDraw"></div>
@@ -974,6 +974,9 @@ const DEF={
     `<path d="M${P(-9,15)}Q${P(0,13)} ${P(9,15)}L${P(13,17)}L${P(16.5,47)}L${P(13.5,48)}L${P(9.5,24)}L${P(9.5,53)}L${P(8,98)}L${P(10.5,100)}L${P(1.5,100)}L${P(1.5,56)}L${P(-1.5,56)}L${P(-1.5,100)}L${P(-10.5,100)}L${P(-8,98)}L${P(-9.5,53)}L${P(-9.5,24)}L${P(-13.5,48)}L${P(-16.5,47)}L${P(-13,17)}Z"/></g>`+
     `<text x="0" y="${y0-3*u}" font-size="${3.2*u}" fill="#9ca3af" text-anchor="middle" font-family="Arial" font-weight="700" direction="ltr">${Math.round(H)}</text>`;}},
  // a wall is a box: both its length and its thickness drag like a rectangle (older ones kept len/wt)
+ underlay:{layer:-1,resize:'scale',edit:['op','exp'],def:{fs:1,iw:1000,ih:700,op:'0.6',exp:'0',hide:'0'},size:o=>({w:r2(o.p.iw*o.p.fs),h:r2(o.p.ih*o.p.fs)}),terms:()=>[],
+  draw:o=>{const {w,h}=sizeOf(o);if(EXPMIN>0)return o.p.exp==='1'&&o.p.hide!=='1'?`<g opacity="${+o.p.op||.6}">${ulayInner(o)}</g>`:'';
+   return `<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" fill="${o.locked||o.p.hide==='1'?'none':'transparent'}" stroke="${o.locked?'none':'#94a3b8'}" stroke-width="1" stroke-dasharray="6 4" vector-effect="non-scaling-stroke" ${o.locked||o.p.hide==='1'?'pointer-events="none"':''}/>`;}},
  wall:{layer:-.2,resize:'box',minBox:20,edit:['w','h'],def:{w:2000,h:200},size:o=>{const p=o.p;if(p.w==null&&p.len!=null){p.w=+p.len;p.h=+p.wt||200;delete p.len;delete p.wt;}return {w:+p.w||2000,h:+p.h||200};},
   draw:o=>{const {w:L,h:T}=DEF.wall.size(o),id='wh'+(o.id||'t'+(++floorSeq));
    return `<defs><pattern id="${id}" patternUnits="userSpaceOnUse" width="40" height="40" patternTransform="rotate(45)"><rect width="40" height="40" fill="#bdb6a8"/><line x1="0" y1="0" x2="0" y2="40" stroke="#6f685c" stroke-width="3"/></pattern></defs><rect x="${-L/2}" y="${-T/2}" width="${L}" height="${T}" fill="url(#${id})" stroke="#3a3a3a" stroke-width="3"/>`;}},
@@ -1738,11 +1741,11 @@ function termsSVG(){if(!showTerms||wireMode)return '';const k=1/view.s,used=new 
  return s+'</g>';}
 function toggleTerms(){showTerms=!showTerms;setTimeout(()=>window.sbSync&&sbSync());try{localStorage.setItem('epd.terms',showTerms?'1':'0');}catch(e){}renderNow();toast(showTerms?'נקודות החיבור מודגשות':'הדגשת נקודות החיבור כבויה');}
 let drawnS=0;
-function renderNow(){drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}let s=layoutSVG()+axesSVG()+content({sel:true})+termsSVG()+handlesSVG()+dimsSVG()+guidesSVG()+dropSVG()+measSVG()+rotSVG()+layHandlesSVG()+cableGuideSVG()+(DRAGNEW?`<g opacity=".8" pointer-events="none">${objSVG(DRAGNEW,true)}</g>`:'')+bandSVG()+qWireSVG();
+function renderNow(){drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}let s=layoutSVG()+axesSVG()+content({sel:true})+termsSVG()+handlesSVG()+dimsSVG()+guidesSVG()+dropSVG()+measSVG()+rotSVG()+layHandlesSVG()+calSVG()+cableGuideSVG()+(DRAGNEW?`<g opacity=".8" pointer-events="none">${objSVG(DRAGNEW,true)}</g>`:'')+bandSVG()+qWireSVG();
  if(wireMode){for(const o of state.objs){if(o.type==='wire')continue;termsOf(o).forEach(t=>{const [x,y]=fromLocal(o,t[0],t[1]);s+=`<circle cx="${x}" cy="${y}" r="2.8" fill="rgba(34,211,238,.25)" stroke="#22d3ee" stroke-width=".7" pointer-events="none"/>`;});}
   if(draft&&draft.pts.length){const c=WCOL[wireColor];const d=wirePath(null,draft.pts);if(d)s+=`<path d="${d}" fill="none" stroke="${c.base}" stroke-width="${SEC[wireSec]}" stroke-linecap="round" stroke-linejoin="round" opacity=".85" pointer-events="none"/>`;
    draft.pts.map(resolve).forEach((p,i)=>{if(p)s+=`<circle cx="${p.x}" cy="${p.y}" r="${i?2.2:3.4}" fill="#fff" stroke="#22d3ee" stroke-width="1" pointer-events="none"/>`;});}}
- world.innerHTML=s;}
+ world.innerHTML=s;renderUlay();}
 /* Rulers along the bottom and left edges in mm from the origin (Y up), the
    origin's two axes across the drawing, and where the mouse is. */
 let showAxes=true;try{showAxes=localStorage.getItem('epd.axes')!=='0';}catch(e){}
@@ -1751,7 +1754,7 @@ let showAxes=true;try{showAxes=localStorage.getItem('epd.axes')!=='0';}catch(e){
    don't shift as it grows), or set by hand or by the production sheet. The view
    itself is free — the origin only measures, it doesn't hold the page. */
 const OKEY=()=>state.tab==='sld'?'originS':'origin';
-function drawExt(){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;state.objs.forEach(o=>{if(o.type==='wire')return;const b=bbW(o);x0=Math.min(x0,b.x0);y0=Math.min(y0,b.y0);x1=Math.max(x1,b.x1);y1=Math.max(y1,b.y1);});return x0>x1?null:{x0,y0,x1,y1};}
+function drawExt(withUl){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;state.objs.forEach(o=>{if(o.type==='wire'||(o.type==='underlay'&&!(withUl&&o.p.hide!=='1')))return;const b=bbW(o);x0=Math.min(x0,b.x0);y0=Math.min(y0,b.y0);x1=Math.max(x1,b.x1);y1=Math.max(y1,b.y1);});return x0>x1?null:{x0,y0,x1,y1};}
 function cornerOf(e){return {x:r2(Math.floor((e.x0-20)/10)*10),y:r2(Math.ceil((e.y1+20)/10)*10)};}
 function ensureOrigin(){const k=OKEY();if(state[k])return;const e=drawExt();if(e)state[k]=cornerOf(e);}
 const ORG=()=>state[OKEY()]||(()=>{const e=drawExt();return e?cornerOf(e):{x:0,y:0};})();
@@ -1762,7 +1765,7 @@ const SHEET={l:32,b:32};
    drawing falls on the printed sheet. The PDF prints exactly that. */
 const LKEY=()=>state.tab==='sld'?'layoutS':'layout';
 function layoutRect(){const L=state[LKEY()];if(!L||!L.on)return null;let [W,H]=PAPER[L.paper]||PAPER.A3;if(L.orient==='P')[W,H]=[H,W];const n=+L.scale||10,o=ORG();return {W,H,n,x0:o.x,y0:o.y-H*n,x1:o.x+W*n,y1:o.y,L};}
-function viewExt(){const e=drawExt(),R=layoutRect();if(!R)return e;if(!e)return {x0:R.x0,y0:R.y0,x1:R.x1,y1:R.y1};return {x0:Math.min(e.x0,R.x0),y0:Math.min(e.y0,R.y0),x1:Math.max(e.x1,R.x1),y1:Math.max(e.y1,R.y1)};}
+function viewExt(){const e=drawExt(true),R=layoutRect();if(!R)return e;if(!e)return {x0:R.x0,y0:R.y0,x1:R.x1,y1:R.y1};return {x0:Math.min(e.x0,R.x0),y0:Math.min(e.y0,R.y0),x1:Math.max(e.x1,R.x1),y1:Math.max(e.y1,R.y1)};}
 function layoutSVG(){const R=layoutRect();if(!R)return '';const {W,H,n,x0,y0}=R,X=v=>x0+v*n,Y=v=>y0+v*n,lt=isLight(),ln=lt?'#475569':'#94a3b8',th=W<230?34:30,B=H-15;
  let s=`<g pointer-events="none"><rect x="${x0}" y="${y0}" width="${W*n}" height="${H*n}" fill="${lt?'rgba(255,255,255,.55)':'rgba(255,255,255,.04)'}" stroke="${ln}" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
  s+=`<rect x="${X(25)}" y="${Y(15)}" width="${(W-40)*n}" height="${(H-30)*n}" fill="none" stroke="${ln}" stroke-width="1.2" stroke-dasharray="8 5" vector-effect="non-scaling-stroke"/>`;
@@ -1828,7 +1831,7 @@ $('sbar').addEventListener('click',e=>{const b=e.target.closest('[data-sb]');if(
 sbSync();
 
 svg.addEventListener('pointerleave',()=>{curW=null;if(showAxes)drawRulers();});
-function applyView(){world.setAttribute('transform',`translate(${view.tx} ${view.ty}) scale(${view.s})`);drawRulers();if(drawnS&&Math.abs(view.s-drawnS)/view.s>.02)render();
+function applyView(){world.setAttribute('transform',`translate(${view.tx} ${view.ty}) scale(${view.s})`);$('ulay').setAttribute('transform',`translate(${view.tx} ${view.ty}) scale(${view.s})`);drawRulers();if(drawnS&&Math.abs(view.s-drawnS)/view.s>.02)render();
  const st=GRID>0?GRID:10,mj=st*5*view.s,mn=st*view.s,showMn=mn>=7;
  const SL=document.body.classList.contains('sld'),gM=SL?'#d6d6cf':'#383838',gm=SL?'#ebebe5':'#2e2e2e';
  stage.style.backgroundImage=`linear-gradient(${gM} 1px,transparent 1px),linear-gradient(90deg,${gM} 1px,transparent 1px)`+(showMn?`,linear-gradient(${gm} 1px,transparent 1px),linear-gradient(90deg,${gm} 1px,transparent 1px)`:'');
@@ -1973,7 +1976,7 @@ document.addEventListener('click',e=>{if(!e.target.closest('#docTabs,#rail,.ddme
  if(e.target.closest('#bOpenProj')){(SH?openShared:openProjects)();return;}
  if(e.target.closest('#bSaveCopy')){(SH?()=>saveSharedAs(true):saveAs)();return;}
  if(e.target.closest('#bBom')){bom();return;}
- if(e.target.closest('#bPdf')){pdfDialog();return;}if(e.target.closest('#bPreview')){printPreview();return;}
+ if(e.target.closest('#bPdf')){pdfDialog();return;}if(e.target.closest('#bUlImp')){ulImport();return;}if(e.target.closest('#bUlMgr')){ulManager();return;}if(e.target.closest('#bPreview')){printPreview();return;}
  if(e.target.closest('#bPng')){exportImage();return;}
  if(e.target.closest('#bDxf')){dxfExport();return;}
  const b=e.target.closest('[data-doc]');if(b)switchDoc(b.dataset.doc);
@@ -2484,6 +2487,97 @@ function layResize(g,wx,wy,free){const R=g.R0,{W,H,x0,y0,x1,y1}=R,h=g.h;let n,ox
  if(!free)n=LYSTD.reduce((b,v)=>Math.abs(Math.log(v/n))<Math.abs(Math.log(b/n))?v:b,LYSTD[0]);else n=Math.round(n*10)/10||.1;
  if(h==='l'||h==='tl')ox=x1-W*n;if(h==='bl'){ox=x1-W*n;oy=y0+H*n;}if(h==='b'||h==='br')oy=y0+H*n;
  state[LKEY()].scale=n;state[OKEY()]={x:r2(ox),y:r2(oy)};}
+
+/* ================= background picture (underlay) =================
+   An image, a PDF page or a DXF drawing laid under the drawing, to trace over:
+   import it, calibrate its scale by two points of known distance, set how
+   faint it is, lock it so clicks go through to the parts above. The picture
+   itself is drawn on its own layer (#ulay) and only redrawn when it changes. */
+function ulayInner(o){const {w,h}=sizeOf(o);if(o.p.svg)return `<svg x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" viewBox="${o.p.vb}" preserveAspectRatio="none" overflow="visible">${o.p.svg}</svg>`;
+ return `<image href="${o.p.src}" x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" preserveAspectRatio="none"/>`;}
+function renderUlay(){const L=$('ulay');if(!L)return;L.style.color=isLight()?'#1f2937':'#e5e7eb';const U=state.objs.filter(o=>o.type==='underlay'&&o.p.hide!=='1'),ids=new Set(U.map(o=>o.id));
+ [...L.children].forEach(g=>{if(!ids.has(g.dataset.u))g.remove();});
+ U.forEach(o=>{let g=L.querySelector(`[data-u="${o.id}"]`);const ck=(o.p.src||o.p.svg||'').length+'|'+o.p.iw+'|'+o.p.ih+'|'+o.p.fs;
+  if(!g){g=document.createElementNS('http://www.w3.org/2000/svg','g');g.dataset.u=o.id;g.setAttribute('pointer-events','none');L.appendChild(g);}
+  if(g.dataset.k!==ck){g.innerHTML=ulayInner(o);g.dataset.k=ck;}
+  g.setAttribute('transform',`translate(${o.x} ${o.y}) rotate(${o.rot||0})`);g.setAttribute('opacity',String(+o.p.op||.6));});}
+function ulImport(){const inp=document.createElement('input');inp.type='file';inp.accept='image/*,.pdf,application/pdf,.dxf';
+ inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;const nm=f.name.toLowerCase();
+  try{if(nm.endsWith('.dxf'))ulFromDxf(await f.text(),f.name);else if(nm.endsWith('.pdf')||f.type==='application/pdf')await ulFromPdf(await f.arrayBuffer(),f.name);else await ulFromImage(f,f.name);}
+  catch(e){console.error(e);toast('לא הצלחתי לקרוא את הקובץ'+(e&&e.message?' ('+e.message+')':''));}};inp.click();}
+// a canvas to a JPEG small enough to keep in the project (the cloud copy holds about 1 MB in all)
+function ulJpeg(c){let q=.82,u=c.toDataURL('image/jpeg',q);while(u.length>420000&&q>.35){q-=.1;u=c.toDataURL('image/jpeg',q);}
+ if(u.length>420000){const k=Math.sqrt(400000/u.length),c2=document.createElement('canvas');c2.width=Math.round(c.width*k);c2.height=Math.round(c.height*k);const g=c2.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c2.width,c2.height);g.drawImage(c,0,0,c2.width,c2.height);return ulJpeg(c2);}return u;}
+function ulCanvas(src,W,H){const M=2000,k=Math.min(1,M/Math.max(W,H)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(W*k));c.height=Math.max(1,Math.round(H*k));const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(src,0,0,c.width,c.height);return c;}
+function ulFromImage(file,name){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=ulCanvas(im,im.naturalWidth,im.naturalHeight);ulAdd({src:ulJpeg(c),iw:c.width,ih:c.height},name);res();};im.onerror=()=>rej(new Error('תמונה לא נתמכת'));im.src=r.result;};r.onerror=rej;r.readAsDataURL(file);});}
+function loadPdfJs(){return window.pdfjsLib?Promise.resolve():new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='vendor/pdfjs/pdf.min.js';sc.onload=()=>{try{pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdfjs/pdf.worker.min.js';}catch(e){}res();};sc.onerror=()=>rej(new Error('רכיב ה-PDF לא נטען'));document.head.appendChild(sc);});}
+async function ulFromPdf(buf,name){toast('קורא את ה-PDF…');await loadPdfJs();const doc=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;let pg=1;
+ if(doc.numPages>1){pg=await new Promise(res=>modal('איזה עמוד?',`<div class="fld"><label>מספר עמוד (1–${doc.numPages})</label><input id="ul_pg" type="number" min="1" max="${doc.numPages}" value="1"></div>`,[{t:'ייבוא',cls:'pri',fn:()=>{res(Math.min(doc.numPages,Math.max(1,Math.round(+$('ul_pg').value)||1)));}},{t:'ביטול',fn:()=>res(0)}]));if(!pg)return;}
+ const page=await doc.getPage(pg),v1=page.getViewport({scale:1}),sc=Math.min(4,2000/Math.max(v1.width,v1.height)),vp=page.getViewport({scale:sc});
+ const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);
+ await page.render({canvasContext:g,viewport:vp}).promise;ulAdd({src:ulJpeg(c),iw:c.width,ih:c.height,pmm:v1.width*25.4/72},String(name).replace(/\.pdf$/i,'')+(doc.numPages>1?' · עמוד '+pg:''));}
+// DXF: lines, polylines, circles, arcs, splines (through their points), texts and blocks, as one vector picture
+function ulFromDxf(txt,name){const L=txt.split(/\r?\n/);const P=[];for(let i=0;i+1<L.length;i+=2)P.push([+L[i].trim(),L[i+1].replace(/\s+$/,'')]);
+ let units=4;for(let i=0;i<P.length-1;i++)if(P[i][0]===9&&P[i][1]==='$INSUNITS'){units=+P[i+1][1];break;}
+ const U={1:25.4,2:304.8,4:1,5:10,6:1000}[units]||1;
+ // split into entities by group code 0, remembering the section
+ const blocks={},ents=[];let sec='',cur=null,blk=null;
+ for(const [c,v] of P){if(c===0){if(cur)(blk?blk.ents:ents).push(cur);cur=null;
+   if(v==='SECTION'){sec='?';continue;}if(v==='ENDSEC'){sec='';continue;}if(v==='BLOCK'){blk={ents:[],name:'',bx:0,by:0};cur={t:'BLOCKHDR',g:[]};continue;}if(v==='ENDBLK'){if(blk&&blk.name)blocks[blk.name]=blk;blk=null;continue;}
+   if(sec==='ENTITIES'||sec==='BLOCKS')cur={t:v,g:[]};continue;}
+  if(c===2&&sec==='?'){sec=v;continue;}
+  if(cur){if(cur.t==='BLOCKHDR'&&blk){if(c===2)blk.name=v;if(c===10)blk.bx=+v;if(c===20)blk.by=+v;}else cur.g.push([c,v]);}}
+ if(cur)ents.push(cur);
+ let d='',tx='',n=0,x0=1e18,y0=1e18,x1=-1e18,y1=-1e18;
+ const put=(m,x,y)=>{const X=(m[0]*x+m[1]*y+m[2])*U,Y=-(m[3]*x+m[4]*y+m[5])*U;x0=Math.min(x0,X);x1=Math.max(x1,X);y0=Math.min(y0,Y);y1=Math.max(y1,Y);return [X,Y];};
+ const seg=(m,pts,close)=>{if(pts.length<2)return;pts.forEach(([x,y],i)=>{const [X,Y]=put(m,x,y);d+=(i?'L':'M')+X.toFixed(2)+' '+Y.toFixed(2);});if(close)d+='Z';n++;};
+ const mul=(a,b)=>[a[0]*b[0]+a[1]*b[3],a[0]*b[1]+a[1]*b[4],a[0]*b[2]+a[1]*b[5]+a[2],a[3]*b[0]+a[4]*b[3],a[3]*b[1]+a[4]*b[4],a[3]*b[2]+a[4]*b[5]+a[5]];
+ const deU=s=>s.replace(/\\U\+([0-9A-Fa-f]{4})/g,(_,h)=>String.fromCharCode(parseInt(h,16))).replace(/\\P/g,' ').replace(/\\[A-Za-z][^;]*;/g,'').replace(/[{}]/g,'');
+ const draw=(list,m,depth)=>{let poly=null;for(const e of list){const g=k=>{const f=e.g.find(q=>q[0]===k);return f?+f[1]:0;},gs=k=>{const f=e.g.find(q=>q[0]===k);return f?f[1]:'';};
+   if(e.t==='LINE')seg(m,[[g(10),g(20)],[g(11),g(21)]]);
+   else if(e.t==='LWPOLYLINE'||e.t==='SPLINE'){const xs=e.g.filter(q=>q[0]===10).map(q=>+q[1]),ys=e.g.filter(q=>q[0]===20).map(q=>+q[1]);seg(m,xs.map((x,i)=>[x,ys[i]]),e.t==='LWPOLYLINE'&&(g(70)&1));}
+   else if(e.t==='POLYLINE')poly={pts:[],cl:g(70)&1};else if(e.t==='VERTEX'&&poly)poly.pts.push([g(10),g(20)]);else if(e.t==='SEQEND'&&poly){seg(m,poly.pts,poly.cl);poly=null;}
+   else if(e.t==='CIRCLE'||e.t==='ARC'){const cx=g(10),cy=g(20),r=g(40);let a0=e.t==='ARC'?g(50):0,a1=e.t==='ARC'?g(51):360;if(a1<=a0)a1+=360;const st=Math.max(8,Math.ceil((a1-a0)/6)),pts=[];for(let i=0;i<=st;i++){const a=(a0+(a1-a0)*i/st)*Math.PI/180;pts.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}seg(m,pts,e.t==='CIRCLE');}
+   else if(e.t==='TEXT'||e.t==='MTEXT'){const t=deU(gs(1)+gs(3));if(!t)continue;const [X,Y]=put(m,g(10),g(20)),hh=(g(40)||2.5)*U*Math.hypot(m[0],m[3]),rot=-(g(50)||0)-Math.atan2(m[3],m[0])*180/Math.PI;
+    tx+=`<text x="${X.toFixed(2)}" y="${Y.toFixed(2)}" font-size="${hh.toFixed(2)}" font-family="Arial" fill="currentColor"${rot?` transform="rotate(${rot.toFixed(1)} ${X.toFixed(2)} ${Y.toFixed(2)})"`:''}${e.t==='MTEXT'?' dominant-baseline="hanging"':''}>${esc(t)}</text>`;n++;}
+   else if(e.t==='INSERT'&&depth<6){const b=blocks[gs(2)];if(!b)continue;const sx=e.g.some(q=>q[0]===41)?g(41):1,sy=e.g.some(q=>q[0]===42)?g(42):1,a=g(50)*Math.PI/180,c=Math.cos(a),s2=Math.sin(a);
+    const T=[c*sx,-s2*sy,g(10),s2*sx,c*sy,g(20)],B=[1,0,-b.bx,0,1,-b.by];draw(b.ents,mul(m,mul(T,B)),depth+1);}}};
+ draw(ents,[1,0,0,0,1,0],0);
+ if(!n||x0>x1){toast('לא נמצאו קווים בקובץ ה-DXF');return;}
+ const W=Math.max(1,x1-x0),H=Math.max(1,y1-y0),svg=`<g transform="translate(${(-x0).toFixed(2)} ${(-y0).toFixed(2)})"><path d="${d}" fill="none" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"/>${tx}</g>`;
+ if(svg.length>900000){toast('קובץ ה-DXF גדול מדי לייבוא כרקע ('+Math.round(svg.length/1000)+' KB)');return;}
+ ulAdd({svg,vb:`0 0 ${W.toFixed(2)} ${H.toFixed(2)}`,iw:r2(W),ih:r2(H),fs:1,op:'0.8'},name);toast(`DXF יובא בקנה מידה 1:1 (${n} ישויות) — אפשר לכייל אם צריך`);}
+function ulAdd(p,name){const r=svg.getBoundingClientRect(),[cx,cy]=toWorld(r.left+r.width/2,r.top+r.height/2),vw=r.width/view.s;
+ const o={id:uid(),type:'underlay',x:r2(cx),y:r2(cy),rot:0,p:Object.assign({},DEF.underlay.def,{name:'רקע: '+String(name||'').replace(/\.[^.]+$/,'')},p)};
+ if(!p.svg)o.p.fs=r2(Math.max(.01,(vw*.7)/p.iw)*1000)/1000;
+ state.objs.unshift(o);sel=o.id;multi.clear();commit();renderNow();updateBar();
+ if(!p.svg)setTimeout(()=>modal('תמונת רקע נוספה','<div class="hint">כדי שהתמונה תהיה במידות אמיתיות: לחץ "כיול קנה מידה", הקש על שתי נקודות בתמונה שהמרחק ביניהן ידוע (למשל רוחב לוח), והקלד את המרחק במ"מ. אחר כך היא ננעלת — ואפשר לשרטט מעליה.</div>',[{t:'📏 כיול קנה מידה',cls:'pri',fn:()=>{setTimeout(()=>calStart(o.id),30);}},{t:'אחר כך'}]),50);}
+// calibration: two taps on the picture, then the real distance between them
+let CAL=null;
+function calStart(id){const o=get(id);if(!o)return;if(wireMode)setWire(false);if(measMode)setMeas(null);closePanel&&closePanel();CAL={id,pts:[]};renderNow();toast('כיול: הקש על הנקודה הראשונה בתמונה (Esc לביטול)');}
+function calSVG(){if(!CAL)return '';const k=1/view.s;return '<g pointer-events="none">'+CAL.pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="${6*k}" fill="none" stroke="#ef4444" stroke-width="${2*k}"/><path d="M${p[0]-10*k} ${p[1]}h${20*k}M${p[0]} ${p[1]-10*k}v${20*k}" stroke="#ef4444" stroke-width="${1.2*k}"/>`).join('')+(CAL.pts.length===2?`<line x1="${CAL.pts[0][0]}" y1="${CAL.pts[0][1]}" x2="${CAL.pts[1][0]}" y2="${CAL.pts[1][1]}" stroke="#ef4444" stroke-width="${1.6*k}" stroke-dasharray="${6*k} ${4*k}"/>`:'')+'</g>';}
+svg.addEventListener('pointerdown',e=>{if(!CAL)return;if(e.pointerType==='mouse'&&e.button!==0)return;e.stopImmediatePropagation();e.preventDefault();
+ const [x,y]=toWorld(e.clientX,e.clientY);CAL.pts.push([x,y]);renderNow();
+ if(CAL.pts.length===1){toast('עכשיו הקש על הנקודה השנייה');return;}
+ const [a,b]=CAL.pts,cur=Math.hypot(b[0]-a[0],b[1]-a[1]);if(cur<1e-6){CAL.pts.pop();return;}const C=CAL;
+ modal('כיול קנה מידה',`<div class="fld"><label>המרחק האמיתי בין שתי הנקודות (מ"מ)</label><input id="cal_d" type="number" inputmode="decimal" dir="ltr" style="text-align:right" value="${Math.round(cur)}"></div><div class="hint">עכשיו המרחק ביניהן בשרטוט: ${Math.round(cur)} מ"מ. התמונה תוגדל או תוקטן סביב הנקודה הראשונה.</div>`,
+  [{t:'כייל',cls:'pri',fn:()=>{const o=get(C.id),dd=+$('cal_d').value;CAL=null;if(!o||!(dd>0)){renderNow();return;}const k=dd/cur;o.p.fs=r2(o.p.fs*k*1e4)/1e4;o.x=r2(a[0]+(o.x-a[0])*k);o.y=r2(a[1]+(o.y-a[1])*k);o.locked=true;commit();renderNow();updateBar();toast('התמונה כוילה וננעלה — לשחרור: תפריט ← תמונות רקע');}},
+   {t:'ביטול',fn:()=>{CAL=null;renderNow();}}]);},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&CAL){CAL=null;renderNow();toast('הכיול בוטל');}});
+// manage the pictures: lock, hide, faintness, export, calibrate, delete
+function ulManager(){const U=state.objs.filter(o=>o.type==='underlay');
+ if(!U.length){modal('תמונות רקע','<div class="hint">אין תמונת רקע במסמך הזה.</div>',[{t:'🖼 ייבוא תמונה / PDF / DXF',cls:'pri',fn:()=>{setTimeout(ulImport,30);}},{t:'סגור'}]);return;}
+ const row=o=>`<div style="border:1px solid var(--line);border-radius:4px;padding:8px;margin-bottom:8px"><b>${esc(o.p.name)}</b><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+  <button class="wbtn" data-ul="lock" data-id="${o.id}">${o.locked?'🔓 שחרר':'🔒 נעל'}</button><button class="wbtn" data-ul="hide" data-id="${o.id}">${o.p.hide==='1'?'👁 הצג':'🙈 הסתר'}</button>
+  <button class="wbtn" data-ul="cal" data-id="${o.id}">📏 כיול</button><button class="wbtn" data-ul="exp" data-id="${o.id}">${o.p.exp==='1'?'✓ בייצוא':'✗ לא בייצוא'}</button><button class="wbtn" data-ul="del" data-id="${o.id}">🗑 מחק</button></div>
+  <div class="fld" style="margin-top:6px"><label>שקיפות</label><input type="range" min="10" max="100" step="5" value="${Math.round((+o.p.op||.6)*100)}" data-ul="op" data-id="${o.id}"></div></div>`;
+ modal('תמונות רקע',U.map(row).join('')+'<div class="hint">נעולה — לא נבחרת ולא זזה, והלחיצות עוברות לרכיבים שמעליה.</div>',[{t:'🖼 ייבוא נוספת',fn:()=>{setTimeout(ulImport,30);}},{t:'סגור',cls:'pri'}]);
+ const B=$('mBody');B.oninput=e=>{const r=e.target.closest('[data-ul="op"]');if(!r)return;const o=get(r.dataset.id);if(o){o.p.op=String(+r.value/100);renderNow();}};
+ B.onchange=()=>commit();
+ B.onclick=e=>{const b=e.target.closest('button[data-ul]');if(!b)return;const o=get(b.dataset.id);if(!o)return;const k=b.dataset.ul;
+  if(k==='lock')o.locked=!o.locked;else if(k==='hide')o.p.hide=o.p.hide==='1'?'0':'1';else if(k==='exp')o.p.exp=o.p.exp==='1'?'0':'1';
+  else if(k==='del'){state.objs=state.objs.filter(q=>q!==o);if(sel===o.id)sel=null;}else if(k==='cal'){$('modal').classList.add('hidden');calStart(o.id);return;}
+  commit();renderNow();updateBar();ulManager();};}
 /* ================= dimensions (סרט מדידה) =================
    A fixed dimension between two points. Each end may be pinned to a part (its
    id and a point in the part's own frame), so the dimension follows the part
@@ -2690,7 +2784,7 @@ function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  else if(g.mode==='drag'||g.mode==='resize'){if(g.mode==='drag'&&g.moved&&g.o){splitThrough(g.o);sldJoin([g.o,...(g.kids||[]).map(k=>k.q)]);}commit();renderNow();updateBar();}}
 function doResize(g,wx,wy){const o=g.o,D=DEF[o.type],[u,v]=toLocal(g.o0,wx,wy);
  if(D.resize==='scale'){const [sx,sy]=g.h,fu=-sx*g.s0.w/2,fv=-sy*g.s0.h/2,k=Math.max(.2,Math.max(sx*(u-fu)/g.s0.w,sy*(v-fv)/g.s0.h));
-  o.p.fs=r2(Math.max(1.5,(g.fs0||o.p.fs)*k));const n=sizeOf(o);[o.x,o.y]=fromLocal(g.o0,fu+sx*n.w/2,fv+sy*n.h/2);return;}
+  o.p.fs=o.type==='underlay'?Math.round(Math.max(.0005,(g.fs0||o.p.fs)*k)*1e5)/1e5:r2(Math.max(1.5,(g.fs0||o.p.fs)*k));const n=sizeOf(o);[o.x,o.y]=fromLocal(g.o0,fu+sx*n.w/2,fv+sy*n.h/2);return;}
  if(D.resize==='len'){const sg=g.h[0],fx=-sg*g.s0.w/2,mn=D.minLen||20;let nl=Math.max(mn,gs(sg*(u-fx)));
   const ax=o.rot%180?'y':'x';const [ex,ey]=fromLocal(g.o0,fx+sg*nl,0);const sp=snapPoint(o,ax==='x'?ex:ey,ax);
   if(sp!==null){const [uu]=toLocal(g.o0,ax==='x'?sp:ex,ax==='y'?sp:ey);nl=Math.max(mn,sg*(uu-fx));}
@@ -2707,7 +2801,7 @@ function zoomCenter(f){const r=svg.getBoundingClientRect();zoomAt(r.left+(16+r.w
 /* ================= bounds / fit ================= */
 function boundsOf(o){if(o.type==='wire'){const ps=o.pts.map(resolve).filter(Boolean);return ps.map(p=>[p.x,p.y]);}
  const {w,h}=sizeOf(o);return [[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]].map(([u,v])=>fromLocal(o,u,v));}
-function boundsAll(){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;state.objs.forEach(o=>boundsOf(o).forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}));if(x0>x1)return {x:-100,y:-100,w:200,h:200};return {x:x0,y:y0,w:x1-x0,h:y1-y0};}
+function boundsAll(noUl){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;state.objs.forEach(o=>(noUl&&o.type==='underlay'&&(o.p.exp!=='1'||o.p.hide==='1'))?0:boundsOf(o).forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}));if(x0>x1)return {x:-100,y:-100,w:200,h:200};return {x:x0,y:y0,w:x1-x0,h:y1-y0};}
 function fit(){const r=svg.getBoundingClientRect(),e0=viewExt();let e=e0;if(e0&&showAxes){const o=ORG();e={x0:Math.min(e0.x0,o.x-30),y0:Math.min(e0.y0,o.y-30),x1:Math.max(e0.x1,o.x+30),y1:Math.max(e0.y1,o.y+30)};}if(!e){view.s=1;view.tx=r.width/2;view.ty=r.height/2;applyView();return;}
  const top=topBottom()+64,bot=sheetTop()-36,left=44,right=r.width-24,aw=right-left,ah=bot-top,b={x:e.x0,y:e.y0,w:e.x1-e.x0,h:e.y1-e.y0};
  view.s=Math.min(30,Math.max(.04,Math.min(aw/(b.w+20),ah/(b.h+20))));view.tx=left+aw/2-(b.x+b.w/2)*view.s;view.ty=top+ah/2-(b.y+b.h/2)*view.s;applyView();}
@@ -2901,6 +2995,8 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='hold')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_hold">${[['180','180 ק"ג'],['280','280 ק"ג'],['500','500 ק"ג']].map(([a,b])=>`<option value="${a}" ${a===String(v)?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='mon')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_mon"><option value="0" ${v!=='1'?'selected':''}>בלי</option><option value="1" ${v==='1'?'selected':''}>עם מגע מצב (NO / C / NC)</option></select></div>`;
   else if(k==='dcv')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_dcv"><option value="12" ${v!=='24'?'selected':''}>12V DC</option><option value="24" ${v==='24'?'selected':''}>24V DC</option></select></div>`;
+  else if(k==='op')h+=`<div class="fld"><label>שקיפות</label><select id="f_op">${[.2,.3,.4,.5,.6,.7,.8,1].map(a=>`<option value="${a}" ${Math.abs(a-(+v||.6))<.01?'selected':''}>${Math.round(a*100)}%</option>`).join('')}</select></div>`;
+  else if(k==='exp')h+=`<div class="fld"><label>בייצוא</label><select id="f_exp"><option value="0" ${v!=='1'?'selected':''}>לא מופיעה ב-PDF / תמונה</option><option value="1" ${v==='1'?'selected':''}>מופיעה בייצוא</option></select></div>`;
   else if(k==='bus')h+=`<div class="fld"><label>חיווט</label><select id="f_bus"><option value="wg" ${v!=='osdp'?'selected':''}>Wiegand — +12V 0V D0 D1 LED BZ TMP</option><option value="osdp" ${v==='osdp'?'selected':''}>OSDP / RS485 — +12V 0V A B TMP</option></select></div>`;
   else if(k==='rdr')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_rdr"><option value="card" ${v!=='kp'?'selected':''}>קורא כרטיסים (צר)</option><option value="kp" ${v==='kp'?'selected':''}>קורא כרטיסים + קודן</option></select></div>`;
   else if(k==='sw')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_sw">${[['1','מפסק יחיד'],['2','מפסק כפול'],['tw','מחליף'],['push','לחצן']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
@@ -2928,6 +3024,7 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='ang')h+=`<div class="fld"><label>${FL[k]}</label><input id="f_ang" type="number" dir="ltr" style="text-align:right" step="15" value="${o.rot}"></div>`;
   else if(k==='h'&&o.type==='person')h+=`<div class="fld"><label>גובה האדם (מ"מ)</label><input id="f_h" type="number" dir="ltr" style="text-align:right" step="50" value="${esc(v)}"></div>`;
   else{const num=['len','dw','mods','w','h','fs','brk'].includes(k);h+=`<div class="fld"><label>${FL[k]}</label><input id="f_${k}" ${num?'type="number" inputmode="numeric"':''} value="${esc(v)}" ${k==='rating'&&D.ratings?'list="dl_r"':''}></div>`;}});
+ if(o.type==='underlay')h+=`<div class="row" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0"><button class="wbtn pri" type="button" onclick="calStart('${o.id}')">📏 כיול קנה מידה</button><button class="wbtn" type="button" onclick="ulManager()">🖼 ניהול תמונות רקע</button></div><div class="hint">גודל: גוררים את הפינות. אחרי הכיול התמונה ננעלת.</div>`;
  if(D.ratings)h+=`<datalist id="dl_r">${D.ratings.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>`;
  panelForm(o.p.name,h,()=>{const k0=o.p.kind;if(o.type==='floor')o._top=o.y-sizeOf(o).h/2;o.p.name=$('f_name').value||o.p.name;D.edit.forEach(k=>{const el=$('f_'+k);if(!el)return;let v=el.value;if(k==='orient'){const want=v==='v'?1:0;if((o.rot%180?1:0)!==want)o.rot=want?90:0;return;}if(k==='ang'){o.rot=(((Math.round(+v)||0)%360)+360)%360;return;}if(k==='lw'){o.p.lw=Math.max(.2,+v||2);return;}if(k==='fs'){o.p.fs=Math.max(1,+v||o.p.fs);return;}
    if(['len','dw','mods','w','h','ph','brk'].includes(k)){v=Math.max(k==='mods'?1:k==='ph'?1:10,Math.round(+v)||o.p[k]);}o.p[k]=v;});if(o.type==='cable')cabRecentre(o);if(o.type==='floor'&&o._top!=null){o.y=r2(o._top+sizeOf(o).h/2);delete o._top;}if(o.type==='floor'&&o.p.kind!==k0)setTimeout(editDialog,0);if(o.type==='cibox'&&/^(CI-K|Ci )/.test(o.p.name))o.p.name=CISZ[o.p.size].n+(o.p.window==='1'?' עם חלון':'');commit();renderNow();updateBar();});}
@@ -2936,7 +3033,7 @@ function wireLen(w){const ps=w.pts.map(resolve).filter(Boolean);let L=0;for(let 
 /* ================= drawer / menu ================= */
 function openDrawer(){const items=[['פרויקט'],['📄 פרויקט חדש',newProject],['🗂 פרויקט חדש מתבנית (דוגמאות)',templatesDialog],...(SH?[['📂 פתח מהתיקייה המשותפת',openShared],['💾 שמור עכשיו (נשמר גם אוטומטית)',saveShared],['📑 שמור עותק בשם…',()=>saveSharedAs(true)]]:[['📂 פתח פרויקט שמור',openProjects],['💾 שמור בשם…',saveAs]]),
  ['תצוגה'],['⚙ הגדרות תצוגה — גופן והגדלה…',displayDialog],[uiLight()?'🌙 מצב כהה לאפליקציה':'☀ מצב בהיר לאפליקציה',toggleUI],['🧩 הסתרת כפתורים / איפוס הסרגלים…',tbEditor],['📄 דף ייצור (Layout)…',layoutDialog],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
- ['ייצוא ושיתוף'],['📋 רשימת ציוד (BOM)',bom],['👁 תצוגה לפני הדפסה',printPreview],['📄 ייצוא PDF עם טבלת שרטוט',pdfDialog],['🖼️ ייצוא תמונה (PNG)',exportImage],['📐 ייצוא DXF ל-AutoCAD (נשמר כ-DWG)',dxfExport],['💾 הורד קובץ פרויקט (JSON)',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state))],['📤 העתק קובץ פרויקט',copyJSON],['📥 ייבוא קובץ פרויקט',importJSON],...(SH&&SH.menu?[['OhadCad'],...SH.menu()]:[])];
+ ['רקע לשרטוט'],['🖼 ייבוא תמונה / PDF / DXF כרקע',ulImport],['🗂 תמונות רקע — נעילה, שקיפות, כיול…',ulManager],['ייצוא ושיתוף'],['📋 רשימת ציוד (BOM)',bom],['👁 תצוגה לפני הדפסה',printPreview],['📄 ייצוא PDF עם טבלת שרטוט',pdfDialog],['🖼️ ייצוא תמונה (PNG)',exportImage],['📐 ייצוא DXF ל-AutoCAD (נשמר כ-DWG)',dxfExport],['💾 הורד קובץ פרויקט (JSON)',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state))],['📤 העתק קובץ פרויקט',copyJSON],['📥 ייבוא קובץ פרויקט',importJSON],...(SH&&SH.menu?[['OhadCad'],...SH.menu()]:[])];
  $('dbox').innerHTML=`<div style="display:flex;align-items:center;justify-content:flex-end;margin:4px 8px 0"><img src="icons/wordmark-${uiLight()?'light':'dark'}.svg" alt="OhadCad" height="26"></div><h2>${esc(state.name)}</h2>`+items.map((it,i)=>it[1]?`<button data-i="${i}">${it[0]}</button>`:`<div style="color:#8a8a8a;font-size:13px;margin:12px 12px 2px">${it[0]}</div>`).join('');
  $('drawer').classList.remove('hidden');$('dbox').onclick=e=>{const b=e.target.closest('button');if(!b)return;$('drawer').classList.add('hidden');items[+b.dataset.i][1]();};}
 $('drawer').addEventListener('click',e=>{if(e.target.id==='drawer')$('drawer').classList.add('hidden');});
@@ -3099,10 +3196,10 @@ function openProjects(){const p=loadProjects(),ks=Object.keys(p);
   if(d){delete p[d.dataset.d];saveProjects(p);openProjects();}};}
 function bomData(){return withPanel(bomData0);}
 // single-line diagram: one row per kind of symbol (name + rating), with the tags drawn on it
-function bomDataSld(){return withDoc('sld',()=>{const rows={},SKIP=['wire','sframe','sfeed','label','mdim'];state.objs.forEach(o=>{if(SKIP.includes(o.type)||DRAWT.has(o.type)||!DEF[o.type])return;
+function bomDataSld(){return withDoc('sld',()=>{const rows={},SKIP=['wire','sframe','sfeed','label','mdim','underlay'];state.objs.forEach(o=>{if(SKIP.includes(o.type)||DRAWT.has(o.type)||!DEF[o.type])return;
   const k=(o.p.name||o.type)+(o.p.rating?' '+o.p.rating:'');const r=rows[k]=rows[k]||{n:0,tags:[]};r.n++;if(o.p.tag)r.tags.push(o.p.tag);});
  return Object.keys(rows).map(k=>{const r=rows[k],tg=r.tags.sort((a,b)=>a.localeCompare(b,'he',{numeric:true}));return [k+(tg.length?` (${tg.length>6?tg.slice(0,6).join(', ')+'…':tg.join(', ')})`:''),`${r.n} יח'`];});});}
-function bomData0(){const rows={};state.objs.forEach(o=>{if(o.type==='wire'){const k=`חוט ${WCOL[o.p.color]?.n} ${o.p.sec} ממ"ר`;rows[k]=rows[k]||{n:0,len:0,w:1};rows[k].len+=wireLen(o);return;}
+function bomData0(){const rows={};state.objs.forEach(o=>{if(o.type==='underlay')return;if(o.type==='wire'){const k=`חוט ${WCOL[o.p.color]?.n} ${o.p.sec} ממ"ר`;rows[k]=rows[k]||{n:0,len:0,w:1};rows[k].len+=wireLen(o);return;}
   let k=o.p.name+(o.p.rating&&!['label'].includes(o.type)?' '+o.p.rating:'');if(o.type==='cable'||o.type==='traysh'||o.type==='traymesh'){const g=o.type==='cable'?cabG2(o):null;k=o.type==='cable'?`כבל ${CNAME[o.p.color]||''} ${g.n}×${o.p.sec} ממ"ר`:`${o.type==='traysh'?'תעלת פח':'תעלת רשת'} ${o.p.tw} מ"מ`;rows[k]=rows[k]||{n:0,len:0};rows[k].len+=o.type==='cable'?cabLength(o):o.p.len;rows[k].n++;return;}
   if(o.type==='rail'||o.type==='duct'||o.type==='busbar'||o.type==='partition'){k=o.p.name+(o.type==='duct'?` ${o.p.dw}מ"מ`:'');rows[k]=rows[k]||{n:0,len:0};rows[k].len+=o.p.len;rows[k].n++;return;}
   if(o.type==='cabinet'){const g=cabG(o),FN={door:'דלת',double:'דלת כפולה',cover:'פאנלים מוברגים',none:'ללא חזית'};g.S.forEach(sc=>{const kk=`שדה ארון ${sc.w}×${g.H} — ${FN[sc.f]}`;rows[kk]=rows[kk]||{n:0};rows[kk].n++;});if(g.P){const kk=`סוקל ${g.P} מ"מ`;rows[kk]=rows[kk]||{n:0,len:0};rows[kk].len+=g.W;rows[kk].n++;}return;}
@@ -3209,7 +3306,7 @@ async function makePdf(t){toast('מכין תצוגה…');
  const LY0=withDoc(PG[0][0],()=>layWith(PG[0][1],layoutRect));if(LY0){t.paper=LY0.L.paper;t.orient=LY0.L.orient;}let [W,H]=PAPER[t.paper]||PAPER.A3;if(t.orient==='P')[W,H]=[H,W];
  const BP=t.bomPage==='1'?[['רשימת ציוד — חזית לוח',bomData()],['רשימת ציוד — חד קווי',bomDataSld()]].filter(x=>x[1].length):[];const pages=PG.length+BP.length;const svgs=[],SZ=[];const DOCN={panel:'חזית לוח',sld:'חד קווי'};
  PG.forEach(([d,lay,nl],di)=>withDoc(d,()=>layWith(lay,()=>{const LY=layoutRect(),PW=LY?LY.W:W,PH=LY?LY.H:H,tt=Object.assign({},t,{title:(t.title||state.name)+(docs.length>1?' — '+DOCN[d]:'')+(nl>1?' — '+lay.name:'')});
-  const tb=tbSVG(tt,PW,PH,di+1,pages,'');const ax0=30,ay0=20,ax1=PW-20,ay1=tb.y0-6,aw=ax1-ax0-28,ah=ay1-ay0-28;const b=boundsAll(),pad=4,bw=b.w+2*pad,bh=b.h+2*pad;
+  const tb=tbSVG(tt,PW,PH,di+1,pages,'');const ax0=30,ay0=20,ax1=PW-20,ay1=tb.y0-6,aw=ax1-ax0-28,ah=ay1-ay0-28;const b=boundsAll(true),pad=4,bw=b.w+2*pad,bh=b.h+2*pad;
   const need=Math.max(bw/aw,bh/ah);const STD=[1,2,2.5,5,10,15,20,25,50,75,100,200];let n=LY?LY.n:(STD.find(v=>v>=need)||Math.ceil(need));const k=1/n;
   const scaleLbl=n===1?'1:1':`1:${n}`;const tb2=tbSVG(tt,PW,PH,di+1,pages,scaleLbl);
   const ox=ax0+(aw-bw*k)/2,oy=ay0+20+(ah-bh*k)/2;
@@ -3263,7 +3360,7 @@ function printVector(svgs,SZ,fname){const fr=document.createElement('iframe');fr
    circles as circles, curves sampled, texts as TEXT (Hebrew as \U+ codes, in
    reading order). One layer per part type. */
 function dxfExport(){const hasP=withDoc('panel',()=>state.objs.length>0),hasS=withDoc('sld',()=>state.objs.length>0);if(!hasP&&!hasS){toast('הלוח ריק');return;}
- let body='';withDoc(hasP&&hasS?'both':hasP?'panel':'sld',()=>{try{wireLayout();}catch(e){}body=content({sel:false});});renderNow();
+ let body='';withDoc(hasP&&hasS?'both':hasP?'panel':'sld',()=>{try{wireLayout();}catch(e){}EXPMIN=1e-6;try{body=content({sel:false});}finally{EXPMIN=0;}});renderNow();
  const NS='http://www.w3.org/2000/svg',host=document.createElementNS(NS,'svg');host.setAttribute('style','position:fixed;left:-99999px;top:0;width:10px;height:10px;overflow:visible');host.innerHTML=body;document.body.appendChild(host);
  const out=[],root=host.getScreenCTM().inverse();let n=0;
  const ACI=[[1,255,0,0],[2,255,255,0],[3,0,255,0],[4,0,255,255],[5,0,0,255],[6,255,0,255],[7,255,255,255],[8,128,128,128],[9,192,192,192],[30,255,127,0],[34,153,76,0],[250,51,51,51],[252,130,130,130],[254,190,190,190],[7,0,0,0]];
@@ -3296,7 +3393,7 @@ function dxfExport(){const hasP=withDoc('panel',()=>state.objs.length>0),hasS=wi
  const fname=safeName(state.name||'drawing')+'.dxf';saveFile(fname,new Blob([dxf],{type:'application/dxf'}));
  toast(`DXF מוכן (${n} ישויות) — פתח ב-AutoCAD ושמור בשם כ-DWG`);}
 function exportImage(){const hasP=withDoc('panel',()=>state.objs.length>0),hasS=withDoc('sld',()=>state.objs.length>0);if(!hasP&&!hasS){toast('הלוח ריק');return;}withDoc(hasP&&hasS?'both':hasP?'panel':'sld',exportImage0);renderNow();}
-function exportImage0(){try{wireLayout();}catch(e){}const b=boundsAll(),pad=12;const bbw=Math.max(60,Math.min(b.w*.3,240)),bbh=bbw*.42;const x=b.x-pad,y=b.y-pad,w=Math.max(b.w+2*pad,bbw+2*pad),h=b.h+2*pad+bbh+pad*.5;const k=Math.min(10,9000/Math.max(w,h),Math.sqrt(48e6/(w*h)));
+function exportImage0(){try{wireLayout();}catch(e){}const b=boundsAll(true),pad=12;const bbw=Math.max(60,Math.min(b.w*.3,240)),bbh=bbw*.42;const x=b.x-pad,y=b.y-pad,w=Math.max(b.w+2*pad,bbw+2*pad),h=b.h+2*pad+bbh+pad*.5;const k=Math.min(10,9000/Math.max(w,h),Math.sqrt(48e6/(w*h)));
  EXPMIN=1.6/k;const body=content({sel:false});EXPMIN=0;
  const s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${h}" width="${Math.round(w*k)}" height="${Math.round(h*k)}"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#ffffff"/>${body}${creditBadge(x+w-bbw-pad*.5,y+h-bbh-pad*.5,bbw,bbh)}</svg>`;
  const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);const g=c.getContext('2d');g.drawImage(img,0,0,c.width,c.height);let url;try{url=c.toDataURL('image/png');}catch(e){url='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);}

@@ -23,10 +23,12 @@ Live at https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/ (GitHub Pa
   - Drawer menu: `openDrawer`.
   - Dimensions: part type `mdim` (`mdGeom`, `setMeas`); ends may be pinned to a part (`of`, `u`, `v`).
   - Layouts (production sheets): `state.lays` = `[{id,d:'panel'|'sld',name,paper,orient,scale,org}]`; the shown one per document mirrors into `state.layout` / `state.layoutS` (with `lid`) and its corner into `state.origin` / `state.originS` (`laySync`, `layShow`, `layWith`). Bottom tabs: `buildLayTabs`. The PDF prints every sheet as a page.
+  - Background pictures: part type `underlay` (`p.src` JPEG data URL ≤ ~420 KB, or `p.svg`+`p.vb` from a DXF; size `iw×ih` × `fs`). Drawn on its own layer `#ulay` (`renderUlay`), only placeholders in `#world`; exports include it only with `exp:'1'`. Import `ulImport` (image / PDF via `vendor/pdfjs` / DXF), calibration `calStart`, manager `ulManager`.
   - Toolbar order: `tbApply` / `tbStore`, kept per device in localStorage.
 - `sw.js`: offline cache. Pages are network-first with `cache: 'no-cache'`; other assets are stale-while-revalidate.
 - `manifest.webmanifest`, `icons/`, `favicon.ico`: the official OhadCad brand kit (amber "O" ring + crosshair icon, white/amber wordmark for dark backgrounds, amber/dark wordmark for light ones). Colors, fonts (Heebo/Inter/JetBrains Mono) and style are in `icons/wordmark-dark.svg` / `icons/wordmark-light.svg` and documented in the brand kit's own README (not kept in this repo) — the live palette is in both `index.html`'s and `cad.html`'s `:root` CSS variables.
 - `vendor/firebase/`: firebase 12.19 compat bundles (app, auth, firestore).
+- `vendor/pdfjs/`: pdf.js 3.11.174 (pdf.min.js + worker), loaded only when a PDF is imported as a background.
 - `firestore.rules`: the source of truth for the rules. There is no CLI access. After changing it, the owner must paste it into Firebase Console → Firestore Database → Rules → Publish.
 - `archive/`: the old "אינדקס תוכניות חשמל G-WWTP" app. It is read-only and still points at its old Firebase project.
 
