@@ -1379,6 +1379,10 @@ function aumaDraw(o,T){const ac=o.p.act==='aumac',g='#8b939c',gd='#5f666e';let s
 const lc2One=(o,k)=>({id:o.id+'_'+k,type:'lc1d',x:0,y:0,rot:0,p:{rating:String(o.p.rating||'LC2D25 25A').replace('LC2D','LC1D'),coil:o.p.coil,tag:k?o.p.tag2:o.p.tag}});
 const proxM=o=>{const m=parseInt(String(o.p.rating).slice(1));return [12,18,30].includes(m)?m:18;};
 const srevOne=(o,k)=>({id:o.id+'_'+k,type:'scont',x:0,y:0,rot:0,p:{tag:k?o.p.tag2:o.p.tag,rating:o.p.rating,desc:'',poles:3}});
+/* Parts that come with a moulded cable: its length (cl, mm) is set in the properties, as long as wanted;
+   CABLEN is the length drawn by default. */
+const CABLEN={prox:56,wcard:12,lvlh:52,lfloat:82,udb:30};
+const cabX=o=>Math.max(0,Math.round(+o.p.cl||0)-(CABLEN[o.type]||0));
 const SPF={2:[[.6,'עצירה','#facc15'],[.3,'הפעלה','#22c55e']],3:[[.66,'עצירה','#facc15'],[.36,'הפעלה','#22c55e'],[.14,'גלישה','#ef4444']],4:[[.8,'יבש','#94a3b8'],[.62,'עצירה','#facc15'],[.36,'הפעלה','#22c55e'],[.14,'גלישה','#ef4444']]};
 const MAGL={'180':{w:170,h:40},'280':{w:250,h:48},'500':{w:266,h:73}};
 function wallBox(w,h,r=8){return `<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${r}" fill="${WALLW}" stroke="#8d8d85" stroke-width="1.4"/><rect x="${-w/2+4}" y="${-h/2+4}" width="${w-8}" height="${h-8}" rx="${r-2}" fill="none" stroke="#d6d6cd" stroke-width="1"/>`;}
@@ -1427,13 +1431,13 @@ const WDEF={
    s+=`<circle cx="${w/2-28}" cy="${y0+M.h/2}" r="3" fill="#ef4444" stroke="#7f1d1d" stroke-width=".7"/>`+txt(-8,y0+M.h/2-5,`${o.p.hold||280} ק"ג`,Math.min(9,M.h*.2),'#1f2937',700)+txt(-8,y0+M.h/2+6,`${o.p.dcv==='24'?24:12}V DC`,Math.min(6,M.h*.14),'#374151',600);
    s+=`<rect x="${-w/2+15}" y="${yb+4}" width="${w-30}" height="14" rx="2" fill="#e5e7eb" stroke="#4b5563" stroke-width="1.1" stroke-dasharray="4 2"/>`+txt(0,yb+11,'פלטת עוגן (על הדלת)',4.5,'#4b5563',600);
    if(o.p.tag)s+=txt(0,y0-8,o.p.tag,8,'#1d4ed8',700);return s;}},
- wcard:{layer:4,edit:['tag','rdr','bus','dcv'],def:{rdr:'card',bus:'wg',dcv:'12',tag:''},size:o=>{const b=cardBody(o);return {w:Math.max(b.w,cardWires(o).length*10+8),h:b.h+24};},
+ wcard:{layer:4,edit:['tag','rdr','bus','dcv','cl'],def:{rdr:'card',bus:'wg',dcv:'12',tag:''},size:o=>{const b=cardBody(o);return {w:Math.max(b.w,cardWires(o).length*10+8),h:b.h+24+cabX(o)};},
   terms:o=>{const L=cardWires(o),{h}=DEF.wcard.size(o);return L.map(([l],i)=>[(i-(L.length-1)/2)*10,-h/2,l]);},
   draw:o=>{const L=cardWires(o),S=DEF.wcard.size(o),Y=-S.h/2,sw=L.length*10+4;
    // the reader's pigtail: its cable up to a terminal strip, every core with its colour and name
-   let t=`<path d="M0 ${Y+12}V${Y+24}" stroke="#4b5563" stroke-width="5" stroke-linecap="round"/><rect x="${-sw/2}" y="${Y}" width="${sw}" height="12" rx="2" fill="#f3f4f6" stroke="#4b5563" stroke-width="1"/>`;
+   let t=`<path d="M0 ${Y+12}V${Y+24+cabX(o)}" stroke="#4b5563" stroke-width="5" stroke-linecap="round"/><rect x="${-sw/2}" y="${Y}" width="${sw}" height="12" rx="2" fill="#f3f4f6" stroke="#4b5563" stroke-width="1"/>`;
    L.forEach(([l,c],i)=>{const x=(i-(L.length-1)/2)*10;t+=`<circle cx="${x}" cy="${Y+4.2}" r="2.1" fill="${c}" stroke="#111827" stroke-width=".5"/>`+txt(x,Y+9.4,l,l.length>3?2.5:3,'#111827',700);});
-   return t+`<g transform="translate(0 12)">`+cardDraw(o)+`</g>`+(o.p.tag?txt(-sw/2-4,Y+6,o.p.tag,8,'#1d4ed8',700,'end'):'');}},
+   return t+`<g transform="translate(0 ${12+cabX(o)/2})">`+cardDraw(o)+`</g>`+(o.p.tag?txt(-sw/2-4,Y+6,o.p.tag,8,'#1d4ed8',700,'end'):'');}},
  /* level measurement: hydrostatic probe, Pulsar Ultra 4 controller and its ultrasonic transducer (sizes in mm) */
  lvlh:{layer:4,edit:['tag','rating'],def:{tag:'LT1',rating:'0-4 mH₂O · 4-20mA'},ratings:['0-1 mH₂O · 4-20mA','0-4 mH₂O · 4-20mA','0-10 mH₂O · 4-20mA','0-20 mH₂O · 4-20mA'],size:()=>({w:40,h:230}),
   terms:()=>[[-6,-115,'+'],[6,-115,'−']],
@@ -1545,10 +1549,10 @@ const WDEF={
    s+=`<rect x="-9" y="${-z.h*.05}" width="18" height="${z.h*.18}" rx="2" fill="#1f2937" stroke="#000" stroke-width=".6"/><path d="M-6 ${z.h*.04}h12M-6 ${z.h*.08}l6 4l6 -4" stroke="#9ca3af" stroke-width="1" fill="none"/>`+txt(0,z.h*.155,'LAD9V2',2.4,'#e5e7eb',700);
    [-1,1].forEach(a=>s+=`<rect x="${-dx-z.w*.32}" y="${a*(z.h/2+1.5)-1.5}" width="${2*dx+z.w*.64}" height="3" rx="1" fill="#9ca3af" opacity=".85"/>`);return s;}},
  /* inductive / capacitive proximity sensor: threaded barrel with lock nuts, LED and sensing face, 3-wire cable (BN +, BU −, BK out) */
- prox:{layer:4,edit:['tag','rating','px'],def:{tag:'B1',rating:'M18 PNP NO 10-30VDC',px:'ind'},ratings:['M12 PNP NO 10-30VDC','M18 PNP NO 10-30VDC','M30 PNP NO 10-30VDC','M18 NPN NO 10-30VDC','M18 PNP NC 10-30VDC'],
-  size:o=>{const m=proxM(o);return {w:m+16,h:m*3.2+70};},
+ prox:{layer:4,edit:['tag','rating','px','cl'],def:{tag:'B1',rating:'M18 PNP NO 10-30VDC',px:'ind'},ratings:['M12 PNP NO 10-30VDC','M18 PNP NO 10-30VDC','M30 PNP NO 10-30VDC','M18 NPN NO 10-30VDC','M18 PNP NC 10-30VDC'],
+  size:o=>{const m=proxM(o);return {w:m+16,h:m*3.2+70+cabX(o)};},
   terms:o=>{const {h}=DEF.prox.size(o);return [[-8,-h/2,'+'],[0,-h/2,'−'],[8,-h/2,'OUT']];},
-  draw:o=>{const m=proxM(o),{h}=DEF.prox.size(o),T=-h/2,cap=o.p.px==='cap',bl=m*3.2,y0=T+60,y1=y0+bl;
+  draw:o=>{const m=proxM(o),{h}=DEF.prox.size(o),T=-h/2,cap=o.p.px==='cap',bl=m*3.2,y0=T+60+cabX(o),y1=y0+bl;
    let s=`<path d="M0 ${T+4}V${y0}" stroke="#1f2937" stroke-width="${Math.max(4,m*.3)}" stroke-linecap="round"/>`+[['#92400e',-8],['#2563eb',0],['#111827',8]].map(([c,x])=>`<path d="M${x} ${T+2}V${T+14}" stroke="${c}" stroke-width="2.2"/>`).join('')+
     `<rect x="${-m/2}" y="${y0}" width="${m}" height="${bl}" fill="${cap?'#d1d5db':'#c0c4c8'}" stroke="#4b5563" stroke-width="1"/>`;
    for(let y=y0+4;y<y1-6;y+=3)s+=`<path d="M${-m/2} ${y}h${m}" stroke="#6b7280" stroke-width=".5" opacity=".7"/>`;
@@ -2722,6 +2726,10 @@ function layResize(g,wx,wy,free){const R=g.R0,{W,H,x0,y0,x1,y1}=R,h=g.h;let n,ox
  if(h==='l'||h==='tl')ox=x1-W*n;if(h==='bl'){ox=x1-W*n;oy=y0+H*n;}if(h==='b'||h==='br')oy=y0+H*n;
  state[LKEY()].scale=n;state[OKEY()]={x:r2(ox),y:r2(oy)};}
 
+// probes drawn at a fixed size: the extra cable is added above them
+[['lvlh',6],['lfloat',6],['udb',7]].forEach(([k,cw])=>{const D=DEF[k];if(!D)return;const s0=D.size,t0=D.terms,d0=D.draw;D.edit=[...D.edit,'cl'];
+ D.size=o=>{const z=s0(o);return {w:z.w,h:z.h+cabX(o)};};D.terms=o=>t0(o).map(([x,y,l])=>[x,r2(y-cabX(o)/2),l]);
+ D.draw=o=>{const E=cabX(o);if(!E)return d0(o);const h0=s0(o).h;return `<path d="M0 ${-h0/2-E/2+3}V${-h0/2+E/2+6}" stroke="#111827" stroke-width="${cw}" stroke-linecap="round"/><g transform="translate(0 ${E/2})">${d0(o)}</g>`;};});
 /* ================= background picture (underlay) =================
    An image, a PDF page or a DXF drawing laid under the drawing, to trace over:
    import it, calibrate its scale by two points of known distance, set how
@@ -3176,7 +3184,7 @@ function shDash(o){const w=Math.max(.2,+o.p.lw||2);return o.p.dash==='dash'?`str
 function shFill(o){const c=col(o,'blue');return o.p.fill==='light'?c+'33':o.p.fill==='solid'?c:'none';}
 function lblFs(o){return Math.max(1,+o.p.fs||6);}
 function lblLines(o){const ls=String(o.p.text??'').split('\n');return ls.length?ls:[''];}
-const FL={tag2:'תג המגען השני',pw:'רוחב הבור (מ"מ)',pd:'עומק הבור (מ"מ)',bus:'חיווט',slots:'מספר חריצים',model:'דגם',rows:'מספר שורות',mods:'מודולים בשורה',title:'שם הלוח',from:'מוזן מ',volt:'מתח',ic:'זרם קצר',main:'מפסק ראשי',notes:'שורות נוספות',pcol:'צבע השלט',feed:'סוג ההזנה',tn:'מספרי הדקים (למעלה-למטה)',wt:'עובי קיר (מ"מ)',lw:'עובי קו (מ"מ)',dash:'סוג קו',fill:'מילוי',head:'ראשי חץ',ang:'זווית (מעלות)',poles:'מספר קטבים',gang:'מספר שקעים',ip:'הגנה',cee:'סוג שקע',cfg:'הרכב הקופסה',sw:'סוג מפסק',hold:'כוח החזקה',mon:'מגע מצב (דלת נעולה)',dcv:'מתח הפעלה',rdr:'סוג קורא',lid:'מכסה',kind:'סוג',th:'עובי רצפה (מ"מ)',rh:'גובה רצפה כפולה (מ"מ)',rad:'רדיוס כיפוף מינימלי',ends:'פתיחת גידים',cores:'מספר גידים',sec:'חתך גיד (ממ"ר)',brk:'אורך פתיחת הגידים (מ"מ)',pump:'משאבה / ציוד מונע',tw:'רוחב תעלה (מ"מ)',set:'הרכב מהדקים',desc:'תיאור',fs:'גודל טקסט (מ"מ)',tag:'סימון (למשל Q1, K2)',rating:'דירוג / ערך',len:'אורך (מ"מ)',dw:'רוחב תעלה (מ"מ)',mods:'מספר מודולים',ph:'מספר פאזות',w:'רוחב (מ"מ)',h:'גובה (מ"מ)',text:'טקסט',kind:'סוג מהדק',color:'צבע',orient:'כיוון התקנה',coil:'מתח סליל',frame:'גודל / מבנה',door:'דלת',hinge:'צד צירים',closed:'תצוגה',size:'גודל קופסה',window:'חלון שקוף'};
+const FL={cl:'אורך הכבל (מ"מ)',tag2:'תג המגען השני',pw:'רוחב הבור (מ"מ)',pd:'עומק הבור (מ"מ)',bus:'חיווט',slots:'מספר חריצים',model:'דגם',rows:'מספר שורות',mods:'מודולים בשורה',title:'שם הלוח',from:'מוזן מ',volt:'מתח',ic:'זרם קצר',main:'מפסק ראשי',notes:'שורות נוספות',pcol:'צבע השלט',feed:'סוג ההזנה',tn:'מספרי הדקים (למעלה-למטה)',wt:'עובי קיר (מ"מ)',lw:'עובי קו (מ"מ)',dash:'סוג קו',fill:'מילוי',head:'ראשי חץ',ang:'זווית (מעלות)',poles:'מספר קטבים',gang:'מספר שקעים',ip:'הגנה',cee:'סוג שקע',cfg:'הרכב הקופסה',sw:'סוג מפסק',hold:'כוח החזקה',mon:'מגע מצב (דלת נעולה)',dcv:'מתח הפעלה',rdr:'סוג קורא',lid:'מכסה',kind:'סוג',th:'עובי רצפה (מ"מ)',rh:'גובה רצפה כפולה (מ"מ)',rad:'רדיוס כיפוף מינימלי',ends:'פתיחת גידים',cores:'מספר גידים',sec:'חתך גיד (ממ"ר)',brk:'אורך פתיחת הגידים (מ"מ)',pump:'משאבה / ציוד מונע',tw:'רוחב תעלה (מ"מ)',set:'הרכב מהדקים',desc:'תיאור',fs:'גודל טקסט (מ"מ)',tag:'סימון (למשל Q1, K2)',rating:'דירוג / ערך',len:'אורך (מ"מ)',dw:'רוחב תעלה (מ"מ)',mods:'מספר מודולים',ph:'מספר פאזות',w:'רוחב (מ"מ)',h:'גובה (מ"מ)',text:'טקסט',kind:'סוג מהדק',color:'צבע',orient:'כיוון התקנה',coil:'מתח סליל',frame:'גודל / מבנה',door:'דלת',hinge:'צד צירים',closed:'תצוגה',size:'גודל קופסה',window:'חלון שקוף'};
 function cabDialog(o,tmp){tmp=tmp||JSON.parse(JSON.stringify(o.p));const sel_=(f,opts,v)=>`<select data-f="${f}">${opts.map(([a,b])=>`<option value="${a}" ${String(a)===String(v)?'selected':''}>${b}</option>`).join('')}</select>`;
  const WS=[300,400,500,600,800,1000,1200].map(w=>[w,w+' מ"מ']),FS=[['door','דלת'],['double','דלת כפולה'],['cover','פאנלים מוברגים'],['none','ללא חזית']],HS=[['L','צירים שמאל'],['R','צירים ימין']];
  let h=`<div class="fld"><label>שם</label><input id="c_name" value="${esc(tmp.name||'')}"></div><div class="fld"><label>שלט על הדלת</label><input id="c_tag" value="${esc(tmp.tag||'')}"></div>`;
@@ -3262,11 +3270,12 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='wt')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_wt">${[100,150,200,250,300,400].map(a=>`<option value="${a}" ${a==v?'selected':''}>${a}</option>`).join('')}</select></div>`;
   else if(k==='ang')h+=`<div class="fld"><label>${FL[k]}</label><input id="f_ang" type="number" dir="ltr" style="text-align:right" step="15" value="${o.rot}"></div>`;
   else if(k==='h'&&o.type==='person')h+=`<div class="fld"><label>גובה האדם (מ"מ)</label><input id="f_h" type="number" dir="ltr" style="text-align:right" step="50" value="${esc(v)}"></div>`;
+  else if(k==='cl'){h+=`<div class="fld"><label>${FL.cl}</label><input id="f_cl" type="number" inputmode="numeric" min="0" step="100" dir="ltr" style="text-align:right" value="${esc(o.p.cl??(CABLEN[o.type]||0))}"></div><div class="hint">כבל יצוק — אפשר להאריך כמה שרוצים (למשל 5000 = 5 מטר).</div>`;}
   else{const num=['len','dw','mods','w','h','fs','brk','pw','pd'].includes(k);h+=`<div class="fld"><label>${FL[k]}</label><input id="f_${k}" ${num?'type="number" inputmode="numeric"':''} value="${esc(v)}" ${k==='rating'&&D.ratings?'list="dl_r"':''}></div>`;}});
  if(o.type==='underlay')h+=`<div class="row" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0"><button class="wbtn pri" type="button" onclick="calStart('${o.id}')">📏 כיול קנה מידה</button><button class="wbtn" type="button" onclick="ulManager()">🖼 ניהול תמונות רקע</button></div><div class="hint">גודל: גוררים את הפינות. אחרי הכיול התמונה ננעלת.</div>`;
  if(D.ratings)h+=`<datalist id="dl_r">${D.ratings.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>`;
  panelForm(o.p.name,h,()=>{const k0=o.p.kind;if(o.type==='floor')o._top=o.y-sizeOf(o).h/2;o.p.name=$('f_name').value||o.p.name;D.edit.forEach(k=>{const el=$('f_'+k);if(!el)return;let v=el.value;if(k==='orient'){const want=v==='v'?1:0;if((o.rot%180?1:0)!==want)o.rot=want?90:0;return;}if(k==='ang'){o.rot=(((Math.round(+v)||0)%360)+360)%360;return;}if(k==='lw'){o.p.lw=Math.max(.2,+v||2);return;}if(k==='fs'){o.p.fs=Math.max(1,+v||o.p.fs);return;}
-   if(k==='pw'||k==='pd'){o.p[k]=Math.round(+v)||o.p[k];return;}if(['len','dw','mods','w','h','ph','brk'].includes(k)){v=Math.max(k==='mods'?1:k==='ph'?1:10,Math.round(+v)||o.p[k]);}o.p[k]=v;});if(o.type==='cable'||o.type==='conduit')cabRecentre(o);if(o.type==='floor'&&o._top!=null){o.y=r2(o._top+sizeOf(o).h/2);delete o._top;}if(o.type==='floor'&&o.p.kind!==k0)setTimeout(editDialog,0);if(o.type==='cibox'&&/^(CI-K|Ci )/.test(o.p.name))o.p.name=CISZ[o.p.size].n+(o.p.window==='1'?' עם חלון':'');commit();renderNow();updateBar();});}
+   if(k==='pw'||k==='pd'){o.p[k]=Math.round(+v)||o.p[k];return;}if(k==='cl'){o.p.cl=Math.max(0,Math.round(+v)||0);return;}if(['len','dw','mods','w','h','ph','brk'].includes(k)){v=Math.max(k==='mods'?1:k==='ph'?1:10,Math.round(+v)||o.p[k]);}o.p[k]=v;});if(o.type==='cable'||o.type==='conduit')cabRecentre(o);if(o.type==='floor'&&o._top!=null){o.y=r2(o._top+sizeOf(o).h/2);delete o._top;}if(o.type==='floor'&&o.p.kind!==k0)setTimeout(editDialog,0);if(o.type==='cibox'&&/^(CI-K|Ci )/.test(o.p.name))o.p.name=CISZ[o.p.size].n+(o.p.window==='1'?' עם חלון':'');commit();renderNow();updateBar();});}
 function wireLen(w){const ps=w.pts.map(resolve).filter(Boolean);let L=0;for(let i=1;i<ps.length;i++)L+=Math.hypot(ps[i].x-ps[i-1].x,ps[i].y-ps[i-1].y);return L;}
 
 /* ================= drawer / menu ================= */
