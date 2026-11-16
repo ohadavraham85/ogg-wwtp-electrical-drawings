@@ -2399,8 +2399,8 @@ function loadProjects(){try{return JSON.parse(localStorage.getItem('epd.projects
 function saveProjects(p){try{localStorage.setItem('epd.projects',JSON.stringify(p));return true;}catch(e){return false;}}
 
 /* ================= UI: top bar ================= */
-function updateBar(){const o=sel&&get(sel);{const df=doorsFront();$('bDoor').disabled=df===null;$('bDoor').classList.toggle('on',df===true);$('bDoor').title=df?'הצג את פנים הלוח':'הצג את חזית הלוח (דלת סגורה)';}$('bLockAll').classList.toggle('on',globalLock);$('bText').disabled=wireMode||globalLock;{const o2=sel&&get(sel);$('bText').title=o2&&o2.type!=='wire'&&o2.type!=='label'?'הוסף תיבת טקסט ל'+o2.p.name:'הוסף תיבת טקסט';}$('bLockAll').title=globalLock?'פתח עריכה':'נעל עריכה (צפייה בלבד)';['bDel','bLock','bRot','bDup'].forEach(b=>$(b).disabled=!o||wireMode);$('rWire').classList.toggle('on',wireMode);$('bMeas').classList.toggle('on',!!measMode);if(pMode!=='lib')DRAWOPEN=false;$('rAdd').classList.toggle('on',pMode==='lib'&&!DRAWOPEN);$('bDraw').classList.toggle('on',pMode==='lib'&&DRAWOPEN);$('rProps').classList.toggle('on',pMode==='props');$('libStrip').classList.toggle('on',pMode==='lib');
- if(o)$('lockLbl').textContent=o.locked?'שחרר רכיב':'נעל רכיב';
+function updateBar(){const o=sel&&get(sel);{const df=doorsFront();$('bDoor').disabled=df===null;$('bDoor').classList.toggle('on',df===true);$('bDoor').title=df?'הצג את פנים הלוח':'הצג את חזית הלוח (דלת סגורה)';}$('bLockAll').classList.toggle('on',globalLock);$('bText').disabled=wireMode||globalLock;{const o2=sel&&get(sel);$('bText').title=o2&&o2.type!=='wire'&&o2.type!=='label'?'הוסף תיבת טקסט ל'+o2.p.name:'הוסף תיבת טקסט';}$('bLockAll').title=globalLock?'פתח עריכה':'נעל עריכה (צפייה בלבד)';['bDel','bLock','bRot','bDup'].forEach(b=>$(b).disabled=!o||wireMode);$('bLock').disabled=!selIds().length||wireMode;$('rWire').classList.toggle('on',wireMode);$('bMeas').classList.toggle('on',!!measMode);if(pMode!=='lib')DRAWOPEN=false;$('rAdd').classList.toggle('on',pMode==='lib'&&!DRAWOPEN);$('bDraw').classList.toggle('on',pMode==='lib'&&DRAWOPEN);$('rProps').classList.toggle('on',pMode==='props');$('libStrip').classList.toggle('on',pMode==='lib');
+ {const ids=selIds(),many=ids.length>1||(o&&isBox(o)),lk=ids.length&&ids.every(i=>get(i)?.locked);if(ids.length)$('lockLbl').textContent=lk?(many?'שחרר הכל':'שחרר רכיב'):(many?'נעל הכל':'נעל רכיב');}
  if(o){$('selName').textContent=o.type==='wire'?`חוט ${WCOL[o.p.color]?.n||''} ${o.p.sec} ממ"ר`:(o.p.name+(o.p.tag&&o.type!=='label'?' · '+o.p.tag:''));
   $('selThumb').innerHTML=o.type==='wire'?`<svg viewBox="0 0 24 24"><path d="M3 18C9 18 9 6 21 6" stroke="${WCOL[o.p.color]?.base}" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>`:thumbSVG(Object.assign({},o,{p:Object.assign({},o.p,THUMBP[o.type]||{})}));
   $('lockShackle').setAttribute('d',o.locked?'M8 11V8a4 4 0 0 1 8 0v3':'M8 11V8a4 4 0 0 1 7.6-1.7');
@@ -3192,7 +3192,14 @@ function fit(){const r=svg.getBoundingClientRect(),e0=viewExt();let e=e0;if(e0&&
 
 /* ================= top bar actions ================= */
 $('bDel').onclick=deleteSelected;
-$('bLock').onclick=()=>{const o=sel&&get(sel);if(!o)return;o.locked=!o.locked;commit();renderNow();updateBar();toast(o.locked?'הרכיב ננעל':'הנעילה שוחררה');};
+/* Lock what is selected, and with a panel / cabinet / box everything inside it (parts, wires, its mapping
+   table): one press on a selected whole panel fixes all of it. If all of it is already locked, it is released. */
+function lockSet(){const S=new Set(selIds().map(get).filter(Boolean));[...S].forEach(o=>{if(!isBox(o))return;const {w,h}=sizeOf(o);
+  state.objs.forEach(q=>{if(q===o||S.has(q))return;if(q.type==='nmap'&&q.p.rk===o.id){S.add(q);return;}
+   if(q.type==='wire'){const ps=q.pts.map(resolve).filter(Boolean);if(ps.length&&ps.every(p=>Math.abs(p.x-o.x)<=w/2&&Math.abs(p.y-o.y)<=h/2))S.add(q);return;}
+   if(Math.abs(q.x-o.x)<w/2&&Math.abs(q.y-o.y)<h/2)S.add(q);});});return [...S];}
+$('bLock').onclick=()=>{const L=lockSet();if(!L.length)return;const all=L.every(o=>o.locked);L.forEach(o=>o.locked=!all);commit();renderNow();updateBar();
+ toast(all?(L.length>1?`הנעילה שוחררה (${L.length} רכיבים)`:'הנעילה שוחררה'):(L.length>1?`ננעלו ${L.length} רכיבים`:'הרכיב ננעל'));};
 $('bRot').onclick=()=>{const o=sel&&get(sel);if(!o||o.type==='wire'||o.type==='mdim'||o.type==='callout'||o.locked)return;if(o.type==='cabinet'){toast('ארון לא מסתובב');return;}o.rot=(o.rot+90)%360;commit();renderNow();};
 $('bDup').onclick=()=>{const o=sel&&get(sel);if(!o)return;const c=JSON.parse(JSON.stringify(o));c.id=uid();c.locked=false;if(c.type==='label')delete c.p.of;
  if(c.type==='wire'){c.pts=c.pts.map(p=>{const q=resolve(p)||p;return {x:q.x+15,y:q.y+15};});}
