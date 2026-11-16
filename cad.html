@@ -1121,6 +1121,16 @@ const SDEF={
   terms:()=>['U','V','W','PE'].map((l,i)=>[-15+i*10,-35,l]),
   draw:o=>{let s=['U','V','W','PE'].map((l,i)=>sL(-15+i*10,-35,-15+i*10,-22,1.4)).join('')+sL(-15,-22,15,-22,1.4)+sL(0,-22,0,-13)+sC(0,0,13)+sT(0,-3,'M',10)+sT(0,7,'3~',6);
    s+=sC(0,22,6)+`<path d="M0 22l4 -4" stroke="${SK}" stroke-width="1.4"/><path d="M-22 31q3.7 -3 7.3 0t7.3 0t7.3 0t7.3 0t7.3 0t7.3 0" fill="none" stroke="${SK}" stroke-width="1.3"/>`;return s+sLbl(o,36);}},
+ smv:{layer:4,sld:true,edit:['tag','rating','act','desc'],def:{tag:'MV1',rating:'DN100',act:'3ph',desc:'מגוף חשמלי'},ratings:['DN50','DN80','DN100','DN150','DN200'],size:()=>({w:70,h:90}),
+  terms:o=>{const P=o.p.act==='3ph'?['U','V','W','PE']:['L','N','PE'],C=['OP','CL','LSO','LSC',...(o.p.act==='mod'?['mA+','mA−']:[])];return [...P.map((l,i)=>[(i-(P.length-1)/2)*10,-45,l]),...C.map((l,i)=>[35,-25+i*10,l])];},
+  draw:o=>{const P=o.p.act==='3ph'?['U','V','W','PE']:['L','N','PE'],C=['OP','CL','LSO','LSC',...(o.p.act==='mod'?['mA+','mA−']:[])],bh=Math.max(40,C.length*10+6);
+   let s=P.map((l,i)=>sL((i-(P.length-1)/2)*10,-45,(i-(P.length-1)/2)*10,-30,1.4)).join('')+sR(-20,-30,40,bh)+sT(0,-30+bh/2-4,'M',11)+txt(0,-30+bh/2+8,o.p.act==='mod'?'4-20mA':'',4.5,SK,700);
+   C.forEach((l,i)=>{const y=-25+i*10;s+=sL(20,y,35,y,1.4)+txt(22,y-3,l,3.8,SK,700,'start');});
+   const vy=-30+bh+16;s+=sL(0,-30+bh,0,vy)+`<path d="M-14 ${vy-9}L14 ${vy+9}V${vy-9}L-14 ${vy+9}Z" fill="#fff" stroke="${SK}" stroke-width="2" stroke-linejoin="round"/>`+sL(-30,vy,-14,vy,2.4)+sL(14,vy,30,vy,2.4);
+   const ls=[[o.p.tag,9,700],[o.p.rating,7,400],[o.p.desc,7,400]].filter(l=>l[0]);return s+ls.map((l,i)=>txt(-24,-18+i*10,l[0],l[1],SK,l[2],'end')).join('');}},
+ ssv:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'SV1',rating:'24VDC',desc:'ברז חשמלי (סולנואיד)'},ratings:['24VDC','24VAC','230VAC'],size:()=>({w:50,h:60}),
+  terms:()=>[[-10,-30,'A1'],[10,-30,'A2']],
+  draw:o=>sL(-10,-30,-10,-14)+sL(10,-30,10,-14)+sR(-13,-14,26,14)+sL(-13,0,13,-14,1.4)+sL(0,0,0,12)+`<path d="M-12 3L12 21V3L-12 21Z" fill="#fff" stroke="${SK}" stroke-width="2" stroke-linejoin="round"/>`+sL(-25,12,-12,12,2.4)+sL(12,12,25,12,2.4)+sLbl(o,40)},
  slamp:{layer:4,sld:true,edit:['tag','rating','desc','color'],def:{tag:'H1',rating:'230V',desc:'נורית סימון',color:'green'},size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sL(0,-30,0,-9)+sL(0,9,0,30)+sC(0,0,9,o.p.color&&o.p.color!=='white'?COLORS[o.p.color]+'55':'#fff')+sL(-6.4,-6.4,6.4,6.4)+sL(-6.4,6.4,6.4,-6.4)+sLbl(o,40)},
  shorn:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'H5',rating:'230V',desc:'צופר / זמזם'},size:()=>({w:40,h:60}),terms:IO,
@@ -1334,6 +1344,9 @@ const KFDN={DN50:[200,165],DN80:[200,200],DN100:[250,220],DN150:[300,285],DN200:
 // floats in the pit: [fraction of the depth, name, colour] for 2, 3 or 4 floats
 // pit size in mm, kept within what the drawing of the pump and floats needs
 const pitWD=o=>({W:Math.max(600,Math.min(5000,+o.p.pw||700)),D:Math.max(700,Math.min(10000,+o.p.pd||1350))});
+// electric valve: body length and flange size by DN and valve type, and the actuator's terminals
+const mvDim=o=>{const D=(KFDN[o.p.rating]||KFDN.DN100)[1],dn=parseInt(String(o.p.rating).slice(2))||100,vt=o.p.vt||'bfly';return {D,L:vt==='bfly'?Math.max(43,Math.round(dn*.45)):vt==='gate'?Math.round(dn*1.1+80):Math.round(dn*1.3+60)};};
+const mvTerms=o=>[...(o.p.act==='3ph'?['U','V','W','PE']:['L','N','PE']),'OP','CL','LSO','LSC','COM',...(o.p.act==='mod'?['mA+','mA−']:[])];
 const SPF={2:[[.6,'עצירה','#facc15'],[.3,'הפעלה','#22c55e']],3:[[.66,'עצירה','#facc15'],[.36,'הפעלה','#22c55e'],[.14,'גלישה','#ef4444']],4:[[.8,'יבש','#94a3b8'],[.62,'עצירה','#facc15'],[.36,'הפעלה','#22c55e'],[.14,'גלישה','#ef4444']]};
 const MAGL={'180':{w:170,h:40},'280':{w:250,h:48},'500':{w:266,h:73}};
 function wallBox(w,h,r=8){return `<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${r}" fill="${WALLW}" stroke="#8d8d85" stroke-width="1.4"/><rect x="${-w/2+4}" y="${-h/2+4}" width="${w-8}" height="${h-8}" rx="${r-2}" fill="none" stroke="#d6d6cd" stroke-width="1"/>`;}
@@ -1468,6 +1481,29 @@ const WDEF={
      `<path d="M${x+36} ${y}H${X1-t-4}" stroke="${c}" stroke-width="2" stroke-dasharray="8 6"/>`+`<rect x="${x-112}" y="${y-15}" width="72" height="30" rx="4" fill="#fff" stroke="${c}" stroke-width="2"/>`+txt(x-76,y,lbl,19,'#111827',800);});
    s+=txt(0,Y1+28,`בור שאיבה ${W}×${D} מ"מ — משאבה טבולה`,26,'#374151',800);
    return s+(o.p.tag?txt(X0,T-35,o.p.tag,28,'#1d4ed8',800,'start'):'');}},
+ /* electric valves: a valve (butterfly / gate / ball, sized by DN) under an electric actuator with a handwheel,
+    and a small solenoid valve; the actuator's power, open / close commands, limit switches (and 4-20mA) at its top */
+ mvalve:{layer:4,edit:['tag','rating','vt','act'],def:{tag:'MV1',rating:'DN100',vt:'bfly',act:'3ph'},ratings:['DN50','DN80','DN100','DN150','DN200','DN250','DN300'],
+  size:o=>{const {L,D}=mvDim(o);return {w:Math.max(250,L+20),h:D+290};},
+  terms:o=>{const L=mvTerms(o),{h}=DEF.mvalve.size(o);return L.map((l,i)=>[(i-(L.length-1)/2)*14,-h/2,l]);},
+  draw:o=>{const {L,D}=mvDim(o),{h}=DEF.mvalve.size(o),T=-h/2,yc=T+250+D/2,vt=o.p.vt||'bfly',fw=vt==='bfly'?0:Math.max(14,L*.1);
+   let s=`<rect x="${-L/2-60}" y="${yc-D*.28}" width="${L+120}" height="${D*.56}" fill="#d1d5db" opacity=".55"/>`;
+   if(vt==='bfly')s+=`<rect x="${-L/2}" y="${yc-D/2}" width="${L}" height="${D}" rx="4" fill="#334155" stroke="#0f172a" stroke-width="1.4"/><path d="M0 ${yc-D*.42}V${yc+D*.42}" stroke="#94a3b8" stroke-width="${Math.max(3,L*.12)}" stroke-linecap="round"/>`;
+   else{[-1,1].forEach(a=>s+=`<rect x="${a<0?-L/2:L/2-fw}" y="${yc-D/2}" width="${fw}" height="${D}" rx="2" fill="#64748b" stroke="#1e293b" stroke-width="1.2"/>`);
+    s+=vt==='gate'?`<path d="M${-L/2+fw} ${yc-D*.34}H${L/2-fw}V${yc+D*.34}H${-L/2+fw}Z" fill="#334155" stroke="#0f172a" stroke-width="1.4"/><path d="M${-D*.18} ${yc-D*.34}V${T+262}H${D*.18}V${yc-D*.34}" fill="#334155" stroke="#0f172a" stroke-width="1.4"/>`
+     :`<ellipse cx="0" cy="${yc}" rx="${L/2-fw+2}" ry="${D*.4}" fill="#334155" stroke="#0f172a" stroke-width="1.4"/><circle cx="0" cy="${yc}" r="${D*.2}" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>`;}
+   s+=`<rect x="-14" y="${T+232}" width="28" height="${yc-D/2-(T+232)+2}" fill="#94a3b8" stroke="#334155" stroke-width="1"/><rect x="-40" y="${T+222}" width="80" height="14" rx="2" fill="#64748b" stroke="#334155" stroke-width="1"/>`;
+   // actuator
+   s+=`<rect x="-80" y="${T+20}" width="160" height="202" rx="12" fill="#1f6f43" stroke="#0b3a22" stroke-width="1.6"/><rect x="-70" y="${T+30}" width="45" height="182" rx="8" fill="#2f9e63" opacity=".35"/><circle cx="0" cy="${T+82}" r="30" fill="#e5e7eb" stroke="#111827" stroke-width="1.4"/>`+
+    `<path d="M0 ${T+82}L${o.p.act==='mod'?18:0} ${T+82-(o.p.act==='mod'?20:27)}" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/>`+txt(-17,T+82,'C',8,'#111827',800)+txt(17,T+82,'O',8,'#111827',800)+txt(0,T+138,'M',26,'#fff',800)+txt(0,T+166,{'3ph':'3~ 400V','1ph':'230V','mod':'4-20mA'}[o.p.act]||'',12,'#dcfce7',700);
+   s+=`<circle cx="95" cy="${T+150}" r="26" fill="none" stroke="#111827" stroke-width="6"/><path d="M80 ${T+150}h30M95 ${T+135}v30" stroke="#111827" stroke-width="3"/><path d="M80 ${T+150}H70" stroke="#111827" stroke-width="5"/>`;
+   s+=txt(0,yc+D/2+16,`${o.p.rating} · ${{bfly:'פרפר',gate:'טריז',ball:'כדורי'}[vt]}`,11,'#374151',800);
+   return s+(o.p.tag?txt(-80,T+12,o.p.tag,10,'#1d4ed8',800,'start'):'');}},
+ svalve:{layer:4,edit:['tag','rating'],def:{tag:'SV1',rating:'24VDC'},ratings:['24VDC','24VAC','230VAC'],size:()=>({w:110,h:150}),
+  terms:()=>[[-12,-75,'1'],[0,-75,'2'],[12,-75,'PE']],
+  draw:o=>{let s=`<rect x="-80" y="38" width="160" height="24" fill="#d1d5db" opacity=".55"/><path d="M-55 30h110v40h-110z" fill="#b8860b" stroke="#6b4f05" stroke-width="1.4"/><path d="M-55 30h18v40h-18zM37 30h18v40h-18z" fill="#d4a017" stroke="#6b4f05" stroke-width="1.2"/>`+
+   `<rect x="-14" y="10" width="28" height="22" fill="#a16207" stroke="#6b4f05" stroke-width="1"/><rect x="-32" y="-50" width="64" height="62" rx="5" fill="#111827" stroke="#000" stroke-width="1.4"/><rect x="-26" y="-72" width="52" height="24" rx="3" fill="#374151" stroke="#000" stroke-width="1"/>`+txt(0,-22,'SV',13,'#fbbf24',800)+txt(0,-4,o.p.rating||'',8,'#e5e7eb',700)+`<path d="M-12 50h24l-5 -6M12 50l-5 6" fill="none" stroke="#fff" stroke-width="2"/>`;
+   return s+(o.p.tag?txt(36,-60,o.p.tag,9,'#1d4ed8',700,'start'):'');}},
  wjb:{layer:4,edit:['tag'],def:{tag:''},size:()=>({w:110,h:110}),
   terms:()=>[...['L1','L2','L3','N','PE'].map((l,i)=>[(i-2)*14,-55,l]),...['L1','L2','L3','N','PE'].map((l,i)=>[(i-2)*14,55,''])],
   draw:o=>{let s=`<rect x="-55" y="-55" width="110" height="110" rx="8" fill="#9ca3af" stroke="#374151" stroke-width="1.6"/><rect x="-46" y="-46" width="92" height="92" rx="6" fill="#b8bec6" stroke="#4b5563" stroke-width="1"/>`;
@@ -1524,6 +1560,7 @@ const LIB=[
   {g:'חיישנים ומפסקי תהליך',items:[{t:'sfloat',n:'מצוף'},{t:'spress',n:'מפסק לחץ'},{t:'sthermo',n:'תרמוסטט'},{t:'slimit',n:'מפסק גבול'}]},
   {g:'סימון',items:[{t:'slamp',n:'נורית ירוקה',p:{color:'green',tag:'H1'}},{t:'slamp',n:'נורית אדומה',p:{color:'red',tag:'H2'}},{t:'slamp',n:'נורית כתומה',p:{color:'orange',tag:'H3'}},{t:'shorn',n:'צופר / זמזם'}]}]},
  {tab:'מדידה וצרכנים',sld:true,groups:[
+  {g:'מגופים חשמליים',items:[{t:'smv',n:'מגוף חשמלי (סמל)'},{t:'smv',n:'מגוף חשמלי מווסת (סמל)',p:{act:'mod',desc:'מגוף מווסת'}},{t:'ssv',n:'ברז חשמלי סולנואיד (סמל)'}]},
   {g:'מדי גובה, לחץ וספיקה',items:[{t:'sfe',n:'מד ספיקה KROHNE — חיישן (סמל)'},{t:'sfit',n:'ממיר ספיקה KROHNE עם צג (סמל)'},{t:'sfloat',n:'מצוף (סמל)'},{t:'spt',n:'משדר לחץ (סמל)'},{t:'spi',n:'מד לחץ — מנומטר (סמל)'},{t:'slvlh',n:'מד גובה הידרוסטטי (סמל)'},{t:'sultra',n:'בקר מפלס Pulsar Ultra 4 (סמל)'},{t:'sudb',n:'מתמר אולטרסוני (סמל)'}]},
   {g:'מדידה',items:[{t:'sct',n:'משנה זרם (CT)'},{t:'svt',n:'משנה מתח (VT)'},{t:'skwh',n:'מונה kWh'},{t:'spm',n:'רב-מודד'},{t:'samm',n:'מד זרם'},{t:'svm',n:'מד מתח'}]},
   {g:'צרכנים',items:[{t:'ssubp',n:'משאבה טבולה (סמל)'},{t:'smot',n:'מנוע תלת-פאזי (U V W)',p:{poles:3}},{t:'smot',n:'מנוע כוכב-משולש (6 הדקים)',p:{poles:6,rating:'30kW'}},{t:'smot',n:'מנוע (קו אחד)'},{t:'slight',n:'תאורה'},{t:'ssock',n:'שקעים'},{t:'sheat',n:'גוף חימום'},{t:'scap',n:'סוללת קבלים'},{t:'sload',n:'לוח משנה / עומס'}]},
@@ -1623,9 +1660,10 @@ const LIB=[
    {g:'מפסקים על הקיר',items:[{t:'wsw',n:'מפסק יחיד',p:{sw:'1'}},{t:'wsw',n:'מפסק כפול',p:{sw:'2'}},{t:'wsw',n:'מחליף',p:{sw:'tw'}},{t:'wsw',n:'לחצן',p:{sw:'push'}},{t:'wiso',n:'מפסק בטחון 3P 25A',p:{poles:3,rating:'25A'}},{t:'wiso',n:'מפסק בטחון 4P 63A',p:{poles:4,rating:'63A'}}]},
    {g:'קופסת חיבורים',items:[{t:'wjb',n:'קופסת חיבורים IP65'}]},
    {g:'בקרת כניסה לדלת',items:[{t:'wmag',n:'אלקטרומגנט לנעילת דלת 280 ק"ג',p:{hold:'280'}},{t:'wmag',n:'אלקטרומגנט לנעילת דלת 500 ק"ג',p:{hold:'500'}},{t:'wmag',n:'אלקטרומגנט עם מגע מצב',p:{hold:'280',mon:'1'}},{t:'wcard',n:'קורא כרטיסים',p:{rdr:'card'}},{t:'wcard',n:'קורא כרטיסים + קודן',p:{rdr:'kp'}}]}]},
-  {tab:'מכשור ומדי גובה',icon:'📟',hint:'מד ספיקה KROHNE בגרסה מרוחקת: החיישן על הצינור (אורך ואוגן לפי DN), והממיר עם הצג על הקיר — מחברים ביניהם כבל אות (1, 2, 3) וכבל זרם שדה (7, 8). מצוף: 3 גידים — C, NO, NC. משדר לחץ: 2 גידים 4-20mA. מנומטר: מד מכני בלי חיבור חשמלי. מד גובה הידרוסטטי: גשש שטובלים בבור, 2 גידים 4-20mA. Pulsar Ultra 4: בקר מפלס אולטרסוני על הקיר — הזנה, מתמר (TX, TX0, SC), 4 ממסרים ויציאת 4-20mA בתחתית. המתמר (dB) מותקן מעל המים ומחובר לבקר בכבל.',groups:[
+  {tab:'מכשור ומדי גובה',icon:'📟',hint:'מגוף חשמלי: בוחרים במאפיינים סוג (פרפר / טריז / כדורי), קוטר (DN) ומפעיל (תלת-פאזי, חד-פאזי או מווסת 4-20mA); בראש המפעיל — הזנה, פקודות פתח / סגור (OP, CL), גבולות (LSO, LSC, COM). מד ספיקה KROHNE בגרסה מרוחקת: החיישן על הצינור (אורך ואוגן לפי DN), והממיר עם הצג על הקיר — מחברים ביניהם כבל אות (1, 2, 3) וכבל זרם שדה (7, 8). מצוף: 3 גידים — C, NO, NC. משדר לחץ: 2 גידים 4-20mA. מנומטר: מד מכני בלי חיבור חשמלי. מד גובה הידרוסטטי: גשש שטובלים בבור, 2 גידים 4-20mA. Pulsar Ultra 4: בקר מפלס אולטרסוני על הקיר — הזנה, מתמר (TX, TX0, SC), 4 ממסרים ויציאת 4-20mA בתחתית. המתמר (dB) מותקן מעל המים ומחובר לבקר בכבל.',groups:[
    {g:'מדי גובה',items:[{t:'lvlh',n:'מד גובה הידרוסטטי 0-4m'},{t:'lvlh',n:'מד גובה הידרוסטטי 0-10m',p:{rating:'0-10 mH₂O · 4-20mA'}},{t:'ultra4',n:'בקר מפלס Pulsar Ultra 4'},{t:'udb',n:'מתמר אולטרסוני dB6'},{t:'udb',n:'מתמר אולטרסוני dB10',p:{rating:'dB10 · 0.3-10m'}},{t:'lfloat',n:'מצוף מפלס'}]},
    {g:'מדי ספיקה KROHNE (גרסה מרוחקת — צג נשלף)',items:[{t:'kflow',n:'מד ספיקה KROHNE DN50',p:{rating:'DN50'}},{t:'kflow',n:'מד ספיקה KROHNE DN100'},{t:'kflow',n:'מד ספיקה KROHNE DN150',p:{rating:'DN150'}},{t:'kflow',n:'מד ספיקה KROHNE DN200',p:{rating:'DN200'}},{t:'kconv',n:'ממיר KROHNE IFC 300 עם צג (על הקיר)'}]},
+   {g:'מגופים חשמליים',items:[{t:'mvalve',n:'מגוף פרפר חשמלי DN100'},{t:'mvalve',n:'מגוף פרפר חשמלי DN200',p:{rating:'DN200'}},{t:'mvalve',n:'מגוף טריז חשמלי DN150',p:{rating:'DN150',vt:'gate'}},{t:'mvalve',n:'מגוף כדורי חשמלי DN50 230V',p:{rating:'DN50',vt:'ball',act:'1ph'}},{t:'mvalve',n:'מגוף מווסת 4-20mA DN100',p:{act:'mod'}},{t:'svalve',n:'ברז חשמלי סולנואיד 24VDC'},{t:'svalve',n:'ברז חשמלי סולנואיד 230VAC',p:{rating:'230VAC'}}]},
    {g:'מדי לחץ',items:[{t:'ptx',n:'משדר לחץ 0-6 bar'},{t:'ptx',n:'משדר לחץ 0-10 bar',p:{rating:'0-10 bar · 4-20mA'}},{t:'pgauge',n:'מד לחץ (מנומטר) 0-10 bar'},{t:'pgauge',n:'מד לחץ (מנומטר) 0-6 bar',p:{rating:'0-6 bar'}}]}]},
   {tab:'מנועים וכבלים',icon:'⟲',hint:'מנוע: את ההספק ואת מה שמותקן עליו (משאבה צנטריפוגלית, בורג, מפוח, טבולה) בוחרים במאפיינים. כבל: בוחרים אותו כדי לנתב — גוררים קצה, ומה-+ שבאמצע קטע יוצרים כיפוף; את הפתיחה בצד אחד או בשניהם בוחרים במאפיינים.',groups:[
    {g:'מנועים ומשאבות',items:I('מנוע חשמלי','מנוע + משאבה צנטריפוגלית','מנוע + משאבת בורג','מנוע + מפוח','משאבה טבולה')},
@@ -2047,7 +2085,7 @@ function inCab(c,x,y){const g=cabG(c);return x>g.x0&&x<g.x0+g.W&&y>g.y0&&y<g.y0+
 /* Designations by IEC 81346 letter, numbered as parts are added: the next free
    number for that letter in this document (H1, H2… lamps; Q1, Q2… breakers…). A
    designation typed by hand stays as it is. */
-const SERIAL={subpit:'P',ssubp:'P',kflow:'FE',kconv:'FIT',sfe:'FE',sfit:'FIT',lfloat:'LS',ptx:'PT',pgauge:'PI',spt:'PT',spi:'PI',lvlh:'LT',ultra4:'LIC',udb:'LE',slvlh:'LT',sultra:'LIC',sudb:'LE',smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
+const SERIAL={mvalve:'MV',svalve:'SV',smv:'MV',ssv:'SV',subpit:'P',ssubp:'P',kflow:'FE',kconv:'FIT',sfe:'FE',sfit:'FIT',lfloat:'LS',ptx:'PT',pgauge:'PI',spt:'PT',spi:'PI',lvlh:'LT',ultra4:'LIC',udb:'LE',slvlh:'LT',sultra:'LIC',sudb:'LE',smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
  sbrk:'Q',smpcb:'Q',siso:'Q',slbs:'Q',sfsd:'Q',sats:'Q',srcd:'F',sfuse:'F',sol:'F',sspd:'F',scont:'K',svfd:'U',sss:'U',sups:'U',sgen:'G',sbatt:'G',strafo:'T',sct:'T',svt:'T',skwh:'P',spm:'P',samm:'P',svm:'P',scap:'C',smot:'M',stb:'X',scable:'W'};
 function autoTag(o){const pre=SERIAL[o.type];if(!pre||!o.p||!DEF[o.type].edit?.includes('tag'))return;const re=new RegExp('^'+pre+'(\\d+)$');if(o.p.tag&&!re.test(o.p.tag))return;
  const mine=isSldObj(o),used=new Set();state.objs.forEach(q=>{if(q===o||isSldObj(q)!==mine)return;const m=re.exec(q.p?.tag||'');if(m)used.add(+m[1]);});let n=1;while(used.has(n))n++;o.p.tag=pre+n;}
@@ -3138,6 +3176,8 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='dcv')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_dcv"><option value="12" ${v!=='24'?'selected':''}>12V DC</option><option value="24" ${v==='24'?'selected':''}>24V DC</option></select></div>`;
   else if(k==='op')h+=`<div class="fld"><label>שקיפות</label><select id="f_op">${[.2,.3,.4,.5,.6,.7,.8,1].map(a=>`<option value="${a}" ${Math.abs(a-(+v||.6))<.01?'selected':''}>${Math.round(a*100)}%</option>`).join('')}</select></div>`;
   else if(k==='exp')h+=`<div class="fld"><label>בייצוא</label><select id="f_exp"><option value="0" ${v!=='1'?'selected':''}>לא מופיעה ב-PDF / תמונה</option><option value="1" ${v==='1'?'selected':''}>מופיעה בייצוא</option></select></div>`;
+  else if(k==='vt')h+=`<div class="fld"><label>סוג המגוף</label><select id="f_vt">${[['bfly','פרפר (Butterfly)'],['gate','טריז (Gate)'],['ball','כדורי (Ball)']].map(([a,b])=>`<option value="${a}" ${a===(v||'bfly')?'selected':''}>${b}</option>`).join('')}</select></div>`;
+  else if(k==='act')h+=`<div class="fld"><label>מפעיל</label><select id="f_act">${[['3ph','תלת-פאזי 400V — פתח / סגור'],['1ph','חד-פאזי 230V — פתח / סגור'],['mod','מווסת 4-20mA']].map(([a,b])=>`<option value="${a}" ${a===(v||'3ph')?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='nf')h+=`<div class="fld"><label>מצופים</label><select id="f_nf">${[['2','2 — עצירה, הפעלה'],['3','3 — עצירה, הפעלה, גלישה'],['4','4 — יבש, עצירה, הפעלה, גלישה']].map(([a,b])=>`<option value="${a}" ${a===String(v||'3')?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='bus')h+=`<div class="fld"><label>חיווט</label><select id="f_bus"><option value="wg" ${v!=='osdp'?'selected':''}>Wiegand — +12V 0V D0 D1 LED BZ TMP</option><option value="osdp" ${v==='osdp'?'selected':''}>OSDP / RS485 — +12V 0V A B TMP</option></select></div>`;
   else if(k==='rdr')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_rdr"><option value="card" ${v!=='kp'?'selected':''}>קורא כרטיסים (צר)</option><option value="kp" ${v==='kp'?'selected':''}>קורא כרטיסים + קודן</option></select></div>`;
