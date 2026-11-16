@@ -701,8 +701,8 @@ const neqW=o=>o.p.inch==='10'?254:482.6;
 // the U slot of a rack nearest to y for an item u units high, or null when it does not fit there
 function rackU(r,o,y){const d=nrDim(r),iu=Math.max(1,+o.p.u||1),yT=r.y-d.H/2+d.top;let k=Math.round((y-iu*RU/2-yT)/RU);k=Math.max(0,Math.min(d.u-iu,k));return {k,y:r2(yT+k*RU+iu*RU/2)};}
 // the mapping table of a rack: its rows face the rack's U rows (header above the top U)
-const NMH=30;
-function nmapGeo(o){const r=get(o.p.rk);if(!r||r.type!=='nrack')return null;const d=nrDim(r),W=+o.p.w||(d.inch===10?300:420),yT=r.y-d.H/2+d.top;return {r,d,W,yT,H:d.u*RU+NMH,cy:r2(yT-NMH+(d.u*RU+NMH)/2)};}
+const NMH=30,NMT=40;
+function nmapGeo(o){const r=get(o.p.rk);if(!r||r.type!=='nrack')return null;const d=nrDim(r),W=+o.p.w||(d.inch===10?300:420),yT=r.y-d.H/2+d.top;return {r,d,W,yT,H:d.u*RU+NMH+NMT,cy:r2(yT-NMH-NMT+(d.u*RU+NMH+NMT)/2)};}
 function rackFree(r,o){const d=nrDim(r),iu=Math.max(1,+o.p.u||1),yT=r.y-d.H/2+d.top,used=new Array(d.u).fill(false);
  state.objs.forEach(q=>{if(q===o||!DEF[q.type]?.ru||Math.abs(q.x-r.x)>1)return;const qu=Math.max(1,+q.p.u||1),k0=Math.round((q.y-qu*RU/2-yT)/RU);for(let k=k0;k<k0+qu;k++)if(k>=0&&k<d.u)used[k]=true;});
  for(let k=0;k+iu<=d.u;k++){let ok=true;for(let j=k;j<k+iu;j++)if(used[j])ok=false;if(ok)return {k,y:r2(yT+k*RU+iu*RU/2)};}return null;}
@@ -865,17 +865,17 @@ const DEF={
    [-1,1].forEach(a=>{const x0=a<0?-rail/2-16:rail/2;s+=`<rect x="${x0}" y="${yT}" width="16" height="${u*RU}" fill="#9aa1a8" stroke="#555b61" stroke-width=".8"/>`;for(let k=0;k<u;k++)[6.35,22.225,38.1].forEach(dy=>s+=`<rect x="${x0+5}" y="${yT+k*RU+dy-2.4}" width="6" height="4.8" fill="#2b2f34"/>`);});
    for(let k=0;k<u;k++)s+=txt(-rail/2-24,yT+k*RU+RU/2,String(u-k),Math.min(9,RU*.22),gr?'#374151':'#9ca3af',700,'end');
    s+=txt(0,yB+(d.fl?14:28),`${d.inch}" · ${u}U · ${W} מ"מ`,12,gr?'#374151':'#9ca3af',700);return s+(o.p.tag?txt(-W/2+8,-H/2-10,o.p.tag,14,'#7dd3fc',800,'start'):'');}},
- nmap:{layer:4,edit:['tag','w'],def:{tag:'',rk:'',w:0},size:o=>{const g=nmapGeo(o);return g?{w:g.W,h:g.H}:{w:300,h:80};},
+ nmap:{layer:4,edit:['title','tag','w'],def:{tag:'',rk:'',w:0,title:'ארון תקשורת'},size:o=>{const g=nmapGeo(o);return g?{w:g.W,h:g.H}:{w:300,h:80};},
   draw:o=>{const g=nmapGeo(o);if(!g)return `<rect x="-150" y="-40" width="300" height="80" fill="#fff" stroke="#9ca3af" stroke-dasharray="6 4"/>`+txt(0,0,'הארון של הטבלה נמחק',12,'#6b7280',700);
    const {r,d,W,yT}=g,y0=yT-NMH-o.y,x0=-W/2,cU=30,cE=(W-cU)*.5,fs=Math.min(11,RU*.24),R=(x,y,t,z,c,w=700)=>`<text x="${r2(x)}" y="${r2(y)}" font-size="${z}" fill="${c}" font-weight="${w}" font-family="Arial,Helvetica,sans-serif" text-anchor="start" direction="rtl" dominant-baseline="central">${esc(t)}</text>`;
-   let s=`<rect x="${x0}" y="${y0}" width="${W}" height="${g.H}" fill="#fff" stroke="#374151" stroke-width="1.6"/><rect x="${x0}" y="${y0}" width="${W}" height="${NMH}" fill="#e5e7eb" stroke="#374151" stroke-width="1.2"/>`;
+   let s=`<rect x="${x0}" y="${y0-NMT}" width="${W}" height="${NMT}" fill="#1f3a5f" stroke="#374151" stroke-width="1.6"/>`+R(-x0-10,y0-NMT/2,o.p.title||'טבלת מיפוי',Math.min(18,NMT*.45),'#fff',800)+(r.p.tag?txt(x0+10,y0-NMT/2,r.p.tag,Math.min(14,NMT*.35),'#bfdbfe',800,'start'):'')+`<rect x="${x0}" y="${y0}" width="${W}" height="${g.H-NMT}" fill="#fff" stroke="#374151" stroke-width="1.6"/><rect x="${x0}" y="${y0}" width="${W}" height="${NMH}" fill="#e5e7eb" stroke="#374151" stroke-width="1.2"/>`;
    s+=txt(W/2-cU/2,y0+NMH/2,'U',11,'#111827',800)+R(W/2-cU-6,y0+NMH/2,'ציוד',11,'#111827',800)+R(x0+(W-cU-cE)-6,y0+NMH/2,'ייעוד',11,'#111827',800);
    const rows=new Array(d.u).fill(null);state.objs.forEach(q=>{if(!DEF[q.type]?.ru||Math.abs(q.x-r.x)>1)return;const qu=Math.max(1,+q.p.u||1),k0=Math.round((q.y-qu*RU/2-yT)/RU);if(k0<0||k0+qu>d.u)return;rows[k0]={q,n:qu};for(let k=k0+1;k<k0+qu;k++)rows[k]='x';});
    for(let k=0;k<d.u;k++){const y=y0+NMH+k*RU;s+=`<path d="M${x0} ${y+RU}H${-x0}" stroke="#d1d5db" stroke-width=".8"/>`+txt(W/2-cU/2,y+RU/2,String(d.u-k),fs,'#374151',700);
-    const c=rows[k];if(c==='x')continue;if(!c){s+=txt(W/2-cU-6,y+RU/2,'—',fs,'#cbd5e1',400,'end');continue;}
+    const c=rows[k];if(c==='x')continue;if(!c){const e=(o.p.rows||{})[String(d.u-k)];if(e&&(e.n||e.use))s+=R(W/2-cU-6,y+RU/2,e.n||'',fs,'#4b5563')+R(x0+(W-cU-cE)-6,y+RU/2,e.use||'',fs,'#1d4ed8');else s+=txt(W/2-cU-6,y+RU/2,'—',fs,'#cbd5e1',400,'end');continue;}
     const hh=c.n*RU;s+=`<rect x="${x0+1}" y="${y+.5}" width="${W-cU-2}" height="${hh-1}" fill="#f8fafc"/>`+R(W/2-cU-6,y+hh/2,c.q.p.name||'',fs,'#111827')+R(x0+(W-cU-cE)-6,y+hh/2,c.q.p.use||'',fs,'#1d4ed8');}
-   s+=`<path d="M${W/2-cU} ${y0}V${y0+g.H}M${x0+W-cU-cE} ${y0}V${y0+g.H}" stroke="#374151" stroke-width="1"/>`;
-   return s+R(-x0,y0-12,`טבלת מיפוי${r.p.tag?' — '+r.p.tag:''}`,13,'#9ca3af',800);}},
+   s+=`<path d="M${W/2-cU} ${y0}V${y0+g.H-NMT}M${x0+W-cU-cE} ${y0}V${y0+g.H-NMT}" stroke="#374151" stroke-width="1"/>`;
+   return s;}},
  nequip:{layer:4,ru:true,edit:['tag','use','rating','u','rcol'],def:{tag:'',k:'patch',inch:'19',u:1,rating:'',rcol:'grey',use:''},size:o=>({w:neqW(o),h:r2(Math.max(1,+o.p.u||1)*RU)}),
   draw:o=>{const W=neqW(o),u=Math.max(1,+o.p.u||1),H=u*RU,k=o.p.k,inn=W-34,x0=-inn/2,ten=o.p.inch==='10';
    const lt=o.p.rcol!=='black',tc=lt?'#374151':'#cbd5e1',tm=lt?'#4b5563':'#9ca3af';const col=(lt?{brush:'#dfe1dc',fiber:'#e4e6e1',patch:'#e4e6e1',sw:'#eceeea',cm:'#dfe1dc',pdu:'#dfe1dc',shelf:'#d2d5cf',blank:'#e4e6e1',router:'#d6e4f3',ups:'#e4e6e1',fan:'#e4e6e1',fw:'#f3d6d6'}:{brush:'#1f2326',fiber:'#2b2f34',patch:'#2b2f34',sw:'#30363d',cm:'#1f2326',pdu:'#1f2326',shelf:'#3a3f45',blank:'#2b2f34',router:'#1e3a5f',ups:'#26292d',fan:'#2b2f34',fw:'#5b1d1d'})[k]||'#2b2f34';
@@ -2697,7 +2697,23 @@ async function appRefresh(){const el=$('ptr');if(el){el.classList.add('go');el.q
    (Enter or a tap elsewhere keeps them, Esc drops the change). On any other
    part: open its properties. */
 let LASTTAP={id:null,t:0,x:0,y:0};
-function dblEdit(o){if(!o||o.locked||globalLock)return;
+// a mapping-table cell under the pointer: [what it edits, its rectangle in world units, current text]
+function nmapCell(o,wx,wy){const g=nmapGeo(o);if(!g)return null;const {r,d,W,yT}=g,cU=30,cE=(W-cU)*.5,lx=wx-o.x,x0=-W/2;if(Math.abs(lx)>W/2)return null;
+ if(wy<yT-NMH&&wy>=yT-NMH-NMT)return {title:true,x:o.x+x0,y:yT-NMH-NMT,w:W,h:NMT,text:o.p.title||''};
+ const k=Math.floor((wy-yT)/RU);if(k<0||k>=d.u||lx>W/2-cU)return null;const col=lx>x0+(W-cU-cE)?'name':'use',cx0=col==='name'?o.x+x0+(W-cU-cE):o.x+x0,cw=col==='name'?cE:W-cU-cE;
+ let q=null,k0=k,n=1;state.objs.forEach(z=>{if(!DEF[z.type]?.ru||Math.abs(z.x-r.x)>1)return;const zu=Math.max(1,+z.p.u||1),a=Math.round((z.y-zu*RU/2-yT)/RU);if(k>=a&&k<a+zu){q=z;k0=a;n=zu;}});
+ const U=String(d.u-k),row=(o.p.rows||{})[U]||{};return {q,U,col,x:cx0,y:yT+k0*RU,w:cw,h:n*RU,text:q?(col==='name'?q.p.name:q.p.use)||'':(col==='name'?row.n:row.use)||''};}
+function nmapEdit(o,cx,cy){const [wx,wy]=toWorld(cx,cy),c=nmapCell(o,wx,wy);if(!c){editDialog();return;}
+ const old=document.getElementById('inEdit');if(old)old.remove();const r=svg.getBoundingClientRect(),inp=document.createElement('input');inp.id='inEdit';inp.value=c.text;inp.dir='rtl';
+ const fs=Math.max(14,Math.min(28,RU*.3*view.s));Object.assign(inp.style,{left:(c.x*view.s+view.tx+r.left)+'px',top:(c.y*view.s+view.ty+r.top)+'px',width:Math.max(160,c.w*view.s)+'px',height:Math.max(fs*1.9,c.h*view.s)+'px',fontSize:fs+'px'});
+ document.body.appendChild(inp);inp.focus();inp.select();let done=false;
+ const fin=keep=>{if(done)return;done=true;const v=inp.value.trim();inp.remove();if(!keep||v===c.text)return;
+  if(c.title)o.p.title=v;else if(c.q){if(c.col==='name')c.q.p.name=v||c.q.p.name;else c.q.p.use=v;}else{const R=o.p.rows=o.p.rows||{},e=R[c.U]=R[c.U]||{};if(c.col==='name')e.n=v;else e.use=v;if(!e.n&&!e.use)delete R[c.U];}
+  commit();renderNow();updateBar();};
+ inp.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter'){e.preventDefault();fin(true);}else if(e.key==='Escape'){e.preventDefault();fin(false);}});inp.addEventListener('blur',()=>fin(true));
+ toast(c.title?'כותרת הטבלה — מה הארון; Enter לשמירה':c.q?(c.col==='name'?'שם הציוד':'ייעוד')+' — Enter לשמירה, Esc לביטול':'הערה לשלב ריק — Enter לשמירה');}
+function dblEdit(o,e){if(!o||o.locked||globalLock)return;
+ if(o.type==='nmap'&&e){nmapEdit(o,e.clientX,e.clientY);return;}
  if(o.type!=='label'&&o.type!=='callout'){editDialog();return;}
  const old=document.getElementById('inEdit');if(old)old.remove();
  const B=bbW(o),r=svg.getBoundingClientRect(),x0=B.x0*view.s+view.tx+r.left,y0=B.y0*view.s+view.ty+r.top,w=(B.x1-B.x0)*view.s,h=(B.y1-B.y0)*view.s;
@@ -3142,7 +3158,7 @@ function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
   if(hit.length)toast(`נבחרו ${selIds().length} רכיבים`);return;}
  if(!g.moved&&Date.now()-g.t0<600){if(g.dim){dimEdit(g.dim);return;}if(wireMode){const [x,y]=toWorld(e.clientX,e.clientY);wireTap(x,y);}
   else{const now=Date.now(),dbl=g.id&&LASTTAP.id===g.id&&now-LASTTAP.t<400&&Math.hypot(e.clientX-LASTTAP.x,e.clientY-LASTTAP.y)<24;LASTTAP={id:g.id,t:dbl?0:now,x:e.clientX,y:e.clientY};
-   select(g.id,g.add);if(dbl&&!g.add)dblEdit(get(g.id));}}
+   select(g.id,g.add);if(dbl&&!g.add)dblEdit(get(g.id),e);}}
  else if(g.mode==='drag'||g.mode==='resize'){if(g.mode==='drag'&&g.moved&&g.o){splitThrough(g.o);sldJoin([g.o,...(g.kids||[]).map(k=>k.q)]);}commit();renderNow();updateBar();}}
 function doResize(g,wx,wy){const o=g.o,D=DEF[o.type],[u,v]=toLocal(g.o0,wx,wy);
  if(D.resize==='scale'){const [sx,sy]=g.h,fu=-sx*g.s0.w/2,fv=-sy*g.s0.h/2,k=Math.max(.2,Math.max(sx*(u-fu)/g.s0.w,sy*(v-fv)/g.s0.h));
