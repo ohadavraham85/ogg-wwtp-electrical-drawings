@@ -324,7 +324,7 @@ body:has(#wireBar:not(.hidden)) #lyTabs,body.libdrag #lyTabs{display:none!import
 #lyTabs button{flex:none;padding:6px 10px;border-radius:4px;font:700 13px Heebo,Arial,sans-serif;background:var(--ctl);border:1px solid var(--ctl-bd);border-bottom:2px solid #6b7280;color:var(--txt);white-space:nowrap}#lyTabs button.on{background:linear-gradient(180deg,var(--acc-light),var(--acc));color:#000;border-color:var(--acc-light);border-bottom-color:#a35a00}#lyTabs button small{font-weight:400;opacity:.75;margin-right:7px;font-size:11px}#lyTabs .add{padding:6px 11px;font-size:15px}
 @media (max-width:600px){#lyTabs button{padding:5px 7px;font-size:12px}}
 @media (max-width:600px){#sbar button{padding:5px 7px;font-size:12px}#sbar #coord{font-size:11px;padding:3px 6px}}
-@media (pointer:coarse){#sbar [data-sb=cross]{display:none}}
+@media (pointer:coarse){#sbar [data-sb=cross]{display:none}#sbar #coord{display:none}}
 /* ---- bars docked to the edges, no gaps ---- */
 #top{top:env(safe-area-inset-top);left:0;right:0;border-radius:0;border:0;border-bottom:1px solid var(--line);box-shadow:none;padding-left:max(6px,env(safe-area-inset-left));padding-right:max(6px,env(safe-area-inset-right))}
 #docTabs{top:calc(env(safe-area-inset-top) + var(--toph));left:0;right:0;border-radius:0;border:0;border-bottom:2px solid var(--acc);box-shadow:0 3px 10px rgba(0,0,0,.35);padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right))}
@@ -1796,7 +1796,7 @@ const LIB=[
    {g:'שקעים על הטיח',items:[{t:'wsock',n:'שקע יחיד',p:{gang:1}},{t:'wsock',n:'שקע כפול',p:{gang:2}},{t:'wsock',n:'שקע משולש',p:{gang:3}},{t:'wsock',n:'שקע מוגן מים IP44',p:{gang:1,ip:'44'}},{t:'wsock',n:'שקע כפול IP44',p:{gang:2,ip:'44'}}]},
    {g:'שקעים תעשייתיים (CEE)',items:[{t:'wcee',n:'שקע CEE 16A חד-פאזי',p:{cee:'16-3'}},{t:'wcee',n:'שקע CEE 16A תלת-פאזי',p:{cee:'16-5'}},{t:'wcee',n:'שקע CEE 32A תלת-פאזי',p:{cee:'32-5'}},{t:'wcee',n:'שקע CEE 63A תלת-פאזי',p:{cee:'63-5'}}]},
    {g:'קופסאות שקעים',items:[{t:'wsbox',n:'קופסת שקעים 16A + 2×230V',p:{cfg:'A'}},{t:'wsbox',n:'קופסת שקעים 32A + 16A + 2×230V',p:{cfg:'B'}},{t:'wsbox',n:'קופסת שקעים 2×16A + 16A חד + 3×230V',p:{cfg:'C'}}]},
-   {g:'מפסקים על הקיר',items:[{t:'wsw',n:'מפסק יחיד',p:{sw:'1'}},{t:'wsw',n:'מפסק כפול',p:{sw:'2'}},{t:'wsw',n:'מחליף',p:{sw:'tw'}},{t:'wsw',n:'לחצן',p:{sw:'push'}},{t:'wiso',n:'מפסק בטחון 3P 25A',p:{poles:3,rating:'25A'}},{t:'wiso',n:'מפסק בטחון 4P 63A',p:{poles:4,rating:'63A'}}]},
+   {g:'מפסקים על הקיר',items:[{t:'wsw',n:'מפסק יחיד',p:{sw:'1'}},{t:'wsw',n:'מפסק כפול',p:{sw:'2'}},{t:'wsw',n:'מחליף',p:{sw:'tw'}},{t:'wsw',n:'לחצן קיר',p:{sw:'push'}},{t:'wiso',n:'מפסק בטחון 3P 25A',p:{poles:3,rating:'25A'}},{t:'wiso',n:'מפסק בטחון 4P 63A',p:{poles:4,rating:'63A'}}]},
    {g:'קופסת חיבורים',items:[{t:'wjb',n:'קופסת חיבורים IP65'}]},
    {g:'בקרת כניסה לדלת',items:[{t:'wmag',n:'אלקטרומגנט לנעילת דלת 280 ק"ג',p:{hold:'280'}},{t:'wmag',n:'אלקטרומגנט לנעילת דלת 500 ק"ג',p:{hold:'500'}},{t:'wmag',n:'אלקטרומגנט עם מגע מצב',p:{hold:'280',mon:'1'}},{t:'wcard',n:'קורא כרטיסים',p:{rdr:'card'}},{t:'wcard',n:'קורא כרטיסים + קודן',p:{rdr:'kp'}}]}]},
   {tab:'תקשורת',icon:'🖧',hint:'מוסיפים קודם ארון (19" או 10"), ואז ציוד: כל פריט נכנס לחריץ ה-U הפנוי הראשון בארון הנבחר, ובגרירה נתפס ל-U הקרוב. ארון שנגרר לוקח איתו את הציוד שבתוכו.',groups:[
@@ -2611,6 +2611,7 @@ function wrapLabels(){document.querySelectorAll('#docTabs button,#sbar button').
    One drawn icon set (thin, rounded strokes in the text colour) for the document
    bar and the status bar, in place of emoji. */
 const IC={
+ view:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
  newp:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11v6M9 14h6"/>',
  tpl:'<rect x="3" y="3" width="18" height="7" rx="1"/><rect x="3" y="14" width="9" height="7" rx="1"/><rect x="15" y="14" width="6" height="7" rx="1"/>',
  open:'<path d="M3 19V5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v2"/><path d="M3 19l3-8h16l-3 8z"/>',
@@ -2805,11 +2806,12 @@ function layEdit(id){laySync();const e=state.lays.find(x=>x.id===id);if(!e)retur
    {t:'⚙ גודל וקנה מידה…',fn:()=>{e.name=$('ly_name').value.trim()||e.name;layShow(id);setTimeout(layoutDialog,30);}},
    {t:'🗑 מחק דף',fn:()=>{state.lays=state.lays.filter(x=>x.id!==id);LAYDOC.forEach(([,lk])=>{if(state[lk]&&state[lk].lid===id){delete state[lk];const nx=state.lays.find(x=>x.d===e.d);if(nx){const [,lk2]=LAYDOC.find(x=>x[0]===nx.d);state[lk2]={on:0,paper:nx.paper,orient:nx.orient,scale:nx.scale,lid:nx.id};}}});commit();renderNow();toast('הדף נמחק');}},{t:'ביטול'}]);}
 let LYSIG='';function buildLayTabs(){const B=$('lyTabs');if(!B)return;laysInit();laySync();const a=layActive(),one=state.tab!=='both';const sig=JSON.stringify([a,curDoc(),state.lays.map(e=>[e.id,e.d,e.name,e.paper,e.scale])]);if(sig===LYSIG&&B.firstChild)return;LYSIG=sig;
- const cd=curDoc();let h=[['panel','🗄 חזית לוח'],['sld','⚡ חד קווי']].map(([d,l])=>`<button data-ly="m:${d}" class="doc${cd===d&&!a?' on':''}${cd===d&&a?' cur':''}" title="${l.slice(3)} — השרטוט עצמו (מודל), בלי דף">${l}</button>`).join('')+'<span class="lysep"></span>';
+ const cd=curDoc();let h=[['panel','🗄 חזית לוח'],['sld','⚡ חד קווי']].map(([d,l])=>`<button data-ly="m:${d}" class="doc${cd===d&&!a?' on':''}${cd===d&&a?' cur':''}" title="${d==='sld'?'חד קווי':'חזית לוח'} — השרטוט עצמו (מודל), בלי דף">${l}</button>`).join('')+'<span class="lysep"></span>';
  state.lays.forEach(e=>{h+=`<button data-ly="${e.id}" class="${a===e.id?'on':''}" title="${esc(e.name)} — ${e.d==='sld'?'חד קווי':'חזית לוח'} · ${e.paper} 1:${e.scale}\nלחיצה כפולה: שם, הגדרות, מחיקה">${e.d==='sld'?'⚡':'🗄'} <bdi>${esc(e.name)}</bdi><small dir="ltr">${e.paper} 1:${e.scale}</small></button>`;});
  h+=`<button class="add" data-ly="add" title="דף ייצור חדש">＋</button>`;B.innerHTML=h;layPos();}
 function layPos(){const B=$('lyTabs'),sb=$('sbar');if(!B||!sb)return;const r=sb.getBoundingClientRect(),cs=getComputedStyle(sb);
- if(cs.display==='none'||!r.width){B.style.left='max(26px,env(safe-area-inset-left))';B.style.bottom=cs.bottom;B.style.height='';B.classList.remove('glued');}else{B.style.left=(r.right-1.5)+'px';B.style.bottom=cs.bottom;B.style.height=r.height+'px';B.classList.add('glued');}
+ if(cs.display==='none'||!r.width){B.style.left='max(26px,env(safe-area-inset-left))';B.style.bottom=cs.bottom;B.style.height='';B.classList.remove('glued');}
+ else if(innerWidth<700){B.style.left=r.left+'px';B.style.bottom=(parseFloat(cs.bottom)+r.height+4)+'px';B.style.height='';B.classList.remove('glued');B.style.maxWidth=`calc(100vw - ${Math.round(r.left)+70}px)`;return;}else{B.style.left=(r.right-1.5)+'px';B.style.bottom=cs.bottom;B.style.height=r.height+'px';B.classList.add('glued');}
  B.style.maxWidth=`calc(100vw - ${Math.round((r.width?r.right:26)+6+86)}px)`;}
 addEventListener('resize',layPos);try{document.fonts.ready.then(layPos);}catch(e){}setTimeout(layPos,800);
 let lyLast=null,lyT=0;
