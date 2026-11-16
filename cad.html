@@ -817,6 +817,17 @@ const DEF={
     [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>s+=ls(a*(w/2-14),b*(h/2-14),5));
     if(o.p.window==='1'){const ww=w-56,wh=Math.min(h-90,120);s+=`<rect x="${-ww/2}" y="${-wh/2}" width="${ww}" height="${wh}" rx="3" fill="rgba(110,150,180,.30)" stroke="#6f8796" stroke-width="1.2"/><path d="M${-ww/2+8} ${-wh/2+wh*.7}L${-ww/2+wh*.5} ${-wh/2+8}M${-ww/2+20} ${-wh/2+wh*.7}L${-ww/2+wh*.5+12} ${-wh/2+8}" stroke="#fff" stroke-width="2" opacity=".35"/><rect x="${-ww/2+6}" y="${wh/2-2}" width="${ww-12}" height="4" rx="2" fill="#8a9aa4"/>`;}}
    if(o.p.tag)s+=txt(0,-h/2+(K?15:24),o.p.tag,K?6:9,'#333',700);return s;}},
+ /* Schneider extended rotary handle, mounted on the door / front panel in front of a ComPacT breaker:
+    escutcheon with the O (OFF) – Trip – I (ON) positions and a lever (black, or red on yellow for emergency) */
+ nsxrh:{layer:6.7,front:true,edit:['tag','rating','hcol','pos'],def:{tag:'',rating:'NSX100-250 · LV429340',hcol:'black',pos:'O'},ratings:['NSXm · LV426937','NSX100-250 · LV429340','NSX400-630 · LV432598'],
+  size:o=>/400-630/.test(o.p.rating)?{w:96,h:110}:/NSXm/.test(o.p.rating)?{w:66,h:80}:{w:80,h:94},
+  draw:o=>{const {w,h}=DEF.nsxrh.size(o),em=o.p.hcol==='red',b=w,R=b*.42,cy=-(h-b)/2;let s=`<rect x="${-b/2}" y="${cy-b/2}" width="${b}" height="${b}" rx="${b*.1}" fill="${em?'#facc15':'#2b2f33'}" stroke="#111" stroke-width="1.2"/>`;
+   s+=`<circle cx="0" cy="${cy}" r="${R}" fill="${em?'#fde047':'#3d4247'}" stroke="${em?'#a16207':'#1a1d20'}" stroke-width="1"/>`;
+   const mk=(a,t,c)=>{const r=R*1.02,x=Math.sin(a*Math.PI/180)*r,y=cy-Math.cos(a*Math.PI/180)*r;return `<path d="M${x*.8} ${cy+(y-cy)*.8}L${x} ${y}" stroke="${c}" stroke-width="1.6"/>`+txt(x*1.12,cy+(y-cy)*1.12,t,b*.075,c,800);};
+   const tc=em?'#111':'#e5e7eb';s+=mk(0,'I',tc)+mk(-90,'O',tc)+mk(-45,'⚡',em?'#b91c1c':'#facc15');
+   const a=o.p.pos==='I'?0:-90,L=R*1.55;s+=`<g transform="translate(0 ${cy}) rotate(${a})"><rect x="${-b*.09}" y="${-L/2}" width="${b*.18}" height="${L}" rx="${b*.08}" fill="${em?'#dc2626':'#111'}" stroke="#000" stroke-width="1"/><circle cx="0" cy="${-L/2+b*.1}" r="${b*.04}" fill="#9ca3af"/><path d="M0 ${-L/2+b*.2}V${-L*.1}" stroke="${em?'#fca5a5':'#4b5563'}" stroke-width="1.2"/></g><circle cx="0" cy="${cy}" r="${b*.07}" fill="#6b7280" stroke="#000" stroke-width=".6"/>`;
+   s+=txt(0,h/2-7,(o.p.rating||'').split('·')[0].trim(),Math.min(6,w*.08),'#e5e7eb',700);
+   return s+(o.p.tag?txt(0,h/2+5,o.p.tag,6,'#7dd3fc',700):'');}},
  hole22:{layer:6.7,front:true,edit:['tag'],def:{tag:''},size:()=>({w:30,h:30}),
   draw:o=>`<circle r="14.85" fill="none" stroke="#777" stroke-width=".5" stroke-dasharray="2 1.5"/><circle r="11.15" fill="#151515" stroke="#555" stroke-width=".5"/><path d="M-4 0H4M0 -4V4" stroke="#888" stroke-width=".5"/>`+lg(o)},
  cutdin:{layer:6.7,front:true,cut:true,edit:['mods','tag'],def:{mods:12,tag:''},size:o=>({w:Math.max(1,+o.p.mods||1)*18+16,h:61}),hole:o=>({w:Math.max(1,+o.p.mods||1)*18,h:45}),
@@ -1683,6 +1694,7 @@ const LIB=[
    {g:'מפסקים ראשיים',items:I('מפסק ראשי 3P','מפסק ראשי 4P')},
    {g:'שניידר ComPacT NSXm (מיני, על פס DIN)',items:I('NSXm 63A 3P','NSXm 160A 3P','NSXm 160A 4P')},
    {g:'שניידר ComPacT NSX (על פלטה)',items:I('NSX100F 3P','NSX160F 3P','NSX250F 3P','NSX250F 4P','NSX400F 3P','NSX630F 3P','NSX630F 4P')},
+   {g:'ידיות מצמד לדלת / פאנל (שניידר) — מניחים מול המפסק',items:[{t:'nsxrh',n:'ידית מצמד NSXm',p:{rating:'NSXm · LV426937'}},{t:'nsxrh',n:'ידית מצמד NSX100-250'},{t:'nsxrh',n:'ידית מצמד NSX400-630',p:{rating:'NSX400-630 · LV432598'}},{t:'nsxrh',n:'ידית מצמד חירום NSX100-250 (אדום/צהוב)',p:{hcol:'red'}},{t:'nsxrh',n:'ידית מצמד חירום NSX400-630 (אדום/צהוב)',p:{hcol:'red',rating:'NSX400-630 · LV432598'}}]},
    {g:'מאמ"תים (MCB) — בחר צבע ואז מפסק',colors:true,items:I('MCB 1P','MCB 2P','MCB 3P','MCB 4P','MCB 1P + N')},
    {g:'מפסקי פחת',items:I('RCD 2P','RCD 4P','RCBO 1P+N')},
    {g:'הגנות',items:I('מגן ברק SPD')}]},
@@ -2447,7 +2459,7 @@ try{buildFav();}catch(e){}
 // a domestic panel brings one DIN rail per row, sized to its modules
 function hboxRails(o){if(o.type!=='hbox')return;const r=Math.max(1,+o.p.rows||1),m=+o.p.mods||12,H=85+150*r;
  for(let i=0;i<r;i++){const rl=mkObj({t:'rail',n:'פס DIN 35',p:{len:m*18+10}});rl.x=o.x;rl.y=r2(o.y-H/2+42.5+75+i*150);rl.rot=0;state.objs.push(rl);}}
-function addItem(e){const o=mkObj(e);placeNew(o);state.objs.push(o);hboxRails(o);sel=o.id;commit();renderNow();updateBar();if(innerWidth<760)closePanel();if(o.type==='cabinet')fit();else ensureVisible(o);toast(`נוסף: ${e.n}`);}
+function addItem(e){const o=mkObj(e);placeNew(o);if(o.type==='nsxrh'){const b=sel&&get(sel);if(b&&(b.type==='nsx'||b.type==='nsxm')){o.x=b.x;o.y=b.y;if(b.type==='nsxm')o.p.rating='NSXm · LV426937';else if(/(400|630)/.test(b.p.rating||b.p.name||''))o.p.rating='NSX400-630 · LV432598';else o.p.rating='NSX100-250 · LV429340';}}state.objs.push(o);hboxRails(o);sel=o.id;commit();renderNow();updateBar();if(innerWidth<760)closePanel();if(o.type==='cabinet')fit();else ensureVisible(o);toast(`נוסף: ${e.n}`);}
 function ensureVisible(o){const r=svg.getBoundingClientRect();const sx=o.x*view.s+view.tx,sy=o.y*view.s+view.ty;if(sx<20||sx>r.width-20||sy<topBottom()+20||sy>sheetTop()-80){const [cx,cy]=viewCenter();view.tx+=(cx-o.x)*view.s;view.ty+=(cy-o.y)*view.s;applyView();}}
 
 /* ================= wiring ================= */
@@ -3269,6 +3281,8 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='exp')h+=`<div class="fld"><label>בייצוא</label><select id="f_exp"><option value="0" ${v!=='1'?'selected':''}>לא מופיעה ב-PDF / תמונה</option><option value="1" ${v==='1'?'selected':''}>מופיעה בייצוא</option></select></div>`;
   else if(k==='dn'&&o.type==='conduit')h+=`<div class="fld"><label>קוטר</label><select id="f_dn">${['16','20','25','32'].map(a=>`<option value="${a}" ${a===String(v)?'selected':''}>${a} מ"מ</option>`).join('')}</select></div>`;
   else if(k==='px')h+=`<div class="fld"><label>סוג הגשש</label><select id="f_px"><option value="ind" ${v!=='cap'?'selected':''}>אינדוקטיבי (מתכת)</option><option value="cap" ${v==='cap'?'selected':''}>קיבולי (כל חומר — נוזל, אבקה, פלסטיק)</option></select></div>`;
+  else if(k==='hcol')h+=`<div class="fld"><label>צבע הידית</label><select id="f_hcol"><option value="black" ${v!=='red'?'selected':''}>שחורה (רגילה)</option><option value="red" ${v==='red'?'selected':''}>אדומה על צהוב (חירום)</option></select></div>`;
+  else if(k==='pos')h+=`<div class="fld"><label>מצב מצויר</label><select id="f_pos"><option value="O" ${v!=='I'?'selected':''}>O — מופסק</option><option value="I" ${v==='I'?'selected':''}>I — מחובר</option></select></div>`;
   else if(k==='vt')h+=`<div class="fld"><label>סוג המגוף</label><select id="f_vt">${[['bfly','פרפר (Butterfly)'],['gate','טריז (Gate)'],['ball','כדורי (Ball)']].map(([a,b])=>`<option value="${a}" ${a===(v||'bfly')?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='act')h+=`<div class="fld"><label>מפעיל</label><select id="f_act">${[['3ph','תלת-פאזי 400V — פתח / סגור'],['1ph','חד-פאזי 230V — פתח / סגור'],['mod','מווסת 4-20mA'],['auma','AUMA SA + AUMA MATIC AM — פתח / סגור 400V'],['aumac','AUMA SA + AUMATIC AC — מווסת 4-20mA 400V']].map(([a,b])=>`<option value="${a}" ${a===(v||'3ph')?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='nf')h+=`<div class="fld"><label>מצופים</label><select id="f_nf">${[['2','2 — עצירה, הפעלה'],['3','3 — עצירה, הפעלה, גלישה'],['4','4 — יבש, עצירה, הפעלה, גלישה']].map(([a,b])=>`<option value="${a}" ${a===String(v||'3')?'selected':''}>${b}</option>`).join('')}</select></div>`;
