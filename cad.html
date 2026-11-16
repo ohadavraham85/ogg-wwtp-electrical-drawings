@@ -551,7 +551,7 @@ const uid=()=>Math.random().toString(36).slice(2,10);
 const TBSETS={'S':[''],'1P':['L','N','PE'],'3P':['L1','L2','L3'],'4P':['L1','L2','L3','N'],'5P':['L1','L2','L3','N','PE']};
 const TBSET=o=>TBSETS[o.p.set]||TBSETS['5P'];
 function screw(x,y,r=4.2){const k=r*.62;return `<circle cx="${x}" cy="${y}" r="${r}" fill="#d4d4d4" stroke="#666" stroke-width=".6"/><path d="M${x-k} ${y-k}L${x+k} ${y+k}M${x+k} ${y-k}L${x-k} ${y+k}" stroke="#4a4a4a" stroke-width="${r*.22}"/>`;}
-function txt(x,y,s,size=4,fill='#333',w=400,anchor='middle',fam='Arial,Helvetica,sans-serif'){return `<text x="${x}" y="${y}" font-size="${size}" fill="${fill}" font-weight="${w}" text-anchor="${anchor}" dominant-baseline="central" font-family="${fam}">${esc(s)}</text>`;}
+function txt(x,y,s,size=4,fill='#333',w=400,anchor='middle',fam='Arial,Helvetica,sans-serif'){if(LODMIN&&size<LODMIN)return '';return `<text x="${x}" y="${y}" font-size="${size}" fill="${fill}" font-weight="${w}" text-anchor="${anchor}" dominant-baseline="central" font-family="${fam}">${esc(s)}</text>`;}
 function spread(w,n){const a=[];for(let i=0;i<n;i++)a.push(r2(-w/2+w*(i+.5)/n));return a;}
 function body(w,h){const x=-w/2,y=-h/2,b=17,mods=Math.round(w/M);let s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1.6" fill="#f4f4f1" stroke="#7d7d7d" stroke-width=".7"/>`;
  s+=`<rect x="${x+.4}" y="${y+.4}" width="${w-.8}" height="${b}" fill="#e3e3df"/><rect x="${x+.4}" y="${-y-b-.4}" width="${w-.8}" height="${b}" fill="#e3e3df"/>`;
@@ -1625,7 +1625,8 @@ function content(opt={}){const s0=content0(opt);if(!opt.sel||state.tab==='panel'
  if(x0>x1)return pn;if(sldDark)return pn+INV+`<g filter="url(#sldInv)">${sd}</g>`;
  return pn+`<rect x="${x0-40}" y="${y0-40}" width="${x1-x0+80}" height="${y1-y0+80}" rx="6" fill="#fbfbf8" stroke="#9ca3af" stroke-width="1" pointer-events="none"/>`+sd;}
 function content0(opt={},pick){const list=state.objs.filter(o=>!hiddenFront(o)&&(!pick||pick(o)));state.objs.forEach(o=>{if(pick&&!pick(o))return;if(o.type==='cabinet'&&isFrontV(o))list.push({__cab:o});if(o.type==='cabinet'&&!isFrontV(o))list.push({__cabGhost:o});if(o.type==='enclosure'&&hasDoor(o)&&o.p.closed==='1')list.push({__door:o});if(o.type==='enclosure'&&hasDoor(o)&&o.p.closed!=='1')list.push({__doorGhost:o});if(o.type==='cibox'&&ciLidOn(o))list.push({__lid:o});});list.sort((a,b)=>rank(a)-rank(b));let s='';
- for(const o of list)s+=o.__cab?(()=>{const c=o.__cab,m=holesMask(c.id,c.x,c.y,q=>inCab(c,q.x,q.y));return `<g data-id="${c.id}" transform="translate(${c.x} ${c.y})">${m?m.svg+`<g mask="url(#${m.id})">`:''}${cabFront(c)}${m?'</g>':''}${opt.sel&&isSelId(c.id)?selBox(c):''}</g>`;})():o.__cabGhost?(()=>{const c=o.__cabGhost;return `<g transform="translate(${c.x} ${c.y})" style="pointer-events:none">${cabFrontOpen(c)}</g>`;})():o.__doorGhost?`<g style="pointer-events:none">${doorSVGOpen(o.__doorGhost)}</g>`:o.__lid?ciLidSVG(o.__lid,opt.sel&&isSelId(o.__lid.id)):o.__door?doorSVG(o.__door,opt.sel&&isSelId(o.__door.id)):o.type==='wire'?drawWire(o,opt.sel&&isSelId(o.id)):(()=>{const dx=doorRideOffset(o);return dx?`<g transform="translate(${dx} 0)">${objSVG(o,opt.sel&&isSelId(o.id))}</g>`:objSVG(o,opt.sel&&isSelId(o.id));})();
+ for(const o of list){const str=o.__cab?(()=>{const c=o.__cab,m=holesMask(c.id,c.x,c.y,q=>inCab(c,q.x,q.y));return `<g data-id="${c.id}" transform="translate(${c.x} ${c.y})">${m?m.svg+`<g mask="url(#${m.id})">`:''}${cabFront(c)}${m?'</g>':''}${opt.sel&&isSelId(c.id)?selBox(c):''}</g>`;})():o.__cabGhost?(()=>{const c=o.__cabGhost;return `<g transform="translate(${c.x} ${c.y})" style="pointer-events:none">${cabFrontOpen(c)}</g>`;})():o.__doorGhost?`<g style="pointer-events:none">${doorSVGOpen(o.__doorGhost)}</g>`:o.__lid?ciLidSVG(o.__lid,opt.sel&&isSelId(o.__lid.id)):o.__door?doorSVG(o.__door,opt.sel&&isSelId(o.__door.id)):o.type==='wire'?drawWire(o,opt.sel&&isSelId(o.id)):(()=>{const dx=doorRideOffset(o);return dx?`<g transform="translate(${dx} 0)">${objSVG(o,opt.sel&&isSelId(o.id))}</g>`:objSVG(o,opt.sel&&isSelId(o.id));})();
+  if(PIECES&&!pick)PIECES.push([(o.__cab?'c:'+o.__cab.id:o.__cabGhost?'g:'+o.__cabGhost.id:o.__doorGhost?'h:'+o.__doorGhost.id:o.__lid?'l:'+o.__lid.id:o.__door?'d:'+o.__door.id:'o:'+o.id),str]);s+=str;}
  return s;}
 function selBox(o){const {w,h}=sizeOf(o);return `<rect x="${-w/2-2.5}" y="${-h/2-2.5}" width="${w+5}" height="${h+5}" rx="2" fill="none" stroke="#3b82f6" stroke-width="1.6" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"/>`;}
 const rank=o=>o.__door||o.__cab||o.__lid||o.__cabGhost||o.__doorGhost?6.5:o.type==='wire'?6:DEF[o.type].layer;
@@ -1741,11 +1742,28 @@ function termsSVG(){if(!showTerms||wireMode)return '';const k=1/view.s,used=new 
  return s+'</g>';}
 function toggleTerms(){showTerms=!showTerms;setTimeout(()=>window.sbSync&&sbSync());try{localStorage.setItem('epd.terms',showTerms?'1':'0');}catch(e){}renderNow();toast(showTerms?'נקודות החיבור מודגשות':'הדגשת נקודות החיבור כבויה');}
 let drawnS=0;
-function renderNow(){drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}let s=layoutSVG()+axesSVG()+content({sel:true})+termsSVG()+handlesSVG()+dimsSVG()+guidesSVG()+dropSVG()+measSVG()+rotSVG()+layHandlesSVG()+calSVG()+cableGuideSVG()+(DRAGNEW?`<g opacity=".8" pointer-events="none">${objSVG(DRAGNEW,true)}</g>`:'')+bandSVG()+qWireSVG();
- if(wireMode){for(const o of state.objs){if(o.type==='wire')continue;termsOf(o).forEach(t=>{const [x,y]=fromLocal(o,t[0],t[1]);s+=`<circle cx="${x}" cy="${y}" r="2.8" fill="rgba(34,211,238,.25)" stroke="#22d3ee" stroke-width=".7" pointer-events="none"/>`;});}
+/* Drawing the screen: every part is its own piece, and only the pieces whose
+   SVG changed since the last frame are rebuilt (dragging one part redraws that
+   part and its wires, not the whole panel). Tiny text is skipped when it would be
+   too small to read at this zoom. The combined panel + diagram view, and the
+   dark diagram, are drawn whole as before. */
+var PIECES=null,LODMIN=0;
+function patchWorld(items){const seen=new Map();for(const n of [...world.children])if(n.__k)seen.set(n.__k,n);let cur=world.firstChild;const used=new Set();
+ for(let [k,str] of items){while(used.has(k))k+='+';used.add(k);let n=seen.get(k);
+  if(!n){n=document.createElementNS('http://www.w3.org/2000/svg','g');n.__k=k;n.__s=null;}
+  if(n.__s!==str){n.innerHTML=str;n.__s=str;}
+  if(n!==cur)world.insertBefore(n,cur);else cur=cur.nextSibling;}
+ while(cur){const nx=cur.nextSibling;cur.remove();cur=nx;}}
+function renderNow(){drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}
+ const fast=state.tab!=='both'&&!(state.tab==='sld'&&sldDark);LODMIN=2.2/view.s;let s,P=null;
+ try{if(fast){PIECES=[];content({sel:true});P=PIECES;}else s=layoutSVG()+axesSVG()+content({sel:true});}finally{PIECES=null;}
+ const pre=fast?layoutSVG()+axesSVG():'';
+ let tail=handlesSVG()+dimsSVG()+guidesSVG()+dropSVG()+measSVG()+rotSVG()+layHandlesSVG()+calSVG()+cableGuideSVG()+(DRAGNEW?`<g opacity=".8" pointer-events="none">${objSVG(DRAGNEW,true)}</g>`:'')+bandSVG()+qWireSVG();
+ const terms=termsSVG();LODMIN=0;if(!fast)s+=terms+tail,tail='';
+ if(s===undefined)s='';if(wireMode){for(const o of state.objs){if(o.type==='wire')continue;termsOf(o).forEach(t=>{const [x,y]=fromLocal(o,t[0],t[1]);s+=`<circle cx="${x}" cy="${y}" r="2.8" fill="rgba(34,211,238,.25)" stroke="#22d3ee" stroke-width=".7" pointer-events="none"/>`;});}
   if(draft&&draft.pts.length){const c=WCOL[wireColor];const d=wirePath(null,draft.pts);if(d)s+=`<path d="${d}" fill="none" stroke="${c.base}" stroke-width="${SEC[wireSec]}" stroke-linecap="round" stroke-linejoin="round" opacity=".85" pointer-events="none"/>`;
    draft.pts.map(resolve).forEach((p,i)=>{if(p)s+=`<circle cx="${p.x}" cy="${p.y}" r="${i?2.2:3.4}" fill="#fff" stroke="#22d3ee" stroke-width="1" pointer-events="none"/>`;});}}
- world.innerHTML=s;renderUlay();}
+ if(fast)patchWorld([['pre',pre],...P,['terms',terms],['tail',tail+s]]);else world.innerHTML=s;renderUlay();}
 /* Rulers along the bottom and left edges in mm from the origin (Y up), the
    origin's two axes across the drawing, and where the mouse is. */
 let showAxes=true;try{showAxes=localStorage.getItem('epd.axes')!=='0';}catch(e){}
@@ -2113,7 +2131,9 @@ function buildSheet(){buildTabs();const q=libQ.trim().toLowerCase();
   if(g.widths)h+=`<div class="chips">${DUCTW.map(d=>`<button class="wbtn ${d==curDW?'pri':''}" data-dw="${d}">${d} מ"מ</button>`).join('')}</div><div class="hint">לשינוי אורך: בחר תעלה/פס וגרור את העיגולים הכחולים שבקצוות.</div>`;
   h+=`<div class="grid">`+g.items.map((e,ii)=>itemBtn(ti,gi,ii,e)).join('')+`</div>`;});});
  $('sheetBody').classList.toggle('allv',curTab===-1);$('sheetBody').innerHTML=h;}
-function itemBtn(ti,gi,ii,e){const fv=favList(LIB[ti]?.sld?'sld':'panel').includes(e.n);return `<button class="item" data-t="${ti}" data-g="${gi}" data-ii="${ii}"><span class="favstar${fv?' on':''}" data-fav="${esc(e.n)}" data-fk="${LIB[ti]?.sld?'sld':'panel'}" title="${fv?'הסר מהמועדפים':'הוסף למועדפים'}">${fv?'★':'☆'}</span><div class="th${DEF[e.t]?.sld?' lt':''}">${thumbSVG(mkObj(e,true))}</div><div class="nm ${/[א-ת]/.test(e.n)?'he':''}">${e.n}</div></button>`;}
+function itemBtn(ti,gi,ii,e){const fv=favList(LIB[ti]?.sld?'sld':'panel').includes(e.n);return `<button class="item" data-t="${ti}" data-g="${gi}" data-ii="${ii}"><span class="favstar${fv?' on':''}" data-fav="${esc(e.n)}" data-fk="${LIB[ti]?.sld?'sld':'panel'}" title="${fv?'הסר מהמועדפים':'הוסף למועדפים'}">${fv?'★':'☆'}</span><div class="th${DEF[e.t]?.sld?' lt':''}">${thumbOf(e)}</div><div class="nm ${/[א-ת]/.test(e.n)?'he':''}">${e.n}</div></button>`;}
+// a library item's picture, made once per item (and colour, for parts drawn in the chosen colour)
+const THC=new WeakMap();function thumbOf(e){const k=ACC.includes(e.t)?curColor:'';let m=THC.get(e);if(!m){m={};THC.set(e,m);}return m[k]??(m[k]=thumbSVG(mkObj(e,true)));}
 function openPanel(m,title){pMode=m;$('panel').classList.remove('hidden');$('panel').classList.toggle('lib',m==='lib');$('panel').classList.toggle('half',m==='props'&&innerWidth<600);$('libWrap').style.display=m==='lib'?'':'none';$('propsBody').style.display=m==='props'?'':'none';$('pTitle').textContent=title||'';if(m==='lib')buildSheet();updateBar();}
 function closePanel(){pMode=null;$('panel').classList.add('hidden');updateBar();}
 $('pClose').onclick=closePanel;
@@ -2177,7 +2197,7 @@ $('sheetBody').addEventListener('contextmenu',e=>{if(e.target.closest('.item'))e
    markup part: text, callouts, plates, lines, shapes, wall, person. Click adds
    one in the automatic place; drag one out onto the drawing to put it exactly. */
 function buildDrawMenu(){const ti=LIB.findIndex(T=>T.draw),T=LIB[ti];if(!T)return;let h='<div class="ddt">✎ שרטוט וסימון</div>';
- T.groups.forEach((g,gi)=>{h+=`<div class="ddt">${g.g}</div><div class="dgrid">`+g.items.map((e,ii)=>`<button class="item" data-t="${ti}" data-g="${gi}" data-ii="${ii}" title="${esc(e.n)} — לחיצה מוסיפה · גרירה ממקמת"><div class="th">${thumbSVG(mkObj(e,true))}</div><span class="nm">${esc(e.n)}</span></button>`).join('')+'</div>';});
+ T.groups.forEach((g,gi)=>{h+=`<div class="ddt">${g.g}</div><div class="dgrid">`+g.items.map((e,ii)=>`<button class="item" data-t="${ti}" data-g="${gi}" data-ii="${ii}" title="${esc(e.n)} — לחיצה מוסיפה · גרירה ממקמת"><div class="th">${thumbOf(e)}</div><span class="nm">${esc(e.n)}</span></button>`).join('')+'</div>';});
  $('mDraw').innerHTML=h+`<div class="dhint">${T.hint}</div>`;}
 $('mDraw').addEventListener('click',e=>{const it=e.target.closest('.item');if(!it||LDSW)return;if(wireMode)setWire(false);if(measMode)setMeas(null);addItem(LIB[+it.dataset.t].groups[+it.dataset.g].items[+it.dataset.ii]);});
 $('mDraw').addEventListener('pointerdown',e=>{const it=e.target.closest('.item');if(!it||LD||(e.pointerType==='mouse'&&e.button!==0))return;
@@ -2193,7 +2213,7 @@ function favToggle(k,n){let L=favList(k);if(L.includes(n))L=L.filter(x=>x!==n);e
 function favFind(k,n){for(let ti=0;ti<LIB.length;ti++){const T=LIB[ti];if(!!T.sld!==(k==='sld'))continue;for(let gi=0;gi<T.groups.length;gi++){const ii=T.groups[gi].items.findIndex(e=>e.n===n);if(ii>=0)return [ti,gi,ii,T.groups[gi].items[ii]];}}return null;}
 function buildFav(){const B=$('favBar');if(!B)return;const ks=state.tab==='both'?['panel','sld']:[state.tab==='sld'?'sld':'panel'];let h='<span class="favlbl">★ מועדפים</span>',n=0;
  ks.forEach(k=>favList(k).forEach(name=>{const f=favFind(k,name);if(!f)return;const [ti,gi,ii,e]=f;n++;
-  h+=`<button class="item fav" data-t="${ti}" data-g="${gi}" data-ii="${ii}" title="${esc(e.n)}\nלחיצה מוסיפה · גרירה ממקמת" aria-label="${esc(e.n)}"><div class="th${DEF[e.t]?.sld?' lt':''}">${thumbSVG(mkObj(e,true))}</div><div class="nm">${esc(e.n)}</div><span class="favx" data-unfav="${esc(e.n)}" data-fk="${k}" title="הסר מהמועדפים">×</span></button>`;}));
+  h+=`<button class="item fav" data-t="${ti}" data-g="${gi}" data-ii="${ii}" title="${esc(e.n)}\nלחיצה מוסיפה · גרירה ממקמת" aria-label="${esc(e.n)}"><div class="th${DEF[e.t]?.sld?' lt':''}">${thumbOf(e)}</div><div class="nm">${esc(e.n)}</div><span class="favx" data-unfav="${esc(e.n)}" data-fk="${k}" title="הסר מהמועדפים">×</span></button>`;}));
  if(!n)h+=`<span class="favhint">סמן ☆ ליד רכיבים בחלון "הוסף רכיב" כדי להוסיף אותם לכאן (עד ${FAVMAX})</span>`;
  B.innerHTML=h;}
 $('favBar').addEventListener('click',e=>{const x=e.target.closest('[data-unfav]');if(x){e.stopPropagation();favToggle(x.dataset.fk,x.dataset.unfav);if(pMode==='lib')buildSheet();return;}
@@ -2453,7 +2473,7 @@ function layEdit(id){laySync();const e=state.lays.find(x=>x.id===id);if(!e)retur
   [{t:'שמור',cls:'pri',fn:()=>{e.name=$('ly_name').value.trim()||e.name;commit();buildLayTabs();}},
    {t:'⚙ גודל וקנה מידה…',fn:()=>{e.name=$('ly_name').value.trim()||e.name;layShow(id);setTimeout(layoutDialog,30);}},
    {t:'🗑 מחק דף',fn:()=>{state.lays=state.lays.filter(x=>x.id!==id);LAYDOC.forEach(([,lk])=>{if(state[lk]&&state[lk].lid===id){delete state[lk];const nx=state.lays.find(x=>x.d===e.d);if(nx){const [,lk2]=LAYDOC.find(x=>x[0]===nx.d);state[lk2]={on:0,paper:nx.paper,orient:nx.orient,scale:nx.scale,lid:nx.id};}}});commit();renderNow();toast('הדף נמחק');}},{t:'ביטול'}]);}
-function buildLayTabs(){const B=$('lyTabs');if(!B)return;laysInit();laySync();const a=layActive(),one=state.tab!=='both';
+let LYSIG='';function buildLayTabs(){const B=$('lyTabs');if(!B)return;laysInit();laySync();const a=layActive(),one=state.tab!=='both';const sig=JSON.stringify([a,curDoc(),state.lays.map(e=>[e.id,e.d,e.name,e.paper,e.scale])]);if(sig===LYSIG&&B.firstChild)return;LYSIG=sig;
  const cd=curDoc();let h=[['panel','🗄 חזית לוח'],['sld','⚡ חד קווי']].map(([d,l])=>`<button data-ly="m:${d}" class="doc${cd===d&&!a?' on':''}${cd===d&&a?' cur':''}" title="${l.slice(3)} — השרטוט עצמו (מודל), בלי דף">${l}</button>`).join('')+'<span class="lysep"></span>';
  state.lays.forEach(e=>{h+=`<button data-ly="${e.id}" class="${a===e.id?'on':''}" title="${esc(e.name)} — ${e.d==='sld'?'חד קווי':'חזית לוח'} · ${e.paper} 1:${e.scale}\nלחיצה כפולה: שם, הגדרות, מחיקה">${e.d==='sld'?'⚡':'🗄'} <bdi>${esc(e.name)}</bdi><small dir="ltr">${e.paper} 1:${e.scale}</small></button>`;});
  h+=`<button class="add" data-ly="add" title="דף ייצור חדש">＋</button>`;B.innerHTML=h;layPos();}
