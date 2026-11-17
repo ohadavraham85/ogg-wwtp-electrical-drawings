@@ -2586,7 +2586,7 @@ $('mDraw').addEventListener('contextmenu',e=>{if(e.target.closest('.item'))e.pre
 const PREFS_OK=()=>!!(SH&&SH.prefs);
 // gathered for a second, so typing in the title-block form doesn't write on every key
 let PRQ={},PRT=0;function prefsPush(o){if(!PREFS_OK())return;Object.assign(PRQ,o);clearTimeout(PRT);PRT=setTimeout(prefsFlush,1000);}
-function prefsFlush(){const o=PRQ;PRQ={};if(!Object.keys(o).length)return;SH.prefs.set(o).then(ok=>{if(ok===false&&!window._prefsWarned){window._prefsWarned=1;console.warn('prefs not saved to the cloud (rules not published yet?)');}});}
+function prefsFlush(){const o=PRQ;PRQ={};if(!Object.keys(o).length)return;SH.prefs.set(o).then(ok=>{if(ok===false&&!window._prefsWarned){window._prefsWarned=1;console.warn('prefs not saved to the cloud (rules not published yet?)');toast('המועדפים לא נשמרו בחשבון — בדוק שחוקי Firebase עודכנו');}});}
 function prefsApply(d){if(!d)return;let ch=false;
  if(d.fav&&typeof d.fav==='object')['panel','sld'].forEach(k=>{if(Array.isArray(d.fav[k])){const v=JSON.stringify(d.fav[k]);if(localStorage.getItem('ohadcad.fav.'+k)!==v){try{localStorage.setItem('ohadcad.fav.'+k,v);}catch(e){}ch=true;}}});
  if(d.tb&&typeof d.tb==='object'){const v=JSON.stringify(d.tb);if(localStorage.getItem('epd.tb')!==v){try{localStorage.setItem('epd.tb',v);}catch(e){}}}
