@@ -1307,7 +1307,8 @@ const SDEF={
  sbusm:{layer:3,sld:true,resize:'len',minLen:60,edit:['tag','rating','nl','len'],def:{tag:'',rating:'3×400/230V 50Hz',len:400,nl:'3'},size:o=>{const n=busN(o).length;return {w:o.p.len,h:(n-1)*10+8};},
   terms:o=>{const L=o.p.len,N=busN(o),t=[];N.forEach((l,i)=>{const y=-(N.length-1)*5+i*10;for(let u=-L/2+20;u<=L/2-20+.01;u+=10)t.push([r2(u),y,'']);});return t;},
   draw:o=>{const L=o.p.len,N=busN(o);let s='';N.forEach((l,i)=>{const y=-(N.length-1)*5+i*10,pe=l==='PE',nn=l==='N';
-    s+=`<path d="M${-L/2+12} ${y}H${L/2-12}" stroke="${SK}" stroke-width="${pe||nn?2.6:3.6}" ${pe?'stroke-dasharray="9 3 2 3"':nn?'stroke-dasharray="10 4"':''}/>`+txt(-L/2+9,y,l,5.5,SK,800,'end')+txt(L/2-9,y,l,5.5,SK,800,'start');});
+    const BC={L1:'#8b5a2b',L2:'#f97316',L3:'#1d1d1d',N:'#2563eb'}[l],d=`M${-L/2+12} ${y}H${L/2-12}`;
+    s+=pe?`<path d="${d}" stroke="#f2c94c" stroke-width="3"/><path d="${d}" stroke="#16a34a" stroke-width="3" stroke-dasharray="7 7"/>`:`<path d="${d}" stroke="${BC}" stroke-width="${nn?3:3.6}"/>`+txt(-L/2+9,y,l,5.5,SK,800,'end')+txt(L/2-9,y,l,5.5,SK,800,'start');});
    const top=-(N.length-1)*5-9;return s+txt(-L/2+12,top,[o.p.tag,o.p.rating].filter(Boolean).join(' · '),8,SK,700,'start');}},
  sbus:{layer:3,sld:true,resize:'len',minLen:40,edit:['tag','rating','len'],def:{tag:'',rating:'3×400/230V 50Hz',len:300},size:o=>({w:o.p.len,h:6}),
   terms:o=>{const L=o.p.len,t=[];for(let u=-L/2+10;u<=L/2-10+.01;u+=10)t.push([r2(u),0,'']);return t;},
@@ -3349,8 +3350,13 @@ $('bLock').onclick=()=>{const L=lockSet();if(!L.length)return;const all=L.every(
  toast(all?(L.length>1?`הנעילה שוחררה (${L.length} רכיבים)`:'הנעילה שוחררה'):(L.length>1?`ננעלו ${L.length} רכיבים`:'הרכיב ננעל'));};
 $('bRot').onclick=()=>{const o=sel&&get(sel);if(!o||o.type==='wire'||o.type==='mdim'||o.type==='callout'||o.locked)return;if(o.type==='cabinet'){toast('ארון לא מסתובב');return;}o.rot=(o.rot+90)%360;commit();renderNow();};
 $('bDup').onclick=()=>{const o=sel&&get(sel);if(!o)return;const c=JSON.parse(JSON.stringify(o));c.id=uid();c.locked=false;if(c.type==='label')delete c.p.of;
- if(c.type==='wire'){c.pts=c.pts.map(p=>{const q=resolve(p)||p;return {x:q.x+15,y:q.y+15};});}
- else{c.x=o.x;c.y=o.y;const sv=sel;placeNew(c);if(c.x===o.x&&c.y===o.y){c.x+=20;c.y+=20;}sel=sv;}
+ if(c.type==='wire'){c.pts=c.pts.map(p=>{const q=resolve(p)||p;return {x:q.x+20,y:q.y};});}
+ else{c.x=o.x;c.y=o.y;const sv=sel;placeNew(c);
+  // the copy goes to the right of the original (DIN-rail parts already land next to it on the rail), at the first free spot
+  if(!DEF[c.type].rail||(c.x===o.x&&c.y===o.y)){const b=bbW(o),W=b.x1-b.x0,gap=Math.max(5,Math.min(40,W*.15));c.x=o.x;c.y=o.y;
+   const hit=x=>{const dx=x-o.x;return state.objs.some(q=>{if(q===o||q.type==='wire'||isBox(q)||q.type==='underlay')return false;const k=bbW(q);return k.x0<b.x1+dx-.5&&k.x1>b.x0+dx+.5&&k.y0<b.y1-.5&&k.y1>b.y0+.5;});};
+   let x=o.x+W+gap;for(let i=0;i<60&&hit(x);i++)x+=W+gap;c.x=r2(x);}
+  sel=sv;}
  state.objs.push(c);sel=c.id;commit();renderNow();updateBar();};
 $('selInfo').onclick=()=>editDialog();
 /* A text box for the selected part (or a free one with nothing selected): it sits
