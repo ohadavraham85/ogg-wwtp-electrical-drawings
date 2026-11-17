@@ -179,11 +179,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 121;
+const VERSION = 122;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'מסך ה-ATV630 (על הדלת ועל הווסת) ירוק עם כיתוב כהה';
+const WHATS_NEW = 'מועדפים ופרטי טבלת שרטוט מסונכרנים בין המכשירים, פס צבירה 3/4/5 קווים בחד קווי, כפתור נקודות חיבור בסרגל העליון';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -217,6 +217,7 @@ const OWNER = db.doc('ohadcad_meta/owner');
 const USERS = db.collection('ohadcad_users');
 const REQUESTS = db.collection('ohadcad_requests');
 const DESIGNS = db.collection('ohadcad_designs');
+const PREFS = db.collection('ohadcad_prefs');   // one document per user (email): settings that follow them to every device
 const OK_KEY = 'ohadcad-approved-uid';
 
 let me = null;        // { uid, email, label }
@@ -338,6 +339,12 @@ function writeDesign(d) {
 const bridge = {
   me: () => ({ label: me.label, email: me.email, owner: isOwner }),
   version: String(VERSION),
+  // the user's own settings (favourites, title-block details), the same on every device they sign in from
+  prefs: {
+    async get() { try { const d = await PREFS.doc(me.email).get(); return d.exists ? d.data() : {}; } catch (e) { return null; } },
+    async set(obj) { try { await PREFS.doc(me.email).set(obj, { merge: true }); return true; } catch (e) { console.warn('prefs', e.code || e); return false; } },
+    watch(cb) { try { return PREFS.doc(me.email).onSnapshot(d => cb(d.exists ? d.data() : {}), () => {}); } catch (e) { return () => {}; } },
+  },
   async list() {
     await ready;
     return [...designs.values()].sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt))).map(info);

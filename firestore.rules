@@ -31,6 +31,11 @@ service cloud.firestore {
       allow delete: if isOwner();
     }
 
+    // Each user's own settings (favourites, title-block details), synced across their devices.
+    match /ohadcad_prefs/{email} {
+      allow read, write: if signedIn() && email == myEmail();
+    }
+
     // The shared folder of drawings. Deleting marks deleted=true, and only
     // the drawing's creator or the owner may do that.
     match /ohadcad_designs/{id} {
