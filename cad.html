@@ -916,6 +916,16 @@ const DEF={
     else s+=`<circle cx="0" cy="${cy}" r="12" fill="#cbd5e1" stroke="#6b7280" stroke-width="1"/><circle cx="0" cy="${cy}" r="9.5" fill="${c}" stroke="#111827" stroke-width=".6"/>`+(k.startsWith('lamp')?`<circle cx="-2.5" cy="${cy-2.5}" r="3" fill="#fff" opacity=".5"/>`:`<circle cx="-2" cy="${cy-2}" r="3.5" fill="#fff" opacity=".2"/>`);});
    s+=`<rect x="-8" y="${h/2-1}" width="16" height="5" rx="1" fill="#6b7280"/>`;
    return s+(o.p.tag?txt(w/2+4,-h/2+6,o.p.tag,7,'#1d4ed8',700,'start'):'');}},
+ /* Altivar Process graphic display terminal (VW3A1111) in its IP65 door-mounting kit (VW3A1112), on the door in front of the drive */
+ atvhmi:{layer:6.7,front:true,edit:['tag','rating'],def:{tag:'',rating:'VW3A1111 + VW3A1112'},size:()=>({w:86,h:126}),
+  draw:o=>{let s=`<rect x="-43" y="-63" width="86" height="126" rx="8" fill="#3a3f45" stroke="#111" stroke-width="1.2"/><rect x="-37" y="-57" width="74" height="114" rx="6" fill="#151719" stroke="#000" stroke-width=".8"/>`;
+   s+=`<rect x="-31" y="-50" width="62" height="44" rx="2" fill="#0f2a3f"/>`+txt(-27,-44,'ATV630 · RUN',4.2,'#9bd2ff',700,'start')+txt(0,-31,'50.0 Hz',11,'#e5f6ff',800)+txt(0,-19,'I mot 21.4 A',5,'#cde9ff',700)+`<rect x="-27" y="-13" width="38" height="3" fill="#3dcd58"/><rect x="11" y="-13" width="16" height="3" fill="#1e3a50"/>`;
+   ['F1','F2','F3','F4'].forEach((t,i)=>s+=`<rect x="${-31+i*16}" y="-2" width="14" height="7" rx="1.5" fill="#2f3337"/>`+txt(-24+i*16,1.5,t,3.6,'#cbd5e1',700));
+   s+=`<circle cx="0" cy="22" r="13" fill="#2f3337" stroke="#000" stroke-width=".8"/><circle cx="0" cy="22" r="5.5" fill="#4a4f54" stroke="#111" stroke-width=".5"/>`;
+   s+=`<rect x="-34" y="12" width="15" height="9" rx="2" fill="#2f3337"/>`+txt(-26.5,16.5,'ESC',3.4,'#cbd5e1',700)+`<rect x="19" y="12" width="15" height="9" rx="2" fill="#2f3337"/>`+txt(26.5,16.5,'⌂',5,'#cbd5e1',700);
+   s+=`<rect x="-34" y="40" width="20" height="11" rx="2.5" fill="#16a34a"/>`+txt(-24,45.5,'RUN',4,'#fff',800)+`<rect x="-10" y="40" width="20" height="11" rx="2.5" fill="#374151"/>`+txt(0,45.5,'L/R',3.8,'#e5e7eb',800)+`<rect x="14" y="40" width="20" height="11" rx="2.5" fill="#dc2626"/>`+txt(24,45.5,'STOP',3.6,'#fff',800);
+   [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>s+=`<circle cx="${a*39}" cy="${b*59}" r="1.8" fill="#9ca3af"/>`);
+   return s+(o.p.tag?txt(0,70,o.p.tag,6,'#7dd3fc',700):'');}},
  hole22:{layer:6.7,front:true,edit:['tag'],def:{tag:''},size:()=>({w:30,h:30}),
   draw:o=>`<circle r="14.85" fill="none" stroke="#777" stroke-width=".5" stroke-dasharray="2 1.5"/><circle r="11.15" fill="#151515" stroke="#555" stroke-width=".5"/><path d="M-4 0H4M0 -4V4" stroke="#888" stroke-width=".5"/>`+lg(o)},
  cutdin:{layer:6.7,front:true,cut:true,edit:['mods','tag'],def:{mods:12,tag:''},size:o=>({w:Math.max(1,+o.p.mods||1)*18+16,h:61}),hole:o=>({w:Math.max(1,+o.p.mods||1)*18,h:45}),
@@ -1253,6 +1263,11 @@ const SDEF={
   draw:o=>sL(-15,-30,-15,-14)+sL(15,-30,15,-14)+sL(0,14,0,30)+sR(-22,-14,44,28)+sT(0,0,'ATS',9)+sLbl(o,50)},
  svfd:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'U1',rating:'ATV630 15kW',desc:''},ratings:['ATV630 5.5kW','ATV630 11kW','ATV630 15kW','ATV630 22kW','ATV630 30kW','ATV630 37kW','ATV630 45kW','ATV630 55kW'],size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sL(0,-30,0,-16)+sL(0,16,0,30)+sR(-16,-16,32,32)+sL(-16,16,16,-16,1.4)+sT(-8,-7,'~',9)+sT(8,7,'~',9)+sLbl(o,40)},
+ svfd3:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'U1',rating:'ATV630 15kW',desc:'ווסת מהירות'},ratings:['ATV630 5.5kW','ATV630 11kW','ATV630 15kW','ATV630 22kW','ATV630 30kW','ATV630 37kW','ATV630 45kW','ATV630 55kW','ATV630 75kW','ATV630 90kW'],size:()=>({w:80,h:80}),
+  // three-phase: L1 L2 L3 in at the top, U V W out at the bottom, on the 20 mm pitch of the other 3-pole symbols
+  terms:()=>[...['L1','L2','L3'].map((l,i)=>[-20+i*20,-40,l]),...['U','V','W'].map((l,i)=>[-20+i*20,40,l])],
+  draw:o=>{let s='';[-20,0,20].forEach(x=>s+=sL(x,-40,x,-20)+sL(x,20,x,40));s+=sR(-30,-20,60,40)+sL(-30,20,30,-20,1.4)+sT(-15,-9,'3~',8)+sT(15,10,'3~',8);
+   ['L1','L2','L3'].forEach((l,i)=>s+=txt(-20+i*20+2.5,-31,l,5,SK,700,'start'));['U','V','W'].forEach((l,i)=>s+=txt(-20+i*20+2.5,31,l,5,SK,700,'start'));return s+sLbl(o,64);}},
  sss:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'U1',rating:'ATS480 30kW',desc:'מתנע רך'},size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sL(0,-30,0,-16)+sL(0,16,0,30)+sR(-16,-16,32,32)+`<path d="M-9 4l5-9l5 9z M9 -4l-5 9l-5-9z" fill="none" stroke="${SK}" stroke-width="1.4"/>`+sL(-11,-5,3,-5,1.2)+sL(-3,5,11,5,1.2)+sLbl(o,40)},
  sspd:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'F0',rating:'T2 40kA',desc:'מגן ברקים'},size:()=>({w:40,h:60}),terms:TOP,
@@ -1704,7 +1719,7 @@ const LIB=[
   {g:'מפסקים',items:[{t:'sbrk',n:'מפסק זרם (MCCB / ACB)'},{t:'sbrk',n:'מאמ"ת (MCB)',p:{tag:'Q2',rating:'MCB C16'}},{t:'srcd',n:'מפסק פחת / RCBO'},{t:'smpcb',n:'מגן מנוע (MPCB)'},{t:'siso',n:'מנתק / מפסק ראשי'},{t:'slbs',n:'מנתק עומס'}]},
   {g:'נתיכים',items:[{t:'sfuse',n:'נתיך'},{t:'sfsd',n:'מנתק נתיכים'}]},
   {g:'תלת-פאזי (3 קטבים, ברוחב המהדקים)',items:[{t:'sbrk',n:'מפסק זרם 3P',p:{poles:3}},{t:'sbrk',n:'מאמ"ת 3P',p:{poles:3,tag:'Q2',rating:'MCB C16'}},{t:'siso',n:'מנתק 3P',p:{poles:3}},{t:'srcd',n:'מפסק פחת 4P',p:{poles:4}},{t:'smpcb',n:'מגן מנוע 3P',p:{poles:3}},{t:'scont',n:'מגען 3P',p:{poles:3}},{t:'sol',n:'ממסר טרמי 3P',p:{poles:3}},{t:'sfuse',n:'נתיכים 3P',p:{poles:3}},{t:'smot',n:'מנוע (U V W)',p:{poles:3}}]},
-  {g:'מיתוג והתנעה',items:[{t:'scont',n:'מגען'},{t:'srev',n:'זוג מגענים מחוגרים (היפוך)'},{t:'sol',n:'ממסר טרמי'},{t:'svfd',n:'ווסת מהירות (VFD)'},{t:'sss',n:'מתנע רך'},{t:'sats',n:'מחליף אוטומטי (ATS)'}]},
+  {g:'מיתוג והתנעה',items:[{t:'scont',n:'מגען'},{t:'srev',n:'זוג מגענים מחוגרים (היפוך)'},{t:'sol',n:'ממסר טרמי'},{t:'svfd',n:'ווסת מהירות (VFD)'},{t:'svfd3',n:'ווסת מהירות תלת-פאזי (L1 L2 L3 → U V W)'},{t:'sss',n:'מתנע רך'},{t:'sats',n:'מחליף אוטומטי (ATS)'}]},
   {g:'הגנות',items:[{t:'sspd',n:'מגן ברקים (SPD)'}]}]},
  {tab:'פיקוד ובקרה',sld:true,icon:'🎛',hint:'סמלי פיקוד (IEC): מגעים, לחצנים, בוררים, סלילים, טיימרים ושעונים. מחברים ביניהם ב"חיווט". הסימון (למשל K1) והמספרים (13-14) נערכים במאפיינים.',groups:[
   {g:'לחצנים',items:[{t:'spbno',n:'לחצן הפעלה (NO)'},{t:'spbnc',n:'לחצן הפסקה (NC)'},{t:'sestop',n:'לחצן חירום'}]},
@@ -1794,7 +1809,8 @@ const LIB=[
    {g:'הגנת מנוע',items:I('מפסק הגנת מנוע','מפסק מנוע GV2ME','ממסר תרמי LRD')},
    {g:'ממסרים',items:I('ממסר','ממסר זמן','ממסר 4 צ׳יינג׳ אובר + בסיס','ממסר 2 צ׳יינג׳ אובר + בסיס','ממסר חוסר / סדר פאזות')}]},
   {tab:'ווסתי מהירות',icon:'≋',groups:[
-   {g:'Altivar Process ATV630 (בקנה מידה)',items:I('ATV630 גודל 1 · עד 5.5kW','ATV630 גודל 2 · 7.5-11kW','ATV630 גודל 3 · 15-22kW','ATV630 גודל 4 · 30-45kW','ATV630 גודל 5 · 55-90kW')}]},
+   {g:'Altivar Process ATV630 (בקנה מידה)',items:I('ATV630 גודל 1 · עד 5.5kW','ATV630 גודל 2 · 7.5-11kW','ATV630 גודל 3 · 15-22kW','ATV630 גודל 4 · 30-45kW','ATV630 גודל 5 · 55-90kW')},
+   {g:'מסך גרפי לדלת — Altivar Process (בוחרים ווסת ומוסיפים: המסך נכנס מולו)',items:[{t:'atvhmi',n:'מסך ATV630 לדלת — VW3A1111 + ערכת דלת VW3A1112'}]}]},
   {tab:'מהדקים ופסי צבירה',icon:'⫴',groups:[
    {g:'קבוצות מהדקים',items:I('מהדקים חד-פאזי L N PE','מהדקים תלת-פאזי L1-L3','מהדקים 4 קטבים +N','מהדקים 5 קטבים +N +PE')},
    {g:'מהדק בודד',items:I('מהדק אפור','מהדק כחול N','מהדק הארקה','מהדק אדום')},
@@ -2262,7 +2278,7 @@ function inCab(c,x,y){const g=cabG(c);return x>g.x0&&x<g.x0+g.W&&y>g.y0&&y<g.y0+
 /* Designations by IEC 81346 letter, numbered as parts are added: the next free
    number for that letter in this document (H1, H2… lamps; Q1, Q2… breakers…). A
    designation typed by hand stays as it is. */
-const SERIAL={xbox:'S',nrack:'RK',lc2d:'K',srev:'K',prox:'B',sprox:'B',mvalve:'MV',svalve:'SV',smv:'MV',ssv:'SV',subpit:'P',ssubp:'P',kflow:'FE',kconv:'FIT',sfe:'FE',sfit:'FIT',lfloat:'LS',ptx:'PT',pgauge:'PI',spt:'PT',spi:'PI',lvlh:'LT',ultra4:'LIC',udb:'LE',slvlh:'LT',sultra:'LIC',sudb:'LE',smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
+const SERIAL={svfd3:'U',xbox:'S',nrack:'RK',lc2d:'K',srev:'K',prox:'B',sprox:'B',mvalve:'MV',svalve:'SV',smv:'MV',ssv:'SV',subpit:'P',ssubp:'P',kflow:'FE',kconv:'FIT',sfe:'FE',sfit:'FIT',lfloat:'LS',ptx:'PT',pgauge:'PI',spt:'PT',spi:'PI',lvlh:'LT',ultra4:'LIC',udb:'LE',slvlh:'LT',sultra:'LIC',sudb:'LE',smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
  sbrk:'Q',smpcb:'Q',siso:'Q',slbs:'Q',sfsd:'Q',sats:'Q',srcd:'F',sfuse:'F',sol:'F',sspd:'F',scont:'K',svfd:'U',sss:'U',sups:'U',sgen:'G',sbatt:'G',strafo:'T',sct:'T',svt:'T',skwh:'P',spm:'P',samm:'P',svm:'P',scap:'C',smot:'M',stb:'X',scable:'W'};
 function autoTag(o){const pre=SERIAL[o.type];if(!pre||!o.p||!DEF[o.type].edit?.includes('tag'))return;const re=new RegExp('^'+pre+'(\\d+)$');if(o.p.tag&&!re.test(o.p.tag))return;
  const mine=isSldObj(o),used=new Set();state.objs.forEach(q=>{if(q===o||isSldObj(q)!==mine)return;const m=re.exec(q.p?.tag||'');if(m)used.add(+m[1]);});let n=1;while(used.has(n))n++;o.p.tag=pre+n;}
@@ -2561,7 +2577,7 @@ try{buildFav();}catch(e){}
 // a domestic panel brings one DIN rail per row, sized to its modules
 function hboxRails(o){if(o.type!=='hbox')return;const r=Math.max(1,+o.p.rows||1),m=+o.p.mods||12,H=85+150*r;
  for(let i=0;i<r;i++){const rl=mkObj({t:'rail',n:'פס DIN 35',p:{len:m*18+10}});rl.x=o.x;rl.y=r2(o.y-H/2+42.5+75+i*150);rl.rot=0;state.objs.push(rl);}}
-function addItem(e){const o=mkObj(e);placeNew(o);if(o.type==='nmap'){const b=sel&&get(sel),r=b&&b.type==='nrack'?b:(b&&b.type==='nequip'?state.objs.find(q=>q.type==='nrack'&&Math.abs(q.x-b.x)<1):null)||state.objs.find(q=>q.type==='nrack');if(!r){toast('הוסף קודם ארון תקשורת');return;}o.p.rk=r.id;const d=nrDim(r);o.p.w=d.inch===10?300:420;o.x=r2(r.x+d.W/2+40+o.p.w/2);o.y=nmapGeo(o).cy;}if(DEF[o.type]?.ru){const b=sel&&get(sel),R=b&&b.type==='nrack'?[b]:state.objs.filter(q=>q.type==='nrack');for(const r of R){if((r.p.inch==='10')!==(o.p.inch==='10'))continue;const f=rackFree(r,o);if(f){o.x=r.x;o.y=f.y;break;}}}if(o.type==='nsxrh'){const b=sel&&get(sel);if(b&&(b.type==='nsx'||b.type==='nsxm')){o.x=b.x;o.y=b.y;if(b.type==='nsxm')o.p.rating='NSXm · LV426937';else if(/(400|630)/.test(b.p.rating||b.p.name||''))o.p.rating='NSX400-630 · LV432598';else o.p.rating='NSX100-250 · LV429340';}}state.objs.push(o);hboxRails(o);sel=o.id;commit();renderNow();updateBar();if(innerWidth<760)closePanel();if(o.type==='cabinet')fit();else ensureVisible(o);toast(`נוסף: ${e.n}`);}
+function addItem(e){const o=mkObj(e);placeNew(o);if(o.type==='atvhmi'){const b=sel&&get(sel);if(b&&b.type==='atv630'){const {w,h}=atvSz(b),tw=Math.min(w*.6,74),th=tw*1.45,ty=-h/2+h*.06+h*.5*.12;o.x=b.x;o.y=r2(b.y+ty+th/2);o.p.tag=b.p.tag||'';}}if(o.type==='nmap'){const b=sel&&get(sel),r=b&&b.type==='nrack'?b:(b&&b.type==='nequip'?state.objs.find(q=>q.type==='nrack'&&Math.abs(q.x-b.x)<1):null)||state.objs.find(q=>q.type==='nrack');if(!r){toast('הוסף קודם ארון תקשורת');return;}o.p.rk=r.id;const d=nrDim(r);o.p.w=d.inch===10?300:420;o.x=r2(r.x+d.W/2+40+o.p.w/2);o.y=nmapGeo(o).cy;}if(DEF[o.type]?.ru){const b=sel&&get(sel),R=b&&b.type==='nrack'?[b]:state.objs.filter(q=>q.type==='nrack');for(const r of R){if((r.p.inch==='10')!==(o.p.inch==='10'))continue;const f=rackFree(r,o);if(f){o.x=r.x;o.y=f.y;break;}}}if(o.type==='nsxrh'){const b=sel&&get(sel);if(b&&(b.type==='nsx'||b.type==='nsxm')){o.x=b.x;o.y=b.y;if(b.type==='nsxm')o.p.rating='NSXm · LV426937';else if(/(400|630)/.test(b.p.rating||b.p.name||''))o.p.rating='NSX400-630 · LV432598';else o.p.rating='NSX100-250 · LV429340';}}state.objs.push(o);hboxRails(o);sel=o.id;commit();renderNow();updateBar();if(innerWidth<760)closePanel();if(o.type==='cabinet')fit();else ensureVisible(o);toast(`נוסף: ${e.n}`);}
 function ensureVisible(o){const r=svg.getBoundingClientRect();const sx=o.x*view.s+view.tx,sy=o.y*view.s+view.ty;if(sx<20||sx>r.width-20||sy<topBottom()+20||sy>sheetTop()-80){const [cx,cy]=viewCenter();view.tx+=(cx-o.x)*view.s;view.ty+=(cy-o.y)*view.s;applyView();}}
 
 /* ================= wiring ================= */
