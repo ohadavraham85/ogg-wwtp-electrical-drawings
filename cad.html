@@ -543,7 +543,7 @@ const COLORS={red:'#c62828',green:'#1f9d55',blue:'#1d5fd1',orange:'#c26a12',oliv
 const CNAME={red:'אדום',green:'ירוק',blue:'כחול',orange:'כתום',olive:'זית',yellow:'צהוב',white:'לבן',grey:'אפור',black:'שחור'};
 const ACC=['mcb','pb','pbl','pl22'];
 const CISZ={K1:{w:80,h:131,n:'CI-K1 131×80'},K2:{w:100,h:181,n:'CI-K2 181×100'},K3:{w:120,h:222,n:'CI-K3 222×120'},K4:{w:160,h:240,n:'CI-K4 240×160'},K5:{w:200,h:280,n:'CI-K5 280×200'},C1:{w:187.5,h:250,n:'Ci 250×187.5'},C2:{w:250,h:375,n:'Ci 375×250'},C3:{w:375,h:250,n:'Ci 250×375'},C4:{w:375,h:375,n:'Ci 375×375'}};
-const WCOL={brown:{base:'#8b5a2b',n:'חום'},black:{base:'#1d1d1d',n:'שחור'},grey:{base:'#8f8f8f',n:'אפור'},blue:{base:'#2563eb',n:'כחול'},yg:{base:'#f2c94c',dash:'#16a34a',n:'צהוב-ירוק'},red:{base:'#dc2626',n:'אדום'},white:{base:'#f1f1f1',n:'לבן'},orange:{base:'#f97316',n:'כתום'}};
+const WCOL={brown:{base:'#8b5a2b',n:'חום'},black:{base:'#1d1d1d',n:'שחור'},grey:{base:'#8f8f8f',n:'אפור'},blue:{base:'#2563eb',n:'כחול'},yg:{base:'#f2c94c',dash:'#16a34a',n:'צהוב-ירוק'},red:{base:'#dc2626',n:'אדום'},white:{base:'#f1f1f1',n:'לבן'},orange:{base:'#f97316',n:'כתום'},bo:{base:'#8b5a2b',dash:'#f97316',n:'חום-כתום'},bk:{base:'#8b5a2b',dash:'#1d1d1d',n:'חום-שחור'}};
 const SEC={'0.75':1.8,'1':2,'1.5':2.3,'2.5':2.7,'4':3.1,'6':3.6,'10':4.4,'16':5.2};
 const SECK=['0.75','1','1.5','2.5','4','6','10','16'];
 let GRID=10;try{const g=localStorage.getItem('epd.grid');if(g!==null)GRID=+g;}catch(e){}
@@ -1307,8 +1307,8 @@ const SDEF={
  sbusm:{layer:3,sld:true,resize:'len',minLen:60,edit:['tag','rating','nl','len'],def:{tag:'',rating:'3×400/230V 50Hz',len:400,nl:'3'},size:o=>{const n=busN(o).length;return {w:o.p.len,h:(n-1)*10+8};},
   terms:o=>{const L=o.p.len,N=busN(o),t=[];N.forEach((l,i)=>{const y=-(N.length-1)*5+i*10;for(let u=-L/2+20;u<=L/2-20+.01;u+=10)t.push([r2(u),y,'']);});return t;},
   draw:o=>{const L=o.p.len,N=busN(o);let s='';N.forEach((l,i)=>{const y=-(N.length-1)*5+i*10,pe=l==='PE',nn=l==='N';
-    const BC={L1:'#8b5a2b',L2:'#f97316',L3:'#1d1d1d',N:'#2563eb'}[l],d=`M${-L/2+12} ${y}H${L/2-12}`;
-    s+=pe?`<path d="${d}" stroke="#f2c94c" stroke-width="3"/><path d="${d}" stroke="#16a34a" stroke-width="3" stroke-dasharray="7 7"/>`:`<path d="${d}" stroke="${BC}" stroke-width="${nn?3:3.6}"/>`+txt(-L/2+9,y,l,5.5,SK,800,'end')+txt(L/2-9,y,l,5.5,SK,800,'start');});
+    const BC={L1:['#8b5a2b'],L2:['#8b5a2b','#f97316'],L3:['#8b5a2b','#1d1d1d'],N:['#2563eb'],PE:['#f2c94c','#16a34a']}[l]||[SK],d=`M${-L/2+12} ${y}H${L/2-12}`,bw=nn||pe?3:3.6;
+    s+=`<path d="${d}" stroke="${BC[0]}" stroke-width="${bw}"/>`+(BC[1]?`<path d="${d}" stroke="${BC[1]}" stroke-width="${bw}" stroke-dasharray="7 7"/>`:'')+txt(-L/2+9,y,l,5.5,SK,800,'end')+txt(L/2-9,y,l,5.5,SK,800,'start');});
    const top=-(N.length-1)*5-9;return s+txt(-L/2+12,top,[o.p.tag,o.p.rating].filter(Boolean).join(' · '),8,SK,700,'start');}},
  sbus:{layer:3,sld:true,resize:'len',minLen:40,edit:['tag','rating','len'],def:{tag:'',rating:'3×400/230V 50Hz',len:300},size:o=>({w:o.p.len,h:6}),
   terms:o=>{const L=o.p.len,t=[];for(let u=-L/2+10;u<=L/2-10+.01;u+=10)t.push([r2(u),0,'']);return t;},
@@ -1941,7 +1941,7 @@ function wirePs(w){let ps=w.pts.map(resolve).filter(Boolean);if(ps.length>=2&&w.
 // a polyline moved sideways by d (mitred corners), for the three lines of a three-phase run
 function offPoly(ps,d){const n=[];for(let i=0;i<ps.length-1;i++){const dx=ps[i+1].x-ps[i].x,dy=ps[i+1].y-ps[i].y,L=Math.hypot(dx,dy)||1;n.push([-dy/L,dx/L]);}
  return ps.map((p,i)=>{const a=n[Math.max(0,i-1)],b=n[Math.min(n.length-1,i)];let mx=a[0]+b[0],my=a[1]+b[1];const m=Math.hypot(mx,my)||1;mx/=m;my/=m;const k=d/Math.max(.35,mx*b[0]+my*b[1]);return {x:p.x+mx*k,y:p.y+my*k};});}
-const PH3=['brown','orange','black'];
+const PH3=['brown','bo','bk'];
 function hopPath(ps,hops,gaps){const R=5,GP=3.4;let d='M'+r2(ps[0].x)+' '+r2(ps[0].y);
  for(let i=1;i<ps.length;i++){const a=ps[i-1],b=ps[i];
   if(gaps){const vv=Math.abs(a.x-b.x)<.01,hh=Math.abs(a.y-b.y)<.01;if(vv||hh){const k=vv?'y':'x',dir=Math.sign(b[k]-a[k])||1,on=g=>vv?Math.abs(g.x-a.x)<.01:Math.abs(g.y-a.y)<.01;
@@ -1953,7 +1953,7 @@ function hopPath(ps,hops,gaps){const R=5,GP=3.4;let d='M'+r2(ps[0].x)+' '+r2(ps[
  return d;}
 function drawWire(w,isSel){const LP=WL.get(w.id);const d=LP&&LP.length>1?hopPath(LP,WG.get(w.id),WB.get(w.id)):wirePath(w);if(!d)return '';if(w.p.joint){const a=resolve(w.pts[0]),b=resolve(w.pts[1]);if(a&&b&&Math.hypot(a.x-b.x,a.y-b.y)<.6)return `<g data-id="${w.id}"><circle cx="${a.x}" cy="${a.y}" r="6" fill="transparent"/><circle cx="${a.x}" cy="${a.y}" r="${isSel?3.2:2.2}" fill="${isSel?'#60a5fa':'#8b5a2b'}"/></g>`;}const sld=state.tab==='sld'||isSldObj(w);let sw=SEC[w.p.sec]||2.3;if(sld)sw=1.3;if(EXPMIN)sw=Math.max(sw,EXPMIN);const c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
  if(w.p.ph==='3'){const ps=LP&&LP.length>1?LP:wirePs(w),gap=sld?2.4:sw*1.25;let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${gap*2+sw+8}"/>`;if(isSel)s+=`<path ${P} stroke="#60a5fa" stroke-width="${gap*2+sw+3}"/>`;
-  PH3.forEach((k,i)=>{const q=offPoly(ps,(i-1)*gap),dd='M'+q.map(p=>r2(p.x)+' '+r2(p.y)).join('L');s+=`<path d="${dd}" fill="none" stroke-linejoin="round" stroke="${WCOL[k].base}" stroke-width="${sw}"/>`;});return s+'</g>';}
+  PH3.forEach((k,i)=>{const q=offPoly(ps,(i-1)*gap),dd='M'+q.map(p=>r2(p.x)+' '+r2(p.y)).join('L');s+=`<path d="${dd}" fill="none" stroke-linejoin="round" stroke="${WCOL[k].base}" stroke-width="${sw}"/>`;if(WCOL[k].dash)s+=`<path d="${dd}" fill="none" stroke="${WCOL[k].dash}" stroke-width="${sw}" stroke-dasharray="5 5"/>`;});return s+'</g>';}
  let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${sw+8}"/>`;
  if(isSel)s+=`<path ${P} stroke="#60a5fa" stroke-width="${sw+3.2}"/>`;
  s+=(sld?'':`<path ${P} stroke="rgba(0,0,0,.6)" stroke-width="${sw+.9}"/>`)+`<path ${P} stroke="${c.base}" stroke-width="${sw}"/>`;
@@ -2663,7 +2663,7 @@ function mwConnect(A,B){if(A.type!=='sbusm'&&B.type==='sbusm')[A,B]=[B,A];const 
   cs.forEach((c,j)=>{const ln=lines[j];if(!ln||mwUsed(B.id,c.i))return;const li=N.indexOf(ln);
    const taps=all.slice(li*per,(li+1)*per).filter(t=>!taken.has(t.i)&&!mwUsed(A.id,t.i));if(!taps.length)return;
    const tp=taps.reduce((m,t)=>Math.abs(t.x-c.x)<Math.abs(m.x-c.x)?t:m);taken.add(tp.i);
-   mk(A,tp.i,B,c.i,{L1:'brown',L2:'orange',L3:'black',N:'blue',PE:'yg'}[ln]);});}
+   mk(A,tp.i,B,c.i,{L1:'brown',L2:'bo',L3:'bk',N:'blue',PE:'yg'}[ln]);});}
  else{const as=mwFace(A,B),bs=mwFace(B,A),n=Math.min(as.length,bs.length);if(!n){toast('לא נמצאו נקודות חיבור מתאימות');return;}
   for(let j=0;j<n;j++){if(mwUsed(A.id,as[j].i)&&mwUsed(B.id,bs[j].i))continue;const isN=[as[j].l,bs[j].l].some(l=>/^N\d*$/i.test(l)),isPE=[as[j].l,bs[j].l].some(l=>/^PE$/i.test(l));
    mk(A,as[j].i,B,bs[j].i,isN?'blue':isPE?'yg':n>=3&&j<3?PH3[j]:null);}}

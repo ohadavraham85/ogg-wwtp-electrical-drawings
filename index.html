@@ -179,11 +179,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 125;
+const VERSION = 126;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'פסי צבירה בצבעי הפאזות (חום, כתום, שחור, N כחול, PE צהוב־ירוק); שכפול רכיב מניח את העותק מימין';
+const WHATS_NEW = 'צבעי פאזות לפי התקן: L1 חום, L2 חום-כתום, L3 חום-שחור — בחוטים ובפסי צבירה';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
