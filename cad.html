@@ -2662,9 +2662,10 @@ function mwConnect(A,B){if(A.type!=='sbusm'&&B.type==='sbusm')[A,B]=[B,A];const 
   cs.forEach((c,j)=>{const ln=lines[j];if(!ln||mwUsed(B.id,c.i))return;const li=N.indexOf(ln);
    const taps=all.slice(li*per,(li+1)*per).filter(t=>!taken.has(t.i)&&!mwUsed(A.id,t.i));if(!taps.length)return;
    const tp=taps.reduce((m,t)=>Math.abs(t.x-c.x)<Math.abs(m.x-c.x)?t:m);taken.add(tp.i);
-   mk(A,tp.i,B,c.i,ln==='N'?'blue':ln==='PE'?'yg':null);});}
+   mk(A,tp.i,B,c.i,{L1:'brown',L2:'orange',L3:'black',N:'blue',PE:'yg'}[ln]);});}
  else{const as=mwFace(A,B),bs=mwFace(B,A),n=Math.min(as.length,bs.length);if(!n){toast('לא נמצאו נקודות חיבור מתאימות');return;}
-  for(let j=0;j<n;j++){if(mwUsed(A.id,as[j].i)&&mwUsed(B.id,bs[j].i))continue;mk(A,as[j].i,B,bs[j].i);}}
+  for(let j=0;j<n;j++){if(mwUsed(A.id,as[j].i)&&mwUsed(B.id,bs[j].i))continue;const isN=[as[j].l,bs[j].l].some(l=>/^N\d*$/i.test(l)),isPE=[as[j].l,bs[j].l].some(l=>/^PE$/i.test(l));
+   mk(A,as[j].i,B,bs[j].i,isN?'blue':isPE?'yg':n>=3&&j<3?PH3[j]:null);}}
  if(!ws.length){toast('הכול כבר מחובר');return;}
  state.objs.push(...ws);commit();renderNow();updateBar();toast(`נוספו ${ws.length} חוטים`);}
 function mwSet(on){MWM=on?{a:null}:null;if(on){if(wireMode)setWire(false);if(measMode)setMeas(null);toast('חיווט מרובה: הקש על פס הצבירה (או הרכיב הראשון) ואז על הרכיב השני');}
