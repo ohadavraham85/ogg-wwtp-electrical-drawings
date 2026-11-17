@@ -493,6 +493,7 @@ body.iconsonly .ddbtn .lbl{display:none}
   <div id="rail">
     <button class="rb" id="rAdd"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>הוסף</span></button>
     <button class="rb" id="rWire"><svg viewBox="0 0 24 24" style="stroke-width:2.4"><path d="M12 22v-8" stroke="#777" style="stroke-width:5"/><path d="M11 14c-1-5-4-8-7-10" stroke="#e53935"/><path d="M12 14c0-5 0-8 1-11" stroke="#43a047"/><path d="M13 14c1-5 4-8 7-9" stroke="#1e88e5"/></svg><span>חיווט</span></button>
+    <button class="rb" id="rMWire" title="חיווט מרובה: מחבר בבת אחת את כל הפאזות בין פס צבירה לרכיב, או בין שני רכיבים"><svg viewBox="0 0 24 24"><path d="M3 5h18" style="stroke-width:2.6"/><path d="M7 5v14M12 5v14M17 5v14" stroke="#e8a23a"/><circle cx="7" cy="5" r="1.4" fill="#fff"/><circle cx="12" cy="5" r="1.4" fill="#fff"/><circle cx="17" cy="5" r="1.4" fill="#fff"/></svg><span>חיווט מרובה</span></button>
     <button class="rb" id="rProps"><svg viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg><span>מאפיינים</span></button>
     <button class="rb" id="bText" title="הוסף תיבת טקסט לרכיב שנבחר"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 9.5h8M12 9.5v6"/></svg><span>טקסט</span></button>
     <button class="rb" id="bMeas" data-dd="mMeas" title="מידות וסרט מדידה"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="13" height="13" rx="3"/><circle cx="8.5" cy="11.5" r="2.4"/><path d="M15 14h7v4h-7M18 14v1.6M20.5 14v1.6"/></svg><span>מידה</span></button>
@@ -1897,12 +1898,12 @@ function wirePath(w,pts){let ps=(pts||w.pts).map(resolve).filter(Boolean);if(ps.
    Auto-routed wires whose middle runs would lie on top of each other are
    spread 10 mm apart, ordered so they don't cross; where two wires still
    cross, the one running across jumps over the other with a small arc. */
-let WL=new Map(),WG=new Map(),EXPMIN=0;
+let WL=new Map(),WG=new Map(),WB=new Map(),EXPMIN=0;
 // a terminal-on-terminal joint whose two ends still meet (drawn as a dot); once pulled apart it is a wire like any other
 function jointClosed(w){if(!w.p.joint)return false;const a=resolve(w.pts[0]),b=resolve(w.pts[1]);return !!a&&!!b&&Math.hypot(a.x-b.x,a.y-b.y)<.6;}
 // which way a terminal points (-1 up, +1 down), following the part's turn
-function tDir(p){const o=get(p.r),t=o&&termsOf(o)[p.t];if(!t)return 1;const [,y0]=fromLocal(o,t[0],t[1]),[,y1]=fromLocal(o,t[0],t[1]+(t[1]<0?-1:1));return y1<y0?-1:1;}
-function wireLayout(){WL=new Map();WG=new Map();
+function tDir(p){const o=get(p.r),t=o&&termsOf(o)[p.t];if(!t)return 1;const [,y0]=fromLocal(o,t[0],t[1]),[,y1]=fromLocal(o,t[0],t[1]+(o.type==='sbusm'?1:t[1]<0?-1:1));return y1<y0?-1:1;}
+function wireLayout(){WL=new Map();WG=new Map();WB=new Map();
  const W=state.objs.filter(w=>w.type==='wire'&&!jointClosed(w)&&(state.tab==='sld'||isSldObj(w)));if(!W.length)return;
  // symbols' terminals point up or down: an auto wire leaves each end that way, runs across at one
  // height (its own "ym" once dragged there) and goes into the other end — over the top when both
@@ -1927,25 +1928,36 @@ function wireLayout(){WL=new Map();WG=new Map();
  // crossings: the run going across hops over the upright one
  const segs=[];W.forEach(w=>{const q=WL.get(w.id);for(let i=0;i<q.length-1;i++){const a=q[i],b=q[i+1];if(Math.abs(a.x-b.x)<.01)segs.push({w,v:true,c:a.x,lo:Math.min(a.y,b.y),hi:Math.max(a.y,b.y)});else if(Math.abs(a.y-b.y)<.01)segs.push({w,v:false,c:a.y,lo:Math.min(a.x,b.x),hi:Math.max(a.x,b.x)});}});
  for(const v of segs){if(!v.v)continue;for(const h of segs){if(h.v||h.w===v.w)continue;
-  if(v.c>h.lo+6&&v.c<h.hi-6&&h.c>v.lo+1.5&&h.c<v.hi-1.5){if(!WG.has(h.w.id))WG.set(h.w.id,[]);WG.get(h.w.id).push({x:v.c,y:h.c});}}}}
+  if(v.c>h.lo+6&&v.c<h.hi-6&&h.c>v.lo+1.5&&h.c<v.hi-1.5){if(!WG.has(h.w.id))WG.set(h.w.id,[]);WG.get(h.w.id).push({x:v.c,y:h.c});}}}
+ busGaps(segs);}
+// a wire running across a busbar's other lines on its way to its own line is drawn with a gap at each
+function busGaps(segs){const BL=[];state.objs.forEach(o=>{if(o.type!=='sbusm'||!(state.tab==='sld'||isSldObj(o)))return;const L=o.p.len,N=busN(o);
+  N.forEach((l,i)=>{const y=-(N.length-1)*5+i*10,[ax,ay]=fromLocal(o,-L/2+12,y),[bx,by]=fromLocal(o,L/2-12,y);
+   if(Math.abs(ay-by)<.01)BL.push({v:false,c:ay,lo:Math.min(ax,bx),hi:Math.max(ax,bx)});else if(Math.abs(ax-bx)<.01)BL.push({v:true,c:ax,lo:Math.min(ay,by),hi:Math.max(ay,by)});});});
+ if(!BL.length)return;
+ for(const s of segs)for(const b of BL){if(s.v===b.v)continue;if(s.c>b.lo&&s.c<b.hi&&b.c>s.lo+2&&b.c<s.hi-2){if(!WB.has(s.w.id))WB.set(s.w.id,[]);WB.get(s.w.id).push(s.v?{x:s.c,y:b.c}:{x:b.c,y:s.c});}}}
 function wirePs(w){let ps=w.pts.map(resolve).filter(Boolean);if(ps.length>=2&&w.p.auto&&ps.length===2)ps=[ps[0],...qRoute(ps[0],ps[1]),ps[1]];return ps;}
 // a polyline moved sideways by d (mitred corners), for the three lines of a three-phase run
 function offPoly(ps,d){const n=[];for(let i=0;i<ps.length-1;i++){const dx=ps[i+1].x-ps[i].x,dy=ps[i+1].y-ps[i].y,L=Math.hypot(dx,dy)||1;n.push([-dy/L,dx/L]);}
  return ps.map((p,i)=>{const a=n[Math.max(0,i-1)],b=n[Math.min(n.length-1,i)];let mx=a[0]+b[0],my=a[1]+b[1];const m=Math.hypot(mx,my)||1;mx/=m;my/=m;const k=d/Math.max(.35,mx*b[0]+my*b[1]);return {x:p.x+mx*k,y:p.y+my*k};});}
 const PH3=['brown','orange','black'];
-function hopPath(ps,hops){const R=5;let d='M'+r2(ps[0].x)+' '+r2(ps[0].y);
+function hopPath(ps,hops,gaps){const R=5,GP=3.4;let d='M'+r2(ps[0].x)+' '+r2(ps[0].y);
  for(let i=1;i<ps.length;i++){const a=ps[i-1],b=ps[i];
+  if(gaps){const vv=Math.abs(a.x-b.x)<.01,hh=Math.abs(a.y-b.y)<.01;if(vv||hh){const k=vv?'y':'x',dir=Math.sign(b[k]-a[k])||1,on=g=>vv?Math.abs(g.x-a.x)<.01:Math.abs(g.y-a.y)<.01;
+   const Gs=gaps.filter(g=>on(g)&&(g[k]-a[k])*dir>GP&&(b[k]-g[k])*dir>GP).sort((p,q)=>(p[k]-q[k])*dir);
+   if(Gs.length&&!(hh&&hops&&hops.length)){Gs.forEach(g=>{const p1=vv?r2(a.x)+' '+r2(g.y-dir*GP):r2(g.x-dir*GP)+' '+r2(a.y),p2=vv?r2(a.x)+' '+r2(g.y+dir*GP):r2(g.x+dir*GP)+' '+r2(a.y);d+='L'+p1+'M'+p2;});d+='L'+r2(b.x)+' '+r2(b.y);continue;}}}
   if(Math.abs(a.y-b.y)<.01&&hops){const dir=Math.sign(b.x-a.x)||1,H=hops.filter(h=>Math.abs(h.y-a.y)<.01&&(h.x-a.x)*dir>R&&(b.x-h.x)*dir>R).sort((p,q)=>(p.x-q.x)*dir);
    H.forEach(h=>{d+='L'+r2(h.x-dir*R)+' '+r2(a.y)+'A'+R+' '+R+' 0 0 '+(dir>0?1:0)+' '+r2(h.x+dir*R)+' '+r2(a.y);});}
   d+='L'+r2(b.x)+' '+r2(b.y);}
  return d;}
-function drawWire(w,isSel){const LP=WL.get(w.id);const d=LP&&LP.length>1?hopPath(LP,WG.get(w.id)):wirePath(w);if(!d)return '';if(w.p.joint){const a=resolve(w.pts[0]),b=resolve(w.pts[1]);if(a&&b&&Math.hypot(a.x-b.x,a.y-b.y)<.6)return `<g data-id="${w.id}"><circle cx="${a.x}" cy="${a.y}" r="6" fill="transparent"/><circle cx="${a.x}" cy="${a.y}" r="${isSel?3.2:2.2}" fill="${isSel?'#60a5fa':'#8b5a2b'}"/></g>`;}const sld=state.tab==='sld'||isSldObj(w);let sw=SEC[w.p.sec]||2.3;if(sld)sw=1.3;if(EXPMIN)sw=Math.max(sw,EXPMIN);const c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+function drawWire(w,isSel){const LP=WL.get(w.id);const d=LP&&LP.length>1?hopPath(LP,WG.get(w.id),WB.get(w.id)):wirePath(w);if(!d)return '';if(w.p.joint){const a=resolve(w.pts[0]),b=resolve(w.pts[1]);if(a&&b&&Math.hypot(a.x-b.x,a.y-b.y)<.6)return `<g data-id="${w.id}"><circle cx="${a.x}" cy="${a.y}" r="6" fill="transparent"/><circle cx="${a.x}" cy="${a.y}" r="${isSel?3.2:2.2}" fill="${isSel?'#60a5fa':'#8b5a2b'}"/></g>`;}const sld=state.tab==='sld'||isSldObj(w);let sw=SEC[w.p.sec]||2.3;if(sld)sw=1.3;if(EXPMIN)sw=Math.max(sw,EXPMIN);const c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
  if(w.p.ph==='3'){const ps=LP&&LP.length>1?LP:wirePs(w),gap=sld?2.4:sw*1.25;let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${gap*2+sw+8}"/>`;if(isSel)s+=`<path ${P} stroke="#60a5fa" stroke-width="${gap*2+sw+3}"/>`;
   PH3.forEach((k,i)=>{const q=offPoly(ps,(i-1)*gap),dd='M'+q.map(p=>r2(p.x)+' '+r2(p.y)).join('L');s+=`<path d="${dd}" fill="none" stroke-linejoin="round" stroke="${WCOL[k].base}" stroke-width="${sw}"/>`;});return s+'</g>';}
  let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${sw+8}"/>`;
  if(isSel)s+=`<path ${P} stroke="#60a5fa" stroke-width="${sw+3.2}"/>`;
  s+=(sld?'':`<path ${P} stroke="rgba(0,0,0,.6)" stroke-width="${sw+.9}"/>`)+`<path ${P} stroke="${c.base}" stroke-width="${sw}"/>`;
  if(c.dash)s+=`<path ${P} stroke="${c.dash}" stroke-width="${sw}" stroke-dasharray="5 5" stroke-linecap="butt"/>`;
+ if(sld)[w.pts[0],w.pts[w.pts.length-1]].forEach(q=>{const b=q&&q.r&&get(q.r);if(b&&b.type==='sbusm'){const r=resolve(q);if(r)s+=`<circle cx="${r2(r.x)}" cy="${r2(r.y)}" r="2.3" fill="${SK}"/>`;}});
  return s+'</g>';}
 function objSVG(o,isSel){const D=DEF[o.type];if(!D)return '';const {w,h}=sizeOf(o);
  let s=`<g data-id="${o.id}" transform="translate(${o.x} ${o.y}) rotate(${o.rot})">`+(D.sld&&o.type!=='sframe'?`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" fill="transparent"/>`:'')+D.draw(o);
@@ -2500,7 +2512,8 @@ function closePanel(){pMode=null;$('panel').classList.add('hidden');updateBar();
 $('pClose').onclick=closePanel;
 $('rAdd').onclick=$('libStrip').onclick=()=>{if(pMode==='lib')closePanel();else{if(wireMode)setWire(false);openPanel('lib','הוספת רכיב');}};
 $('rProps').onclick=()=>{if(pMode==='props')closePanel();else{if(wireMode)setWire(false);editDialog();}};
-$('rWire').onclick=()=>setWire(!wireMode);
+$('rWire').onclick=()=>{if(MWM)mwSet(false);setWire(!wireMode);};
+$('rMWire').onclick=mwStart;
 $('search').addEventListener('input',e=>{libQ=e.target.value;buildSheet();});
 function panelForm(title,html,apply){openPanel('props',title);const b=$('propsBody');b.innerHTML=html;b.onclick=null;let t=0;
  b.oninput=e=>{if(e.target.tagName==='SELECT')return;clearTimeout(t);t=setTimeout(apply,350);};b.onchange=()=>{clearTimeout(t);apply();};}
@@ -2626,6 +2639,41 @@ function termLbl(p){if(!p||!p.r)return '';const o=get(p.r);if(!o)return '';if(o.
 function wireAutoColor(ends,def){if(ends.some(p=>/^N\d*$/.test(termLbl(p))))return 'blue';
  for(const p of ends){if(!p||!p.r)continue;const w=state.objs.find(o=>o.type==='wire'&&o.pts.some(q=>q.r===p.r&&q.t===p.t));if(w)return w.p.color;}return def;}
 function finishWire(){if(draft&&draft.pts.length>=2){const w={id:uid(),type:'wire',p:{color:wireAutoColor([draft.pts[0],draft.pts[draft.pts.length-1]],wireColor),sec:wireSec,name:'חוט'},pts:draft.pts};state.objs.push(w);draft=null;commit();toast('החוט נוסף');}else draft=null;renderNow();updateBar();}
+
+/* ================= multi-wire =================
+   One action wires every pole between two parts: a busbar and a breaker, a
+   breaker and a contactor… Pick the two (or select both and press the button).
+   On a busbar each pole lands on its own line (L1 L2 L3, N, PE) at the tap
+   straight above it; between two parts the facing terminals pair up left to right. */
+let MWM=null;
+function mwFace(o,other){const ts=termsOf(o).map((t,i)=>{const [x,y]=fromLocal(o,t[0],t[1]);return {i,x,y,d:tDir({r:o.id,t:i}),l:String(t[2]==null?'':t[2]).trim()};});
+ if(!ts.length)return [];const up=other.y<o.y,f=ts.filter(t=>up?t.d<0:t.d>0),pool=f.length?f:ts,ey=up?Math.min(...pool.map(t=>t.y)):Math.max(...pool.map(t=>t.y));
+ return pool.filter(t=>Math.abs(t.y-ey)<6).sort((a,b)=>a.x-b.x);}
+const mwUsed=(id,t)=>state.objs.some(w=>w.type==='wire'&&w.pts.some(q=>q.r===id&&q.t===t));
+function mwConnect(A,B){if(A.type!=='sbusm'&&B.type==='sbusm')[A,B]=[B,A];const sld=isSldObj(A)||isSldObj(B)||state.tab==='sld',ws=[];
+ const mk=(a,ta,b,tb,col)=>ws.push({id:uid(),type:'wire',p:{color:col||wireAutoColor([{r:a.id,t:ta},{r:b.id,t:tb}],sld?'brown':wireColor),sec:wireSec,name:'חוט',auto:1},pts:[{r:a.id,t:ta},{r:b.id,t:tb}]});
+ if(A.type==='sbusm'){const N=busN(A),cs=mwFace(B,A);if(!cs.length){toast('לרכיב אין נקודות חיבור');return;}
+  const ph=N.filter(l=>/^L/.test(l)),hasN=N.includes('N'),hasPE=N.includes('PE');let k=0;
+  // labelled N / PE poles go to their line; a 2-pole part is L1 + N; the rest take L1, L2, L3, then N, then PE
+  const lines=[],extra=[hasN?'N':null,hasPE?'PE':null].filter(Boolean);
+  cs.forEach((c,j)=>{let ln=null;if(/^N\d*$/i.test(c.l)&&hasN)ln='N';else if(/^PE$/i.test(c.l)&&hasPE)ln='PE';
+   else if(cs.length===2&&j===1&&hasN&&!c.l)ln='N';else if(k<ph.length)ln=ph[k++];else ln=extra.find(x=>!lines.includes(x))||null;lines.push(ln);});
+  const all=termsOf(A).map((t,i)=>{const [x,y]=fromLocal(A,t[0],t[1]);return {i,x,y};}),per=all.length/N.length,taken=new Set();
+  cs.forEach((c,j)=>{const ln=lines[j];if(!ln||mwUsed(B.id,c.i))return;const li=N.indexOf(ln);
+   const taps=all.slice(li*per,(li+1)*per).filter(t=>!taken.has(t.i)&&!mwUsed(A.id,t.i));if(!taps.length)return;
+   const tp=taps.reduce((m,t)=>Math.abs(t.x-c.x)<Math.abs(m.x-c.x)?t:m);taken.add(tp.i);
+   mk(A,tp.i,B,c.i,ln==='N'?'blue':ln==='PE'?'yg':null);});}
+ else{const as=mwFace(A,B),bs=mwFace(B,A),n=Math.min(as.length,bs.length);if(!n){toast('לא נמצאו נקודות חיבור מתאימות');return;}
+  for(let j=0;j<n;j++){if(mwUsed(A.id,as[j].i)&&mwUsed(B.id,bs[j].i))continue;mk(A,as[j].i,B,bs[j].i);}}
+ if(!ws.length){toast('הכול כבר מחובר');return;}
+ state.objs.push(...ws);commit();renderNow();updateBar();toast(`נוספו ${ws.length} חוטים`);}
+function mwSet(on){MWM=on?{a:null}:null;if(on){if(wireMode)setWire(false);if(measMode)setMeas(null);toast('חיווט מרובה: הקש על פס הצבירה (או הרכיב הראשון) ואז על הרכיב השני');}
+ $('rMWire').classList.toggle('on',!!MWM);renderNow();}
+function mwStart(){if(MWM){mwSet(false);return;}const ids=selIds().map(get).filter(o=>o&&o.type!=='wire');
+ if(ids.length===2){mwConnect(ids[0],ids[1]);return;}mwSet(true);}
+function mwTap(id){const o=id&&get(id);if(!o||o.type==='wire'||!termsOf(o).length){toast('הקש על רכיב עם נקודות חיבור');return;}
+ if(!MWM.a){MWM.a=id;sel=id;multi.clear();renderNow();updateBar();toast('עכשיו הקש על הרכיב השני');return;}
+ if(MWM.a===id)return;const a=get(MWM.a);MWM.a=null;if(a)mwConnect(a,o);}
 
 /* A DIN-rail part goes onto the nearest rail it is held over (within about half
    its own height), next to its neighbours, and never on top of another part:
@@ -3164,6 +3212,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  const t=e.target.closest('[data-id]'),id=t?t.dataset.id:null;
  G={sx:e.clientX,sy:e.clientY,t0:Date.now(),id,moved:false,mode:'pan',tx0:view.tx,ty0:view.ty,add:e.shiftKey||e.ctrlKey||e.metaKey};
  if(e.pointerType==='mouse'&&e.button!==0)return;
+ if(MWM){G.mode='mw';return;}
  const clEl=e.target.closest('[data-cl]');if(clEl&&so0()&&!wireMode&&!globalLock){const o=so0(),{h}=sizeOf(o);G.mode='cl';G.o=o;G.b0=fromLocal(o,0,h/2);G.base=h-cabX(o);return;}
  const lmEl=e.target.closest('[data-lymv]');if(lmEl&&!wireMode&&layoutRect()){G.mode='lymv';G.o0=Object.assign({},ORG());G.w0=toWorld(e.clientX,e.clientY);return;}
  const lyEl=e.target.closest('[data-lyh]');if(lyEl&&!wireMode){const R=layoutRect();if(R){G.mode='lyr';G.h=lyEl.dataset.lyh;G.R0=R;return;}}
@@ -3198,6 +3247,7 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
   view.s=s;view.tx=cx-r.left-wx*s;view.ty=cy-r.top-wy*s;applyView();return;}
  if(!G)return;const dx=e.clientX-G.sx,dy=e.clientY-G.sy;if(!G.moved&&Math.hypot(dx,dy)>7){G.moved=true;if(G.mode==='drag'&&sel!==G.id){sel=G.id;updateBar();}}
  if(!G.moved)return;
+ if(G.mode==='mw'){G.mode='pan';G.tx0=view.tx;G.ty0=view.ty;G.sx=e.clientX;G.sy=e.clientY;return;}
  if(G.mode==='pan'){view.tx=G.tx0+dx;view.ty=G.ty0+dy;applyView();}
  else if(G.mode==='band'){G.w1=toWorld(e.clientX,e.clientY);render();}
  else if(G.mode==='wmid'){const o=G.o,[,wy]=toWorld(e.clientX,e.clientY);o.p.ym=gs(wy);if(sel!==o.id){sel=o.id;updateBar();}render();}
@@ -3240,6 +3290,7 @@ function guidesSVG(){if(!GUIDES.length)return '';const k=1/view.s,ext=12*k;retur
 function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(pinch){if(P.size<2)pinch=null;G=null;return;}
  if(!G)return;const g=G;G=null;if(g.mode==='meas'){MS.cur=null;measUp(g,e);render();return;}
+ if(g.mode==='mw'){if(!g.moved){const [x,y]=toWorld(e.clientX,e.clientY),tr=g.id?null:nearestTerm(x,y,Math.max(5,20/view.s));mwTap(g.id||(tr&&tr.r));}return;}
  if(g.mode==='cl'){if(g.moved){commit();renderNow();toast(`אורך הכבל: ${((+g.o.p.cl||0)/1000).toFixed(2)} מ'`);}else renderNow();return;}
  if(g.mode==='lymv'){if(g.moved){commit();renderNow();toast('הדף הוזז');}else renderNow();return;}
  if(g.mode==='lyr'){if(g.moved){commit();renderNow();const L=state[LKEY()];toast(`דף ${L.paper} · קנה מידה 1:${+(+L.scale).toFixed(2)}`);}else renderNow();return;}
@@ -3321,7 +3372,7 @@ document.addEventListener('keydown',e=>{const t=e.target;if(t&&(t.isContentEdita
  const k=e.key,mod=e.ctrlKey||e.metaKey;
  if((k==='Delete'||k==='Backspace')&&!globalLock&&!wireMode&&selIds().length){e.preventDefault();deleteSelected();}
  else if(mod&&(e.code==='BracketRight'||e.code==='BracketLeft')&&selIds().length&&!globalLock){e.preventDefault();zOrder(e.code==='BracketRight'?(e.shiftKey?'front':'up'):(e.shiftKey?'back':'down'));}
- else if(k==='Escape'){if(measMode){if(MS.a){MS.a=MS.cur=null;render();}else setMeas(null);return;}if(wireMode)return;clearSel();}
+ else if(k==='Escape'){if(MWM){mwSet(false);return;}if(measMode){if(MS.a){MS.a=MS.cur=null;render();}else setMeas(null);return;}if(wireMode)return;clearSel();}
  else if(mod&&(k==='z'||k==='Z')&&!e.shiftKey){e.preventDefault();undo();}
  else if(mod&&(k==='y'||k==='Y'||((k==='z'||k==='Z')&&e.shiftKey))){e.preventDefault();redo();}
  else if(mod&&(k==='a'||k==='A')){e.preventDefault();state.objs.filter(o=>!hiddenFront(o)).forEach(o=>multi.add(o.id));sel=state.objs.length?state.objs[state.objs.length-1].id:null;if(multi.size<2)multi.clear();renderNow();updateBar();}});$('bHelp').onclick=()=>help();
