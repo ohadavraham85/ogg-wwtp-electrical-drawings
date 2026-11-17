@@ -2591,10 +2591,20 @@ function prefsApply(d){if(!d)return;let ch=false;
  if(d.fav&&typeof d.fav==='object')['panel','sld'].forEach(k=>{if(Array.isArray(d.fav[k])){const v=JSON.stringify(d.fav[k]);if(localStorage.getItem('ohadcad.fav.'+k)!==v){try{localStorage.setItem('ohadcad.fav.'+k,v);}catch(e){}ch=true;}}});
  if(d.tb&&typeof d.tb==='object'){const v=JSON.stringify(d.tb);if(localStorage.getItem('epd.tb')!==v){try{localStorage.setItem('epd.tb',v);}catch(e){}}}
  if(ch){try{buildFav();}catch(e){}if(pMode==='lib')buildSheet();}}
-async function prefsInit(){if(!PREFS_OK())return;const d=await SH.prefs.get();if(d===null)return;
+let PRINIT=false;async function prefsInit(){if(!PREFS_OK()||PRINIT)return;const d=await SH.prefs.get();if(d===null)return;PRINIT=true;
  const up={};if(!d.fav){const f={panel:favList('panel'),sld:favList('sld')};if(f.panel.length||f.sld.length)up.fav=f;}if(!d.tb){const t=tbLoad();if(Object.keys(t).length)up.tb=t;}
  if(Object.keys(up).length)prefsPush(up);prefsApply(d);try{SH.prefs.watch(prefsApply);}catch(e){}}
 setTimeout(()=>prefsInit().catch(()=>{}),500);
+// if the account couldn't be read at start (offline, rules not yet published) try again when the app comes back to the front
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!PRINIT)prefsInit().catch(()=>{});});
+// the drawer's "check sync": writes to the account, reads it back and says in plain words what happened
+async function prefsCheck(){toast('בודק…');let r;try{r=await SH.prefs.test();}catch(e){r={write:String(e),read:''};}
+ const loc={panel:favList('panel').length,sld:favList('sld').length},denied=/permission/i.test(r.write+r.read);
+ const msg=r.write==='ok'&&r.read==='ok'?`✅ הסנכרון עובד.<br>בחשבון שמורים: ${r.fav?`${r.fav.panel} מועדפים בחזית לוח, ${r.fav.sld} בחד קווי`:'עדיין אין מועדפים'}.<br>במכשיר הזה: ${loc.panel} בחזית לוח, ${loc.sld} בחד קווי.<br><br>המועדפים מוצגים לפי הלשונית: מה שסומן בחד קווי מופיע רק כשפתוח חד קווי.`
+  :denied?'❌ Firebase חוסם את השמירה — החוקים החדשים עדיין לא פורסמו. צריך להדביק את הקובץ firestore.rules במסך Rules וללחוץ Publish.'
+  :`❌ השמירה בחשבון נכשלה.<br>כתיבה: ${esc(r.write||'-')}<br>קריאה: ${esc(r.read||'-')}`;
+ modal('בדיקת סנכרון',`<div style="line-height:1.7">${msg}</div>`);
+ if(r.write==='ok'&&r.read==='ok'){const d=await SH.prefs.get();if(d&&!d.fav){const f={panel:favList('panel'),sld:favList('sld')};if(f.panel.length||f.sld.length)prefsPush({fav:f});}else if(d)prefsApply(d);if(!PRINIT)prefsInit().catch(()=>{});}}
 /* ================= favourites bar =================
    Up to 10 parts per view (panel front / single-line), starred in the library;
    a strip under the document bar adds them with a click or a drag. Kept per device. */
@@ -3606,7 +3616,7 @@ function aboutDialog(){const v=(SH&&SH.version)||'';modal('אודות OhadCad',`
  <div class="grp" style="margin-top:12px">אחריות מקצועית</div><div class="hint" style="line-height:1.7">שרטוטים שהוכנו ב-OhadCad הם כלי עזר. התכנון, הבחירה והביצוע באחריות מתכנן / חשמלאי מוסמך, לפי התקנות והתקנים.</div>`,[{t:'סגור',cls:'pri'}]);}
 /* ================= drawer / menu ================= */
 function openDrawer(){const items=[['פרויקט'],['📄 פרויקט חדש',newProject],['🗂 פרויקט חדש מתבנית (דוגמאות)',templatesDialog],...(SH?[['📂 פתח מהתיקייה המשותפת',openShared],['💾 שמור עכשיו (נשמר גם אוטומטית)',saveShared],['📑 שמור עותק בשם…',()=>saveSharedAs(true)]]:[['📂 פתח פרויקט שמור',openProjects],['💾 שמור בשם…',saveAs]]),
- ['תצוגה'],['⚙ הגדרות תצוגה — גופן והגדלה…',displayDialog],[uiLight()?'🌙 מצב כהה לאפליקציה':'☀ מצב בהיר לאפליקציה',toggleUI],['🧩 הסתרת כפתורים / איפוס הסרגלים…',tbEditor],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
+ ...(SH&&SH.prefs&&SH.prefs.test?[['☁ בדיקת סנכרון מועדפים בין מכשירים',prefsCheck]]:[]),['תצוגה'],['⚙ הגדרות תצוגה — גופן והגדלה…',displayDialog],[uiLight()?'🌙 מצב כהה לאפליקציה':'☀ מצב בהיר לאפליקציה',toggleUI],['🧩 הסתרת כפתורים / איפוס הסרגלים…',tbEditor],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
  ['רקע לשרטוט'],['🖼 ייבוא תמונה / PDF / DXF כרקע',ulImport],['🗂 תמונות רקע — נעילה, שקיפות, כיול…',ulManager],['ייצוא ושיתוף'],['📋 רשימת ציוד (BOM)',bom],['👁 תצוגה לפני הדפסה',printPreview],['📄 ייצוא PDF עם טבלת שרטוט',pdfDialog],['🖼️ ייצוא תמונה (PNG)',exportImage],['📐 ייצוא DXF ל-AutoCAD (נשמר כ-DWG)',dxfExport],['💾 הורד קובץ פרויקט (JSON)',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state))],['📤 העתק קובץ פרויקט',copyJSON],['📥 ייבוא קובץ פרויקט',importJSON],['OhadCad'],...(SH&&SH.menu?SH.menu():[]),['ℹ אודות OhadCad',aboutDialog]];
  $('dbox').innerHTML=`<div style="display:flex;align-items:center;justify-content:flex-end;margin:4px 8px 0"><img src="icons/wordmark-${uiLight()?'light':'dark'}.svg" alt="OhadCad" height="26"></div><h2>${esc(state.name)}</h2>`+items.map((it,i)=>it[1]?`<button data-i="${i}">${it[0]}</button>`:`<div style="color:#8a8a8a;font-size:13px;margin:12px 12px 2px">${it[0]}</div>`).join('');
  $('drawer').classList.remove('hidden');$('dbox').onclick=e=>{const b=e.target.closest('button');if(!b)return;$('drawer').classList.add('hidden');items[+b.dataset.i][1]();};}
