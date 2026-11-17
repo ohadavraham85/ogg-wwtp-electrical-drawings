@@ -919,7 +919,7 @@ const DEF={
  /* Altivar Process graphic display terminal (VW3A1111) in its IP65 door-mounting kit (VW3A1112), on the door in front of the drive */
  atvhmi:{layer:6.7,front:true,edit:['tag','rating'],def:{tag:'',rating:'VW3A1111 + VW3A1112'},size:()=>({w:86,h:126}),
   draw:o=>{let s=`<rect x="-43" y="-63" width="86" height="126" rx="8" fill="#3a3f45" stroke="#111" stroke-width="1.2"/><rect x="-37" y="-57" width="74" height="114" rx="6" fill="#151719" stroke="#000" stroke-width=".8"/>`;
-   s+=`<rect x="-31" y="-50" width="62" height="44" rx="2" fill="#0f2a3f"/>`+txt(-27,-44,'ATV630 · RUN',4.2,'#9bd2ff',700,'start')+txt(0,-31,'50.0 Hz',11,'#e5f6ff',800)+txt(0,-19,'I mot 21.4 A',5,'#cde9ff',700)+`<rect x="-27" y="-13" width="38" height="3" fill="#3dcd58"/><rect x="11" y="-13" width="16" height="3" fill="#1e3a50"/>`;
+   s+=`<rect x="-31" y="-50" width="62" height="44" rx="2" fill="#3dcd58" stroke="#1f7a35" stroke-width=".6"/>`+txt(-27,-44,'ATV630 · RUN',4.2,'#0b3d1a',700,'start')+txt(0,-31,'50.0 Hz',11,'#062a12',800)+txt(0,-19,'I mot 21.4 A',5,'#0b3d1a',700)+`<rect x="-27" y="-13" width="38" height="3" fill="#062a12"/><rect x="11" y="-13" width="16" height="3" fill="#7fdc93"/>`;
    ['F1','F2','F3','F4'].forEach((t,i)=>s+=`<rect x="${-31+i*16}" y="-2" width="14" height="7" rx="1.5" fill="#2f3337"/>`+txt(-24+i*16,1.5,t,3.6,'#cbd5e1',700));
    s+=`<circle cx="0" cy="22" r="13" fill="#2f3337" stroke="#000" stroke-width=".8"/><circle cx="0" cy="22" r="5.5" fill="#4a4f54" stroke="#111" stroke-width=".5"/>`;
    s+=`<rect x="-34" y="12" width="15" height="9" rx="2" fill="#2f3337"/>`+txt(-26.5,16.5,'ESC',3.4,'#cbd5e1',700)+`<rect x="19" y="12" width="15" height="9" rx="2" fill="#2f3337"/>`+txt(26.5,16.5,'⌂',5,'#cbd5e1',700);
@@ -1028,7 +1028,7 @@ const DEF={
   draw:o=>{const {w,h}=atvSz(o),k=w/144;let s=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${4*k}" fill="#e3e4e5" stroke="#5f6366" stroke-width="${.9*k}"/>`;
    const cy0=-h/2+h*.06,ch=h*.5;s+=`<rect x="${-w/2+5*k}" y="${cy0}" width="${w-10*k}" height="${ch}" rx="${4*k}" fill="#2a2e32"/><rect x="${-w/2+5*k}" y="${cy0}" width="${w-10*k}" height="${3*k}" fill="#3dcd58"/>`;
    const tw=Math.min(w*.6,74),th=tw*1.45,tx=-tw/2,ty=cy0+ch*.12;s+=`<rect x="${tx}" y="${ty}" width="${tw}" height="${th}" rx="${5}" fill="#151719" stroke="#000" stroke-width=".8"/>`;
-   const sw=tw*.82,sh=tw*.58;s+=`<rect x="${-sw/2}" y="${ty+tw*.1}" width="${sw}" height="${sh}" rx="2" fill="#0f2a3f"/>`+txt(0,ty+tw*.1+sh*.38,'50.0 Hz',tw*.15,'#e5f6ff',700)+`<rect x="${-sw/2+3}" y="${ty+tw*.1+sh*.7}" width="${sw*.6}" height="${sh*.1}" fill="#3dcd58"/>`;
+   const sw=tw*.82,sh=tw*.58;s+=`<rect x="${-sw/2}" y="${ty+tw*.1}" width="${sw}" height="${sh}" rx="2" fill="#3dcd58"/>`+txt(0,ty+tw*.1+sh*.38,'50.0 Hz',tw*.15,'#062a12',700)+`<rect x="${-sw/2+3}" y="${ty+tw*.1+sh*.7}" width="${sw*.6}" height="${sh*.1}" fill="#062a12"/>`;
    const jy=ty+tw*.1+sh+tw*.33;s+=`<circle cx="0" cy="${jy}" r="${tw*.17}" fill="#2f3337" stroke="#000" stroke-width=".6"/><circle cx="0" cy="${jy}" r="${tw*.07}" fill="#4a4f54"/>`;
    [-1,1].forEach(d=>s+=`<rect x="${d*tw*.34-tw*.08}" y="${jy-tw*.06}" width="${tw*.16}" height="${tw*.12}" rx="1.5" fill="#3a3f44"/>`);
    s+=`<rect x="${-tw*.32}" y="${jy+tw*.22}" width="${tw*.22}" height="${tw*.1}" rx="1.5" fill="#1f9d55"/><rect x="${tw*.1}" y="${jy+tw*.22}" width="${tw*.22}" height="${tw*.1}" rx="1.5" fill="#c62828"/>`;
