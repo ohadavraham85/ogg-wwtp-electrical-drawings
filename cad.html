@@ -1949,6 +1949,7 @@ const LIB=[
    {g:'מגופים ושסתומים',items:Object.entries(HVK).map(([k,n])=>({t:'hvalve',n,p:{vk:k,dn:'110'}}))},
    {g:'אביזרים',items:Object.entries(HFK).map(([k,n])=>({t:'hfit',n,p:{fk:k,mat:'steel',dn:'110'}}))}]},
   {tab:'הנדסה אזרחית',icon:'🧱',groups:[
+   {g:'בור שאיבה',items:[{t:'subpit',n:'בור שאיבה + 3 מצופים'},{t:'subpit',n:'בור שאיבה + 2 מצופים',p:{nf:'2'}},{t:'subpit',n:'בור שאיבה + 4 מצופים',p:{nf:'4'}}]},
    {g:'רצפה (חתך)',items:[{t:'floor',n:'רצפת בטון',p:{kind:'concrete'}},{t:'floor',n:'רצפה כפולה (צפה)',p:{kind:'raised'}}]},
    {g:'קירות',items:[{t:'wall',n:'קיר אופקי'},{t:'wall',n:'קיר אנכי',p:{w:200,h:2000}}]},
    {g:'קנה מידה',items:[{t:'person',n:'אדם (קנה מידה)'}]}]},
@@ -2329,7 +2330,7 @@ function toWorld(cx,cy){const r=svg.getBoundingClientRect();return [(cx-r.left-v
 
 /* ================= thumbnails ================= */
 function thumbSVG(o){let {w,h}=sizeOf(o);const p=o.type==='cabinet'?20:3,v=(o.rot||0)%180;if(v)[w,h]=[h,w];return `<svg viewBox="${-w/2-p} ${-h/2-p} ${w+2*p} ${h+2*p}" style="direction:ltr"><g transform="rotate(${v?90:0})">${DEF[o.type].draw(o)}${o.type==='cabinet'&&o.p.view==='front'?cabFront(o):''}</g></svg>`;}
-function mkObj(e,forThumb){const D=DEF[e.t];const p=JSON.parse(JSON.stringify(Object.assign({},D.def,e.p||{},{name:e.n})));if(ACC.includes(e.t)&&!(e.p&&e.p.color))p.color=curColor;
+function mkObj(e,forThumb){const D=DEF[e.t];const p=JSON.parse(JSON.stringify(Object.assign({},D.def,e.p||{},{name:e.n})));if((e.t==='conduit'||e.t==='hpipe')&&!p.route){const L=+p.len||1000;p.route=[{x:-L/2,y:0},{x:L/2,y:0}];}if(ACC.includes(e.t)&&!(e.p&&e.p.color))p.color=curColor;
 if(forThumb&&THUMBP[e.t])Object.assign(p,THUMBP[e.t]);
  if(e.t==='duct')p.dw=curDW;
  return {id:uid(),type:e.t,x:0,y:0,rot:e.rot||0,p};}
