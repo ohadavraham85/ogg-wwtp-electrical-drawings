@@ -507,6 +507,7 @@ body.iconsonly .ddbtn .lbl{display:none}
     <div class="sep"></div>
     <button class="rb" id="bFit"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>התאם למסך</span></button>
     <button class="rb" id="bGrid"><b id="gridLbl"></b><span>גריד</span></button>
+    <button class="rb" id="bPaper" title="דף חלק: הסתר / הצג את משבצות הרקע"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M8 8h8M8 12h8M8 16h5" stroke-opacity=".35"/></svg><span>דף חלק</span></button>
     <button class="rb" id="bTerms" title="הצג / הסתר נקודות חיבור"><svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.6"/><circle cx="12" cy="12" r="2.6"/><circle cx="18" cy="12" r="2.6"/></svg><span>נקודות</span></button>
     <div class="sep"></div>
     <button class="rb" id="bDoor" title="דלת הלוח: פנים / חזית"><svg viewBox="0 0 24 24"><path d="M6 21V3.5h12V21"/><path d="M3.5 21h17"/><circle cx="15" cy="12.5" r="1" fill="#fff"/></svg><span id="doorLbl">דלת</span></button>
@@ -2235,12 +2236,17 @@ svg.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'){xhHide();retu
  if(!showCross||gc){xhHide();return;}const r=svg.getBoundingClientRect();
  $('xh').style.display=$('yh').style.display='block';$('xh').style.top=(e.clientY-r.top+r.top)+'px';$('yh').style.left=e.clientX+'px';});
 svg.addEventListener('pointerleave',xhHide);
+$('bPaper').onclick=togglePaper;
 $('bTerms').onclick=()=>{toggleTerms();sbSync();};
 $('sbar').addEventListener('click',e=>{const b=e.target.closest('[data-sb]');if(!b)return;({cross:toggleCross,axes:toggleAxes,terms:toggleTerms})[b.dataset.sb]();sbSync();});
 sbSync();
 
 svg.addEventListener('pointerleave',()=>{curW=null;if(showAxes)drawRulers();});
+// a plain sheet: the background squares can be hidden (snapping to the step stays as it is)
+let showGridBg=true;try{showGridBg=localStorage.getItem('epd.gridbg')!=='0';}catch(e){}
+function togglePaper(){showGridBg=!showGridBg;try{localStorage.setItem('epd.gridbg',showGridBg?'1':'0');}catch(e){}applyView();toast(showGridBg?'משבצות הרקע מוצגות':'דף חלק — בלי משבצות (ההצמדה למדרגה נשארת)');}
 function applyView(){world.setAttribute('transform',`translate(${view.tx} ${view.ty}) scale(${view.s})`);$('ulay').setAttribute('transform',`translate(${view.tx} ${view.ty}) scale(${view.s})`);drawRulers();if(drawnS&&Math.abs(view.s-drawnS)/view.s>.02)render();
+ $('bPaper')&&$('bPaper').classList.toggle('on',!showGridBg);if(!showGridBg){stage.style.backgroundImage='none';const so=sel&&get(sel);if(so&&so.type!=='wire')render();return;}
  const st=GRID>0?GRID:10,mj=st*5*view.s,mn=st*view.s,showMn=mn>=7;
  const SL=document.body.classList.contains('sld'),gM=SL?'#d6d6cf':'#383838',gm=SL?'#ebebe5':'#2e2e2e';
  stage.style.backgroundImage=`linear-gradient(${gM} 1px,transparent 1px),linear-gradient(90deg,${gM} 1px,transparent 1px)`+(showMn?`,linear-gradient(${gm} 1px,transparent 1px),linear-gradient(90deg,${gm} 1px,transparent 1px)`:'');
