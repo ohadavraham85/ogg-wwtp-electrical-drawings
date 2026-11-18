@@ -1951,7 +1951,8 @@ function hopPath(ps,hops,gaps){const R=5,GP=3.4;let d='M'+r2(ps[0].x)+' '+r2(ps[
    H.forEach(h=>{d+='L'+r2(h.x-dir*R)+' '+r2(a.y)+'A'+R+' '+R+' 0 0 '+(dir>0?1:0)+' '+r2(h.x+dir*R)+' '+r2(a.y);});}
   d+='L'+r2(b.x)+' '+r2(b.y);}
  return d;}
-function drawWire(w,isSel){const LP=WL.get(w.id);const d=LP&&LP.length>1?hopPath(LP,WG.get(w.id),WB.get(w.id)):wirePath(w);if(!d)return '';if(w.p.joint){const a=resolve(w.pts[0]),b=resolve(w.pts[1]);if(a&&b&&Math.hypot(a.x-b.x,a.y-b.y)<.6)return `<g data-id="${w.id}"><circle cx="${a.x}" cy="${a.y}" r="6" fill="transparent"/><circle cx="${a.x}" cy="${a.y}" r="${isSel?3.2:2.2}" fill="${isSel?'#60a5fa':'#8b5a2b'}"/></g>`;}const sld=state.tab==='sld'||isSldObj(w);let sw=SEC[w.p.sec]||2.3;if(sld)sw=1.3;if(EXPMIN)sw=Math.max(sw,EXPMIN);const c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+function drawWire(w,isSel){const s=drawWire0(w,isSel);return DMS&&!isSel&&s&&!(state.tab==='sld'||isSldObj(w))?s.replace('<g data-id=','<g mask="url(#dM)" data-id='):s;}
+function drawWire0(w,isSel){const LP=WL.get(w.id);const d=LP&&LP.length>1?hopPath(LP,WG.get(w.id),WB.get(w.id)):wirePath(w);if(!d)return '';if(w.p.joint){const a=resolve(w.pts[0]),b=resolve(w.pts[1]);if(a&&b&&Math.hypot(a.x-b.x,a.y-b.y)<.6)return `<g data-id="${w.id}"><circle cx="${a.x}" cy="${a.y}" r="6" fill="transparent"/><circle cx="${a.x}" cy="${a.y}" r="${isSel?3.2:2.2}" fill="${isSel?'#60a5fa':'#8b5a2b'}"/></g>`;}const sld=state.tab==='sld'||isSldObj(w);let sw=SEC[w.p.sec]||2.3;if(sld)sw=1.3;if(EXPMIN)sw=Math.max(sw,EXPMIN);const c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
  if(w.p.ph==='3'){const ps=LP&&LP.length>1?LP:wirePs(w),gap=sld?2.4:sw*1.25;let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${gap*2+sw+8}"/>`;if(isSel)s+=`<path ${P} stroke="#60a5fa" stroke-width="${gap*2+sw+3}"/>`;
   PH3.forEach((k,i)=>{const q=offPoly(ps,(i-1)*gap),dd='M'+q.map(p=>r2(p.x)+' '+r2(p.y)).join('L');s+=`<path d="${dd}" fill="none" stroke-linejoin="round" stroke="${WCOL[k].base}" stroke-width="${sw}"/>`;if(WCOL[k].dash)s+=`<path d="${dd}" fill="none" stroke="${WCOL[k].dash}" stroke-width="${sw}" stroke-dasharray="5 5"/>`;});return s+'</g>';}
  let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${sw+8}"/>`;
@@ -1986,7 +1987,15 @@ function hiddenFront(o){if(o.type==='label'&&o.p.of){const h=get(o.p.of);return 
 /* On screen the diagram can be shown white on black: its parts drawn through an
    inverting filter. Printed and exported it's always black on white. */
 const INV='<filter id="sldInv" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0"/><feColorMatrix type="hueRotate" values="180"/></filter>';
-function content(opt={}){const s0=content0(opt);if(!opt.sel||state.tab==='panel'||!state.tab)return s0;
+/* Wires in the panel front disappear where they run inside a wiring duct, as they
+   would under its cover: one mask with every duct cut out of it. A selected wire
+   shows its whole route. */
+let DMS='';
+function ductMaskSVG(){const D=state.objs.filter(o=>o.type==='duct'&&!hiddenFront(o)&&!isSldObj(o));if(!D.length)return '';
+ const B=-1e6,W=2e6;return `<defs><mask id="dM" maskUnits="userSpaceOnUse" x="${B}" y="${B}" width="${W}" height="${W}"><rect x="${B}" y="${B}" width="${W}" height="${W}" fill="#fff"/>`+
+  D.map(o=>{const L=o.p.len,d=o.p.dw;return `<rect transform="translate(${o.x} ${o.y}) rotate(${o.rot||0})" x="${-L/2}" y="${-d/2+1.5}" width="${L}" height="${d-3}" fill="#000"/>`;}).join('')+'</mask></defs>';}
+function content(opt={}){DMS=ductMaskSVG();if(PIECES&&DMS)PIECES.push(['dmask',DMS]);return DMS+content1(opt);}
+function content1(opt={}){const s0=content0(opt);if(!opt.sel||state.tab==='panel'||!state.tab)return s0;
  if(state.tab==='sld')return sldDark?INV+`<g filter="url(#sldInv)">${s0}</g>`:s0;
  const pn=content0(opt,o=>!isSldObj(o)),sd=content0(opt,isSldObj);let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
  state.objs.forEach(o=>{if(o.type==='wire'||!isSldObj(o))return;const b=bbW(o);x0=Math.min(x0,b.x0);y0=Math.min(y0,b.y0);x1=Math.max(x1,b.x1+60);y1=Math.max(y1,b.y1);});
