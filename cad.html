@@ -767,7 +767,8 @@ function acbDraw(o){const {w,h,v,P}=acbDim(o),dr=v==='d',sw=1.2,k='#0b0b0b';let 
 /* Live dimensions on a drawn rectangle / ellipse: width above, height at the
    side, following the shape as it is resized. Tap a dimension to type the size
    (and its offset); drag it to move the dimension line nearer or farther. */
-function shDimsSVG(o){if(o.p.sd!=='1')return '';const w=+o.p.w,h=+o.p.h,c=col(o,'blue'),fs=+o.p.dfs||Math.max(8,Math.min(60,Math.round(Math.min(w,h)*.08))),od=Math.max(0,+o.p.ofd||0),ow=Math.max(0,+o.p.dw||fs*1.6)+od,oh=Math.max(0,+o.p.dh||fs*1.6)+od,lw=Math.max(.4,fs*.07),a=fs*.55;
+const shDimFs=o=>+o.p.dfs||Math.max(8,Math.min(60,Math.round(Math.min(+o.p.w,+o.p.h)*.08)));
+function shDimsSVG(o){if(o.p.sd!=='1')return '';const w=+o.p.w,h=+o.p.h,c=col(o,'blue'),fs=shDimFs(o),od=Math.max(0,+o.p.ofd||0),ow=Math.max(0,+o.p.dw||fs*1.6)+od,oh=Math.max(0,+o.p.dh||fs*1.6)+od,lw=Math.max(.4,fs*.07),a=fs*.55;
  const v=x=>String(Math.round(x*10)/10);let s='';
  const bt=o.p.wpos==='b',lf=o.p.hpos==='l',sy=bt?1:-1,sx=lf?-1:1;
  const y=sy*(h/2+ow);s+=`<g data-sdim="w" style="cursor:pointer"><path d="M${-w/2} ${sy*(h/2+lw*2)}V${y+sy*a*.6}M${w/2} ${sy*(h/2+lw*2)}V${y+sy*a*.6}M${-w/2} ${y}H${w/2}" stroke="${c}" stroke-width="${lw}" fill="none"/><path d="M${-w/2} ${y}l${a} ${-a*.35}v${a*.7}zM${w/2} ${y}l${-a} ${-a*.35}v${a*.7}z" fill="${c}"/><rect x="${-w/2}" y="${bt?y-fs*.2:y-fs*1.4}" width="${w}" height="${fs*1.6}" fill="transparent"/>`+txt(0,y+sy*fs*.7,v(w),fs,c,700)+`</g>`;
@@ -3349,11 +3350,19 @@ function mdSnap(x,y){let best=null,bd=40/view.s;
  for(const o of state.objs){if(o.type==='wire'||o.type==='mdim'||o.type==='label'||o.type==='callout'||hiddenFront(o))continue;const {w,h}=sizeOf(o),c=[];
   for(const u of [-w/2,0,w/2])for(const v of [-h/2,0,h/2])c.push([u,v]);termsOf(o).forEach(t=>c.push([t[0],t[1]]));
   for(const [u,v] of c){const [X,Y]=fromLocal(o,u,v),d=Math.hypot(X-x,Y-y);if(d<bd){bd=d;best={x:r2(X),y:r2(Y),of:o.id,u,v};}}}
- return best;}
+ if(best&&bd<14/view.s)return best;
+ // nothing that close: the nearest point on an edge (corners win when about as near)
+ let eb=null,ed=18/view.s;
+ for(const o of state.objs){if(o.type==='wire'||o.type==='mdim'||o.type==='label'||o.type==='callout'||hiddenFront(o))continue;const {w,h}=sizeOf(o),[lu,lv]=toLocal(o,x,y);
+  const R=[[w/2,h/2]];const od=(o.type==='shrect'||o.type==='shellipse')?(+o.p.ofd||0):0;if(od)R.push([w/2+od,h/2+od]);
+  for(const [hw,hh] of R){const cand=[];if(Math.abs(lu)<=hw){cand.push([lu,-hh],[lu,hh]);}if(Math.abs(lv)<=hh){cand.push([-hw,lv],[hw,lv]);}
+   for(const [u,v] of cand){const [X,Y]=fromLocal(o,u,v),d=Math.hypot(X-x,Y-y);if(d<ed){ed=d;eb={x:r2(X),y:r2(Y),of:o.id,u:r2(u),v:r2(v)};}}}}
+ return best&&(!eb||bd<ed*1.6)?best:(eb||best);}
 const MD_NOSNAP='אין כאן נקודת תפיסה — הקש קרוב לפינה, לאמצע צלע או לנקודת חיבור של רכיב';
 let measMode=null;const MS={a:null,cur:null,hov:null};
 const mdGap=()=>r2(Math.max(4,26/view.s)),mdFs=()=>{const v=13/view.s;return [2.5,3.5,5,7,10,14,20,28,40].find(q=>q>=v)||40;};
-function mdNew(mode,a,b,off){const o=mkObj({t:'mdim',n:'מידה',p:{mode,a:{...a},b:{...b},off:r2(off),fs:mdFs()}});state.objs.push(o);return o;}
+function mdNew(mode,a,b,off){const SS=[a,b].map(q=>q&&q.of&&get(q.of)).filter(q=>q&&(q.type==='shrect'||q.type==='shellipse')),S=SS.find(q=>q.p.sd==='1')||SS[0];
+ const o=mkObj({t:'mdim',n:'מידה',p:Object.assign({mode,a:{...a},b:{...b},off:r2(off),fs:mdFs()},S?{fs:shDimFs(S),color:S.p.color||'blue'}:{})});state.objs.push(o);return o;}
 function mdMake(a,b){MS.a=null;MS.cur=null;if(Math.hypot(a.x-b.x,a.y-b.y)<.5){toast('שתי הנקודות זהות — בחר נקודה אחרת');render();return;}
  let made;if(measMode==='area'){const gap=mdGap();
   mdNew('h',a,b,Math.min(a.y,b.y)-gap-(a.y+b.y)/2);mdNew('v',a,b,Math.max(a.x,b.x)+gap-(a.x+b.x)/2);
@@ -3371,9 +3380,14 @@ function tapeAt(a,wx,wy){let p=mdSnap(wx,wy)||{x:r2(gs(wx)),y:r2(gs(wy))};if(!a)
 function measUp(g,e){if(measMode!=='tape'&&measMode!=='obj'){const [wx,wy]=toWorld(e.clientX,e.clientY),p1=mdPick(wx,wy);
   if(g.moved&&!MS.a){mdMake(g.p0,p1);return;}if(!g.moved&&!MS.a){MS.a=g.p0;MS.cur=g.p0;render();toast(measMode==='area'?'עכשיו הקש על הפינה הנגדית':'עכשיו הקש על הנקודה השנייה');return;}mdMake(MS.a,g.moved?p1:g.p0);return;}
  if(measMode==='tape'){const [wx,wy]=toWorld(e.clientX,e.clientY);
-  if(g.moved){MS.a=g.p0;MS.cur=tapeAt(g.p0,wx,wy);MS.frozen=true;}
-  else if(!MS.a||MS.frozen){MS.a=g.p0;MS.cur=g.p0;MS.frozen=false;toast('הזז אל הנקודה השנייה והקש שוב');}
-  else{MS.cur=tapeAt(MS.a,wx,wy);MS.frozen=true;}render();return;}
+  let A=null,B=null;
+  if(g.moved){A=g.p0;B=tapeAt(g.p0,wx,wy);}
+  else if(!MS.a||MS.frozen){MS.a=g.p0;MS.cur=g.p0;MS.frozen=false;toast('הזז אל הנקודה השנייה והקש שוב');render();return;}
+  else{A=MS.a;B=tapeAt(MS.a,wx,wy);}
+  MS.a=MS.cur=null;MS.frozen=false;if(!A||!B||Math.hypot(A.x-B.x,A.y-B.y)<.5){render();return;}
+  // the end that landed on a part stays pinned to it (tapeAt may straighten it: re-pin by the new point)
+  const pin=q=>{const o=q.of&&get(q.of);if(!o)return {x:q.x,y:q.y};const [u,v]=toLocal(o,q.x,q.y);return {x:q.x,y:q.y,of:o.id,u:r2(u),v:r2(v)};};
+  const m=mdNew(mdMode(null,A.x,A.y,B.x,B.y),pin(A),pin(B),0);commit();renderNow();toast(`מידה קבועה: ${mdFmt(mdGeom(m).len)} מ"מ`);return;}
 const [wx,wy]=toWorld(e.clientX,e.clientY),p1=mdSnap(wx,wy);
  if(measMode==='obj'){if(g.moved)return;const o=g.id&&get(g.id);if(!o||o.type==='wire'||o.type==='mdim'||o.type==='label'){toast('הקש על רכיב כדי להוסיף לו מידות רוחב וגובה');return;}mdForObj(o);return;}
  if(g.moved&&!MS.a){if(!g.p0||!p1){toast(MD_NOSNAP);return;}mdMake(g.p0,p1);return;}
@@ -3401,7 +3415,7 @@ function measSVG(){if(!measMode)return '';if(measMode==='tape')return tapeSVG();
    `<path d="${hm?`M${a.x} ${a.y}V${my}M${b.x} ${b.y}V${my}`:`M${a.x} ${a.y}H${mx}M${b.x} ${b.y}H${mx}`}" stroke="#ff8c00" stroke-opacity=".6" stroke-width="${1.2*k}" stroke-dasharray="${3*k} ${3*k}"/><path d="${hm?`M${a.x} ${my}H${b.x}`:`M${mx} ${a.y}V${b.y}`}" stroke="#ff8c00" stroke-width="${2.2*k}"/>`;
   s+=`<g transform="translate(${b.x+10*k} ${b.y-14*k})"><rect x="0" y="${-10*k}" width="${(t.length*7.5+14)*k}" height="${20*k}" rx="${4*k}" fill="#000" stroke="#ff8c00" stroke-width="${1.4*k}"/><text x="${7*k}" y="0" font-size="${13*k}" fill="#ffb340" font-weight="700" dominant-baseline="central" font-family="Arial" direction="ltr">${t}</text></g>`;}
  return `<g pointer-events="none">${mk(a)}${mk(b)}${s}</g>`;}
-const MMODES=[['tape','📐','סרט מדידה','מקישים על נקודה והסרט נפתח עד המקום שעוצרים בו, עם קווים מנחים של 90 מעלות. לא נשמר בשרטוט.'],['dist','📏','מידה קבועה','שתי נקודות בכל מקום — מידה אופקית או אנכית שנשארת בשרטוט. ליד רכיב היא נתפסת לנקודה שלו וזזה איתו.'],['area','⬚','מידות אזור','שתי פינות נגדיות בכל מקום — מידות רוחב וגובה.'],['obj','🔲','מידות רכיב','הקשה על רכיב — מידות רוחב וגובה שזזות איתו.']];
+const MMODES=[['tape','📐','סרט מדידה','מקישים על נקודה והסרט נפתח עד המקום שעוצרים בו, עם קווים מנחים של 90 מעלות. בהקשה השנייה נשארת מידה קבועה, צמודה לרכיבים — זזה איתם.'],['dist','📏','מידה קבועה','שתי נקודות בכל מקום — מידה אופקית או אנכית שנשארת בשרטוט. ליד רכיב היא נתפסת לנקודה שלו וזזה איתו.'],['area','⬚','מידות אזור','שתי פינות נגדיות בכל מקום — מידות רוחב וגובה.'],['obj','🔲','מידות רכיב','הקשה על רכיב — מידות רוחב וגובה שזזות איתו.']];
 function buildMeasMenu(){$('mMeas').innerHTML='<div class="ddt">📏 מידות</div>'+MMODES.map(([k,i,t,h])=>`<button data-mm="${k}" class="${measMode===k?'on':''}"><span>${i}</span><span class="ml">${t}<span class="mh">${h}</span></span></button>`).join('')+(measMode?'<button data-mm=""><span>✓</span><span class="ml">סיום מדידה</span></button>':'');}
 document.addEventListener('click',e=>{const b=e.target.closest('#mMeas [data-mm]');if(b)setMeas(b.dataset.mm||null);});
 function setMeas(m){measMode=m;MS.a=MS.cur=MS.hov=null;MS.frozen=false;if(m){if(wireMode)setWire(false);if(pMode)closePanel();const t=MMODES.find(x=>x[0]===m);if(t)toast(`${t[2]}: ${t[3]} · לסיום — Esc או "סיום" בתפריט`);}
