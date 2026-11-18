@@ -502,6 +502,7 @@ body.iconsonly .ddbtn .lbl{display:none}
     <button class="rb" id="bDup"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="13" rx="1.5"/><path d="M5 16V4.5A1.5 1.5 0 0 1 6.5 3H16"/></svg><span>שכפול</span></button>
     <button class="rb" id="bOrder" data-dd="mOrder" title="סדר: מעל / מתחת לרכיבים אחרים"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 16l9 5 9-5"/></svg><span>סדר</span></button>
     <button class="rb" id="bRot"><svg viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4.6h-4.6"/></svg><span>סיבוב</span></button>
+    <button class="rb" id="bMir" title="מראה: הפוך את הרכיב ימין ↔ שמאל"><svg viewBox="0 0 24 24"><path d="M12 3v18" stroke-dasharray="2 2"/><path d="M9 6L3 18h6z"/><path d="M15 6l6 12h-6z" fill="#fff" fill-opacity=".25"/></svg><span>מראה</span></button>
     <button class="rb" id="bLock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1.5" fill="#fff"/><path id="lockShackle" d="M8 11V8a4 4 0 0 1 7.6-1.7"/></svg><span id="lockLbl">נעל רכיב</span></button>
     <button class="rb dng" id="bDel"><svg viewBox="0 0 24 24"><path d="M5 7h14M9 7V4.5h6V7M7 7l1 13h8l1-13"/></svg><span>מחיקה</span></button>
     <div class="sep"></div>
@@ -1972,8 +1973,9 @@ const svg=document.getElementById('svg'),world=document.getElementById('world'),
 const $=id=>document.getElementById(id);
 
 function rotp(x,y,d){const a=d*Math.PI/180,c=Math.cos(a),s=Math.sin(a);return [r2(x*c-y*s),r2(x*s+y*c)];}
-function toLocal(o,x,y){return rotp(x-o.x,y-o.y,-o.rot);}
-function fromLocal(o,u,v){const [a,b]=rotp(u,v,o.rot);return [r2(o.x+a),r2(o.y+b)];}
+// a mirrored part (o.mx) is flipped left-right in its own frame, before its turn
+function toLocal(o,x,y){const r=rotp(x-o.x,y-o.y,-o.rot);if(o.mx)r[0]=-r[0];return r;}
+function fromLocal(o,u,v){if(o.mx)u=-u;const [a,b]=rotp(u,v,o.rot);return [r2(o.x+a),r2(o.y+b)];}
 const sizeOf=o=>o._r?o._r:DEF[o.type].size(o);
 const termsOf=o=>DEF[o.type]?.terms?DEF[o.type].terms(o):[];
 function resolve(p){if(p.r){const o=get(p.r);if(!o)return null;const t=termsOf(o)[p.t];if(!t)return null;const [x,y]=fromLocal(o,t[0],t[1]);return {x,y};}return p;}
@@ -2046,8 +2048,11 @@ function drawWire0(w,isSel){const LP=WL.get(w.id);const d=LP&&LP.length>1?hopPat
  if(c.dash)s+=`<path ${P} stroke="${c.dash}" stroke-width="${sw}" stroke-dasharray="5 5" stroke-linecap="butt"/>`;
  if(sld)[w.pts[0],w.pts[w.pts.length-1]].forEach(q=>{const b=q&&q.r&&get(q.r);if(b&&b.type==='sbusm'){const r=resolve(q);if(r)s+=`<circle cx="${r2(r.x)}" cy="${r2(r.y)}" r="2.3" fill="${SK}"/>`;}});
  return s+'</g>';}
+// text in a mirrored part is flipped back about its own x so it still reads left to right
+function unmirrorText(str){return str.replace(/<text ([^>]*)>/g,(m,a)=>{if(/transform=/.test(a))return m;const x=+((a.match(/\bx="([-\d.e]+)"/)||[])[1]||0);
+ a=a.replace(/text-anchor="(start|end)"/,(q,v)=>`text-anchor="${v==='start'?'end':'start'}"`);return `<text ${a} transform="matrix(-1 0 0 1 ${r2(2*x)} 0)">`;});}
 function objSVG(o,isSel){const D=DEF[o.type];if(!D)return '';const {w,h}=sizeOf(o);
- let s=`<g data-id="${o.id}" transform="translate(${o.x} ${o.y}) rotate(${o.rot})">`+(D.sld&&o.type!=='sframe'?`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" fill="transparent"/>`:'')+D.draw(o);
+ let s=`<g data-id="${o.id}" transform="translate(${o.x} ${o.y}) rotate(${o.rot})${o.mx?' scale(-1 1)':''}">`+(D.sld&&o.type!=='sframe'?`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" fill="transparent"/>`:'')+(o.mx?unmirrorText(D.draw(o)):D.draw(o));
  if(o.locked)s+=`<circle cx="${w/2-2}" cy="${-h/2+2}" r="2.6" fill="#f59e0b" stroke="#000" stroke-width=".4"/>`;
  if(isSel)s+=`<rect x="${-w/2-2.5}" y="${-h/2-2.5}" width="${w+5}" height="${h+5}" rx="2" fill="rgba(59,130,246,.08)" stroke="#3b82f6" stroke-width="1.6" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"/>`;
  return s+'</g>';}
@@ -2556,12 +2561,12 @@ function loadProjects(){try{return JSON.parse(localStorage.getItem('epd.projects
 function saveProjects(p){try{localStorage.setItem('epd.projects',JSON.stringify(p));return true;}catch(e){return false;}}
 
 /* ================= UI: top bar ================= */
-function updateBar(){const o=sel&&get(sel);{const df=doorsFront();$('bDoor').disabled=df===null;$('bDoor').classList.toggle('on',df===true);$('bDoor').title=df?'הצג את פנים הלוח':'הצג את חזית הלוח (דלת סגורה)';}$('bLockAll').classList.toggle('on',globalLock);$('bText').disabled=wireMode||globalLock;{const o2=sel&&get(sel);$('bText').title=o2&&o2.type!=='wire'&&o2.type!=='label'?'הוסף תיבת טקסט ל'+o2.p.name:'הוסף תיבת טקסט';}$('bLockAll').title=globalLock?'פתח עריכה':'נעל עריכה (צפייה בלבד)';['bDel','bLock','bRot','bDup'].forEach(b=>$(b).disabled=!o||wireMode);$('bOrder').disabled=!selIds().length||wireMode||globalLock;$('bLock').disabled=!selIds().length||wireMode;$('rWire').classList.toggle('on',wireMode);$('bMeas').classList.toggle('on',!!measMode);if(pMode!=='lib')DRAWOPEN=false;$('rAdd').classList.toggle('on',pMode==='lib'&&!DRAWOPEN);$('bDraw').classList.toggle('on',pMode==='lib'&&DRAWOPEN);$('rProps').classList.toggle('on',pMode==='props');$('libStrip').classList.toggle('on',pMode==='lib');
+function updateBar(){const o=sel&&get(sel);{const df=doorsFront();$('bDoor').disabled=df===null;$('bDoor').classList.toggle('on',df===true);$('bDoor').title=df?'הצג את פנים הלוח':'הצג את חזית הלוח (דלת סגורה)';}$('bLockAll').classList.toggle('on',globalLock);$('bText').disabled=wireMode||globalLock;{const o2=sel&&get(sel);$('bText').title=o2&&o2.type!=='wire'&&o2.type!=='label'?'הוסף תיבת טקסט ל'+o2.p.name:'הוסף תיבת טקסט';}$('bLockAll').title=globalLock?'פתח עריכה':'נעל עריכה (צפייה בלבד)';['bDel','bLock','bRot','bMir','bDup'].forEach(b=>$(b).disabled=!o||wireMode);if(!o)$('bMir').classList.remove('on');$('bOrder').disabled=!selIds().length||wireMode||globalLock;$('bLock').disabled=!selIds().length||wireMode;$('rWire').classList.toggle('on',wireMode);$('bMeas').classList.toggle('on',!!measMode);if(pMode!=='lib')DRAWOPEN=false;$('rAdd').classList.toggle('on',pMode==='lib'&&!DRAWOPEN);$('bDraw').classList.toggle('on',pMode==='lib'&&DRAWOPEN);$('rProps').classList.toggle('on',pMode==='props');$('libStrip').classList.toggle('on',pMode==='lib');
  {const ids=selIds(),many=ids.length>1||(o&&isBox(o)),lk=ids.length&&ids.every(i=>get(i)?.locked);if(ids.length)$('lockLbl').textContent=lk?(many?'שחרר הכל':'שחרר רכיב'):(many?'נעל הכל':'נעל רכיב');}
  if(o){$('selName').textContent=o.type==='wire'?`חוט ${WCOL[o.p.color]?.n||''} ${o.p.sec} ממ"ר`:(o.p.name+(o.p.tag&&o.type!=='label'?' · '+o.p.tag:''));
   $('selThumb').innerHTML=o.type==='wire'?`<svg viewBox="0 0 24 24"><path d="M3 18C9 18 9 6 21 6" stroke="${WCOL[o.p.color]?.base}" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>`:thumbSVG(Object.assign({},o,{p:Object.assign({},o.p,THUMBP[o.type]||{})}));
   $('lockShackle').setAttribute('d',o.locked?'M8 11V8a4 4 0 0 1 8 0v3':'M8 11V8a4 4 0 0 1 7.6-1.7');
-  $('bRot').disabled=o.type==='wire'||wireMode;}
+  $('bRot').disabled=o.type==='wire'||wireMode;$('bMir').disabled=o.type==='wire'||o.type==='mdim'||wireMode;$('bMir').classList.toggle('on',!!o.mx);}
  else{$('selName').textContent=state.name||'לוח חדש';$('selThumb').innerHTML=`<svg viewBox="0 0 24 24" style="width:30px"><rect x="4.5" y="2.5" width="15" height="19" rx="1.5" fill="none" stroke="#9ca3af" stroke-width="1.6"/><path d="M13.2 5.5L8.6 12.6h3.3l-1.3 5.9 4.9-7.6h-3.4z" fill="#ff8c00" stroke="#ff8c00" stroke-width=".6" stroke-linejoin="round"/></svg>`;}
  if(selIds().length>1){$('selName').textContent=`${selIds().length} רכיבים נבחרו`;['bDel'].forEach(b=>$(b).disabled=wireMode);}
  $('selName').textContent=(globalLock?'🔒 ':'')+$('selName').textContent;
@@ -3406,7 +3411,7 @@ let GUIDES=[];
    Dragging a pipe, valve or fitting near another one's flange snaps them face to
    face; with nothing that close, its flanges line up with others' axes (guides). */
 const HYD=o=>o&&(o.type==='hpipe'||o.type==='hvalve'||o.type==='hfit');
-function hPorts(o){if(!HYD(o))return [];const W=(u,v,du,dv)=>{const [x,y]=fromLocal(o,u,v),[a,b]=rotp(du,dv,o.rot||0);return {x,y,ux:a,uy:b,D:+o.p.dn||110};};
+function hPorts(o){if(!HYD(o))return [];const W=(u,v,du,dv)=>{const [x,y]=fromLocal(o,u,v),[a,b]=rotp(o.mx?-du:du,dv,o.rot||0);return {x,y,ux:a,uy:b,D:+o.p.dn||110};};
  if(o.type==='hpipe'){const R=cabRoute(o),n=R.length,e=(p,q)=>{const dx=p.x-q.x,dy=p.y-q.y,l=Math.hypot(dx,dy)||1;return W(p.x,p.y,dx/l,dy/l);};return [e(R[0],R[1]),e(R[n-1],R[n-2])];}
  if(o.type==='hvalve'){const L=hvL(o);return [W(-L/2,0,-1,0),W(L/2,0,1,0)];}
  const {D,k,L}=hfitGeo(o);
@@ -3501,6 +3506,10 @@ function lockSet(){const S=new Set(selIds().map(get).filter(Boolean));[...S].for
    if(Math.abs(q.x-o.x)<w/2&&Math.abs(q.y-o.y)<h/2)S.add(q);});});return [...S];}
 $('bLock').onclick=()=>{const L=lockSet();if(!L.length)return;const all=L.every(o=>o.locked);L.forEach(o=>o.locked=!all);commit();renderNow();updateBar();
  toast(all?(L.length>1?`הנעילה שוחררה (${L.length} רכיבים)`:'הנעילה שוחררה'):(L.length>1?`ננעלו ${L.length} רכיבים`:'הרכיב ננעל'));};
+$('bMir').onclick=()=>{const L=selIds().map(get).filter(o=>o&&o.type!=='wire'&&o.type!=='mdim'&&!o.locked&&o.type!=='cabinet');if(!L.length)return;
+ // several parts flip as one group, about the middle of the selection
+ let cx=0;if(L.length>1){const b=L.map(bbW);cx=(Math.min(...b.map(q=>q.x0))+Math.max(...b.map(q=>q.x1)))/2;}
+ L.forEach(o=>{o.mx=!o.mx;if(o.mx===false)delete o.mx;o.rot=r2((360-(+o.rot||0))%360);if(L.length>1)o.x=r2(2*cx-o.x);});commit();renderNow();updateBar();toast(L.length>1?`${L.length} רכיבים הופכו במראה`:'הרכיב הופך במראה');};
 $('bRot').onclick=()=>{const o=sel&&get(sel);if(!o||o.type==='wire'||o.type==='mdim'||o.type==='callout'||o.locked)return;if(o.type==='cabinet'){toast('ארון לא מסתובב');return;}o.rot=(o.rot+90)%360;commit();renderNow();};
 $('bDup').onclick=()=>{const o=sel&&get(sel);if(!o)return;const c=JSON.parse(JSON.stringify(o));c.id=uid();c.locked=false;if(c.type==='label')delete c.p.of;
  if(c.type==='wire'){c.pts=c.pts.map(p=>{const q=resolve(p)||p;return {x:q.x+20,y:q.y};});}
