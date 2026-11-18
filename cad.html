@@ -2587,10 +2587,17 @@ const PREFS_OK=()=>!!(SH&&SH.prefs);
 // gathered for a second, so typing in the title-block form doesn't write on every key
 let PRQ={},PRT=0,PRST='';function prSt(v){if(PRST===v)return;PRST=v;try{buildFav();}catch(e){}}
 function prefsPush(o){if(!PREFS_OK())return;Object.assign(PRQ,o);clearTimeout(PRT);PRT=setTimeout(prefsFlush,1000);}
-function prefsFlush(){const o=PRQ;PRQ={};if(!Object.keys(o).length)return;SH.prefs.set(o).then(ok=>{prSt(ok===false?'err':'ok');if(ok===false&&!window._prefsWarned){window._prefsWarned=1;console.warn('prefs not saved to the cloud (rules not published yet?)');toast('המועדפים לא נשמרו בחשבון — בדוק שחוקי Firebase עודכנו');}});}
+// each setting is written on its own, so one that Firebase refuses (a title block with a huge logo) can't hold the favourites back;
+// a logo over ~300 KB stays on this device only (a Firebase document holds at most 1 MB)
+let PRERR='';
+function prefsSafe(k,v){if(k==='tb'&&v&&typeof v==='object'&&String(v.logo||'').length>300000){v=Object.assign({},v);delete v.logo;}return v;}
+function prefsFlush(){const o=PRQ;PRQ={};const ks=Object.keys(o);if(!ks.length)return;
+ Promise.all(ks.map(k=>SH.prefs.set({[k]:prefsSafe(k,o[k])}).then(r=>({k,r})))).then(R=>{const bad=R.filter(x=>x.r!==true),favBad=bad.some(x=>x.k==='fav');
+  PRERR=bad.map(x=>x.k+': '+x.r).join(' · ');prSt(favBad?'err':'ok');
+  if(favBad&&!window._prefsWarned){window._prefsWarned=1;toast('המועדפים לא נשמרו בחשבון — הקש על סימן הענן האדום לפרטים');}});}
 function prefsApply(d){if(!d)return;let ch=false;
  if(d.fav&&typeof d.fav==='object')['panel','sld'].forEach(k=>{if(Array.isArray(d.fav[k])){const v=JSON.stringify(d.fav[k]);if(localStorage.getItem('ohadcad.fav.'+k)!==v){try{localStorage.setItem('ohadcad.fav.'+k,v);}catch(e){}ch=true;}}});
- if(d.tb&&typeof d.tb==='object'){const v=JSON.stringify(d.tb);if(localStorage.getItem('epd.tb')!==v){try{localStorage.setItem('epd.tb',v);}catch(e){}}}
+ if(d.tb&&typeof d.tb==='object'){const lg=tbLoad().logo;const v=JSON.stringify(d.tb.logo||!lg?d.tb:Object.assign({},d.tb,{logo:lg}));if(localStorage.getItem('epd.tb')!==v){try{localStorage.setItem('epd.tb',v);}catch(e){}}}
  if(ch){try{buildFav();}catch(e){}if(pMode==='lib')buildSheet();}}
 let PRINIT=false;async function prefsInit(){if(!PREFS_OK()||PRINIT)return;const d=await SH.prefs.get();if(d===null){prSt('err');return;}PRINIT=true;prSt('ok');
  const up={};if(!d.fav){const f={panel:favList('panel'),sld:favList('sld')};if(f.panel.length||f.sld.length)up.fav=f;}if(!d.tb){const t=tbLoad();if(Object.keys(t).length)up.tb=t;}
@@ -2604,8 +2611,9 @@ async function prefsCheck(){toast('בודק…');let r;try{r=await SH.prefs.test
  const msg=r.write==='ok'&&r.read==='ok'?`✅ הסנכרון עובד.<br>בחשבון שמורים: ${r.fav?`${r.fav.panel} מועדפים בחזית לוח, ${r.fav.sld} בחד קווי`:'עדיין אין מועדפים'}.<br>במכשיר הזה: ${loc.panel} בחזית לוח, ${loc.sld} בחד קווי.<br><br>המועדפים מוצגים לפי הלשונית: מה שסומן בחד קווי מופיע רק כשפתוח חד קווי.`
   :denied?'❌ Firebase חוסם את השמירה — החוקים החדשים עדיין לא פורסמו. צריך להדביק את הקובץ firestore.rules במסך Rules וללחוץ Publish.'
   :`❌ השמירה בחשבון נכשלה.<br>כתיבה: ${esc(r.write||'-')}<br>קריאה: ${esc(r.read||'-')}`;
- modal('בדיקת סנכרון',`<div style="line-height:1.7">${msg}</div>`);
- if(r.write==='ok'&&r.read==='ok'){const d=await SH.prefs.get();if(d&&!d.fav){const f={panel:favList('panel'),sld:favList('sld')};if(f.panel.length||f.sld.length)prefsPush({fav:f});}else if(d)prefsApply(d);if(!PRINIT)prefsInit().catch(()=>{});}}
+ const msg2=PRERR&&r.write==='ok'?`<br><br>השמירה האחרונה נכשלה: ${esc(PRERR)}`:'';
+ modal('בדיקת סנכרון',`<div style="line-height:1.7">${msg}${msg2}</div>`);
+ if(r.write==='ok'&&r.read==='ok'){prSt('ok');PRERR='';const d=await SH.prefs.get();if(d&&!d.fav){const f={panel:favList('panel'),sld:favList('sld')};if(f.panel.length||f.sld.length)prefsPush({fav:f});}else if(d)prefsApply(d);if(!PRINIT)prefsInit().catch(()=>{});}}
 /* ================= favourites bar =================
    Up to 10 parts per view (panel front / single-line), starred in the library;
    a strip under the document bar adds them with a click or a drag. Kept per device. */
