@@ -1203,6 +1203,8 @@ const SDEF={
   draw:o=>sL(0,-30,0,-6)+sL(0,6,0,30)+sL(-12,-6,12,-6,2.4)+sL(-6,0,6,0,3.2)+sL(-12,6,12,6,2.4)+sLbl(o,40)},
  sbrk:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Q1',rating:'MCCB 100A',desc:''},ratings:['NSXm63F 63A','NSXm160F 160A','NSX100F 100A','NSX160F 160A','NSX250F 250A','NSX400F 400A','NSX630F 630A','MCB C10','MCB C16','MCB C20','MCB C32','MCCB 63A','MCCB 100A','MCCB 160A','MCCB 250A','MCCB 400A','MCCB 630A','ACB 1600A','ACB 2500A'],size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sSwitch('x')+sLbl(o,40)},
+ sacb:{layer:4,sld:true,edit:['tag','rating','acv','desc'],def:{tag:'Q1',rating:'MTZ2 2500A',acv:'d',desc:''},ratings:['MTZ1 630A','MTZ1 800A','MTZ1 1000A','MTZ1 1250A','MTZ1 1600A','MTZ2 800A','MTZ2 1000A','MTZ2 1250A','MTZ2 1600A','MTZ2 2000A','MTZ2 2500A','MTZ2 3200A','MTZ2 4000A','MTZ3 4000A','MTZ3 5000A','MTZ3 6300A'],size:()=>({w:40,h:60}),terms:IO,
+  draw:o=>{const c=(y,d)=>`<path d="M-4 ${y}L0 ${y+d*3.5}L4 ${y}" fill="none" stroke="${SK}" stroke-width="1.4"/>`;return sSwitch('x')+(o.p.acv==='f'?'':c(-27,1)+c(-24,1)+c(21,1)+c(24,1))+sLbl(o,40);}},
  srcd:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'F1',rating:'40A 30mA',desc:''},ratings:['25A 30mA','40A 30mA','63A 30mA','40A 300mA','RCBO C16 30mA'],size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sSwitch('x')+`<ellipse cx="0" cy="21" rx="8" ry="3.2" fill="none" stroke="${SK}" stroke-width="1.8"/>`+`<path d="M8 21h6v-21h-9" fill="none" stroke="${SK}" stroke-width="1.2" stroke-dasharray="3 2"/>`+sLbl(o,40)},
  smpcb:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Q1',rating:'GV2 4-6.3A',desc:''},ratings:['GV2 1-1.6A','GV2 2.5-4A','GV2 4-6.3A','GV2 6-10A','GV2 9-14A','GV2 13-18A','GV2 20-25A'],size:()=>({w:40,h:60}),terms:IO,
@@ -1381,7 +1383,7 @@ Object.keys(TN).forEach(k=>{const D=SDEF[k];if(!D)return;const d0=D.draw;D.def=O
 /* Multi-pole (3P / 4P) versions: the one-pole symbol repeated every 20 mm — the
    same pitch as terminal blocks, so poles, terminals and wires line up — with a
    dashed mechanical link and terminals 1-3-5(-N) / 2-4-6(-N). */
-const PP=20,MPT=['sbrk','srcd','smpcb','sfuse','sfsd','siso','slbs','scont','sol'],npol=o=>Math.max(1,Math.min(4,Math.round(+o.p.poles||1)));
+const PP=20,MPT=['sbrk','sacb','srcd','smpcb','sfuse','sfsd','siso','slbs','scont','sol'],npol=o=>Math.max(1,Math.min(4,Math.round(+o.p.poles||1)));
 const PT=['1','3','5','N'],PB=['2','4','6','N'];
 MPT.forEach(k=>{const D=SDEF[k],d1=D.draw,t1=D.terms,s1=D.size;D.def=Object.assign({poles:1},D.def);if(!D.edit.includes('poles'))D.edit=[...D.edit,'poles'];
  D.size=o=>npol(o)===1?s1(o):{w:npol(o)*PP+20,h:60};
@@ -1835,9 +1837,9 @@ const LIB=[
   {g:'הזנות בודדות',items:[{t:'sfeed',n:'הזנת N (אפס)'},{t:'sfeed',n:'הזנת L (פאזה)',p:{feed:'L'}},{t:'sfeed',n:'הזנת PE (הארקה)',p:{feed:'PE'}},{t:'sfeed',n:'הזנת L1',p:{feed:'L1'}},{t:'sfeed',n:'הזנת L2',p:{feed:'L2'}},{t:'sfeed',n:'הזנת L3',p:{feed:'L3'}},{t:'sfeed',n:'הזנת +24V',p:{feed:'+24V'}},{t:'sfeed',n:'הזנת 0V',p:{feed:'0V'}}]},
   {g:'גבול לוח',items:[{t:'sframe',n:'גבול לוח (מקווקו)'}]}]},
  {tab:'הגנה ומיתוג',sld:true,groups:[
-  {g:'מפסקים',items:[{t:'sbrk',n:'מפסק זרם (MCCB / ACB)'},{t:'sbrk',n:'מאמ"ת (MCB)',p:{tag:'Q2',rating:'MCB C16'}},{t:'srcd',n:'מפסק פחת / RCBO'},{t:'smpcb',n:'מגן מנוע (MPCB)'},{t:'siso',n:'מנתק / מפסק ראשי'},{t:'slbs',n:'מנתק עומס'}]},
+  {g:'מפסקים',items:[{t:'sbrk',n:'מפסק זרם (MCCB / ACB)'},{t:'sacb',n:'מפסק אוויר ACB (נשלף)'},{t:'sacb',n:'מפסק אוויר ACB (קבוע)',p:{acv:'f',rating:'MTZ2 1600A'}},{t:'sbrk',n:'מאמ"ת (MCB)',p:{tag:'Q2',rating:'MCB C16'}},{t:'srcd',n:'מפסק פחת / RCBO'},{t:'smpcb',n:'מגן מנוע (MPCB)'},{t:'siso',n:'מנתק / מפסק ראשי'},{t:'slbs',n:'מנתק עומס'}]},
   {g:'נתיכים',items:[{t:'sfuse',n:'נתיך'},{t:'sfsd',n:'מנתק נתיכים'}]},
-  {g:'תלת-פאזי (3 קטבים, ברוחב המהדקים)',items:[{t:'sbrk',n:'מפסק זרם 3P',p:{poles:3}},{t:'sbrk',n:'מאמ"ת 3P',p:{poles:3,tag:'Q2',rating:'MCB C16'}},{t:'siso',n:'מנתק 3P',p:{poles:3}},{t:'srcd',n:'מפסק פחת 4P',p:{poles:4}},{t:'smpcb',n:'מגן מנוע 3P',p:{poles:3}},{t:'scont',n:'מגען 3P',p:{poles:3}},{t:'sol',n:'ממסר טרמי 3P',p:{poles:3}},{t:'sfuse',n:'נתיכים 3P',p:{poles:3}},{t:'smot',n:'מנוע (U V W)',p:{poles:3}}]},
+  {g:'תלת-פאזי (3 קטבים, ברוחב המהדקים)',items:[{t:'sbrk',n:'מפסק זרם 3P',p:{poles:3}},{t:'sacb',n:'מפסק אוויר ACB 3P',p:{poles:3}},{t:'sbrk',n:'מאמ"ת 3P',p:{poles:3,tag:'Q2',rating:'MCB C16'}},{t:'siso',n:'מנתק 3P',p:{poles:3}},{t:'srcd',n:'מפסק פחת 4P',p:{poles:4}},{t:'smpcb',n:'מגן מנוע 3P',p:{poles:3}},{t:'scont',n:'מגען 3P',p:{poles:3}},{t:'sol',n:'ממסר טרמי 3P',p:{poles:3}},{t:'sfuse',n:'נתיכים 3P',p:{poles:3}},{t:'smot',n:'מנוע (U V W)',p:{poles:3}}]},
   {g:'מיתוג והתנעה',items:[{t:'scont',n:'מגען'},{t:'srev',n:'זוג מגענים מחוגרים (היפוך)'},{t:'sol',n:'ממסר טרמי'},{t:'svfd',n:'ווסת מהירות (VFD)'},{t:'svfd3',n:'ווסת מהירות תלת-פאזי (L1 L2 L3 → U V W)'},{t:'sss',n:'מתנע רך'},{t:'sats',n:'מחליף אוטומטי (ATS)'}]},
   {g:'הגנות',items:[{t:'sspd',n:'מגן ברקים (SPD)'}]}]},
  {tab:'פיקוד ובקרה',sld:true,icon:'🎛',hint:'סמלי פיקוד (IEC): מגעים, לחצנים, בוררים, סלילים, טיימרים ושעונים. מחברים ביניהם ב"חיווט". הסימון (למשל K1) והמספרים (13-14) נערכים במאפיינים.',groups:[
@@ -2130,7 +2132,7 @@ function content0(opt={},pick){const list=state.objs.filter(o=>!hiddenFront(o)&&
   if(PIECES&&!pick)PIECES.push([(o.__cab?'c:'+o.__cab.id:o.__cabGhost?'g:'+o.__cabGhost.id:o.__doorGhost?'h:'+o.__doorGhost.id:o.__lid?'l:'+o.__lid.id:o.__door?'d:'+o.__door.id:'o:'+o.id),str]);s+=str;}
  return s;}
 function selBox(o){const {w,h}=sizeOf(o);return `<rect x="${-w/2-2.5}" y="${-h/2-2.5}" width="${w+5}" height="${h+5}" rx="2" fill="none" stroke="#3b82f6" stroke-width="1.6" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"/>`;}
-const rank=o=>o.__door||o.__cab||o.__lid||o.__cabGhost||o.__doorGhost?6.5:(o.type==='wire'?6:DEF[o.type].layer)+(+o.z||0);
+const rank=o=>o.__door||o.__cab||o.__lid||o.__cabGhost||o.__doorGhost?6.5+(+(o.__door||o.__cab||o.__lid||o.__cabGhost||o.__doorGhost).z||0):(o.type==='wire'?6:DEF[o.type].layer)+(+o.z||0);
 let rq=0;function render(){if(rq)return;rq=requestAnimationFrame(()=>{rq=0;renderNow();});}
 function handlesSVG(){const o=sel&&get(sel);if(!o||o.type==='wire'||o.locked||wireMode)return '';const D=DEF[o.type];
  if(o.type==='cable'||isPipe(o)||CABRT[o.type]){const R=cabRoute(o),r=9/view.s;let s='',cps='';const BB=cabBends(o);R.forEach((p,i)=>{const [x,y]=fromLocal(o,p.x,p.y),tight=i>0&&i<R.length-1&&BB[i-1]&&BB[i-1].tight;cps+=`<g data-cp="${i}" style="cursor:move"><title>${tight?`הכיפוף צר מהרדיוס הנדרש (${Math.round(BB[i-1].r)} מתוך ${Math.round(BB[i-1].need)} מ"מ) — האריכו את הקטעים`:''}</title><circle cx="${x}" cy="${y}" r="${r*2}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r}" fill="${tight?'#ef4444':'#3b82f6'}" stroke="#fff" stroke-width="${r*.28}"/></g>`;});
@@ -2438,7 +2440,7 @@ function inCab(c,x,y){const g=cabG(c);return x>g.x0&&x<g.x0+g.W&&y>g.y0&&y<g.y0+
 /* Designations by IEC 81346 letter, numbered as parts are added: the next free
    number for that letter in this document (H1, H2… lamps; Q1, Q2… breakers…). A
    designation typed by hand stays as it is. */
-const SERIAL={acb:'Q',svfd3:'U',xbox:'S',nrack:'RK',lc2d:'K',srev:'K',prox:'B',sprox:'B',mvalve:'MV',svalve:'SV',smv:'MV',ssv:'SV',subpit:'P',ssubp:'P',kflow:'FE',kconv:'FIT',sfe:'FE',sfit:'FIT',lfloat:'LS',ptx:'PT',pgauge:'PI',spt:'PT',spi:'PI',lvlh:'LT',ultra4:'LIC',udb:'LE',slvlh:'LT',sultra:'LIC',sudb:'LE',smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
+const SERIAL={acb:'Q',sacb:'Q',svfd3:'U',xbox:'S',nrack:'RK',lc2d:'K',srev:'K',prox:'B',sprox:'B',mvalve:'MV',svalve:'SV',smv:'MV',ssv:'SV',subpit:'P',ssubp:'P',kflow:'FE',kconv:'FIT',sfe:'FE',sfit:'FIT',lfloat:'LS',ptx:'PT',pgauge:'PI',spt:'PT',spi:'PI',lvlh:'LT',ultra4:'LIC',udb:'LE',slvlh:'LT',sultra:'LIC',sudb:'LE',smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
  sbrk:'Q',smpcb:'Q',siso:'Q',slbs:'Q',sfsd:'Q',sats:'Q',srcd:'F',sfuse:'F',sol:'F',sspd:'F',scont:'K',svfd:'U',sss:'U',sups:'U',sgen:'G',sbatt:'G',strafo:'T',sct:'T',svt:'T',skwh:'P',spm:'P',samm:'P',svm:'P',scap:'C',smot:'M',stb:'X',scable:'W'};
 function autoTag(o){const pre=SERIAL[o.type];if(!pre||!o.p||!DEF[o.type].edit?.includes('tag'))return;const re=new RegExp('^'+pre+'(\\d+)$');if(o.p.tag&&!re.test(o.p.tag))return;
  const mine=isSldObj(o),used=new Set();state.objs.forEach(q=>{if(q===o||isSldObj(q)!==mine)return;const m=re.exec(q.p?.tag||'');if(m)used.add(+m[1]);});let n=1;while(used.has(n))n++;o.p.tag=pre+n;}
@@ -3246,16 +3248,18 @@ function ulManager(){const U=state.objs.filter(o=>o.type==='underlay');
    Bring the selected parts over, or put them under, the parts they overlap: to the
    front / back of all of them, or one step past the next one. The order is kept as
    an offset (o.z) on the part's layer. */
+// where a part is really drawn: a cabinet's front / a closed door / a lid sits over everything at 6.5
+function drawnRank(q){if((q.type==='cabinet'&&isFrontV(q))||(q.type==='enclosure'&&hasDoor(q)&&q.p.closed==='1')||(q.type==='cibox'&&ciLidOn(q)))return 6.5+(+q.z||0);return rank(q);}
 function zOrder(mode){const ids=selIds(),S=new Set(ids);if(!ids.length){toast('בחר רכיב קודם');return;}
  const ov=(a,b)=>{const A=bbW(a),B=bbW(b);return A.x0<B.x1&&B.x0<A.x1&&A.y0<B.y1&&B.y0<A.y1;};let moved=0;
  ids.map(get).filter(o=>o&&o.type!=='underlay').sort((a,b)=>(mode==='front'||mode==='up'?1:-1)*(rank(a)-rank(b))).forEach((o,i)=>{
   const others=state.objs.filter(q=>!S.has(q.id)&&q.type!=='underlay'&&ov(o,q)),base=rank(o)-(+o.z||0),r=rank(o);if(!others.length)return;
-  const R=others.map(rank);let t=null;
+  const R=others.map(drawnRank);let t=null;
   if(mode==='front'){const m=Math.max(...R);if(m>=r)t=m+.01+i*.001;}
   else if(mode==='back'){const m=Math.min(...R);if(m<=r)t=m-.01-i*.001;}
   else{// one step: the next overlapping part in the drawn order (the same layer is drawn in list order)
-   const ord=state.objs.map((q,j)=>[q,j]).sort((x,y)=>rank(x[0])-rank(y[0])||x[1]-y[1]).map(x=>x[0]),me=ord.indexOf(o),ot=new Set(others);
-   if(mode==='up'){const n=ord.slice(me+1).find(q=>ot.has(q));if(n)t=rank(n)+.005;}else{const n=ord.slice(0,me).reverse().find(q=>ot.has(q));if(n)t=rank(n)-.005;}}
+   const ord=state.objs.map((q,j)=>[q,j]).sort((x,y)=>drawnRank(x[0])-drawnRank(y[0])||x[1]-y[1]).map(x=>x[0]),me=ord.indexOf(o),ot=new Set(others);
+   if(mode==='up'){const n=ord.slice(me+1).find(q=>ot.has(q));if(n)t=drawnRank(n)+.005;}else{const n=ord.slice(0,me).reverse().find(q=>ot.has(q));if(n)t=drawnRank(n)-.005;}}
   if(t!==null){o.z=r2((t-base)*1000)/1000;moved++;}});
  if(!moved){toast({front:'כבר מעל כולם',back:'כבר מתחת לכולם',up:'אין רכיב מעליו',down:'אין רכיב מתחתיו'}[mode]);return;}
  commit();renderNow();toast({front:'הובא לחזית',back:'נשלח לרקע',up:'הועלה צעד אחד',down:'הורד צעד אחד'}[mode]);}
@@ -3740,7 +3744,7 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='poles'&&DEF[o.type]?.sld)h+=`<div class="fld"><label>${FL[k]}</label><select id="f_poles">${(o.type==='smot'?[[1,'קו אחד'],[3,'3 הדקים (U V W)'],[6,'6 הדקים — כוכב-משולש (U1 V1 W1 / W2 U2 V2)']]:[[1,'קוטב אחד'],[2,'2 קטבים'],[3,'3 קטבים (תלת-פאזי)'],[4,'4 קטבים (3P+N)']]).map(([a,b])=>`<option value="${a}" ${a==(+v||1)?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='acs')h+=`<div class="fld"><label>סדרה</label><select id="f_acs">${Object.keys(ACBS).map(a=>`<option value="${a}" ${a===v?'selected':''}>MasterPacT ${a} (${ACBS[a].r[0]}-${ACBS[a].r[ACBS[a].r.length-1]}A)</option>`).join('')}</select></div>`;
   else if(k==='acr'){const R=(ACBS[o.p.acs]||ACBS.MTZ2).r;h+=`<div class="fld"><label>זרם נקוב (In)</label><select id="f_acr">${R.map(a=>`<option value="${a}" ${a==v?'selected':''}>${a}A</option>`).join('')}</select></div>`;}
-  else if(k==='acv')h+=`<div class="fld"><label>התקנה</label><select id="f_acv"><option value="d" ${v!=='f'?'selected':''}>נשלף (בתוך שאסי)</option>${(ACBS[o.p.acs]||{}).f?`<option value="f" ${v==='f'?'selected':''}>קבוע</option>`:''}</select></div>`;
+  else if(k==='acv')h+=`<div class="fld"><label>התקנה</label><select id="f_acv"><option value="d" ${v!=='f'?'selected':''}>נשלף (בתוך שאסי)</option>${(o.type==='sacb'||(ACBS[o.p.acs]||{}).f)?`<option value="f" ${v==='f'?'selected':''}>קבוע</option>`:''}</select></div>`;
   else if(k==='mlu')h+=`<div class="fld"><label>יחידת הגנה</label><select id="f_mlu">${MLU.map(a=>`<option ${a===v?'selected':''}>${a}</option>`).join('')}</select></div>`;
   else if(k==='poles'&&(o.type==='wiso'||o.type==='nsx'||o.type==='nsxm'||o.type==='acb'))h+=`<div class="fld"><label>${FL[k]}</label><select id="f_poles"><option value="3" ${+v!==4?'selected':''}>3 קטבים</option><option value="4" ${+v===4?'selected':''}>4 קטבים (+N)</option></select></div>`;
   else if(k==='gang')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_gang">${[[1,'יחיד'],[2,'כפול'],[3,'משולש'],[4,'מרובע']].map(([a,b])=>`<option value="${a}" ${a==v?'selected':''}>${b}</option>`).join('')}</select></div>`;
