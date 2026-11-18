@@ -2611,7 +2611,7 @@ async function prefsCheck(){toast('בודק…');let r;try{r=await SH.prefs.test
  const msg=r.write==='ok'&&r.read==='ok'?`✅ הסנכרון עובד.<br>בחשבון שמורים: ${r.fav?`${r.fav.panel} מועדפים בחזית לוח, ${r.fav.sld} בחד קווי`:'עדיין אין מועדפים'}.<br>במכשיר הזה: ${loc.panel} בחזית לוח, ${loc.sld} בחד קווי.<br><br>המועדפים מוצגים לפי הלשונית: מה שסומן בחד קווי מופיע רק כשפתוח חד קווי.`
   :denied?'❌ Firebase חוסם את השמירה — החוקים החדשים עדיין לא פורסמו. צריך להדביק את הקובץ firestore.rules במסך Rules וללחוץ Publish.'
   :`❌ השמירה בחשבון נכשלה.<br>כתיבה: ${esc(r.write||'-')}<br>קריאה: ${esc(r.read||'-')}`;
- const msg2=PRERR&&r.write==='ok'?`<br><br>השמירה האחרונה נכשלה: ${esc(PRERR)}`:'';
+ const le=(SH.prefs.lastErr||'')+(PRERR?' · '+PRERR:''),msg2=`<br><br><span style="font-size:12px;opacity:.75" dir="ltr">${esc(r.email||'')} · write=${esc(r.write||'-')} · read=${esc(r.read||'-')}${le?' · '+esc(le):''}</span>`;
  modal('בדיקת סנכרון',`<div style="line-height:1.7">${msg}${msg2}</div>`);
  if(r.write==='ok'&&r.read==='ok'){prSt('ok');PRERR='';const d=await SH.prefs.get();if(d&&!d.fav){const f={panel:favList('panel'),sld:favList('sld')};if(f.panel.length||f.sld.length)prefsPush({fav:f});}else if(d)prefsApply(d);if(!PRINIT)prefsInit().catch(()=>{});}}
 /* ================= favourites bar =================
