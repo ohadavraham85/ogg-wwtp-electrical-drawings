@@ -718,6 +718,20 @@ function rackFree(r,o){const d=nrDim(r),iu=Math.max(1,+o.p.u||1),yT=r.y-d.H/2+d.
 const XAHOLE={start:['הפעלה','#16a34a',['13','14']],stop:['הפסקה','#dc2626',['11','12']],estop:['חירום','#dc2626',['11','12']],lampg:['פועל','#22c55e',['X1','X2']],lampr:['תקלה','#ef4444',['X1','X2']],sel2:['0-1','#111827',['13','14']],blank:['','#9ca3af',[]]};
 const xaHoles=o=>[o.p.h1,o.p.h2,o.p.h3].slice(0,Math.max(1,Math.min(3,+o.p.n||1))).map(k=>XAHOLE[k]?k:'blank');
 const xaSize=o=>{const n=Math.max(1,Math.min(3,+o.p.n||1));return {w:68,h:[0,68,106,136][n]};};
+/* Civil fills: the pattern inside a wall or a floor section (concrete, block,
+   brick, earth…), how dense it is and its base colour — all chosen in properties. */
+const HATCH={lines:'קווים אלכסוניים',concrete:'בטון',block:'בלוקים',brick:'לבנים',earth:'אדמה',cross:'רשת (מתכת)',solid:'מלא',none:'ללא מילוי'};
+const HATCHC={grey:{n:'אפור',b:'#c9c3b6',l:'#8d8678'},beige:{n:"בז'",b:'#e4d6b8',l:'#9b8763'},white:{n:'לבן',b:'#f5f5f4',l:'#a8a29e'},dark:{n:'כהה',b:'#6b7280',l:'#374151'}};
+function hatchDef(id,k,sc,c){const C=HATCHC[c]||HATCHC.grey,z=Math.max(.25,+sc||1),W=r2(28*z),b=C.b,l=C.l,lw=r2(2.2*z);
+ const P=(w,h,inner,rot=0)=>`<defs><pattern id="${id}" patternUnits="userSpaceOnUse" width="${r2(w)}" height="${r2(h)}"${rot?` patternTransform="rotate(${rot})"`:''}><rect width="${r2(w)}" height="${r2(h)}" fill="${b}"/>${inner}</pattern></defs>`;
+ if(k==='none')return {defs:'',fill:'none'};if(k==='solid')return {defs:'',fill:b};
+ const d={lines:()=>P(W,W,`<line x1="0" y1="0" x2="0" y2="${W}" stroke="${l}" stroke-width="${lw}"/>`,45),
+  concrete:()=>P(W,W,`<line x1="0" y1="0" x2="0" y2="${W}" stroke="${l}" stroke-width="${lw}"/><circle cx="${r2(W/2)}" cy="${r2(W*.32)}" r="${r2(1.6*z)}" fill="${l}"/><circle cx="${r2(W*.32)}" cy="${r2(W*.72)}" r="${r2(1.1*z)}" fill="${l}"/>`,45),
+  block:()=>{const w=W*3,h=W*1.4;return P(w,h*2,`<path d="M0 0H${r2(w)}M0 ${r2(h)}H${r2(w)}M0 0V${r2(h)}M${r2(w/2)} ${r2(h)}V${r2(h*2)}" stroke="${l}" stroke-width="${lw}" fill="none"/>`);},
+  brick:()=>{const w=W*1.6,h=W*.6;return P(w,h*2,`<path d="M0 0H${r2(w)}M0 ${r2(h)}H${r2(w)}M0 0V${r2(h)}M${r2(w/2)} ${r2(h)}V${r2(h*2)}" stroke="${l}" stroke-width="${r2(lw*.8)}" fill="none"/>`);},
+  earth:()=>P(W*1.4,W*1.4,`<path d="M${r2(W*.1)} ${r2(W*.5)}l${r2(W*.35)} ${r2(-W*.35)}M${r2(W*.3)} ${r2(W*.6)}l${r2(W*.35)} ${r2(-W*.35)}M${r2(W*.5)} ${r2(W*.7)}l${r2(W*.35)} ${r2(-W*.35)}M0 ${r2(W*1.3)}H${r2(W*1.4)}" stroke="${l}" stroke-width="${lw}" fill="none"/>`),
+  cross:()=>P(W*.6,W*.6,`<path d="M0 0V${r2(W*.6)}M0 0H${r2(W*.6)}" stroke="${l}" stroke-width="${r2(lw*.7)}"/>`,45)}[k]||null;
+ return d?{defs:d(),fill:`url(#${id})`}:{defs:'',fill:b};}
 const DEF={
  mcb:{layer:4,rail:true,edit:['tag','rating','color'],ratings:['B6','B10','B16','B20','C6','C10','C16','C20','C25','C32','C40','C50','C63','D16','D25','D32'],
   def:{poles:1,rating:'C16'},
@@ -1089,9 +1103,9 @@ const DEF={
  underlay:{layer:-1,resize:'scale',edit:['op','exp'],def:{fs:1,iw:1000,ih:700,op:'0.6',exp:'0',hide:'0'},size:o=>({w:r2(o.p.iw*o.p.fs),h:r2(o.p.ih*o.p.fs)}),terms:()=>[],
   draw:o=>{const {w,h}=sizeOf(o);if(EXPMIN>0)return o.p.exp==='1'&&o.p.hide!=='1'?`<g opacity="${+o.p.op||.6}">${ulayInner(o)}</g>`:'';
    return `<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" fill="${o.locked||o.p.hide==='1'?'none':'transparent'}" stroke="${o.locked?'none':'#94a3b8'}" stroke-width="1" stroke-dasharray="6 4" vector-effect="non-scaling-stroke" ${o.locked||o.p.hide==='1'?'pointer-events="none"':''}/>`;}},
- wall:{layer:-.2,resize:'box',minBox:20,edit:['w','h'],def:{w:2000,h:200},size:o=>{const p=o.p;if(p.w==null&&p.len!=null){p.w=+p.len;p.h=+p.wt||200;delete p.len;delete p.wt;}return {w:+p.w||2000,h:+p.h||200};},
+ wall:{layer:-.2,resize:'box',minBox:20,edit:['w','h','hk','hs','hc'],def:{w:2000,h:200,hk:'lines',hs:'1',hc:'grey'},size:o=>{const p=o.p;if(p.w==null&&p.len!=null){p.w=+p.len;p.h=+p.wt||200;delete p.len;delete p.wt;}return {w:+p.w||2000,h:+p.h||200};},
   draw:o=>{const {w:L,h:T}=DEF.wall.size(o),id='wh'+(o.id||'t'+(++floorSeq));
-   return `<defs><pattern id="${id}" patternUnits="userSpaceOnUse" width="40" height="40" patternTransform="rotate(45)"><rect width="40" height="40" fill="#bdb6a8"/><line x1="0" y1="0" x2="0" y2="40" stroke="#6f685c" stroke-width="3"/></pattern></defs><rect x="${-L/2}" y="${-T/2}" width="${L}" height="${T}" fill="url(#${id})" stroke="#3a3a3a" stroke-width="3"/>`;}},
+   const H=hatchDef(id,o.p.hk||'lines',o.p.hs||(o.p.hk?1:1.43),o.p.hc||'grey');return H.defs+`<rect x="${-L/2}" y="${-T/2}" width="${L}" height="${T}" fill="${H.fill}" stroke="#3a3a3a" stroke-width="3"/>`;}},
  shline:{layer:7,resize:'len',minLen:5,edit:['len','ang','lw','dash','head','color'],def:{len:200,lw:2,dash:'solid',head:'none',color:'blue'},size:o=>{const lw=+o.p.lw||2;return {w:o.p.len,h:Math.max(lw*4,6)};},
   draw:o=>{const L=o.p.len,lw=Math.max(.2,+o.p.lw||2),c=col(o,'blue'),al=Math.min(lw*5+4,L/2.5),aw=al*.4,hd=o.p.head||'none';
    const x0=-L/2+(hd==='both'?al*.85:0),x1=L/2-(hd!=='none'?al*.85:0);
@@ -1354,14 +1368,14 @@ Object.assign(DEF,SDEF);
 // Core colours by IEC 60445: L1 brown, L2 black, L3 grey, N blue, PE green-yellow.
 const CORESETS={'2':[['L','#8b5a2b'],['N','#2563eb']],'3':[['L','#8b5a2b'],['N','#2563eb'],['PE','pe']],'4':[['L1','#8b5a2b'],['L2','#1d1d1d'],['L3','#8f8f8f'],['PE','pe']],'5':[['L1','#8b5a2b'],['L2','#1d1d1d'],['L3','#8f8f8f'],['N','#2563eb'],['PE','pe']]};
 const CSECS=['1.5','2.5','4','6','10','16','25','35','50','70','95','120','150','185','240'];
-function cabG2(o){if(CABRT[o.type]){const D=CABRT[o.type];return {C:[],n:0,sec:0,D,cw:2,pitch:10,span:0,len:0,brk:0,w:D+6,h:0};}if(o.type==='conduit'){const D=+o.p.dn||20,len=Math.max(20,+o.p.len||1000);return {C:[],n:0,sec:0,D,cw:2,pitch:10,span:0,len,brk:0,w:D+6,h:len};}const C=CORESETS[o.p.cores]||CORESETS['5'],n=C.length,sec=+o.p.sec||2.5,D=Math.round(6+2.2*Math.sqrt(sec*n)),cw=Math.max(1.8,Math.sqrt(sec)*1.25),pitch=Math.max(cw+5,10),span=(n-1)*pitch;
+function cabG2(o){if(CABRT[o.type]){const D=CABRT[o.type];return {C:[],n:0,sec:0,D,cw:2,pitch:10,span:0,len:0,brk:0,w:D+6,h:0};}if(isPipe(o)){const D=+o.p.dn||20,len=Math.max(20,+o.p.len||1000);return {C:[],n:0,sec:0,D,cw:2,pitch:10,span:0,len,brk:0,w:D+6,h:len};}const C=CORESETS[o.p.cores]||CORESETS['5'],n=C.length,sec=+o.p.sec||2.5,D=Math.round(6+2.2*Math.sqrt(sec*n)),cw=Math.max(1.8,Math.sqrt(sec)*1.25),pitch=Math.max(cw+5,10),span=(n-1)*pitch;
  const len=Math.max(20,+o.p.len||200),brk=Math.max(30,+o.p.brk||120),w=Math.max(D,span+cw)+6,h=len+brk;return {C,n,sec,D,cw,pitch,span,len,brk,w,h};}
 /* A cable runs along a route of points (its own, relative to it) and can be opened
    at either end: there its cores fan out, in the direction it arrives from, each
    ending in a terminal. Cables from before routes had a straight run with the
    cores opening at the top, which is what cabRoute() gives them. */
 function cabRoute(o){if(o.p.route&&o.p.route.length>1)return o.p.route;if(CABRT[o.type]){const h0=DEF[o.type].size0(o).h,E=Math.max(0,Math.round(+o.p.cl||0)-(CABLEN[o.type]||0));return [{x:0,y:r2(-h0/2)},{x:0,y:r2(-h0/2-E)}];}const g=cabG2(o);return [{x:0,y:r2(g.h/2-g.len)},{x:0,y:r2(g.h/2)}];}
-function cabEnds(o){if(o.type==='conduit'||CABRT[o.type])return {A:false,B:false};const e=o.p.ends||'A';return {A:e==='A'||e==='AB',B:e==='B'||e==='AB'};}
+function cabEnds(o){if(isPipe(o)||CABRT[o.type])return {A:false,B:false};const e=o.p.ends||'A';return {A:e==='A'||e==='AB',B:e==='B'||e==='AB'};}
 function cabGeo(o){const g=cabG2(o),R=cabRoute(o),E=cabEnds(o),outs=[],terms=[];
  const fan=(P,Q,tag)=>{let dx=P.x-Q.x,dy=P.y-Q.y,l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;const nx=-dy,ny=dx;
   const cores=g.C.map(([lb,c],i)=>{const o0=-g.D/2+g.D*(i+.5)/g.n,o1=-g.span/2+i*g.pitch,a={x:P.x+nx*o0,y:P.y+ny*o0},t={x:r2(P.x+dx*g.brk+nx*o1),y:r2(P.y+dy*g.brk+ny*o1)};
@@ -1380,7 +1394,7 @@ function cabLength(o){const G=cabGeo(o);let L=0;for(let i=1;i<G.R.length;i++)L+=
 /* Bends follow an arc of at least the cable's bending radius (a multiple of its
    diameter, 6× by default as for PVC cables); where the runs either side are too
    short for it the arc is as wide as they allow, and that bend is flagged. */
-function cabBends(o){const G=cabGeo(o),R=G.R,need=(+o.p.rad||(o.type==='conduit'?4:6))*G.g.D,out=[];
+function cabBends(o){const G=cabGeo(o),R=G.R,need=(+o.p.rad||(o.type==='conduit'?4:o.type==='hpipe'?1.5:6))*G.g.D,out=[];
  for(let i=1;i<R.length-1;i++){const a=R[i-1],P=R[i],b=R[i+1];let ux=P.x-a.x,uy=P.y-a.y,vx=b.x-P.x,vy=b.y-P.y;const lu=Math.hypot(ux,uy),lv=Math.hypot(vx,vy);if(lu<.01||lv<.01){out.push(null);continue;}
   ux/=lu;uy/=lu;vx/=lv;vy/=lv;const cr=ux*vy-uy*vx,dot=ux*vx+uy*vy,phi=Math.atan2(Math.abs(cr),dot);if(phi<.01){out.push(null);continue;}
   const tn=Math.tan(phi/2),tMax=Math.min(lu,lv)/2,t=Math.min(need*tn,tMax),r=t/tn;out.push({P,A:{x:P.x-ux*t,y:P.y-uy*t},B:{x:P.x+vx*t,y:P.y+vy*t},r,sweep:cr>0?1:0,tight:r<need-.5,need});}
@@ -1388,6 +1402,55 @@ function cabBends(o){const G=cabGeo(o),R=G.R,need=(+o.p.rad||(o.type==='conduit'
 function cabPathD(o){const R=cabGeo(o).R,B=cabBends(o);let d=`M${R[0].x} ${R[0].y}`;for(let i=1;i<R.length-1;i++){const b=B[i-1];if(!b){d+=`L${R[i].x} ${R[i].y}`;continue;}d+=`L${r2(b.A.x)} ${r2(b.A.y)}A${r2(b.r)} ${r2(b.r)} 0 0 ${b.sweep} ${r2(b.B.x)} ${r2(b.B.y)}`;}return d+`L${R[R.length-1].x} ${R[R.length-1].y}`;}
 const FLEXC={red:{n:'אדום',a:'#7f1d1d',b:'#dc2626',r:'#991b1b'},black:{n:'שחור',a:'#000',b:'#27272a',r:'#52525b'},white:{n:'לבן',a:'#6b7280',b:'#f4f4f5',r:'#c4c4c8'}};
 const CKIND={mar:'מרירון (צינור קשיח)',flex:'שרשורי (גמיש)',cobra:'קוברה (מתכת גמישה מצופה)'};
+/* ================= hydraulic piping =================
+   Water / sludge pipes in plastic (PVC, HDPE) or iron (steel, ductile iron,
+   stainless), drawn to scale from above. A pipe is routed like a cable (drag the
+   ends, + makes a turn, every turn an elbow); valves and fittings are placed on it
+   and take its diameter from their properties. */
+const isPipe=o=>o&&(o.type==='conduit'||o.type==='hpipe');
+const HMAT={pvc:{n:'PVC (פלסטיק)',s:'PVC',b:'#a8b0ba',e:'#4b5563',pl:1},hdpe:{n:'HDPE פוליאתילן (פלסטיק)',s:'HDPE',b:'#26292e',e:'#000',st:'#2563eb',pl:1},
+ steel:{n:'פלדה (ברזל)',s:'ST',b:'#6b7a8c',e:'#1e293b'},di:{n:'ברזל יציקה (DI)',s:'DI',b:'#3b4a63',e:'#111827'},ss:{n:'נירוסטה',s:'SS',b:'#d5d9de',e:'#6b7280'}};
+const HDN=[25,32,40,50,63,75,80,90,100,110,150,160,200,250,300,315,400,500];
+const HDNL=(d,m)=>(HMAT[m]||{}).pl?`Ø${d} מ"מ`:`DN${d}`;
+const HVK={gate:'מגוף טריז (שיבר)',bfly:'מגוף פרפר',ball:'מגוף כדורי',check:'שסתום אל-חוזר',air:'שסתום אוויר'};
+const HFK={elbow:'קשת 90°',tee:'הסתעפות T',red:'מעבר קוטר',flange:'זוג אוגנים',blind:'אוגן עיוור',dj:'מחבר פירוק',flex:'מחבר גמיש',strainer:'מסנן Y',cap:'פקק קצה'};
+function hpipeSVG(o){const G=cabGeo(o),D=G.g.D,R=G.R,B=cabBends(o),d=cabPathD(o),M=HMAT[o.p.mat]||HMAT.pvc,P=`d="${d}" fill="none" stroke-linejoin="round"`;
+ let s=`<path ${P} stroke="${M.e}" stroke-width="${D+2}"/><path ${P} stroke="${M.b}" stroke-width="${D}"/>`+(M.st?`<path ${P} stroke="${M.st}" stroke-width="${Math.max(1.5,D*.07)}" stroke-dasharray="${D*2} ${D}"/>`:`<path ${P} stroke="#fff" stroke-opacity=".22" stroke-width="${D*.22}"/>`);
+ const cut=(x,y,ux,uy,h,w,fill)=>{const nx=-uy,ny=ux;return `<path d="M${r2(x+nx*h)} ${r2(y+ny*h)}L${r2(x-nx*h)} ${r2(y-ny*h)}L${r2(x-nx*h+ux*w)} ${r2(y-ny*h+uy*w)}L${r2(x+nx*h+ux*w)} ${r2(y+ny*h+uy*w)}Z" fill="${fill}" stroke="${M.e}" stroke-width="${Math.max(.6,D*.02)}"/>`;};
+ // a joint at both ends of every elbow; flanges on iron pipe ends, a socket on plastic ones
+ B.forEach((b,i)=>{if(!b)return;const a=R[i],c=R[i+2];let ux=b.P.x-a.x,uy=b.P.y-a.y,l=Math.hypot(ux,uy)||1;s+=cut(b.A.x,b.A.y,-ux/l,-uy/l,D/2+1.5,Math.max(2,D*.08),M.e);ux=c.x-b.P.x;uy=c.y-b.P.y;l=Math.hypot(ux,uy)||1;s+=cut(b.B.x,b.B.y,ux/l,uy/l,D/2+1.5,Math.max(2,D*.08),M.e);});
+ [R[0],R[R.length-1]].forEach((p,k)=>{const q=k?R[R.length-2]:R[1];let ux=q.x-p.x,uy=q.y-p.y;const l=Math.hypot(ux,uy)||1;ux/=l;uy/=l;
+  s+=M.pl?cut(p.x,p.y,ux,uy,D/2+Math.max(2,D*.1),Math.max(6,D*.6),M.b):cut(p.x,p.y,ux,uy,D*.8+4,Math.max(4,D*.14),M.b);});
+ const a=R[0],b=R[1],L=Math.hypot(b.x-a.x,b.y-a.y);if(L>D*4){const ang=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI,up=ang>90||ang<-90?ang+180:ang,mx=(a.x+b.x)/2,my=(a.y+b.y)/2,fs=Math.max(9,Math.min(40,D*.55));
+  s+=`<g transform="translate(${r2(mx)} ${r2(my)}) rotate(${r2(up)})">${txt(0,-D/2-fs*.7,[o.p.tag,M.s+' '+HDNL(+o.p.dn,o.p.mat)].filter(Boolean).join(' · '),fs,'#9ca3af',700)}</g>`;}
+ return s;}
+// valves and fittings, drawn along x (flow left to right) at their diameter
+const hvL=o=>{const D=+o.p.dn||110;return Math.max(50,D*1.5);};
+function hvalveSVG(o){const D=+o.p.dn||110,L=hvL(o),t=Math.max(4,D*.12),F=D*.8+4,k=o.p.vk||'gate',e='#0f172a',bd='#1d4ed8',sw=Math.max(.8,D*.025);
+ const fl=x=>`<rect x="${r2(x-t/2)}" y="${r2(-F)}" width="${r2(t)}" height="${r2(F*2)}" fill="#475569" stroke="${e}" stroke-width="${sw}"/>`;
+ const a=L/2-t,hh=D*.55;let s=`<path d="M${-a} ${-hh}L0 0L${-a} ${hh}Z" fill="${k==='check'?'#fff':bd}" stroke="${e}" stroke-width="${sw}"/><path d="M${a} ${-hh}L0 0L${a} ${hh}Z" fill="${bd}" stroke="${e}" stroke-width="${sw}"/>`+fl(-L/2+t/2)+fl(L/2-t/2);
+ if(k==='gate')s+=`<path d="M0 0V${r2(-D*1.05)}" stroke="${e}" stroke-width="${sw*2}"/><rect x="${r2(-D*.5)}" y="${r2(-D*1.18)}" width="${r2(D)}" height="${r2(D*.16)}" rx="${r2(D*.08)}" fill="#dc2626" stroke="${e}" stroke-width="${sw}"/>`;
+ if(k==='bfly')s+=`<path d="M0 ${r2(-hh)}V${r2(hh)}" stroke="${e}" stroke-width="${sw*2.4}"/><path d="M0 ${r2(-hh)}V${r2(-D*.95)}" stroke="${e}" stroke-width="${sw*2}"/><rect x="${r2(-D*.28)}" y="${r2(-D*1.2)}" width="${r2(D*.56)}" height="${r2(D*.3)}" fill="#dc2626" stroke="${e}" stroke-width="${sw}"/>`;
+ if(k==='ball')s+=`<circle r="${r2(D*.26)}" fill="${e}"/><path d="M0 0V${r2(-D*.9)}H${r2(D*.9)}" fill="none" stroke="#dc2626" stroke-width="${sw*3}" stroke-linecap="round"/>`;
+ if(k==='check')s+=`<path d="M${r2(-a*.7)} ${r2(-D*.85)}H${r2(a*.7)}M${r2(a*.7-D*.18)} ${r2(-D*.97)}L${r2(a*.7)} ${r2(-D*.85)}L${r2(a*.7-D*.18)} ${r2(-D*.73)}" fill="none" stroke="${e}" stroke-width="${sw*1.6}"/>`;
+ if(k==='air')s=`<rect x="${r2(-L/2)}" y="${r2(-D*.35)}" width="${r2(L)}" height="${r2(D*.7)}" fill="#475569" stroke="${e}" stroke-width="${sw}"/><path d="M${r2(-D*.4)} ${r2(-D*.35)}V${r2(-D*1.1)}Q0 ${r2(-D*1.5)} ${r2(D*.4)} ${r2(-D*1.1)}V${r2(-D*.35)}Z" fill="${bd}" stroke="${e}" stroke-width="${sw}"/>`;
+ if(o.p.tag)s+=txt(0,D*.8+F*.3+8,o.p.tag,Math.max(9,D*.35),'#9ca3af',700);return s;}
+function hfitGeo(o){const D=+o.p.dn||110,D2=+o.p.dn2||Math.round(D*.6),k=o.p.fk||'elbow';
+ const L={elbow:D*1.5+D/2,tee:D*2.4,red:D*1.6,flange:Math.max(10,D*.3),blind:Math.max(6,D*.15),dj:D*1.4,flex:D*1.2,strainer:D*1.8,cap:D*.6}[k]||D;return {D,D2,k,L};}
+function hfitSVG(o){const {D,D2,k,L}=hfitGeo(o),M=HMAT[o.p.mat]||HMAT.steel,sw=Math.max(.8,D*.025),e=M.e,t=Math.max(4,D*.12),F=D*.8+4;
+ const fl=(x,y=0,r=0,f=F)=>`<rect transform="translate(${r2(x)} ${r2(y)}) rotate(${r})" x="${r2(-t/2)}" y="${r2(-f)}" width="${r2(t)}" height="${r2(f*2)}" fill="#475569" stroke="#0f172a" stroke-width="${sw}"/>`;
+ const body=(x0,x1,d=D)=>`<rect x="${r2(Math.min(x0,x1))}" y="${r2(-d/2)}" width="${r2(Math.abs(x1-x0))}" height="${r2(d)}" fill="${M.b}" stroke="${e}" stroke-width="${sw}"/>`;
+ let s='';
+ if(k==='elbow'){const R=D*1.5,h=R/2,d=`M${r2(-h)} ${r2(-h)}A${r2(R)} ${r2(R)} 0 0 1 ${r2(h)} ${r2(h)}`;s=`<path d="${d}" fill="none" stroke="${e}" stroke-width="${r2(D+2)}"/><path d="${d}" fill="none" stroke="${M.b}" stroke-width="${r2(D)}"/>`+(M.pl?'':fl(-h+t/2,-h)+fl(h,h-t/2,90));}
+ if(k==='tee'){const b2=D2;s=`<rect x="${r2(-b2/2)}" y="${r2(-L/2+t)}" width="${r2(b2)}" height="${r2(L/2-t)}" fill="${M.b}" stroke="${e}" stroke-width="${sw}"/>`+body(-L/2,L/2)+(M.pl?'':fl(-L/2+t/2)+fl(L/2-t/2)+fl(0,-L/2+t/2,90,b2*.8+4));}
+ if(k==='red')s=`<path d="M${r2(-L/2)} ${r2(-D/2)}L${r2(-L/6)} ${r2(-D/2)}L${r2(L/6)} ${r2(-D2/2)}L${r2(L/2)} ${r2(-D2/2)}V${r2(D2/2)}L${r2(L/6)} ${r2(D2/2)}L${r2(-L/6)} ${r2(D/2)}L${r2(-L/2)} ${r2(D/2)}Z" fill="${M.b}" stroke="${e}" stroke-width="${sw}"/>`+(M.pl?'':fl(-L/2+t/2)+fl(L/2-t/2,0,0,D2*.8+4));
+ if(k==='flange')s=fl(-L/2+t/2)+fl(L/2-t/2)+`<path d="M${r2(-L/2)} ${r2(-F*.75)}H${r2(L/2)}M${r2(-L/2)} ${r2(F*.75)}H${r2(L/2)}" stroke="#0f172a" stroke-width="${sw*1.6}"/>`;
+ if(k==='blind')s=`<rect x="${r2(-L/2)}" y="${r2(-F)}" width="${r2(L)}" height="${r2(F*2)}" fill="#334155" stroke="#0f172a" stroke-width="${sw}"/>`;
+ if(k==='dj')s=body(-L/2+t,0)+body(0,L/2-t,D*1.12)+fl(-L/2+t/2)+fl(L/2-t/2)+`<path d="M${r2(-L/2)} ${r2(-F*.7)}H${r2(L/2)}M${r2(-L/2)} ${r2(F*.7)}H${r2(L/2)}" stroke="#0f172a" stroke-width="${sw*1.4}" stroke-dasharray="${r2(D*.2)} ${r2(D*.1)}"/>`;
+ if(k==='flex')s=`<path d="M${r2(-L/2+t)} ${r2(-D/2)}Q0 ${r2(-D*.95)} ${r2(L/2-t)} ${r2(-D/2)}V${r2(D/2)}Q0 ${r2(D*.95)} ${r2(-L/2+t)} ${r2(D/2)}Z" fill="#111" stroke="#000" stroke-width="${sw}"/>`+fl(-L/2+t/2)+fl(L/2-t/2);
+ if(k==='strainer')s=`<path d="M${r2(-D*.1)} ${r2(D*.2)}L${r2(D*.55)} ${r2(D*1.05)}" stroke="${e}" stroke-width="${r2(D*.6+2)}" stroke-linecap="round"/><path d="M${r2(-D*.1)} ${r2(D*.2)}L${r2(D*.55)} ${r2(D*1.05)}" stroke="${M.b}" stroke-width="${r2(D*.6)}" stroke-linecap="round"/>`+body(-L/2,L/2)+(M.pl?'':fl(-L/2+t/2)+fl(L/2-t/2));
+ if(k==='cap')s=`<path d="M${r2(-L/2)} ${r2(-D/2)}H${r2(L/2-D*.25)}Q${r2(L/2)} ${r2(-D/2)} ${r2(L/2)} 0Q${r2(L/2)} ${r2(D/2)} ${r2(L/2-D*.25)} ${r2(D/2)}H${r2(-L/2)}Z" fill="${M.b}" stroke="${e}" stroke-width="${sw}"/>`;
+ if(o.p.tag)s+=txt(0,F+Math.max(9,D*.35),o.p.tag,Math.max(9,D*.35),'#9ca3af',700);return s;}
 /* מרירון: rigid grey PVC conduit, 20 or 25 mm, along a route of points like a cable; every turn is a bend
    (קשת) of at least 4× its diameter with its two sockets marked, and couplings every 3 m of straight run. */
 function conduitSVG(o){const G=cabGeo(o),D=G.g.D,R=G.R,B=cabBends(o),d=cabPathD(o);
@@ -1422,6 +1485,9 @@ function motG(o){const kw=parseFloat(o.p.rating)||7.5,L=Math.round(Math.min(1100
 const FDEF={
  cable:{layer:5,edit:['tag','cores','sec','color','ends','rad','brk'],def:{tag:'W1',cores:'5',sec:'16',color:'green',len:250,brk:120,ends:'A'},size:o=>{const G=cabGeo(o);return {w:G.w,h:G.h};},
   terms:o=>cabGeo(o).terms,draw:o=>cabSVG(o)},
+ hpipe:{layer:5,edit:['tag','mat','dn','rad'],def:{tag:'',mat:'pvc',dn:'110',len:3000,rad:1.5},size:o=>{const G=cabGeo(o);return {w:G.w,h:G.h};},terms:()=>[],draw:o=>hpipeSVG(o)},
+ hvalve:{layer:5.2,edit:['tag','vk','dn'],def:{tag:'',vk:'gate',dn:'110'},size:o=>{const D=+o.p.dn||110;return {w:hvL(o),h:D*2.5+8};},draw:o=>hvalveSVG(o)},
+ hfit:{layer:5.2,edit:['tag','fk','mat','dn','dn2'],def:{tag:'',fk:'elbow',mat:'steel',dn:'110',dn2:'63'},size:o=>{const {D,D2,k,L}=hfitGeo(o),F=D*.8+4;return k==='elbow'?{w:D*1.5+F*2,h:D*1.5+F*2}:k==='tee'?{w:L,h:L}:{w:L,h:F*2};},draw:o=>hfitSVG(o)},
  conduit:{layer:5,edit:['tag','ck','fc','dn','rad'],def:{tag:'',ck:'mar',fc:'red',dn:'20',len:1000,rad:4},size:o=>{const G=cabGeo(o);return {w:G.w,h:G.h};},terms:()=>[],draw:o=>conduitSVG(o)},
  traysh:{layer:.5,resize:'len',minLen:200,edit:['tag','tw','len','orient'],def:{tw:200,len:1500,tag:''},size:o=>({w:o.p.len,h:+o.p.tw}),
   draw:o=>{const L=o.p.len,W=+o.p.tw;let s=`<rect x="${-L/2}" y="${-W/2}" width="${L}" height="${W}" fill="#c7cbd0" stroke="#5f6670" stroke-width="1.6"/><rect x="${-L/2}" y="${-W/2}" width="${L}" height="9" fill="#a9aeb5"/><rect x="${-L/2}" y="${W/2-9}" width="${L}" height="9" fill="#a9aeb5"/>`;
@@ -1706,11 +1772,11 @@ Object.assign(DEF,WDEF);
    slab, or a raised floor — tiles on pedestals over the slab with the cable void
    between. Its top is the floor level, marked at the end (±0.00 by default). */
 let floorSeq=0;
-DEF.floor={layer:.2,resize:'len',minLen:300,edit:['tag','kind','th','rh','len'],def:{kind:'concrete',th:200,rh:400,len:2000,tag:'±0.00'},
+DEF.floor={layer:.2,resize:'len',minLen:300,edit:['tag','kind','th','rh','len','hk','hs','hc'],def:{kind:'concrete',th:200,rh:400,len:2000,tag:'±0.00',hk:'concrete',hs:'1',hc:'grey'},
  size:o=>({w:o.p.len,h:+o.p.th+(o.p.kind==='raised'?+o.p.rh:0)}),
  draw:o=>{const L=o.p.len,th=+o.p.th,rh=o.p.kind==='raised'?+o.p.rh:0,h=th+rh,y0=-h/2,ys=y0+rh,id='fh'+(o.id||'t'+(++floorSeq));
-  let s=`<defs><pattern id="${id}" patternUnits="userSpaceOnUse" width="28" height="28" patternTransform="rotate(45)"><rect width="28" height="28" fill="#c9c3b6"/><line x1="0" y1="0" x2="0" y2="28" stroke="#8d8678" stroke-width="2.2"/><circle cx="14" cy="9" r="1.6" fill="#9e978a"/><circle cx="9" cy="20" r="1.1" fill="#9e978a"/></pattern></defs>`;
-  s+=`<rect x="${-L/2}" y="${ys}" width="${L}" height="${th}" fill="url(#${id})" stroke="#4b4b4b" stroke-width="2"/><line x1="${-L/2}" y1="${ys}" x2="${L/2}" y2="${ys}" stroke="#222" stroke-width="3"/>`;
+  const H=hatchDef(id,o.p.hk||'concrete',o.p.hs||1,o.p.hc||'grey');let s=H.defs;
+  s+=`<rect x="${-L/2}" y="${ys}" width="${L}" height="${th}" fill="${H.fill}" stroke="#4b4b4b" stroke-width="2"/><line x1="${-L/2}" y1="${ys}" x2="${L/2}" y2="${ys}" stroke="#222" stroke-width="3"/>`;
   if(rh){const tt=30;s+=`<rect x="${-L/2}" y="${y0}" width="${L}" height="${tt}" fill="#d6d3cc" stroke="#555" stroke-width="1.6"/>`;
    for(let x=-L/2+600;x<L/2;x+=600)s+=`<line x1="${x}" y1="${y0}" x2="${x}" y2="${y0+tt}" stroke="#555" stroke-width="2"/>`;
    for(let x=-L/2+300;x<L/2;x+=600)s+=`<rect x="${x-6}" y="${y0+tt}" width="12" height="${rh-tt-18}" fill="#9ca3af" stroke="#555" stroke-width="1"/><rect x="${x-40}" y="${ys-18}" width="80" height="18" fill="#9ca3af" stroke="#555" stroke-width="1"/><rect x="${x-40}" y="${y0+tt}" width="80" height="8" fill="#b0b5bb" stroke="#555" stroke-width="1"/>`;}
@@ -1877,6 +1943,11 @@ const LIB=[
   {tab:'צנרת, מובילים ותעלות',icon:'⊂',hint:'צינור: סוג (מרירון / שרשורי / קוברה), צבע לשרשורי וקוטר במאפיינים; כל פנייה היא קשת. תעלת כבלים: אורך בגרירת הקצוות, רוחב במאפיינים.',groups:[
    {g:'צנרת — סוג, צבע וקוטר (16-63 מ"מ) במאפיינים; לכיפוף גוררים את ה-+ שבאמצע הצינור',items:[{t:'conduit',n:'צינור מרירון',p:{ck:'mar',dn:'20'}},{t:'conduit',n:'צינור שרשורי',p:{ck:'flex',fc:'red',dn:'20'}},{t:'conduit',n:'צינור קוברה',p:{ck:'cobra',dn:'20'}}]},
    {g:'תעלות כבלים — רוחב (50-600 מ"מ) וכיוון (אופקי / אנכי) במאפיינים; אורך בגרירת הקצוות; סיבוב בכפתור הסיבוב',items:I('תעלת פח','תעלת רשת')}]},
+  {tab:'צנרת הידראולית',icon:'🚰',groups:[
+   {g:'צנרת פלסטיק',items:[{t:'hpipe',n:'צינור PVC',p:{mat:'pvc',dn:'110'}},{t:'hpipe',n:'צינור HDPE',p:{mat:'hdpe',dn:'110'}}]},
+   {g:'צנרת ברזל',items:[{t:'hpipe',n:'צינור פלדה',p:{mat:'steel',dn:'100'}},{t:'hpipe',n:'צינור ברזל יציקה',p:{mat:'di',dn:'200'}},{t:'hpipe',n:'צינור נירוסטה',p:{mat:'ss',dn:'50'}}]},
+   {g:'מגופים ושסתומים',items:Object.entries(HVK).map(([k,n])=>({t:'hvalve',n,p:{vk:k,dn:'110'}}))},
+   {g:'אביזרים',items:Object.entries(HFK).map(([k,n])=>({t:'hfit',n,p:{fk:k,mat:'steel',dn:'110'}}))}]},
   {tab:'הנדסה אזרחית',icon:'🧱',groups:[
    {g:'רצפה (חתך)',items:[{t:'floor',n:'רצפת בטון',p:{kind:'concrete'}},{t:'floor',n:'רצפה כפולה (צפה)',p:{kind:'raised'}}]},
    {g:'קירות',items:[{t:'wall',n:'קיר אופקי'},{t:'wall',n:'קיר אנכי',p:{w:200,h:2000}}]},
@@ -2022,9 +2093,9 @@ function selBox(o){const {w,h}=sizeOf(o);return `<rect x="${-w/2-2.5}" y="${-h/2
 const rank=o=>o.__door||o.__cab||o.__lid||o.__cabGhost||o.__doorGhost?6.5:(o.type==='wire'?6:DEF[o.type].layer)+(+o.z||0);
 let rq=0;function render(){if(rq)return;rq=requestAnimationFrame(()=>{rq=0;renderNow();});}
 function handlesSVG(){const o=sel&&get(sel);if(!o||o.type==='wire'||o.locked||wireMode)return '';const D=DEF[o.type];
- if(o.type==='cable'||o.type==='conduit'||CABRT[o.type]){const R=cabRoute(o),r=9/view.s;let s='',cps='';const BB=cabBends(o);R.forEach((p,i)=>{const [x,y]=fromLocal(o,p.x,p.y),tight=i>0&&i<R.length-1&&BB[i-1]&&BB[i-1].tight;cps+=`<g data-cp="${i}" style="cursor:move"><title>${tight?`הכיפוף צר מהרדיוס הנדרש (${Math.round(BB[i-1].r)} מתוך ${Math.round(BB[i-1].need)} מ"מ) — האריכו את הקטעים`:''}</title><circle cx="${x}" cy="${y}" r="${r*2}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r}" fill="${tight?'#ef4444':'#3b82f6'}" stroke="#fff" stroke-width="${r*.28}"/></g>`;});
+ if(o.type==='cable'||isPipe(o)||CABRT[o.type]){const R=cabRoute(o),r=9/view.s;let s='',cps='';const BB=cabBends(o);R.forEach((p,i)=>{const [x,y]=fromLocal(o,p.x,p.y),tight=i>0&&i<R.length-1&&BB[i-1]&&BB[i-1].tight;cps+=`<g data-cp="${i}" style="cursor:move"><title>${tight?`הכיפוף צר מהרדיוס הנדרש (${Math.round(BB[i-1].r)} מתוך ${Math.round(BB[i-1].need)} מ"מ) — האריכו את הקטעים`:''}</title><circle cx="${x}" cy="${y}" r="${r*2}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r}" fill="${tight?'#ef4444':'#3b82f6'}" stroke="#fff" stroke-width="${r*.28}"/></g>`;});
   for(let i=1;i<R.length;i++){if(Math.hypot(R[i].x-R[i-1].x,R[i].y-R[i-1].y)*view.s<26)continue;const [x,y]=fromLocal(o,(R[i].x+R[i-1].x)/2,(R[i].y+R[i-1].y)/2);s+=`<g data-cm="${i-1}" style="cursor:copy"><circle cx="${x}" cy="${y}" r="${r*1.6}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r*.7}" fill="#fff" stroke="#3b82f6" stroke-width="${r*.3}"/><path d="M${x-r*.4} ${y}h${r*.8}M${x} ${y-r*.4}v${r*.8}" stroke="#3b82f6" stroke-width="${r*.22}"/></g>`;}
-  s+=cps+cutHandles(o,R,r);
+  s+=cps+(isPipe(o)?'':cutHandles(o,R,r));
   return s;}
  if(o.type==='wcard'){const r=9/view.s,{h}=sizeOf(o),[x,y]=fromLocal(o,0,-h/2-r*1.6);let s=`<g data-cl="1" style="cursor:ns-resize"><title>גרור כדי להאריך או לקצר את הכבל</title><circle cx="${x}" cy="${y}" r="${r*2}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r}" fill="#ff8c00" stroke="#fff" stroke-width="${r*.28}"/><path d="M${x} ${y-r*.55}v${r*1.1}M${x-r*.35} ${y-r*.25}l${r*.35} ${-r*.3}l${r*.35} ${r*.3}M${x-r*.35} ${y+r*.25}l${r*.35} ${r*.3}l${r*.35} ${-r*.3}" fill="none" stroke="#000" stroke-width="${r*.18}" stroke-linecap="round"/></g>`;
   if(G&&G.mode==='cl'){const t=`${(Math.max(+o.p.cl||0,CABLEN[o.type])/1000).toFixed(2)} מ'`;s+=`<g pointer-events="none" transform="translate(${x+r*2} ${y})"><rect x="0" y="${-r*1.1}" width="${r*6.4}" height="${r*2.2}" rx="${r*.4}" fill="#000" stroke="#ff8c00" stroke-width="${r*.15}"/><text x="${r*3.2}" y="0" font-size="${r*1.3}" fill="#ffb340" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Arial">${t}</text></g>`;}return s;}
@@ -3272,7 +3343,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  const dEl=e.target.closest('[data-dim]');if(dEl){G.dim=dEl.dataset.dim;return;}
  const hEl=e.target.closest('[data-h]'),so=sel&&get(sel);
  const cutEl=e.target.closest('[data-cut]');if(cutEl&&so&&!so.locked&&!globalLock){cutToggle(so,cutEl.dataset.cut);G.mode='cutx';return;}
- const cpEl=e.target.closest('[data-cp],[data-cm]');if(cpEl&&so&&(so.type==='cable'||so.type==='conduit'||CABRT[so.type])&&!so.locked&&!wireMode&&!globalLock){so.p.route=cabRoute(so).map(p=>({...p}));let i;
+ const cpEl=e.target.closest('[data-cp],[data-cm]');if(cpEl&&so&&(so.type==='cable'||isPipe(so)||CABRT[so.type])&&!so.locked&&!wireMode&&!globalLock){so.p.route=cabRoute(so).map(p=>({...p}));let i;
   if(cpEl.dataset.cm!==undefined){const [wx,wy]=toWorld(e.clientX,e.clientY),[lx,ly]=toLocal(so,wx,wy);i=+cpEl.dataset.cm+1;so.p.route.splice(i,0,{x:r2(lx),y:r2(ly)});G.added=1;}else i=+cpEl.dataset.cp;
   G.mode='cpt';G.o=so;G.i=i;return;}
  if(e.target.closest('[data-tip]')&&so&&so.type==='callout'&&!so.locked&&!globalLock){G.mode='tip';G.o=so;return;}
@@ -3594,6 +3665,13 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='exp')h+=`<div class="fld"><label>בייצוא</label><select id="f_exp"><option value="0" ${v!=='1'?'selected':''}>לא מופיעה ב-PDF / תמונה</option><option value="1" ${v==='1'?'selected':''}>מופיעה בייצוא</option></select></div>`;
   else if(k==='ck')h+=`<div class="fld"><label>סוג הצינור</label><select id="f_ck">${Object.entries(CKIND).map(([a,n])=>`<option value="${a}" ${a===String(v||'mar')?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='fc'){if(o.p.ck==='flex')h+=`<div class="fld"><label>צבע הצינור</label><select id="f_fc">${Object.entries(FLEXC).map(([a,c])=>`<option value="${a}" ${a===String(v||'red')?'selected':''}>${c.n}</option>`).join('')}</select></div>`;}
+  else if(k==='hk')h+=`<div class="fld"><label>מילוי (הצללה)</label><select id="f_hk">${Object.entries(HATCH).map(([a,n])=>`<option value="${a}" ${a===String(v||'lines')?'selected':''}>${n}</option>`).join('')}</select></div>`;
+  else if(k==='hs')h+=`<div class="fld"><label>צפיפות ההצללה</label><select id="f_hs">${[['0.5','צפופה'],['1','רגילה'],['2','דלילה'],['4','דלילה מאוד']].map(([a,n])=>`<option value="${a}" ${a===String(v||'1')?'selected':''}>${n}</option>`).join('')}</select></div>`;
+  else if(k==='hc')h+=`<div class="fld"><label>צבע המילוי</label><select id="f_hc">${Object.entries(HATCHC).map(([a,c])=>`<option value="${a}" ${a===String(v||'grey')?'selected':''}>${c.n}</option>`).join('')}</select></div>`;
+  else if(k==='mat')h+=`<div class="fld"><label>חומר</label><select id="f_mat">${Object.entries(HMAT).map(([a,m])=>`<option value="${a}" ${a===String(v||'pvc')?'selected':''}>${m.n}</option>`).join('')}</select></div>`;
+  else if(k==='vk')h+=`<div class="fld"><label>סוג המגוף</label><select id="f_vk">${Object.entries(HVK).map(([a,n])=>`<option value="${a}" ${a===String(v)?'selected':''}>${n}</option>`).join('')}</select></div>`;
+  else if(k==='fk')h+=`<div class="fld"><label>סוג האביזר</label><select id="f_fk">${Object.entries(HFK).map(([a,n])=>`<option value="${a}" ${a===String(v)?'selected':''}>${n}</option>`).join('')}</select></div>`;
+  else if((k==='dn'||k==='dn2')&&(o.type==='hpipe'||o.type==='hvalve'||o.type==='hfit')){if(k==='dn2'&&!['red','tee'].includes(o.p.fk))return;h+=`<div class="fld"><label>${k==='dn2'?(o.p.fk==='tee'?'קוטר ההסתעפות':'קוטר היציאה'):'קוטר'}</label><select id="f_${k}">${HDN.map(a=>`<option value="${a}" ${a==v?'selected':''}>${HDNL(a,o.p.mat)}</option>`).join('')}</select></div>`;}
   else if(k==='dn'&&o.type==='conduit')h+=`<div class="fld"><label>קוטר</label><select id="f_dn">${['16','20','25','32','40','50','63'].map(a=>`<option value="${a}" ${a===String(v)?'selected':''}>${a} מ"מ</option>`).join('')}</select></div>`;
   else if(k==='px')h+=`<div class="fld"><label>סוג הגשש</label><select id="f_px"><option value="ind" ${v!=='cap'?'selected':''}>אינדוקטיבי (מתכת)</option><option value="cap" ${v==='cap'?'selected':''}>קיבולי (כל חומר — נוזל, אבקה, פלסטיק)</option></select></div>`;
   else if(k==='hcol')h+=`<div class="fld"><label>צבע הידית</label><select id="f_hcol"><option value="black" ${v!=='red'?'selected':''}>שחורה (רגילה)</option><option value="red" ${v==='red'?'selected':''}>אדומה על צהוב (חירום)</option></select></div>`;
@@ -3642,8 +3720,8 @@ function editDialog(){const o=sel&&get(sel);
   else{const num=['len','dw','mods','w','h','fs','brk','pw','pd'].includes(k);h+=`<div class="fld"><label>${FL[k]}</label><input id="f_${k}" ${num?'type="number" inputmode="numeric"':''} value="${esc(v)}" ${k==='rating'&&D.ratings?'list="dl_r"':''}></div>`;}});
  if(o.type==='underlay')h+=`<div class="row" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0"><button class="wbtn pri" type="button" onclick="calStart('${o.id}')">📏 כיול קנה מידה</button><button class="wbtn" type="button" onclick="ulManager()">🖼 ניהול תמונות רקע</button></div><div class="hint">גודל: גוררים את הפינות. אחרי הכיול התמונה ננעלת.</div>`;
  if(D.ratings)h+=`<datalist id="dl_r">${D.ratings.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>`;
- panelForm(o.p.name,h,()=>{const k0=o.p.kind,n0=o.p.n,ck0=o.p.ck;if(o.type==='floor')o._top=o.y-sizeOf(o).h/2;o.p.name=$('f_name').value||o.p.name;D.edit.forEach(k=>{const el=$('f_'+k);if(!el)return;let v=el.value;if(k==='orient'){const want=v==='v'?1:0;if((o.rot%180?1:0)!==want)o.rot=want?90:0;return;}if(k==='ang'){o.rot=(((Math.round(+v)||0)%360)+360)%360;return;}if(k==='lw'){o.p.lw=Math.max(.2,+v||2);return;}if(k==='fs'){o.p.fs=Math.max(1,+v||o.p.fs);return;}
-   if(k==='pw'||k==='pd'){o.p[k]=Math.round(+v)||o.p[k];return;}if(k==='u'){o.p.u=Math.max(1,Math.min(52,Math.round(+v)||o.p.u));return;}if(k==='cl'){o.p.cl=Math.max(0,Math.round(+v)||0);if(CABRT[o.type])senSetLen(o);return;}if(['len','dw','mods','w','h','ph','brk'].includes(k)){v=Math.max(k==='mods'?1:k==='ph'?1:10,Math.round(+v)||o.p[k]);}o.p[k]=v;});if(o.type==='cable'||o.type==='conduit')cabRecentre(o);if(o.type==='floor'&&o._top!=null){o.y=r2(o._top+sizeOf(o).h/2);delete o._top;}if(o.type==='floor'&&o.p.kind!==k0)setTimeout(editDialog,0);if(o.type==='xbox'&&o.p.n!=n0){const n=+o.p.n;if(/^קופסת לחצנים/.test(o.p.name))o.p.name=`קופסת לחצנים ${n===1?'1 קדח':n+' קדחים'} — XALD0${n}`;setTimeout(editDialog,0);}if(o.type==='cibox'&&/^(CI-K|Ci )/.test(o.p.name))o.p.name=CISZ[o.p.size].n+(o.p.window==='1'?' עם חלון':'');if(o.type==='conduit'&&ck0!==o.p.ck){if(/^צינור (מרירון|שרשורי|קוברה)$/.test(o.p.name))o.p.name='צינור '+{mar:'מרירון',flex:'שרשורי',cobra:'קוברה'}[o.p.ck];setTimeout(editDialog,0);}commit();renderNow();updateBar();});}
+ panelForm(o.p.name,h,()=>{const k0=o.p.kind,n0=o.p.n,ck0=o.p.ck,fk0=o.p.fk,vk0=o.p.vk;if(o.type==='floor')o._top=o.y-sizeOf(o).h/2;o.p.name=$('f_name').value||o.p.name;D.edit.forEach(k=>{const el=$('f_'+k);if(!el)return;let v=el.value;if(k==='orient'){const want=v==='v'?1:0;if((o.rot%180?1:0)!==want)o.rot=want?90:0;return;}if(k==='ang'){o.rot=(((Math.round(+v)||0)%360)+360)%360;return;}if(k==='lw'){o.p.lw=Math.max(.2,+v||2);return;}if(k==='fs'){o.p.fs=Math.max(1,+v||o.p.fs);return;}
+   if(k==='pw'||k==='pd'){o.p[k]=Math.round(+v)||o.p[k];return;}if(k==='u'){o.p.u=Math.max(1,Math.min(52,Math.round(+v)||o.p.u));return;}if(k==='cl'){o.p.cl=Math.max(0,Math.round(+v)||0);if(CABRT[o.type])senSetLen(o);return;}if(['len','dw','mods','w','h','ph','brk'].includes(k)){v=Math.max(k==='mods'?1:k==='ph'?1:10,Math.round(+v)||o.p[k]);}o.p[k]=v;});if(o.type==='cable'||isPipe(o))cabRecentre(o);if((o.type==='hfit'&&fk0!==o.p.fk)||(o.type==='hvalve'&&vk0!==o.p.vk)){const N=o.type==='hfit'?HFK:HVK,k1=o.type==='hfit'?o.p.fk:o.p.vk;if(Object.values(N).includes(o.p.name))o.p.name=N[k1];setTimeout(editDialog,0);}if(o.type==='floor'&&o._top!=null){o.y=r2(o._top+sizeOf(o).h/2);delete o._top;}if(o.type==='floor'&&o.p.kind!==k0)setTimeout(editDialog,0);if(o.type==='xbox'&&o.p.n!=n0){const n=+o.p.n;if(/^קופסת לחצנים/.test(o.p.name))o.p.name=`קופסת לחצנים ${n===1?'1 קדח':n+' קדחים'} — XALD0${n}`;setTimeout(editDialog,0);}if(o.type==='cibox'&&/^(CI-K|Ci )/.test(o.p.name))o.p.name=CISZ[o.p.size].n+(o.p.window==='1'?' עם חלון':'');if(o.type==='conduit'&&ck0!==o.p.ck){if(/^צינור (מרירון|שרשורי|קוברה)$/.test(o.p.name))o.p.name='צינור '+{mar:'מרירון',flex:'שרשורי',cobra:'קוברה'}[o.p.ck];setTimeout(editDialog,0);}commit();renderNow();updateBar();});}
 function wireLen(w){const ps=w.pts.map(resolve).filter(Boolean);let L=0;for(let i=1;i<ps.length;i++)L+=Math.hypot(ps[i].x-ps[i-1].x,ps[i].y-ps[i-1].y);return L;}
 
 /* ================= about =================
@@ -3826,6 +3904,8 @@ function bomDataSld(){return withDoc('sld',()=>{const rows={},SKIP=['wire','sfra
   const k=(o.p.name||o.type)+(o.p.rating?' '+o.p.rating:'');const r=rows[k]=rows[k]||{n:0,tags:[]};r.n++;if(o.p.tag)r.tags.push(o.p.tag);});
  return Object.keys(rows).map(k=>{const r=rows[k],tg=r.tags.sort((a,b)=>a.localeCompare(b,'he',{numeric:true}));return [k+(tg.length?` (${tg.length>6?tg.slice(0,6).join(', ')+'…':tg.join(', ')})`:''),`${r.n} יח'`];});});}
 function bomData0(){const rows={};state.objs.forEach(o=>{if(o.type==='underlay'||o.type==='nmap')return;if(o.type==='wire'){const k=`חוט ${WCOL[o.p.color]?.n} ${o.p.sec} ממ"ר`;rows[k]=rows[k]||{n:0,len:0,w:1};rows[k].len+=wireLen(o);return;}
+  if(o.type==='hpipe'){const M=HMAT[o.p.mat]||HMAT.pvc,kl=`צינור ${M.n.replace(/ \(.*\)/,'')} ${HDNL(+o.p.dn,o.p.mat)}`;rows[kl]=rows[kl]||{n:0,len:0};rows[kl].len+=cabLength(o);rows[kl].n++;const nb=cabBends(o).filter(Boolean).length;if(nb){const kb=`קשת 90° ${M.s} ${HDNL(+o.p.dn,o.p.mat)}`;rows[kb]=rows[kb]||{n:0};rows[kb].n+=nb;}return;}
+  if(o.type==='hvalve'||o.type==='hfit'){const kl=(o.type==='hvalve'?HVK[o.p.vk]:HFK[o.p.fk]+' '+(HMAT[o.p.mat]||HMAT.steel).s)+' '+HDNL(+o.p.dn,o.p.mat)+(o.type==='hfit'&&['red','tee'].includes(o.p.fk)?'×'+o.p.dn2:'');rows[kl]=rows[kl]||{n:0};rows[kl].n++;return;}
   if(o.type==='conduit'){const D=+o.p.dn||20,kn={mar:'מרירון',flex:'שרשורי',cobra:'קוברה'}[o.p.ck||'mar'],kl=`צינור ${kn}${o.p.ck==='flex'?' '+(FLEXC[o.p.fc]||FLEXC.red).n:''} ${D} מ"מ`,kb=o.p.ck&&o.p.ck!=='mar'?null:`קשת מרירון ${D} מ"מ`,nb=cabBends(o).filter(Boolean).length;rows[kl]=rows[kl]||{n:0,len:0};rows[kl].len+=cabLength(o);rows[kl].n++;if(nb&&kb){rows[kb]=rows[kb]||{n:0};rows[kb].n+=nb;}return;}
   let k=o.p.name+(o.p.rating&&!['label'].includes(o.type)?' '+o.p.rating:'');if(o.type==='cable'||o.type==='traysh'||o.type==='traymesh'){const g=o.type==='cable'?cabG2(o):null;k=o.type==='cable'?`כבל ${CNAME[o.p.color]||''} ${g.n}×${o.p.sec} ממ"ר`:`${o.type==='traysh'?'תעלת פח':'תעלת רשת'} ${o.p.tw} מ"מ`;rows[k]=rows[k]||{n:0,len:0};rows[k].len+=o.type==='cable'?cabLength(o):o.p.len;rows[k].n++;return;}
   if(o.type==='rail'||o.type==='duct'||o.type==='busbar'||o.type==='partition'){k=o.p.name+(o.type==='duct'?` ${o.p.dw}מ"מ`:'');rows[k]=rows[k]||{n:0,len:0};rows[k].len+=o.p.len;rows[k].n++;return;}
