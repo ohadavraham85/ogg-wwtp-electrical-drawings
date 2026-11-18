@@ -767,12 +767,17 @@ function acbDraw(o){const {w,h,v,P}=acbDim(o),dr=v==='d',sw=1.2,k='#0b0b0b';let 
 /* Live dimensions on a drawn rectangle / ellipse: width above, height at the
    side, following the shape as it is resized. Tap a dimension to type the size
    (and its offset); drag it to move the dimension line nearer or farther. */
-function shDimsSVG(o){if(o.p.sd!=='1')return '';const w=+o.p.w,h=+o.p.h,c=col(o,'blue'),fs=+o.p.dfs||Math.max(8,Math.min(60,Math.round(Math.min(w,h)*.08))),ow=Math.max(0,+o.p.dw||fs*1.6),oh=Math.max(0,+o.p.dh||fs*1.6),lw=Math.max(.4,fs*.07),a=fs*.55;
+function shDimsSVG(o){if(o.p.sd!=='1')return '';const w=+o.p.w,h=+o.p.h,c=col(o,'blue'),fs=+o.p.dfs||Math.max(8,Math.min(60,Math.round(Math.min(w,h)*.08))),od=Math.max(0,+o.p.ofd||0),ow=Math.max(0,+o.p.dw||fs*1.6)+od,oh=Math.max(0,+o.p.dh||fs*1.6)+od,lw=Math.max(.4,fs*.07),a=fs*.55;
  const v=x=>String(Math.round(x*10)/10);let s='';
  const bt=o.p.wpos==='b',lf=o.p.hpos==='l',sy=bt?1:-1,sx=lf?-1:1;
  const y=sy*(h/2+ow);s+=`<g data-sdim="w" style="cursor:pointer"><path d="M${-w/2} ${sy*(h/2+lw*2)}V${y+sy*a*.6}M${w/2} ${sy*(h/2+lw*2)}V${y+sy*a*.6}M${-w/2} ${y}H${w/2}" stroke="${c}" stroke-width="${lw}" fill="none"/><path d="M${-w/2} ${y}l${a} ${-a*.35}v${a*.7}zM${w/2} ${y}l${-a} ${-a*.35}v${a*.7}z" fill="${c}"/><rect x="${-w/2}" y="${bt?y-fs*.2:y-fs*1.4}" width="${w}" height="${fs*1.6}" fill="transparent"/>`+txt(0,y+sy*fs*.7,v(w),fs,c,700)+`</g>`;
  const x=sx*(w/2+oh);s+=`<g data-sdim="h" style="cursor:pointer"><path d="M${sx*(w/2+lw*2)} ${-h/2}H${x+sx*a*.6}M${sx*(w/2+lw*2)} ${h/2}H${x+sx*a*.6}M${x} ${-h/2}V${h/2}" stroke="${c}" stroke-width="${lw}" fill="none"/><path d="M${x} ${-h/2}l${-a*.35} ${a}h${a*.7}zM${x} ${h/2}l${-a*.35} ${-a}h${a*.7}z" fill="${c}"/><rect x="${lf?x-fs*1.4:x-fs*.2}" y="${-h/2}" width="${fs*1.6}" height="${h}" fill="transparent"/><g transform="translate(${r2(x+sx*fs*.7)} 0) rotate(-90)">${txt(0,0,v(h),fs,c,700)}</g></g>`;
  return s;}
+// a CAD-style offset: a second outline d mm outside (or inside, when negative) the shape, and optionally the band between them filled like a wall
+function shOffSVG(o,ell){const d=+o.p.ofd||0;if(!d)return '';const w=+o.p.w,h=+o.p.h,W=Math.max(1,w+2*d),H=Math.max(1,h+2*d),c=col(o,'blue'),lw=Math.max(.2,+o.p.lw||2);
+ const shp=(a,b)=>ell?`M${-a/2} 0A${a/2} ${b/2} 0 1 0 ${a/2} 0A${a/2} ${b/2} 0 1 0 ${-a/2} 0Z`:`M${-a/2} ${-b/2}H${a/2}V${b/2}H${-a/2}Z`;
+ let s='';if(o.p.ofh&&o.p.ofh!=='none'){const H2=hatchDef('of'+(o.id||'t'+(++floorSeq)),o.p.ofh,o.p.ofs||1,'grey');s+=H2.defs+`<path d="${shp(w,h)}${shp(W,H)}" fill="${H2.fill}" fill-rule="evenodd" stroke="none"/>`;}
+ return s+`<path d="${shp(W,H)}" fill="none" stroke="${c}" stroke-width="${lw}" ${shDash(o)}/>`;}
 function shDimEdit(o,k){const nm=k==='w'?'רוחב':'גובה';
  modal(`${nm} ${o.p.name||''}`,`<div class="fld"><label>${nm} (מ"מ)</label><input id="f_sdv" type="number" inputmode="decimal" step="0.1" value="${+o.p[k]}"></div><div class="fld"><label>מרחק קו המידה מהצורה — אופסט (מ"מ)</label><input id="f_sdo" type="number" inputmode="decimal" step="1" value="${Math.round(+o.p[k==='w'?'dw':'dh']||0)}"></div><div class="fld"><label>צד</label><select id="f_sds">${k==='w'?`<option value="t" ${o.p.wpos!=='b'?'selected':''}>מעל הצורה</option><option value="b" ${o.p.wpos==='b'?'selected':''}>מתחת לצורה</option>`:`<option value="r" ${o.p.hpos!=='l'?'selected':''}>מימין לצורה</option><option value="l" ${o.p.hpos==='l'?'selected':''}>משמאל לצורה</option>`}</select></div><div class="hint">אופסט 0 = לפי ברירת המחדל. אפשר גם לגרור את קו המידה — גם אל הצד השני של הצורה.</div>`,
   [{t:'החל',cls:'pri',fn:()=>{const v=parseFloat($('f_sdv').value),f=parseFloat($('f_sdo').value);if(!(v>0)){toast('ערך לא תקין');return false;}
@@ -1163,10 +1168,10 @@ const DEF={
    if(hd!=='none')s+=`<path d="M${L/2} 0L${L/2-al} ${-aw}L${L/2-al} ${aw}Z" fill="${c}"/>`;
    if(hd==='both')s+=`<path d="M${-L/2} 0L${-L/2+al} ${-aw}L${-L/2+al} ${aw}Z" fill="${c}"/>`;
    return s+`<path d="M${-L/2} 0H${L/2}" stroke="transparent" stroke-width="${Math.max(lw*4,10)}"/>`;}},
- shrect:{layer:6.8,resize:'box',minBox:5,edit:['w','h','sd','lw','dash','fill','color'],def:{w:300,h:200,sd:'1',lw:2,dash:'solid',fill:'none',color:'blue'},size:o=>({w:o.p.w,h:o.p.h}),
-  draw:o=>shDimsSVG(o)+`<rect x="${-o.p.w/2}" y="${-o.p.h/2}" width="${o.p.w}" height="${o.p.h}" fill="${shFill(o)}" stroke="${col(o,'blue')}" stroke-width="${Math.max(.2,+o.p.lw||2)}" ${shDash(o)}/>`},
- shellipse:{layer:6.8,resize:'box',minBox:5,edit:['w','h','sd','lw','dash','fill','color'],def:{w:200,h:200,sd:'1',lw:2,dash:'solid',fill:'none',color:'blue'},size:o=>({w:o.p.w,h:o.p.h}),
-  draw:o=>shDimsSVG(o)+`<ellipse cx="0" cy="0" rx="${o.p.w/2}" ry="${o.p.h/2}" fill="${shFill(o)}" stroke="${col(o,'blue')}" stroke-width="${Math.max(.2,+o.p.lw||2)}" ${shDash(o)}/>`},
+ shrect:{layer:6.8,resize:'box',minBox:5,edit:['w','h','sd','ofd','ofh','lw','dash','fill','color'],def:{w:300,h:200,sd:'1',lw:2,dash:'solid',fill:'none',color:'blue'},size:o=>({w:o.p.w,h:o.p.h}),
+  draw:o=>shOffSVG(o,false)+shDimsSVG(o)+`<rect x="${-o.p.w/2}" y="${-o.p.h/2}" width="${o.p.w}" height="${o.p.h}" fill="${shFill(o)}" stroke="${col(o,'blue')}" stroke-width="${Math.max(.2,+o.p.lw||2)}" ${shDash(o)}/>`},
+ shellipse:{layer:6.8,resize:'box',minBox:5,edit:['w','h','sd','ofd','ofh','lw','dash','fill','color'],def:{w:200,h:200,sd:'1',lw:2,dash:'solid',fill:'none',color:'blue'},size:o=>({w:o.p.w,h:o.p.h}),
+  draw:o=>shOffSVG(o,true)+shDimsSVG(o)+`<ellipse cx="0" cy="0" rx="${o.p.w/2}" ry="${o.p.h/2}" fill="${shFill(o)}" stroke="${col(o,'blue')}" stroke-width="${Math.max(.2,+o.p.lw||2)}" ${shDash(o)}/>`},
  label:{layer:7,edit:['text','fs','color'],def:{text:'טקסט',color:'black',fs:6},
   size:o=>{const f=lblFs(o),ls=lblLines(o);return {w:Math.max(3*f,Math.max(...ls.map(l=>l.length))*f*.77+f*1.4),h:ls.length*f*1.3+f*.55};},
   draw:o=>{const {w,h}=DEF.label.size(o),f=lblFs(o),ls=lblLines(o),y0=-(ls.length-1)*f*1.3/2;
@@ -3780,6 +3785,8 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='ck')h+=`<div class="fld"><label>סוג הצינור</label><select id="f_ck">${Object.entries(CKIND).map(([a,n])=>`<option value="${a}" ${a===String(v||'mar')?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='fc'){if(o.p.ck==='flex')h+=`<div class="fld"><label>צבע הצינור</label><select id="f_fc">${Object.entries(FLEXC).map(([a,c])=>`<option value="${a}" ${a===String(v||'red')?'selected':''}>${c.n}</option>`).join('')}</select></div>`;}
   else if(k==='sd')h+=`<div class="fld"><label>מידות על הצורה</label><select id="f_sd"><option value="1" ${v==='1'?'selected':''}>הצג</option><option value="0" ${v!=='1'?'selected':''}>הסתר</option></select></div>`;
+  else if(k==='ofd')h+=`<div class="fld"><label>אופסט — קו מתאר נוסף (מ"מ; חיובי = החוצה, שלילי = פנימה, 0 = בלי)</label><input id="f_ofd" type="number" inputmode="decimal" step="1" value="${+v||0}"></div>`;
+  else if(k==='ofh')h+=`<div class="fld"><label>מילוי בין הקווים (קיר)</label><select id="f_ofh">${[['none','ללא'],...Object.entries(HATCH).filter(([a])=>a!=='none')].map(([a,n])=>`<option value="${a}" ${a===String(v||'none')?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='hk')h+=`<div class="fld"><label>מילוי (הצללה)</label><select id="f_hk">${Object.entries(HATCH).map(([a,n])=>`<option value="${a}" ${a===String(v||'lines')?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='hs')h+=`<div class="fld"><label>צפיפות ההצללה</label><select id="f_hs">${[['0.5','צפופה'],['1','רגילה'],['2','דלילה'],['4','דלילה מאוד']].map(([a,n])=>`<option value="${a}" ${a===String(v||'1')?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='hc')h+=`<div class="fld"><label>צבע המילוי</label><select id="f_hc">${Object.entries(HATCHC).map(([a,c])=>`<option value="${a}" ${a===String(v||'grey')?'selected':''}>${c.n}</option>`).join('')}</select></div>`;
