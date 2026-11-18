@@ -322,7 +322,7 @@ body:has(#wireBar:not(.hidden)) #sbar,body:has(#measBar:not(.hidden)) #sbar,body
 body:has(#wireBar:not(.hidden)) #lyTabs,body.libdrag #lyTabs{display:none!important}
 #lyTabs{position:fixed;z-index:4;display:flex;align-items:center;gap:3px;padding:3px;background:var(--card);border:1.5px solid var(--acc);border-radius:4px;box-shadow:0 4px 14px rgba(0,0,0,.5);direction:rtl;overflow-x:auto;scrollbar-width:none}#lyTabs::-webkit-scrollbar{display:none}#lyTabs.glued{border-top-left-radius:0;border-bottom-left-radius:0;box-sizing:border-box}body:has(#lyTabs.glued) #sbar{border-top-right-radius:0;border-bottom-right-radius:0}#lyTabs .lysep{flex:none;width:2px;align-self:stretch;margin:2px 3px;background:var(--acc);opacity:.6}#lyTabs button.doc.cur{border-color:var(--acc)}
 #lyTabs button{flex:none;padding:6px 10px;border-radius:4px;font:700 13px Heebo,Arial,sans-serif;background:var(--ctl);border:1px solid var(--ctl-bd);border-bottom:2px solid #6b7280;color:var(--txt);white-space:nowrap}#lyTabs button.on{background:linear-gradient(180deg,var(--acc-light),var(--acc));color:#000;border-color:var(--acc-light);border-bottom-color:#a35a00}#lyTabs button small{font-weight:400;opacity:.75;margin-right:7px;font-size:11px}#lyTabs .add{padding:6px 11px;font-size:15px}
-@media (max-width:600px){#lyTabs button{padding:5px 7px;font-size:12px}}
+@media (max-width:600px){#lyTabs button{padding:5px 7px;font-size:12px}#lyTabs .lyl,#lyTabs button small{display:none}}
 @media (max-width:600px){#sbar button{padding:5px 7px;font-size:12px}#sbar #coord{font-size:11px;padding:3px 6px}}
 @media (pointer:coarse){#sbar [data-sb=cross]{display:none}#sbar #coord{display:none}}
 /* ---- bars docked to the edges, no gaps ---- */
@@ -3130,12 +3130,12 @@ function layEdit(id){laySync();const e=state.lays.find(x=>x.id===id);if(!e)retur
    {t:'⚙ גודל וקנה מידה…',fn:()=>{e.name=$('ly_name').value.trim()||e.name;layShow(id);setTimeout(layoutDialog,30);}},
    {t:'🗑 מחק דף',fn:()=>{state.lays=state.lays.filter(x=>x.id!==id);LAYDOC.forEach(([,lk])=>{if(state[lk]&&state[lk].lid===id){delete state[lk];const nx=state.lays.find(x=>x.d===e.d);if(nx){const [,lk2]=LAYDOC.find(x=>x[0]===nx.d);state[lk2]={on:0,paper:nx.paper,orient:nx.orient,scale:nx.scale,lid:nx.id};}}});commit();renderNow();toast('הדף נמחק');}},{t:'ביטול'}]);}
 let LYSIG='';function buildLayTabs(){const B=$('lyTabs');if(!B)return;laysInit();laySync();const a=layActive(),one=state.tab!=='both';const sig=JSON.stringify([a,curDoc(),state.lays.map(e=>[e.id,e.d,e.name,e.paper,e.scale])]);if(sig===LYSIG&&B.firstChild)return;LYSIG=sig;
- const cd=curDoc();let h=[['panel','🗄 חזית לוח'],['sld','⚡ חד קווי'],['both','◧ משולב']].map(([d,l])=>`<button data-ly="m:${d}" class="doc${cd===d&&!a?' on':''}${cd===d&&a?' cur':''}" title="${{panel:'חזית לוח',sld:'חד קווי',both:'חזית וחד קווי יחד'}[d]} — השרטוט עצמו, בלי דף">${l}</button>`).join('')+'<span class="lysep"></span>';
+ const cd=curDoc();let h=[['panel','🗄','חזית לוח'],['sld','⚡','חד קווי'],['both','◧','משולב']].map(([d,ic,l0])=>`<button data-ly="m:${d}" class="doc${cd===d&&!a?' on':''}${cd===d&&a?' cur':''}" title="${{panel:'חזית לוח',sld:'חד קווי',both:'חזית וחד קווי יחד'}[d]} — השרטוט עצמו, בלי דף">${ic}<span class="lyl"> ${l0}</span></button>`).join('')+'<span class="lysep"></span>';
  state.lays.forEach(e=>{h+=`<button data-ly="${e.id}" class="${a===e.id?'on':''}" title="${esc(e.name)} — ${e.d==='sld'?'חד קווי':'חזית לוח'} · ${e.paper} 1:${e.scale}\nלחיצה כפולה: שם, הגדרות, מחיקה">${e.d==='sld'?'⚡':'🗄'} <bdi>${esc(e.name)}</bdi><small dir="ltr">${e.paper} 1:${e.scale}</small></button>`;});
  h+=`<button class="add" data-ly="add" title="דף ייצור חדש">＋</button>`;B.innerHTML=h;layPos();}
 function layPos(){const B=$('lyTabs'),sb=$('sbar');if(!B||!sb)return;const r=sb.getBoundingClientRect(),cs=getComputedStyle(sb);
  if(cs.display==='none'||!r.width){B.style.left='max(26px,env(safe-area-inset-left))';B.style.bottom=cs.bottom;B.style.height='';B.classList.remove('glued');}
- else if(innerWidth<700){B.style.left=r.left+'px';B.style.bottom=(parseFloat(cs.bottom)+r.height+4)+'px';B.style.height='';B.classList.remove('glued');B.style.maxWidth=`calc(100vw - ${Math.round(r.left)+70}px)`;return;}else{B.style.left=(r.right-1.5)+'px';B.style.bottom=cs.bottom;B.style.height=r.height+'px';B.classList.add('glued');}
+ else{B.style.left=(r.right-1.5)+'px';B.style.bottom=cs.bottom;B.style.height=r.height+'px';B.classList.add('glued');}
  B.style.maxWidth=`calc(100vw - ${Math.round((r.width?r.right:26)+6+86)}px)`;}
 addEventListener('resize',layPos);
 function railHint(){const r=$('rail');if(!r)return;const over=r.scrollWidth-r.clientWidth;r.classList.toggle('more',over>4&&Math.abs(r.scrollLeft)<over-4);}
