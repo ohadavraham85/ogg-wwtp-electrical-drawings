@@ -179,11 +179,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 157;
+const VERSION = 158;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'תצוגה לפני הדפסה: בחירת עמודים, שיתוף (וואטסאפ / מייל) והעתקה כתמונה';
+const WHATS_NEW = 'מספר שרטוט אוטומטי (חודש+שנה ומספר רץ, למשל 1126-1) וגרסה שעולה בכל ייצוא';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -321,7 +321,7 @@ let ready;
 
 function info(d) {
   return {
-    id: d.id, name: d.name, parts: d.parts || 0,
+    id: d.id, name: d.name, parts: d.parts || 0, dwgno: d.dwgno || '',
     createdBy: d.createdBy, createdAt: d.createdAt,
     updatedBy: d.updatedBy, updatedAt: d.updatedAt,
     canDelete: isOwner || d.createdByEmail === me.email,
@@ -365,11 +365,14 @@ const bridge = {
     await ready;
     const now = new Date().toISOString();
     const ex = input.id ? designs.get(input.id) : null;
-    const d = ex
+    // the drawing number travels with the design, so new numbers can follow on from the last one
+    let dwgno = '';try { dwgno = String(JSON.parse(input.data).dwgno || ''); } catch (e) {}
+    const d0 = ex
       ? { ...ex, name: input.name, data: input.data, parts: input.parts, updatedBy: me.label, updatedByEmail: me.email, updatedAt: now }
       : { id: DESIGNS.doc().id, name: input.name, data: input.data, parts: input.parts,
           createdBy: me.label, createdByEmail: me.email, createdAt: now,
           updatedBy: me.label, updatedByEmail: me.email, updatedAt: now, deleted: false };
+    const d = dwgno ? { ...d0, dwgno } : d0;
     writeDesign(d);
     return info(d);
   },

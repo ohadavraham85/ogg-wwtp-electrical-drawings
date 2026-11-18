@@ -2554,7 +2554,7 @@ document.addEventListener('click',e=>{if(!e.target.closest('#docTabs,#rail,.ddme
 function panelObjs(){return state.tab==='sld'?(state.alt||[]):state.tab==='both'?state.objs.filter(o=>!isSldObj(o)):state.objs;}
 function withPanel(fn){if(state.tab==='panel'||!state.tab)return fn();const a=state.objs,b=state.alt;state.objs=panelObjs();try{return fn();}finally{state.objs=a;state.alt=b;}}
 function commit(){syncDoc();state.objs.forEach(q=>{if(q.type==='nmap'){const g=nmapGeo(q);if(g)q.y=g.cy;}});ensureOrigin();syncLayoutBtn();const j=JSON.stringify(state);if(hist[hi]===j)return;hist=hist.slice(0,hi+1);hist.push(j);if(hist.length>100)hist.shift();hi=hist.length-1;persist();updateBar();scheduleSave();}
-function restore(j){state=JSON.parse(j);scheduleSave();syncDoc();syncLayoutBtn();multi.clear();if(sel&&!get(sel))sel=null;renderNow();persist();updateBar();}
+function restore(j){const dn=state.dwgno,rv=state.rev;state=JSON.parse(j);if(dn&&state.name!==undefined){state.dwgno=dn;if(rv!=null)state.rev=rv;}scheduleSave();syncDoc();syncLayoutBtn();multi.clear();if(sel&&!get(sel))sel=null;renderNow();persist();updateBar();}
 function undo(){if(draft){draft.pts.pop();if(!draft.pts.length)draft=null;renderNow();return;}if(hi>0){hi--;restore(hist[hi]);}}
 function redo(){if(hi<hist.length-1){hi++;restore(hist[hi]);}}
 /* ================= shared folder (inside the app) =================
@@ -2578,7 +2578,7 @@ function setSaveSt(k){const el=$('saveSt');if(!el)return;if(!SH){el.style.displa
  el.style.display='';el.textContent=txt;el.dataset.k=k;el.title=ttl;}
 function scheduleSave(){if(!SH)return;if(lastSaved!==null&&JSON.stringify(state)===lastSaved){if(!saveT&&!saving)setSaveSt('saved');return;}clearTimeout(saveT);setSaveSt('pending');saveT=setTimeout(doAutoSave,1800);}
 function flushSave(){if(saveT){clearTimeout(saveT);saveT=null;return doAutoSave();}}
-async function doAutoSave(){saveT=null;const data=JSON.stringify(state);if(data===lastSaved){setSaveSt('saved');return;}if(saving){scheduleSave();return;}saving=true;setSaveSt('saving');
+async function doAutoSave(){saveT=null;if(!state.dwgno&&state.objs.length&&!saving){try{await ensureDwgNo();}catch(e){}}const data=JSON.stringify(state);if(data===lastSaved){setSaveSt('saved');return;}if(saving){scheduleSave();return;}saving=true;setSaveSt('saving');
  try{if(cloudId){const d=await SH.info(cloudId),me=SH.me();
    if(d&&cloudStamp&&d.updatedAt!==cloudStamp&&me&&d.updatedBy!==me.label){const nd=await SH.save({name:state.name+' (עותק)',data,parts:partsCount()});setCloud(nd.id);cloudStamp=nd.updatedAt;state.name=nd.name;toast(`${d.updatedBy} ערך את הלוח הזה במקביל — השינויים שלך נשמרו כעותק`);}
    else{const nd=await SH.save({id:cloudId,name:state.name,data,parts:partsCount()});if(nd.id!==cloudId)setCloud(nd.id);cloudStamp=nd.updatedAt;}}
@@ -2592,7 +2592,7 @@ async function saveShared(){if(!cloudId){saveSharedAs(false);return;}
  clearTimeout(saveT);saveT=null;await doAutoSave();toast('נשמר בתיקייה המשותפת');}
 function saveSharedAs(copy){modal(copy?'שמירת עותק בתיקייה המשותפת':'שמירה בתיקייה המשותפת',`<div class="fld"><label>שם הלוח</label><input id="f_sn" value="${esc(copy?state.name+' (עותק)':state.name)}"></div><div class="hint">הלוח יישמר בתיקייה המשותפת של מחלקת החשמל. כולם יוכלו לפתוח אותו, ויראו מי יצר אותו ומי ערך אותו לאחרונה.</div>`,
  [{t:'שמור',cls:'pri',fn:async()=>{const n=($('f_sn').value||'').trim()||'לוח';state.name=n;commit();
-   try{clearTimeout(saveT);saveT=null;const data=JSON.stringify(state),d=await SH.save({name:n,data,parts:partsCount()});setCloud(d.id);cloudStamp=d.updatedAt;lastSaved=data;setSaveSt('saved');updateBar();toast('נשמר בתיקייה המשותפת: '+n);}catch(e){toast('השמירה נכשלה');}}},{t:'ביטול'}]);}
+   try{clearTimeout(saveT);saveT=null;delete state.dwgno;delete state.rev;await ensureDwgNo();const data=JSON.stringify(state),d=await SH.save({name:n,data,parts:partsCount()});setCloud(d.id);cloudStamp=d.updatedAt;lastSaved=data;setSaveSt('saved');updateBar();toast('נשמר בתיקייה המשותפת: '+n);}catch(e){toast('השמירה נכשלה');}}},{t:'ביטול'}]);}
 async function openShared(){let ds=[];try{ds=await SH.list();}catch(e){toast('לא ניתן לקרוא את התיקייה המשותפת');return;}
  const loc=loadProjects(),lk=Object.keys(loc);
  const mine=d=>SH.me()&&d.createdBy===SH.me().label;ds.sort((a,b)=>(mine(b)?1:0)-(mine(a)?1:0));
@@ -4108,7 +4108,7 @@ const DEFAULT_LOGO='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIIAAACUCAYAAA
 const PAPER={A4:[297,210],A3:[420,297],A2:[594,420]};
 function tbLoad(){try{return JSON.parse(localStorage.getItem('epd.tb')||'{}');}catch(e){return {};}}
 function tbSave(t){try{localStorage.setItem('epd.tb',JSON.stringify(t));}catch(e){toast('הלוגו גדול מדי לשמירה — ישמש רק לייצוא הנוכחי');}prefsPush({tb:t});}
-function pdfDialog(){if(!state.objs.length){toast('הלוח ריק');return;}const t=Object.assign({paper:'A3',orient:'L',company:'',project:'',dwgno:'',rev:'0',drafter:'',checker:'',approver:'',notes:'',bomPage:'1',logo:''},tbLoad());
+async function pdfDialog(){if(!state.objs.length){toast('הלוח ריק');return;}await ensureDwgNo();const t=Object.assign({paper:'A3',orient:'L',company:'',project:'',dwgno:'',rev:'0',drafter:'',checker:'',approver:'',notes:'',bomPage:'1',logo:''},tbLoad(),{dwgno:state.dwgno||'',rev:String(nextRev())});
  const today=new Date().toISOString().slice(0,10);const F=(id,l,v,type='text')=>`<div class="fld"><label>${l}</label><input id="t_${id}" type="${type}" value="${esc(v)}"></div>`;
  const S=(id,l,opts,v)=>`<div class="fld"><label>${l}</label><select id="t_${id}">${opts.map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
  let h=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 10px">${S('paper','גודל דף',[['A4','A4'],['A3','A3'],['A2','A2']],t.paper)}${S('orient','כיוון',[['L','לרוחב'],['P','לאורך']],t.orient)}</div>`;
@@ -4120,8 +4120,8 @@ function pdfDialog(){if(!state.objs.length){toast('הלוח ריק');return;}con
  h+=`<div class="hint">כל מה שכתוב כאן (חוץ מהתאריך ושם השרטוט) נשמר תוך כדי הקלדה ויופיע בכל השרטוטים הבאים, עד שתשנה אותו. השרטוט ממוקם בקנה מידה סטנדרטי (1:5, 1:10…) כך שאפשר למדוד בהדפסה.</div>`;
  let logo=t.logo;
  modal('ייצוא PDF',h,[{t:'👁 תצוגה מקדימה',cls:'pri',fn:()=>{const v=id=>$('t_'+id).value;const nt={paper:v('paper'),orient:v('orient'),company:v('company'),project:v('project'),dwgno:v('dwgno'),rev:v('rev'),drafter:v('drafter'),checker:v('checker'),approver:v('approver'),notes:v('notes'),bomPage:v('bomPage'),logo};
-   tbSave(nt);const title=v('title')||state.name;if(title!==state.name){state.name=title;commit();updateBar();}makePdf(Object.assign({},nt,{title,date:v('date')}));}},{t:'ביטול'}]);
- const keep=()=>{const v=id=>$('t_'+id).value;tbSave({paper:v('paper'),orient:v('orient'),company:v('company'),project:v('project'),dwgno:v('dwgno'),rev:v('rev'),drafter:v('drafter'),checker:v('checker'),approver:v('approver'),notes:v('notes'),bomPage:v('bomPage'),logo});};
+   if(v('dwgno')!==state.dwgno){state.dwgno=v('dwgno');commit();}tbSave(Object.assign({},nt,{dwgno:'',rev:''}));const title=v('title')||state.name;if(title!==state.name){state.name=title;commit();updateBar();}makePdf(Object.assign({},nt,{title,date:v('date')}));}},{t:'ביטול'}]);
+ const keep=()=>{const v=id=>$('t_'+id).value;tbSave({paper:v('paper'),orient:v('orient'),company:v('company'),project:v('project'),dwgno:'',rev:'',drafter:v('drafter'),checker:v('checker'),approver:v('approver'),notes:v('notes'),bomPage:v('bomPage'),logo});};
  $('mBody').oninput=keep;$('mBody').onchange=keep;
  $('t_logoF').onchange=e=>{const fl=e.target.files[0];if(!fl)return;const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,500/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);logo=c.toDataURL('image/png');keep();$('t_logoPrev').innerHTML=`<img src="${logo}" style="max-width:100%;max-height:100%">`;};im.src=rd.result;};rd.readAsDataURL(fl);};
  $('t_logoX').onclick=()=>{logo='';keep();$('t_logoPrev').innerHTML=defLogo()?`<img src="${defLogo()}" style="max-width:100%;max-height:100%">`:'<span style="color:#888;font-size:12px">ללא לוגו</span>';toast(defLogo()?'חזרה ללוגו ברירת המחדל':'הלוגו הוסר');};}
@@ -4183,6 +4183,19 @@ function withDoc(d,fn){const cur=state.tab==='sld'?'sld':state.tab==='both'?'bot
 // run fn with sheet l (or none) as its document's layout
 function layWith(l,fn){if(!l)return fn();const [,lk,ok]=LAYDOC.find(x=>x[0]===l.d);const a=state[lk],b=state[ok];state[lk]={on:1,paper:l.paper,orient:l.orient,scale:l.scale,lid:l.id};if(l.org)state[ok]=l.org;
  try{return fn();}finally{state[lk]=a;if(b===undefined)delete state[ok];else state[ok]=b;}}
+/* Drawing number and revision, per project (saved with it):
+   - the number is given once, automatically: month + year, then the next running
+     number of that month among all the drawings in the shared folder — 1126-1,
+     1126-2… and 1226-1 when the month turns;
+   - the revision goes up by one each time the drawing is exported (PDF, print,
+     share, copy); the preview shows the revision the export will carry. */
+async function ensureDwgNo(){if(state.dwgno)return state.dwgno;const d=new Date(),pre=String(d.getMonth()+1).padStart(2,'0')+String(d.getFullYear()).slice(2),re=new RegExp('^'+pre+'-(\\d+)$');let mx=0;
+ const take=v=>{const m=re.exec(String(v||''));if(m)mx=Math.max(mx,+m[1]);};
+ try{if(SH&&SH.list)(await SH.list()).forEach(x=>take(x.dwgno));}catch(e){}
+ try{take(localStorage.getItem('ohadcad.lastdwg'));Object.values(loadProjects?loadProjects():{}).forEach(x=>take(x&&x.dwgno));}catch(e){}
+ state.dwgno=pre+'-'+(mx+1);try{localStorage.setItem('ohadcad.lastdwg',state.dwgno);}catch(e){}commit();return state.dwgno;}
+const nextRev=()=>state.rev==null||state.rev===''?0:(+state.rev||0)+1;
+function revDone(t){const r=t&&t.rev!=null&&t.rev!==''&&!isNaN(+t.rev)?+t.rev:nextRev();state.rev=r;commit();}
 async function makePdf(t){toast('מכין תצוגה…');
  // one drawing page for the panel front and one for the single-line diagram (each that has something on it)
  const docs=[];withDoc('panel',()=>{if(state.objs.length)docs.push('panel');});withDoc('sld',()=>{if(state.objs.length)docs.push('sld');});if(!docs.length)docs.push('panel');
@@ -4219,8 +4232,8 @@ async function pdfDownload(P){const {svgs,SZ,fname}=P;toast('מכין PDF…');
    Every export first shows its pages here, full screen and sharp (the pages are
    the real vector drawing): check them, then download the PDF, print, or go
    back and change the title-block details. */
-function pdfDefaults(){return Object.assign({paper:'A3',orient:'L',company:'',project:'',dwgno:'',rev:'0',drafter:'',checker:'',approver:'',notes:'',bomPage:'1',logo:''},tbLoad(),{title:state.name,date:new Date().toISOString().slice(0,10)});}
-function printPreview(){if(!state.objs.length&&!(state.alt||[]).length){toast('הלוח ריק');return;}makePdf(pdfDefaults());}
+function pdfDefaults(){return Object.assign({paper:'A3',orient:'L',company:'',project:'',dwgno:'',rev:'0',drafter:'',checker:'',approver:'',notes:'',bomPage:'1',logo:''},tbLoad(),{dwgno:state.dwgno||'',rev:String(nextRev())},{title:state.name,date:new Date().toISOString().slice(0,10)});}
+async function printPreview(){if(!state.objs.length&&!(state.alt||[]).length){toast('הלוח ריק');return;}await ensureDwgNo();makePdf(pdfDefaults());}
 let PV=null;
 function showPreview(P){PV=P;let ov=$('pvOv');if(!ov){ov=document.createElement('div');ov.id='pvOv';document.body.appendChild(ov);ov.addEventListener('click',pvClick);}
  const n=P.svgs.length;
@@ -4245,7 +4258,7 @@ async function pvCopy(){const P=pvSub();if(!P)return;if(P.svgs.length>1)toast('�
 function pvClose(){const ov=$('pvOv');if(ov)ov.classList.add('hidden');}
 function pvClick(e){const ck=e.target.closest('[data-pg]');if(ck&&PV){const i=+ck.dataset.pg;if(ck.checked)PV.sel.add(i);else PV.sel.delete(i);pvCount();return;}const b=e.target.closest('[data-pv]');if(!b||!PV)return;const k=b.dataset.pv,ov=$('pvOv');
  if(k==='close')pvClose();else if(k==='zoom'){ov.classList.toggle('big');b.textContent=ov.classList.contains('big')?'🔍 התאם למסך':'🔍 הגדל';}
- else if(k==='edit'){pvClose();pdfDialog();}else if(k==='print'){const P=pvSub();if(P)printVector(P.svgs,P.SZ,P.fname);}else if(k==='pdf'){const P=pvSub();if(P)pdfDownload(P);}else if(k==='share')pvShare();else if(k==='copy')pvCopy();
+ else if(k==='edit'){pvClose();pdfDialog();}else if(k==='print'){const P=pvSub();if(P){printVector(P.svgs,P.SZ,P.fname);revDone(PV.t);}}else if(k==='pdf'){const P=pvSub();if(P){pdfDownload(P);revDone(PV.t);}}else if(k==='share'){pvShare();revDone(PV.t);}else if(k==='copy'){pvCopy();revDone(PV.t);}
  else if(k==='all'||k==='none'){PV.sel=new Set(k==='all'?PV.svgs.map((_,i)=>i):[]);document.querySelectorAll('#pvOv [data-pg]').forEach(c=>c.checked=k==='all');pvCount();}}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){const ov=$('pvOv');if(ov&&!ov.classList.contains('hidden')){pvClose();e.stopPropagation();}}},true);
 /* Vector PDF: the pages go to the browser's own print (choose "Save as PDF"),
