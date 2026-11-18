@@ -2578,7 +2578,7 @@ function setSaveSt(k){const el=$('saveSt');if(!el)return;if(!SH){el.style.displa
  el.style.display='';el.textContent=txt;el.dataset.k=k;el.title=ttl;}
 function scheduleSave(){if(!SH)return;if(lastSaved!==null&&JSON.stringify(state)===lastSaved){if(!saveT&&!saving)setSaveSt('saved');return;}clearTimeout(saveT);setSaveSt('pending');saveT=setTimeout(doAutoSave,1800);}
 function flushSave(){if(saveT){clearTimeout(saveT);saveT=null;return doAutoSave();}}
-async function doAutoSave(){saveT=null;if(!state.dwgno&&state.objs.length&&!saving){try{await ensureDwgNo();}catch(e){}}const data=JSON.stringify(state);if(data===lastSaved){setSaveSt('saved');return;}if(saving){scheduleSave();return;}saving=true;setSaveSt('saving');
+async function doAutoSave(){saveT=null;dwgFix();if(!state.dwgno&&state.objs.length&&!saving){try{await ensureDwgNo();}catch(e){}}const data=JSON.stringify(state);if(data===lastSaved){setSaveSt('saved');return;}if(saving){scheduleSave();return;}saving=true;setSaveSt('saving');
  try{if(cloudId){const d=await SH.info(cloudId),me=SH.me();
    if(d&&cloudStamp&&d.updatedAt!==cloudStamp&&me&&d.updatedBy!==me.label){const nd=await SH.save({name:state.name+' (עותק)',data,parts:partsCount()});setCloud(nd.id);cloudStamp=nd.updatedAt;state.name=nd.name;toast(`${d.updatedBy} ערך את הלוח הזה במקביל — השינויים שלך נשמרו כעותק`);}
    else{const nd=await SH.save({id:cloudId,name:state.name,data,parts:partsCount()});if(nd.id!==cloudId)setCloud(nd.id);cloudStamp=nd.updatedAt;}}
@@ -4189,7 +4189,9 @@ function layWith(l,fn){if(!l)return fn();const [,lk,ok]=LAYDOC.find(x=>x[0]===l.
      2611-2… and 2612-1 when the month turns;
    - the revision goes up by one each time the drawing is exported (PDF, print,
      share, copy); the preview shows the revision the export will carry. */
-async function ensureDwgNo(){if(state.dwgno)return state.dwgno;const d=new Date(),pre=String(d.getFullYear()).slice(2)+String(d.getMonth()+1).padStart(2,'0'),re=new RegExp('^'+pre+'-(\\d+)$');let mx=0;
+// numbers given in the first version were month+year (1126-4): turn them round once
+function dwgFix(){const m=/^(0[1-9]|1[0-2])(2[5-9])-(\d+)$/.exec(String(state.dwgno||''));if(m){state.dwgno=m[2]+m[1]+'-'+m[3];return true;}return false;}
+async function ensureDwgNo(){if(dwgFix())commit();if(state.dwgno)return state.dwgno;const d=new Date(),pre=String(d.getFullYear()).slice(2)+String(d.getMonth()+1).padStart(2,'0'),re=new RegExp('^'+pre+'-(\\d+)$');let mx=0;
  const take=v=>{const m=re.exec(String(v||''));if(m)mx=Math.max(mx,+m[1]);};
  try{if(SH&&SH.list)(await SH.list()).forEach(x=>take(x.dwgno));}catch(e){}
  try{take(localStorage.getItem('ohadcad.lastdwg'));Object.values(loadProjects?loadProjects():{}).forEach(x=>take(x&&x.dwgno));}catch(e){}
