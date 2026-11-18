@@ -1874,7 +1874,7 @@ const LIB=[
    {g:'מנועים ומשאבות',items:I('מנוע חשמלי','מנוע + משאבה צנטריפוגלית','מנוע + משאבת בורג','מנוע + מפוח','משאבה טבולה')},
    {g:'בור שאיבה — משאבה טבולה עם מצופים',items:[{t:'subpit',n:'בור שאיבה + 3 מצופים'},{t:'subpit',n:'בור שאיבה + 2 מצופים',p:{nf:'2'}},{t:'subpit',n:'בור שאיבה + 4 מצופים',p:{nf:'4'}}]}]},
   {tab:'כבלים ומוליכים',icon:'〰',hint:'כבל: בוחרים אותו כדי לנתב — גוררים קצה, ומה-+ שבאמצע קטע יוצרים כיפוף; את הפתיחה בצד אחד או בשניהם בוחרים במאפיינים.',groups:[
-   {g:'כבלים — פתיחת גידים',items:I('כבל ירוק 2×1.5','כבל ירוק 3×2.5','כבל ירוק 5×2.5','כבל ירוק 5×6','כבל ירוק 5×16','כבל ירוק 4×35','כבל שחור 5×16')}]},
+   {g:'כבלים',items:I('כבל ירוק 2×1.5','כבל ירוק 3×2.5','כבל ירוק 5×2.5','כבל ירוק 5×6','כבל ירוק 5×16','כבל ירוק 4×35','כבל שחור 5×16')}]},
   {tab:'צנרת, מובילים ותעלות',icon:'⊂',hint:'צינור: סוג (מרירון / שרשורי / קוברה), צבע לשרשורי וקוטר במאפיינים; כל פנייה היא קשת. תעלת כבלים: אורך בגרירת הקצוות, רוחב במאפיינים.',groups:[
    {g:'צנרת — סוג, צבע וקוטר (16-63 מ"מ) במאפיינים; לכיפוף גוררים את ה-+ שבאמצע הצינור',items:[{t:'conduit',n:'צינור מרירון',p:{ck:'mar',dn:'20'}},{t:'conduit',n:'צינור שרשורי',p:{ck:'flex',fc:'red',dn:'20'}},{t:'conduit',n:'צינור קוברה',p:{ck:'cobra',dn:'20'}}]},
    {g:'תעלות כבלים — רוחב (50-600 מ"מ) וכיוון (אופקי / אנכי) במאפיינים; אורך בגרירת הקצוות; סיבוב בכפתור הסיבוב',items:I('תעלת פח 200','תעלת רשת 200')}]},
@@ -2524,12 +2524,16 @@ function buildSheet(){buildTabs();const q=libQ.trim().toLowerCase();
  const tabs=LIB.map((t,i)=>[t,i]).filter(([t])=>inDoc(t)&&!t.draw);
  tabs.forEach(([T2,ti])=>{const open=LOPEN.has(T2.tab),cnt=T2.groups.reduce((n,g)=>n+g.items.length,0);
   h+=`<button class="tabhead${open?' open':''}" data-sec="${esc(T2.tab)}"><span class="chev">${open?'▾':'◂'}</span><span class="tt">${T2.icon||''} ${T2.tab}</span><span class="cnt">${cnt}</span></button>`;
-  if(!open)return;if(T2.hint)h+=`<div class="hint" style="margin:4px 2px 2px">${T2.hint}</div>`;
- T2.groups.forEach((g,gi)=>{h+=`<div class="grp">${g.g}</div>`;
+  if(!open)return;
+ // just the group's name: the explanations after a dash or semicolon stay in the search, not on screen
+ T2.groups.forEach((g,gi)=>{h+=`<div class="grp">${grpTitle(g.g)}</div>`;
   if(g.colors)h+=`<div class="chips">${Object.keys(COLORS).filter(c=>g.colors==='all'||!['black','grey','yellow','white'].includes(c)).map(c=>`<button class="chip ${c===curColor?'on':''}" data-c="${c}" style="background:${COLORS[c]}"></button>`).join('')}</div>`;
-  if(g.widths)h+=`<div class="chips">${DUCTW.map(d=>`<button class="wbtn ${d==curDW?'pri':''}" data-dw="${d}">${d} מ"מ</button>`).join('')}</div><div class="hint">לשינוי אורך: בחר תעלה/פס וגרור את העיגולים הכחולים שבקצוות.</div>`;
+  if(g.widths)h+=`<div class="chips">${DUCTW.map(d=>`<button class="wbtn ${d==curDW?'pri':''}" data-dw="${d}">${d} מ"מ</button>`).join('')}</div>`;
   h+=`<div class="grid">`+g.items.map((e,ii)=>itemBtn(ti,gi,ii,e)).join('')+`</div>`;});});
  $('sheetBody').classList.toggle('allv',curTab===-1);$('sheetBody').innerHTML=h;}
+// a library group's title without the how-to that follows it ("— בחר צבע ואז מפסק", "; גוררים…"); a dash that names a kind (M340 — ספקי כוח) stays
+function grpTitle(t){t=String(t).split(';')[0];const i=t.indexOf(' — ');if(i>0&&/בוחר|בחר|גורר|גרור|מניחים|נכנס|במאפיינים|הוסף|שורה מול|לבראש|לפלטת|מבט מלפנים/.test(t.slice(i))&&!/^מבט מלפנים/.test(t.slice(i+3)))t=t.slice(0,i);
+ const o=(t.match(/\(/g)||[]).length,c=(t.match(/\)/g)||[]).length;if(o>c)t=t.slice(0,t.lastIndexOf('(')).trim();return t.trim();}
 function itemBtn(ti,gi,ii,e){const fv=favList(LIB[ti]?.sld?'sld':'panel').includes(e.n);return `<button class="item" data-t="${ti}" data-g="${gi}" data-ii="${ii}"><span class="favstar${fv?' on':''}" data-fav="${esc(e.n)}" data-fk="${LIB[ti]?.sld?'sld':'panel'}" title="${fv?'הסר מהמועדפים':'הוסף למועדפים'}">${fv?'★':'☆'}</span><div class="th${DEF[e.t]?.sld?' lt':''}">${thumbOf(e)}</div><div class="nm ${/[א-ת]/.test(e.n)?'he':''}">${e.n}</div></button>`;}
 // a library item's picture, made once per item (and colour, for parts drawn in the chosen colour)
 const THC=new WeakMap();function thumbOf(e){const k=ACC.includes(e.t)?curColor:'';let m=THC.get(e);if(!m){m={};THC.set(e,m);}return m[k]??(m[k]=thumbSVG(mkObj(e,true)));}
