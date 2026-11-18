@@ -764,6 +764,21 @@ function acbDraw(o){const {w,h,v,P}=acbDim(o),dr=v==='d',sw=1.2,k='#0b0b0b';let 
  const hy=Y0+H*.68;s+=`<rect x="${X0+W*.42}" y="${hy}" width="${W*.42}" height="${H*.2}" rx="4" fill="#1a1c1f" stroke="${k}" stroke-width=".8"/><rect x="${X0+W*.5}" y="${hy+H*.05}" width="${W*.26}" height="${H*.1}" rx="3" fill="#0b0b0b"/>`;
  if(o.p.tag)s+=txt(0,-h/2-fs*.9,o.p.tag,fs*1.2,'#e5e7eb',800);
  return s;}
+/* Live dimensions on a drawn rectangle / ellipse: width above, height at the
+   side, following the shape as it is resized. Tap a dimension to type the size
+   (and its offset); drag it to move the dimension line nearer or farther. */
+function shDimsSVG(o){if(o.p.sd!=='1')return '';const w=+o.p.w,h=+o.p.h,c=col(o,'blue'),fs=+o.p.dfs||Math.max(8,Math.min(60,Math.round(Math.min(w,h)*.08))),ow=Math.max(0,+o.p.dw||fs*1.6),oh=Math.max(0,+o.p.dh||fs*1.6),lw=Math.max(.4,fs*.07),a=fs*.55;
+ const v=x=>String(Math.round(x*10)/10);let s='';
+ const y=-h/2-ow;s+=`<g data-sdim="w" style="cursor:pointer"><path d="M${-w/2} ${-h/2-lw*2}V${y-a*.6}M${w/2} ${-h/2-lw*2}V${y-a*.6}M${-w/2} ${y}H${w/2}" stroke="${c}" stroke-width="${lw}" fill="none"/><path d="M${-w/2} ${y}l${a} ${-a*.35}v${a*.7}zM${w/2} ${y}l${-a} ${-a*.35}v${a*.7}z" fill="${c}"/><rect x="${-w/2}" y="${y-fs*1.4}" width="${w}" height="${fs*1.6}" fill="transparent"/>`+txt(0,y-fs*.65,v(w),fs,c,700)+`</g>`;
+ const x=w/2+oh;s+=`<g data-sdim="h" style="cursor:pointer"><path d="M${w/2+lw*2} ${-h/2}H${x+a*.6}M${w/2+lw*2} ${h/2}H${x+a*.6}M${x} ${-h/2}V${h/2}" stroke="${c}" stroke-width="${lw}" fill="none"/><path d="M${x} ${-h/2}l${-a*.35} ${a}h${a*.7}zM${x} ${h/2}l${-a*.35} ${-a}h${a*.7}z" fill="${c}"/><rect x="${x-fs*.2}" y="${-h/2}" width="${fs*1.6}" height="${h}" fill="transparent"/><g transform="translate(${r2(x+fs*.7)} 0) rotate(-90)">${txt(0,0,v(h),fs,c,700)}</g></g>`;
+ return s;}
+function shDimEdit(o,k){const nm=k==='w'?'רוחב':'גובה';
+ modal(`${nm} ${o.p.name||''}`,`<div class="fld"><label>${nm} (מ"מ)</label><input id="f_sdv" type="number" inputmode="decimal" step="0.1" value="${+o.p[k]}"></div><div class="fld"><label>מרחק קו המידה מהצורה — אופסט (מ"מ)</label><input id="f_sdo" type="number" inputmode="decimal" step="1" value="${Math.round(+o.p[k==='w'?'dw':'dh']||0)}"></div><div class="hint">אופסט 0 = לפי ברירת המחדל. אפשר גם לגרור את קו המידה.</div>`,
+  [{t:'החל',cls:'pri',fn:()=>{const v=parseFloat($('f_sdv').value),f=parseFloat($('f_sdo').value);if(!(v>0)){toast('ערך לא תקין');return false;}
+   const {w:w0,h:h0}=sizeOf(o);o.p[k]=r2(v);if(f>=0)o.p[k==='w'?'dw':'dh']=r2(f);
+   // keep the left / top edge where it was
+   const [cx,cy]=k==='w'?fromLocal(o,(o.p.w-w0)/2,0):fromLocal(o,0,(o.p.h-h0)/2);o.x=cx;o.y=cy;commit();renderNow();updateBar();}},{t:'ביטול'}]);
+ setTimeout(()=>{const e=$('f_sdv');if(e){e.focus();e.select();}},50);}
 const DEF={
  mcb:{layer:4,rail:true,edit:['tag','rating','color'],ratings:['B6','B10','B16','B20','C6','C10','C16','C20','C25','C32','C40','C50','C63','D16','D25','D32'],
   def:{poles:1,rating:'C16'},
@@ -1147,10 +1162,10 @@ const DEF={
    if(hd!=='none')s+=`<path d="M${L/2} 0L${L/2-al} ${-aw}L${L/2-al} ${aw}Z" fill="${c}"/>`;
    if(hd==='both')s+=`<path d="M${-L/2} 0L${-L/2+al} ${-aw}L${-L/2+al} ${aw}Z" fill="${c}"/>`;
    return s+`<path d="M${-L/2} 0H${L/2}" stroke="transparent" stroke-width="${Math.max(lw*4,10)}"/>`;}},
- shrect:{layer:6.8,resize:'box',minBox:5,edit:['w','h','lw','dash','fill','color'],def:{w:300,h:200,lw:2,dash:'solid',fill:'none',color:'blue'},size:o=>({w:o.p.w,h:o.p.h}),
-  draw:o=>`<rect x="${-o.p.w/2}" y="${-o.p.h/2}" width="${o.p.w}" height="${o.p.h}" fill="${shFill(o)}" stroke="${col(o,'blue')}" stroke-width="${Math.max(.2,+o.p.lw||2)}" ${shDash(o)}/>`},
- shellipse:{layer:6.8,resize:'box',minBox:5,edit:['w','h','lw','dash','fill','color'],def:{w:200,h:200,lw:2,dash:'solid',fill:'none',color:'blue'},size:o=>({w:o.p.w,h:o.p.h}),
-  draw:o=>`<ellipse cx="0" cy="0" rx="${o.p.w/2}" ry="${o.p.h/2}" fill="${shFill(o)}" stroke="${col(o,'blue')}" stroke-width="${Math.max(.2,+o.p.lw||2)}" ${shDash(o)}/>`},
+ shrect:{layer:6.8,resize:'box',minBox:5,edit:['w','h','sd','lw','dash','fill','color'],def:{w:300,h:200,sd:'1',lw:2,dash:'solid',fill:'none',color:'blue'},size:o=>({w:o.p.w,h:o.p.h}),
+  draw:o=>shDimsSVG(o)+`<rect x="${-o.p.w/2}" y="${-o.p.h/2}" width="${o.p.w}" height="${o.p.h}" fill="${shFill(o)}" stroke="${col(o,'blue')}" stroke-width="${Math.max(.2,+o.p.lw||2)}" ${shDash(o)}/>`},
+ shellipse:{layer:6.8,resize:'box',minBox:5,edit:['w','h','sd','lw','dash','fill','color'],def:{w:200,h:200,sd:'1',lw:2,dash:'solid',fill:'none',color:'blue'},size:o=>({w:o.p.w,h:o.p.h}),
+  draw:o=>shDimsSVG(o)+`<ellipse cx="0" cy="0" rx="${o.p.w/2}" ry="${o.p.h/2}" fill="${shFill(o)}" stroke="${col(o,'blue')}" stroke-width="${Math.max(.2,+o.p.lw||2)}" ${shDash(o)}/>`},
  label:{layer:7,edit:['text','fs','color'],def:{text:'טקסט',color:'black',fs:6},
   size:o=>{const f=lblFs(o),ls=lblLines(o);return {w:Math.max(3*f,Math.max(...ls.map(l=>l.length))*f*.77+f*1.4),h:ls.length*f*1.3+f*.55};},
   draw:o=>{const {w,h}=DEF.label.size(o),f=lblFs(o),ls=lblLines(o),y0=-(ls.length-1)*f*1.3/2;
@@ -3390,6 +3405,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  G={sx:e.clientX,sy:e.clientY,t0:Date.now(),id,moved:false,mode:'pan',tx0:view.tx,ty0:view.ty,add:e.shiftKey||e.ctrlKey||e.metaKey};
  if(e.pointerType==='mouse'&&e.button!==0)return;
  if(MWM){G.mode='mw';return;}
+ {const sd=e.target.closest('[data-sdim]'),so=sd&&id&&get(id);if(so&&!so.locked&&!wireMode&&!globalLock){G.mode='sdim';G.o=so;G.k=sd.dataset.sdim;if(sel!==so.id){sel=so.id;multi.clear();updateBar();}return;}}
  const clEl=e.target.closest('[data-cl]');if(clEl&&so0()&&!wireMode&&!globalLock){const o=so0(),{h}=sizeOf(o);G.mode='cl';G.o=o;G.b0=fromLocal(o,0,h/2);G.base=h-cabX(o);return;}
  const lmEl=e.target.closest('[data-lymv]');if(lmEl&&!wireMode&&layoutRect()){G.mode='lymv';G.o0=Object.assign({},ORG());G.w0=toWorld(e.clientX,e.clientY);return;}
  const lyEl=e.target.closest('[data-lyh]');if(lyEl&&!wireMode){const R=layoutRect();if(R){G.mode='lyr';G.h=lyEl.dataset.lyh;G.R0=R;return;}}
@@ -3424,6 +3440,7 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
   view.s=s;view.tx=cx-r.left-wx*s;view.ty=cy-r.top-wy*s;applyView();return;}
  if(!G)return;const dx=e.clientX-G.sx,dy=e.clientY-G.sy;if(!G.moved&&Math.hypot(dx,dy)>7){G.moved=true;if(G.mode==='drag'&&sel!==G.id){sel=G.id;updateBar();}}
  if(!G.moved)return;
+ if(G.mode==='sdim'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY),[u,v]=toLocal(o,wx,wy);if(G.k==='w')o.p.dw=r2(Math.max(0,gs(-v-o.p.h/2)));else o.p.dh=r2(Math.max(0,gs(u-o.p.w/2)));render();return;}
  if(G.mode==='mw'){G.mode='pan';G.tx0=view.tx;G.ty0=view.ty;G.sx=e.clientX;G.sy=e.clientY;return;}
  if(G.mode==='pan'){view.tx=G.tx0+dx;view.ty=G.ty0+dy;applyView();}
  else if(G.mode==='band'){G.w1=toWorld(e.clientX,e.clientY);render();}
@@ -3498,6 +3515,7 @@ function guidesSVG(){if(!GUIDES.length)return '';const k=1/view.s,ext=12*k;retur
 function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(pinch){if(P.size<2)pinch=null;G=null;return;}
  if(!G)return;const g=G;G=null;if(g.mode==='meas'){MS.cur=null;measUp(g,e);render();return;}
+ if(g.mode==='sdim'){if(g.moved){commit();renderNow();toast('קו המידה הוזז');}else shDimEdit(g.o,g.k);return;}
  if(g.mode==='mw'){if(!g.moved){const [x,y]=toWorld(e.clientX,e.clientY),tr=g.id?null:nearestTerm(x,y,Math.max(5,20/view.s));mwTap(g.id||(tr&&tr.r));}return;}
  if(g.mode==='cl'){if(g.moved){commit();renderNow();toast(`אורך הכבל: ${((+g.o.p.cl||0)/1000).toFixed(2)} מ'`);}else renderNow();return;}
  if(g.mode==='lymv'){if(g.moved){commit();renderNow();toast('הדף הוזז');}else renderNow();return;}
@@ -3758,6 +3776,7 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='exp')h+=`<div class="fld"><label>בייצוא</label><select id="f_exp"><option value="0" ${v!=='1'?'selected':''}>לא מופיעה ב-PDF / תמונה</option><option value="1" ${v==='1'?'selected':''}>מופיעה בייצוא</option></select></div>`;
   else if(k==='ck')h+=`<div class="fld"><label>סוג הצינור</label><select id="f_ck">${Object.entries(CKIND).map(([a,n])=>`<option value="${a}" ${a===String(v||'mar')?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='fc'){if(o.p.ck==='flex')h+=`<div class="fld"><label>צבע הצינור</label><select id="f_fc">${Object.entries(FLEXC).map(([a,c])=>`<option value="${a}" ${a===String(v||'red')?'selected':''}>${c.n}</option>`).join('')}</select></div>`;}
+  else if(k==='sd')h+=`<div class="fld"><label>מידות על הצורה</label><select id="f_sd"><option value="1" ${v==='1'?'selected':''}>הצג</option><option value="0" ${v!=='1'?'selected':''}>הסתר</option></select></div>`;
   else if(k==='hk')h+=`<div class="fld"><label>מילוי (הצללה)</label><select id="f_hk">${Object.entries(HATCH).map(([a,n])=>`<option value="${a}" ${a===String(v||'lines')?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='hs')h+=`<div class="fld"><label>צפיפות ההצללה</label><select id="f_hs">${[['0.5','צפופה'],['1','רגילה'],['2','דלילה'],['4','דלילה מאוד']].map(([a,n])=>`<option value="${a}" ${a===String(v||'1')?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='hc')h+=`<div class="fld"><label>צבע המילוי</label><select id="f_hc">${Object.entries(HATCHC).map(([a,c])=>`<option value="${a}" ${a===String(v||'grey')?'selected':''}>${c.n}</option>`).join('')}</select></div>`;
