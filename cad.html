@@ -4184,12 +4184,12 @@ function withDoc(d,fn){const cur=state.tab==='sld'?'sld':state.tab==='both'?'bot
 function layWith(l,fn){if(!l)return fn();const [,lk,ok]=LAYDOC.find(x=>x[0]===l.d);const a=state[lk],b=state[ok];state[lk]={on:1,paper:l.paper,orient:l.orient,scale:l.scale,lid:l.id};if(l.org)state[ok]=l.org;
  try{return fn();}finally{state[lk]=a;if(b===undefined)delete state[ok];else state[ok]=b;}}
 /* Drawing number and revision, per project (saved with it):
-   - the number is given once, automatically: month + year, then the next running
-     number of that month among all the drawings in the shared folder — 1126-1,
-     1126-2… and 1226-1 when the month turns;
+   - the number is given once, automatically: year + month, then the next running
+     number of that month among all the drawings in the shared folder — 2611-1,
+     2611-2… and 2612-1 when the month turns;
    - the revision goes up by one each time the drawing is exported (PDF, print,
      share, copy); the preview shows the revision the export will carry. */
-async function ensureDwgNo(){if(state.dwgno)return state.dwgno;const d=new Date(),pre=String(d.getMonth()+1).padStart(2,'0')+String(d.getFullYear()).slice(2),re=new RegExp('^'+pre+'-(\\d+)$');let mx=0;
+async function ensureDwgNo(){if(state.dwgno)return state.dwgno;const d=new Date(),pre=String(d.getFullYear()).slice(2)+String(d.getMonth()+1).padStart(2,'0'),re=new RegExp('^'+pre+'-(\\d+)$');let mx=0;
  const take=v=>{const m=re.exec(String(v||''));if(m)mx=Math.max(mx,+m[1]);};
  try{if(SH&&SH.list)(await SH.list()).forEach(x=>take(x.dwgno));}catch(e){}
  try{take(localStorage.getItem('ohadcad.lastdwg'));Object.values(loadProjects?loadProjects():{}).forEach(x=>take(x&&x.dwgno));}catch(e){}
