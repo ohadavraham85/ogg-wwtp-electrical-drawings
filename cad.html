@@ -454,6 +454,7 @@ body.iconsonly #docTabs button{padding:6px 11px}body.iconsonly #docTabs .lic{wid
 #pvOv{position:fixed;inset:0;z-index:25;background:#2f3237;display:flex;flex-direction:column}#pvOv.hidden{display:none}
 .pvbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;background:var(--card);border-bottom:2px solid var(--acc)}.pvbar .pvt{font-size:16px;color:var(--acc-light)}.pvbar .pvinfo{font-size:13px;opacity:.8}.pvbar .wbtn{padding:8px 12px;font-size:14px;font-weight:700}
 .pvpages{flex:1;overflow:auto;padding:18px 20px 34px;display:flex;flex-direction:column;align-items:safe center;gap:30px}
+.pvsel{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 12px;background:var(--card);font-size:13px;font-weight:700}.pvsel .wbtn{padding:4px 12px;min-height:0}.pvcnt{opacity:.8}.pvck{position:absolute;top:8px;left:8px;background:rgba(17,24,39,.85);color:#fff;font-size:13px;font-weight:700;padding:5px 10px;border-radius:6px;display:flex;gap:6px;align-items:center;cursor:pointer}.pvck input{width:18px;height:18px}.pvpage.off{opacity:.35}
 .pvpage{position:relative;flex:none;width:var(--fw);background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.55)}#pvOv.big .pvpage{width:calc(var(--fw) * 2.2)}.pvpage>svg{display:block;width:100%;height:auto;direction:ltr}.pvn{position:absolute;bottom:-22px;right:0;font-size:12px;color:#d1d5db}
 #rAdd,#bText,#ddView{display:none!important}
 #rail.more{-webkit-mask-image:linear-gradient(to left,#000 82%,transparent);mask-image:linear-gradient(to left,#000 82%,transparent)}
@@ -4207,6 +4208,8 @@ async function makePdf(t){toast('מכין תצוגה…');
   svgs.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}mm" height="${H}mm">${pageFrame(W,H,true)}${s}${tb.s}</svg>`);SZ.push([W,H]);});
  const fname=((t.dwgno?t.dwgno+'_':'')+(t.title||'panel')).replace(/[\\/:*?"<>|]+/g,'_')+'.pdf';
  showPreview({svgs,SZ,W,H,fname,t});}
+async function pdfBlob(P){const {svgs,SZ}=P;const imgs=[];for(let i=0;i<svgs.length;i++){const [w,h]=SZ[i],dpi=Math.max(150,Math.min(300,Math.floor(25.4*Math.sqrt(32e6/(w*h)))));imgs.push(await svgToJpeg(svgs[i],w,h,dpi));}
+ await loadJsPDF();const {jsPDF}=window.jspdf;const [w0,h0]=SZ[0];const pdf=new jsPDF({orientation:w0>h0?'landscape':'portrait',unit:'mm',format:[w0,h0]});imgs.forEach((im,i)=>{const [w,h]=SZ[i];if(i)pdf.addPage([w,h],w>h?'landscape':'portrait');pdf.addImage(im,'JPEG',0,0,w,h);});return pdf.output('blob');}
 async function pdfDownload(P){const {svgs,SZ,fname}=P;toast('מכין PDF…');
  try{const imgs=[];for(let i=0;i<svgs.length;i++){const [w,h]=SZ[i],dpi=Math.max(150,Math.min(300,Math.floor(25.4*Math.sqrt(32e6/(w*h)))));imgs.push(await svgToJpeg(svgs[i],w,h,dpi));}
   await loadJsPDF();const {jsPDF}=window.jspdf;const [w0,h0]=SZ[0];const pdf=new jsPDF({orientation:w0>h0?'landscape':'portrait',unit:'mm',format:[w0,h0]});imgs.forEach((im,i)=>{const [w,h]=SZ[i];if(i)pdf.addPage([w,h],w>h?'landscape':'portrait');pdf.addImage(im,'JPEG',0,0,w,h);});
@@ -4222,13 +4225,28 @@ let PV=null;
 function showPreview(P){PV=P;let ov=$('pvOv');if(!ov){ov=document.createElement('div');ov.id='pvOv';document.body.appendChild(ov);ov.addEventListener('click',pvClick);}
  const n=P.svgs.length;
  ov.innerHTML=`<div class="pvbar"><b class="pvt">👁 תצוגה לפני הדפסה</b><span class="pvinfo">${P.t.paper} ${P.t.orient==='P'?'לגובה':'לרוחב'} · ${n} ${n===1?'עמוד':'עמודים'} · קנה מידה ${P.t.__scale||''}</span><span style="flex:1"></span>
-  <button class="wbtn" data-pv="zoom">🔍 הגדל</button><button class="wbtn" data-pv="edit">✏ פרטי טבלת שרטוט</button><button class="wbtn" data-pv="print">🖨 הדפס / PDF חד</button><button class="wbtn pri" data-pv="pdf">⬇ הורד PDF</button><button class="wbtn" data-pv="close" title="סגור (Esc)">✕</button></div>
-  <div class="pvpages">${P.svgs.map((sv,i)=>`<div class="pvpage" style="--fw:min(calc(100vw - 40px),calc((100vh - 130px) * ${(P.SZ[i][0]/P.SZ[i][1]).toFixed(4)}))">${sv}<span class="pvn">עמוד ${i+1} מתוך ${n}</span></div>`).join('')}</div>`;
- ov.classList.remove('hidden','big');}
+  <button class="wbtn" data-pv="zoom">🔍 הגדל</button><button class="wbtn" data-pv="edit">✏ פרטי טבלת שרטוט</button><button class="wbtn" data-pv="print">🖨 הדפס / PDF חד</button><button class="wbtn pri" data-pv="pdf">⬇ הורד PDF</button><button class="wbtn" data-pv="share" title="שליחה בוואטסאפ, במייל או בכל אפליקציה">📤 שתף</button><button class="wbtn" data-pv="copy" title="העתק את העמוד כתמונה — להדבקה בוואטסאפ, במייל או במסמך">📋 העתק</button><button class="wbtn" data-pv="close" title="סגור (Esc)">✕</button></div>${n>1?`<div class="pvsel"><span>עמודים:</span><button class="wbtn" data-pv="all">הכל</button><button class="wbtn" data-pv="none">אף אחד</button><span class="pvcnt"></span></div>`:''}
+  <div class="pvpages">${P.svgs.map((sv,i)=>`<div class="pvpage" style="--fw:min(calc(100vw - 40px),calc((100vh - 130px) * ${(P.SZ[i][0]/P.SZ[i][1]).toFixed(4)}))">${sv}<span class="pvn">עמוד ${i+1} מתוך ${n}</span>${n>1?`<label class="pvck"><input type="checkbox" data-pg="${i}" checked> כלול</label>`:''}</div>`).join('')}</div>`;
+ PV.sel=new Set(P.svgs.map((_,i)=>i));pvCount();ov.classList.remove('hidden','big');}
+// only the ticked pages go to the PDF, the print, the share and the copy
+function pvCount(){const c=document.querySelector('#pvOv .pvcnt');if(c&&PV)c.textContent=`נבחרו ${PV.sel.size} מתוך ${PV.svgs.length}`;document.querySelectorAll('#pvOv .pvpage').forEach((pg,i)=>pg.classList.toggle('off',PV&&!PV.sel.has(i)));}
+function pvSub(){const I=[...PV.sel].sort((a,b)=>a-b);if(!I.length){toast('לא נבחר אף עמוד');return null;}return {svgs:I.map(i=>PV.svgs[i]),SZ:I.map(i=>PV.SZ[i]),fname:PV.fname,t:PV.t};}
+async function pvShare(){const P=pvSub();if(!P)return;toast('מכין PDF לשיתוף…');let blob;try{blob=await pdfBlob(P);}catch(e){toast('לא ניתן היה ליצור PDF');return;}
+ const file=new File([blob],P.fname,{type:'application/pdf'}),title=state.name||'שרטוט';
+ if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title,text:title});}catch(e){}return;}
+ // no share sheet here (most desktop browsers): download it and offer mail / WhatsApp to attach it
+ saveFile(P.fname,blob);const t=encodeURIComponent(title);
+ modal('שיתוף',`<div style="line-height:1.7">ה-PDF הורד (${esc(P.fname)}). פתח את המייל או את וואטסאפ וצרף אותו:</div><div class="chips" style="margin-top:10px"><a class="wbtn pri" href="mailto:?subject=${t}&body=${t}" target="_blank">✉ מייל</a><a class="wbtn" href="https://web.whatsapp.com/send?text=${t}" target="_blank" rel="noopener">🟢 וואטסאפ</a></div>`);}
+async function pvCopy(){const P=pvSub();if(!P)return;if(P.svgs.length>1)toast('מועתק העמוד הראשון שנבחר — לכמה עמודים השתמש ב"שתף"');
+ try{const [w,h]=P.SZ[0],dpi=Math.max(110,Math.min(200,Math.floor(25.4*Math.sqrt(12e6/(w*h))))),url=await svgToJpeg(P.svgs[0],w,h,dpi);
+  const png=await new Promise(res=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);c.toBlob(res,'image/png');};im.src=url;});
+  await navigator.clipboard.write([new ClipboardItem({'image/png':png})]);toast('העמוד הועתק כתמונה — הדבק בוואטסאפ, במייל או במסמך');}
+ catch(e){toast('הדפדפן לא מאפשר העתקת תמונה — השתמש ב"שתף" או "הורד PDF"');}}
 function pvClose(){const ov=$('pvOv');if(ov)ov.classList.add('hidden');}
-function pvClick(e){const b=e.target.closest('[data-pv]');if(!b||!PV)return;const k=b.dataset.pv,ov=$('pvOv');
+function pvClick(e){const ck=e.target.closest('[data-pg]');if(ck&&PV){const i=+ck.dataset.pg;if(ck.checked)PV.sel.add(i);else PV.sel.delete(i);pvCount();return;}const b=e.target.closest('[data-pv]');if(!b||!PV)return;const k=b.dataset.pv,ov=$('pvOv');
  if(k==='close')pvClose();else if(k==='zoom'){ov.classList.toggle('big');b.textContent=ov.classList.contains('big')?'🔍 התאם למסך':'🔍 הגדל';}
- else if(k==='edit'){pvClose();pdfDialog();}else if(k==='print')printVector(PV.svgs,PV.SZ,PV.fname);else if(k==='pdf')pdfDownload(PV);}
+ else if(k==='edit'){pvClose();pdfDialog();}else if(k==='print'){const P=pvSub();if(P)printVector(P.svgs,P.SZ,P.fname);}else if(k==='pdf'){const P=pvSub();if(P)pdfDownload(P);}else if(k==='share')pvShare();else if(k==='copy')pvCopy();
+ else if(k==='all'||k==='none'){PV.sel=new Set(k==='all'?PV.svgs.map((_,i)=>i):[]);document.querySelectorAll('#pvOv [data-pg]').forEach(c=>c.checked=k==='all');pvCount();}}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){const ov=$('pvOv');if(ov&&!ov.classList.contains('hidden')){pvClose();e.stopPropagation();}}},true);
 /* Vector PDF: the pages go to the browser's own print (choose "Save as PDF"),
    which keeps every line and letter sharp at any zoom. */
