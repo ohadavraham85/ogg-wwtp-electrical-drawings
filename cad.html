@@ -2379,7 +2379,7 @@ svg.addEventListener('pointermove',e=>{if(!showAxes)return;curW=toWorld(e.client
    the bottom holds the coordinate readout and on/off switches for it, the
    axes & rulers and the connection-point marks. */
 let showCross=true;try{showCross=localStorage.getItem('ohadcad.cross')!=='0';}catch(e){}
-function sbSync(){const S={cross:showCross,axes:showAxes,terms:showTerms};document.querySelectorAll('#sbar [data-sb]').forEach(b=>b.classList.toggle('on',!!S[b.dataset.sb]));const bt=$('bTerms');if(bt)bt.classList.toggle('on',showTerms);svg.style.cursor=showCross?'crosshair':'';if(!showCross)xhHide();}
+function sbSync(){const S={cross:showCross,axes:showAxes,terms:showTerms};document.querySelectorAll('#sbar [data-sb]').forEach(b=>b.classList.toggle('on',!!S[b.dataset.sb]));const bt=$('bTerms');if(bt)bt.classList.toggle('on',showTerms);svg.style.cursor=showCross?'crosshair':'';if(!showCross)xhHide();requestAnimationFrame(()=>{try{layPos();}catch(e){}});}
 function xhHide(){$('xh').style.display=$('yh').style.display='none';}
 function toggleCross(){showCross=!showCross;try{localStorage.setItem('ohadcad.cross',showCross?'1':'0');}catch(e){}sbSync();toast(showCross?'סמן צלב פעיל':'סמן צלב כבוי');}
 // over a part that can be moved, the crosshair turns into a hand (grabbing while it is dragged)

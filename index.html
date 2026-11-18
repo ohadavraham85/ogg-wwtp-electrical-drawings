@@ -95,7 +95,7 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .dlg h2{color:var(--amber-light)}
 #toast{border:1.5px solid var(--amber)}
 #topbar .tbSave{flex:none;font-size:13.5px;font-weight:700;padding:5px 10px;border-radius:4px;border:1.5px solid #6b6b72;background:#000;color:#cfcfd4;white-space:nowrap}
-#topbar .tbSave[data-k=saved]{border-color:#22c55e;color:#4ade80}
+#topbar .tbSave[data-k=saved]{border-color:#22c55e;color:#22c55e;font-size:17px;line-height:1;padding:4px 8px}
 #topbar .tbSave[data-k=saving]{border-color:var(--amber);color:var(--amber-light)}
 #topbar .tbSave[data-k=error]{border-color:#ef4444;color:#f87171}
 @media (max-width:520px){#topbar{padding-inline:10px;gap:8px}#topbar .tbSave{font-size:12px;padding:4px 7px}#topbar .tbWho>.sep,#tbClock,#topbar .tbWho>span:last-child{display:none}#topbar .tbBrand img{height:18px}}
@@ -179,11 +179,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 162;
+const VERSION = 163;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'השורה העליונה נשארת בגודל קבוע גם כשמגדילים את התצוגה';
+const WHATS_NEW = 'ענן ירוק בלבד כשהכול נשמר; הפקדים התחתונים מתיישרים כשמציגים או מסתירים צירים';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -389,7 +389,8 @@ const bridge = {
   // The drawing's save state, shown in this top bar rather than inside the tool.
   saveStatus(k, text, title) {
     const el = $('tbSave');
-    el.hidden = !text; el.textContent = text || ''; el.title = title || ''; el.dataset.k = k || '';
+    // all saved: just a green cloud (the words stay in the tooltip)
+    el.hidden = !text; el.textContent = k === 'saved' ? '☁' : (text || ''); el.title = title || text || ''; el.dataset.k = k || '';
   },
   refresh() { location.reload(); },
   applyUI() { applyUI(); applyFontScale(); },
