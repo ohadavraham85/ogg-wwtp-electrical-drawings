@@ -479,6 +479,11 @@ body.iconsonly .ddbtn .lbl{display:none}
 .ddmenu button .lbl{display:inline!important}.ddmenu button .lic{width:20px;height:20px}
 @media (hover:hover){.ddmenu button:hover{background:#2a1a08!important;border-color:var(--acc)!important}body.uil .ddmenu button:hover{background:#fff1dc!important}}
 .ddmenu button.on{background:linear-gradient(180deg,var(--acc-light),var(--acc))!important;color:#000}.ddmenu button.on .lic{stroke:#000}
+#v3d{position:fixed;inset:0;z-index:300;background:#111;touch-action:none}#v3d canvas{display:block}
+#v3d .v3bar{position:absolute;top:calc(8px + env(safe-area-inset-top));inset-inline:8px;display:flex;gap:6px;flex-wrap:wrap;direction:rtl}
+#v3d .v3bar button{font:600 14px Heebo,Arial,sans-serif;color:var(--txt);background:var(--ctl);border:1px solid var(--ctl-bd);border-radius:10px;padding:8px 12px;cursor:pointer}
+#v3d .v3bar button.on{border-color:var(--acc)}#v3d .v3bar button[data-a="x"]{background:var(--acc);color:#000;min-width:40px}
+#v3d .v3hint{position:absolute;bottom:calc(10px + env(safe-area-inset-bottom));inset-inline:0;text-align:center;font:13px Heebo,Arial,sans-serif;color:#9ca3af;pointer-events:none;direction:rtl}
 </style>
 </head>
 <body>
@@ -523,6 +528,7 @@ body.iconsonly .ddbtn .lbl{display:none}
     <button class="rb" id="bTerms" title="הצג / הסתר נקודות חיבור"><svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.6"/><circle cx="12" cy="12" r="2.6"/><circle cx="18" cy="12" r="2.6"/></svg><span>נקודות</span></button>
     <div class="sep"></div>
     <button class="rb" id="bDoor" title="דלת הלוח: פנים / חזית"><svg viewBox="0 0 24 24"><path d="M6 21V3.5h12V21"/><path d="M3.5 21h17"/><circle cx="15" cy="12.5" r="1" fill="#fff"/></svg><span id="doorLbl">דלת</span></button>
+    <button class="rb" id="b3d" title="תלת־ממד: הלוח בעומק, מסתובב — עם דלתות שנפתחות"><svg viewBox="0 0 24 24"><path d="M12 2.8l8 4.6v9.2l-8 4.6-8-4.6V7.4z"/><path d="M4 7.4l8 4.6 8-4.6M12 12v9.2"/></svg><span>תלת־ממד</span></button>
     <button class="rb" id="bLockAll" title="נעל עריכה (צפייה בלבד)"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg><span>מצב צפייה</span></button>
     <button class="rb" id="bHelp" title="עזרה"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7v.5"/><circle cx="12" cy="17.2" r=".6" fill="#fff"/></svg><span>עזרה</span></button>
   </div>
@@ -3997,7 +4003,7 @@ $('bText').onclick=()=>{if(wireMode||globalLock)return;const o=sel&&get(sel);con
  setTimeout(()=>$('f_newtxt')&&$('f_newtxt').focus(),60);};
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;
 $('bFit').onclick=fit;$('bGrid').onclick=()=>gridDialog();
-$('bDoor').onclick=()=>{toggleDoors();updateBar();};$('bLockAll').onclick=toggleLockAll;
+$('bDoor').onclick=()=>{toggleDoors();updateBar();};$('b3d').onclick=open3D;$('bLockAll').onclick=toggleLockAll;
 /* Keyboard: Delete removes what's selected, Esc lets go, Ctrl+Z / Ctrl+Y undo and redo, Ctrl+A takes all. */
 document.addEventListener('keydown',e=>{const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;if(!$('modal').classList.contains('hidden'))return;
  const k=e.key,mod=e.ctrlKey||e.metaKey;
@@ -4288,6 +4294,109 @@ function openDrawer(){const items=[['פרויקט'],['📄 פרויקט חדש',
  $('dbox').innerHTML=`<div style="display:flex;align-items:center;justify-content:flex-end;margin:4px 8px 0"><img src="icons/wordmark-${uiLight()?'light':'dark'}.svg" alt="OhadCad" height="26"></div><h2>${esc(state.name)}</h2>`+items.map((it,i)=>it[1]?`<button data-i="${i}">${it[0]}</button>`:`<div style="color:#8a8a8a;font-size:13px;margin:12px 12px 2px">${it[0]}</div>`).join('');
  $('drawer').classList.remove('hidden');$('dbox').onclick=e=>{const b=e.target.closest('button');if(!b)return;$('drawer').classList.add('hidden');items[+b.dataset.i][1]();};}
 $('drawer').addEventListener('click',e=>{if(e.target.id==='drawer')$('drawer').classList.add('hidden');});
+/* ---------- 3D view of the panel front (view only) ----------
+   Built from the 2D drawing every time it opens: each part becomes a box whose
+   front face is its own 2D picture, standing off the mounting plate by a depth
+   that suits its kind; boards get walls and doors that swing on their hinges;
+   parts mounted on a door ride on it. Three.js (vendor/three) loads on first use. */
+function loadThree(){return window.THREE?Promise.resolve():new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='vendor/three/three.min.js';sc.onload=()=>res();sc.onerror=()=>rej(new Error('three'));document.head.appendChild(sc);});}
+const V3SKIP=new Set(['wire','mdim','label','callout','underlay','ink','shline','shrect','shellipse','person','sframe','floor','wall','adoor','awin','subpit','cable','conduit','hpipe','hfit','hvalve']);
+const V3DEP={mcb:72,rcd:72,spd:72,iso:72,gv2:88,mpcb:88,cont:88,lc1d:88,lc2d:92,relay:62,rxm:48,lrd:72,nsx:98,nsxm:82,acb:330,atv630:230,psu:62,meter:62,m340mod:110,clxmod:120,kconv:62,socket:52,comb:14,gland:30,ctie:5,zprof:40,rail:7.5,duct:62,busbar:12,partition:2,traysh:60,traymesh:60};
+function v3Depth(o){const D=DEF[o.type],L=D.layer;if(V3DEP[o.type]!=null)return V3DEP[o.type];if(D.front)return 22;if(L<1)return 3;if(L<2)return 50;if(L<3)return 8;if(L<3.6)return 120;if(L<4.6){const {w,h}=sizeOf(o);return Math.max(30,Math.min(200,Math.min(w,h)*.7));}return 18;}
+function v3Base(o){return o.type==='busbar'?36:0;}
+let V3=null;
+async function open3D(){if(state.tab==='sld'){toast('התלת־ממד מוצג לחזית הלוח — עבור ללשונית "לוח"');return;}
+ const objs=state.objs.filter(o=>!isSldObj(o)&&(o.type==='wire'||DEF[o.type]));if(!objs.some(o=>!V3SKIP.has(o.type)&&!DEF[o.type].sld)){toast('אין עדיין רכיבים בחזית הלוח');return;}
+ toast('בונה תלת־ממד…');try{await loadThree();}catch(e){toast('לא הצלחתי לטעון את מנוע התלת־ממד — בדוק חיבור לאינטרנט ונסה שוב');return;}
+ const T=THREE,ov=document.createElement('div');ov.id='v3d';ov.innerHTML=`<div class="v3bar"><button data-a="x" title="סגור (Esc)">✕</button><button data-a="door" class="on">🚪 <span>פתח דלתות</span></button><button data-a="front">⬜ חזית</button><button data-a="iso">🧊 זווית</button><button data-a="wires" class="on">〰 חוטים</button><button data-a="shot">📷 תמונה</button></div><div class="v3hint">גרירה: סיבוב · שתי אצבעות / גלגלת: זום והזזה</div>`;
+ document.body.appendChild(ov);const R=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});R.setPixelRatio(Math.min(2,devicePixelRatio||1));R.outputColorSpace=T.SRGBColorSpace;ov.prepend(R.domElement);
+ const scene=new T.Scene();scene.background=new T.Color(isLight()?0xeef0f3:0x1a1b1e);scene.add(new T.HemisphereLight(0xffffff,0x8a8f99,1.6));const sun=new T.DirectionalLight(0xffffff,1.5);sun.position.set(-.6,.9,1.2);scene.add(sun);
+ const cam=new T.PerspectiveCamera(30,1,10,1e6),root=new T.Group();scene.add(root);
+ const V={R,scene,cam,ov,root,doors:[],covers:[],wires:null,open:0,goal:0,texs:[],th:.38,ph:.14,dist:3000,tg:new T.Vector3(),raf:0,dirty:true};V3=V;
+ const svgNS='xmlns="http://www.w3.org/2000/svg"',cache=new Map(),pend=[];
+ // a picture of an SVG fragment inside a box of the world (mm) → texture + its average colour
+ function tex(inner,x0,y0,w,h,maxPx=2048){const key=inner+'|'+[x0,y0,w,h].join(',');if(cache.has(key))return cache.get(key);
+  const k=Math.max(.25,Math.min(5,maxPx/Math.max(w,h))),W=Math.max(2,Math.ceil(w*k)),H=Math.max(2,Math.ceil(h*k)),cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const t=new T.CanvasTexture(cv);t.colorSpace=T.SRGBColorSpace;t.anisotropy=4;const r={t,avg:null,cbs:[]};cache.set(key,r);V.texs.push(t);
+  const img=new Image();pend.push(new Promise(res=>{img.onload=()=>{try{const c=cv.getContext('2d');c.drawImage(img,0,0,W,H);t.needsUpdate=true;
+     const s=document.createElement('canvas');s.width=s.height=8;const sc=s.getContext('2d');sc.drawImage(cv,0,0,8,8);const d=sc.getImageData(0,0,8,8).data;let R0=0,G0=0,B0=0,n=0;for(let i=0;i<d.length;i+=4)if(d[i+3]>128){R0+=d[i];G0+=d[i+1];B0+=d[i+2];n++;}
+     if(n){r.avg=new T.Color(`rgb(${R0/n|0},${G0/n|0},${B0/n|0})`);r.cbs.forEach(f=>f(r.avg));}}catch(e){}res();};img.onerror=()=>res();}));
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg ${svgNS} width="${W}" height="${H}" viewBox="${x0} ${y0} ${w} ${h}" style="direction:ltr">${inner}</svg>`);return r;}
+ const side=(hex)=>new T.MeshLambertMaterial({color:hex});
+ // a box from world rect (x0..x1, y0..y1 in 2D mm) and z0..z1 (toward the viewer), front face pictured
+ function box(x0,y0,x1,y1,z0,z1,front,col,parent){const w=Math.max(.5,x1-x0),h=Math.max(.5,y1-y0),d=Math.max(.5,z1-z0);
+  const sm=side(col||0xc9ccd0),fm=front?new T.MeshLambertMaterial({map:front.t,transparent:true,alphaTest:.08}):sm;
+  if(front&&!col){const f=c=>sm.color.copy(c).multiplyScalar(.82);if(front.avg)f(front.avg);else front.cbs.push(c=>{f(c);V.dirty=true;});}
+  const m=new T.Mesh(new T.BoxGeometry(w,h,d),[sm,sm,sm,sm,fm,sm]);m.position.set((x0+x1)/2,-(y0+y1)/2,(z0+z1)/2);(parent||root).add(m);return m;}
+ function plane(x0,y0,x1,y1,z,front,parent,dbl){const m=new T.Mesh(new T.PlaneGeometry(x1-x0,y1-y0),new T.MeshLambertMaterial({map:front.t,transparent:true,alphaTest:.08,side:dbl?T.DoubleSide:T.FrontSide}));m.position.set((x0+x1)/2,-(y0+y1)/2,z);(parent||root).add(m);return m;}
+ const keep=[];const setP=(o,k,v)=>{keep.push([o,k,o.p[k]]);o.p[k]=v;};const LOD0=LODMIN;LODMIN=0;
+ try{
+  // every board shown closed while its pictures are drawn, so door parts and cut-outs are all present
+  objs.forEach(o=>{if(o.type==='cabinet')setP(o,'view','door');if(o.type==='enclosure'&&hasDoor(o))setP(o,'closed','1');if(o.type==='cibox')setP(o,'lid','1');});
+  const hosts=[];// {o, inside(x,y), plateZ, D, front groups}
+  const partBox=(o,host)=>{const b=bbW(o),pad=1,inner=objSVG(o,false);const f=tex(inner,b.x0-pad,b.y0-pad,b.x1-b.x0+2*pad,b.y1-b.y0+2*pad,1024);const z0=v3Base(o),d=v3Depth(o);return {b,f,z0,d};};
+  // boards
+  for(const c of objs){if(c.type==='cabinet'){const g=cabG(c),D=+c.p.d||(g.W>=1000?500:400),x1=g.x0+g.W,y1=g.y0+g.H,wl=0x9aa0a6;
+    const pl=tex(DEF.cabinet.draw(Object.assign({},c,{x:0,y:0})).replace(/^/,`<g transform="translate(${c.x} ${c.y})">`)+'</g>',g.x0,g.y0,g.W,g.H);plane(g.x0,g.y0,x1,y1,-2,pl);
+    box(g.x0,g.y0,g.x0+18,y1,-30,D,null,wl);box(x1-18,g.y0,x1,y1,-30,D,null,wl);box(g.x0,g.y0,x1,g.y0+18,-30,D,null,wl);box(g.x0,y1-18,x1,y1,-30,D,null,wl);box(g.x0,g.y0,x1,y1,-34,-30,null,0x7d838a);
+    g.S.slice(1).forEach(sc=>box(sc.x0-3,g.y0,sc.x0+3,y1,-30,D-10,null,wl));if(g.P)box(g.x0+10,y1,x1-10,y1+g.P,10,D-10,null,0x2f3235);
+    const m=holesMask(c.id,c.x,c.y,q=>inCab(c,q.x,q.y)),fr=`<g transform="translate(${c.x} ${c.y})">${m?m.svg+`<g mask="url(#${m.id})">`:''}${cabFront(c)}${m?'</g>':''}</g>`,ft=tex(fr,g.x0,g.y0,g.W,g.H,2600);
+    const groups=[];
+    g.S.forEach(sc=>{const face=secFace(c,sc);if(face==='none')return;const fx0=sc.x0+3,fx1=sc.x1-3,fy0=g.y0+3,fy1=y1-3;
+     const leafs=face==='double'?[[fx0,fx0+(fx1-fx0)/2-2,'L'],[fx0+(fx1-fx0)/2+2,fx1,'R']]:face==='cover'?[[fx0,fx1,'C']]:[[fx0,fx1,sc.hinge==='R'?'R':'L']];
+     leafs.forEach(([a,b,hg])=>{const grp=new T.Group(),px=hg==='R'?b:a;grp.position.set(hg==='C'?0:px,0,D);root.add(grp);const ox=hg==='C'?0:px;
+      const sub=tex(fr,a,fy0,b-a,fy1-fy0,2048);const m2=new T.Mesh(new T.BoxGeometry(b-a,fy1-fy0,3),[side(0xb9bcb6),side(0xb9bcb6),side(0xb9bcb6),side(0xb9bcb6),new T.MeshLambertMaterial({map:sub.t,transparent:true,alphaTest:.08}),side(0xc9cbc6)]);
+      m2.position.set((a+b)/2-ox,-(fy0+fy1)/2,1.5);grp.add(m2);const G={grp,x0:a,x1:b,y0:fy0,y1:fy1,ox,hg,z:D+3};groups.push(G);(hg==='C'?V.covers:V.doors).push(G);});});
+    hosts.push({o:c,inside:(x,y)=>inCab(c,x,y),groups,D});}
+   else if(c.type==='enclosure'||c.type==='cibox'){const {w,h}=sizeOf(c),x0=c.x-w/2,y0=c.y-h/2,x1=x0+w,y1=y0+h,D=+c.p.d||(c.type==='cibox'?150:Math.max(180,Math.min(300,Math.max(w,h)*.33))),wl=c.type==='cibox'?0xb8bcc2:0xc2c6cb;
+    const pc=c.type==='enclosure'?Object.assign({},c,{p:Object.assign({},c.p,{door:'none'})}):c;plane(x0,y0,x1,y1,-2,tex(objSVG(pc,false),x0,y0,w,h));
+    const t=c.type==='cibox'?6:14;box(x0,y0,x0+t,y1,-20,D,null,wl);box(x1-t,y0,x1,y1,-20,D,null,wl);box(x0,y0,x1,y0+t,-20,D,null,wl);box(x0,y1-t,x1,y1,-20,D,null,wl);box(x0,y0,x1,y1,-24,-20,null,wl);
+    const groups=[];const fs=c.type==='cibox'?ciLidSVG(c,false):(hasDoor(c)?doorSVG(c,false):'');
+    if(fs){const hg=c.type==='cibox'?'C':(c.p.hinge==='R'?'R':'L'),px=hg==='R'?x1:x0,grp=new T.Group(),ox=hg==='C'?0:px;grp.position.set(ox,0,D);root.add(grp);const ft=tex(fs,x0,y0,w,h,2048);
+     const m2=new T.Mesh(new T.BoxGeometry(w,h,3),[side(0xb9bcb6),side(0xb9bcb6),side(0xb9bcb6),side(0xb9bcb6),new T.MeshLambertMaterial({map:ft.t,transparent:true,alphaTest:.08}),side(0xc9cbc6)]);m2.position.set(c.x-ox,-c.y,1.5);grp.add(m2);
+     const G={grp,x0,x1,y0,y1,ox,hg,z:D+3};groups.push(G);(hg==='C'?V.covers:V.doors).push(G);}
+    hosts.push({o:c,inside:(x,y)=>Math.abs(x-c.x)<w/2&&Math.abs(y-c.y)<h/2,groups,D});}}
+  // parts
+  for(const o of objs){if(V3SKIP.has(o.type)||DEF[o.type].sld||o.type==='cabinet'||o.type==='enclosure'||o.type==='cibox'||DEF[o.type].layer<0||(DEF[o.type].layer>=7&&o.type!=='nplate'))continue;
+   const host=hosts.find(H=>H.inside(o.x,o.y)),fr=DEF[o.type].front||o.type==='nplate';
+   if(DEF[o.type].cut&&host&&host.groups.length)continue;// a cut-out is a hole in the door picture
+   const P=partBox(o);
+   if(fr&&host){const G=host.groups.find(G=>o.x>=G.x0&&o.x<=G.x1&&o.y>=G.y0&&o.y<=G.y1);if(G){const m=box(P.b.x0,P.b.y0,P.b.x1,P.b.y1,3,3+P.d,P.f,null,G.grp);m.position.x-=G.ox;continue;}}
+   box(P.b.x0,P.b.y0,P.b.x1,P.b.y1,P.z0,P.z0+P.d,P.f);}
+  // wires: one sheet just above the plate, under the ducts and parts
+  const W=objs.filter(o=>o.type==='wire');if(W.length){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;W.forEach(w=>boundsOf(w).forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}));
+   if(x1>x0){x0-=5;y0-=5;x1+=5;y1+=5;V.wires=plane(x0,y0,x1,y1,9,tex(W.map(w=>drawWire0(w,false)).join(''),x0,y0,x1-x0,y1-y0,4096));}}
+ }finally{LODMIN=LOD0;keep.reverse().forEach(([o,k,v])=>{if(v===undefined)delete o.p[k];else o.p[k]=v;});}
+ // frame the scene
+ const bb=new T.Box3().setFromObject(root),sz=bb.getSize(new T.Vector3());bb.getCenter(V.tg);V.span=Math.max(sz.x,sz.y,300);V.sz=sz;cam.near=V.span/200;cam.far=V.span*40;
+ function size(){const r=ov.getBoundingClientRect();R.setSize(r.width,r.height,false);R.domElement.style.width=r.width+'px';R.domElement.style.height=r.height+'px';cam.aspect=r.width/Math.max(1,r.height);cam.updateProjectionMatrix();if(!V.fit){V.fit=1;V.dist=Math.max(V.sz.y,V.sz.x/cam.aspect)*1.2/(2*Math.tan(cam.fov*Math.PI/360))+V.sz.z;}V.dirty=true;}
+ function frame(){V.raf=requestAnimationFrame(frame);if(V.open!==V.goal){const s=Math.sign(V.goal-V.open);V.open=Math.abs(V.goal-V.open)<.04?V.goal:V.open+s*.04;V.dirty=true;}if(!V.dirty)return;V.dirty=false;
+  const a=V.open*1.92;V.doors.forEach(G=>G.grp.rotation.y=G.hg==='R'?a:-a);V.covers.forEach(G=>{G.grp.position.z=G.z-3+V.open*300;G.grp.visible=V.open<.98;G.grp.children.forEach(m=>{[].concat(m.material).forEach(q=>{q.opacity=1-V.open;q.transparent=true;});});});
+  const cp=Math.cos(V.ph);cam.position.set(V.tg.x+V.dist*cp*Math.sin(V.th),V.tg.y+V.dist*Math.sin(V.ph),V.tg.z+V.dist*cp*Math.cos(V.th));cam.lookAt(V.tg);R.render(scene,cam);}
+ size();frame();Promise.all(pend).then(()=>{V.dirty=true;});V.onR=size;addEventListener('resize',size);
+ // orbit: one finger / left mouse turns, two fingers pinch + pan, wheel zooms, right mouse / shift pans
+ const P=new Map();let last=null;const cv=R.domElement;cv.style.touchAction='none';
+ const pan=(dx,dy)=>{const k=V.dist*.0012,r=new T.Vector3().setFromMatrixColumn(cam.matrix,0),u=new T.Vector3().setFromMatrixColumn(cam.matrix,1);V.tg.addScaledVector(r,-dx*k).addScaledVector(u,dy*k);V.dirty=true;};
+ const zoom=f=>{V.dist=Math.max(V.span*.12,Math.min(V.span*8,V.dist*f));V.dirty=true;};
+ cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);P.set(e.pointerId,{x:e.clientX,y:e.clientY,b:e.button,sh:e.shiftKey});last=null;});
+ cv.addEventListener('pointermove',e=>{const p=P.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;
+  if(P.size===1){if(p.b===2||p.b===1||p.sh)pan(dx,dy);else{V.th-=dx*.006;V.ph=Math.max(-1.45,Math.min(1.45,V.ph+dy*.006));V.dirty=true;}}
+  else if(P.size===2){const [a,b]=[...P.values()],d0=Math.hypot(a.x-b.x,a.y-b.y);p.x=e.clientX;p.y=e.clientY;const d1=Math.hypot(a.x-b.x,a.y-b.y);if(d0>10&&d1>10)zoom(d0/d1);pan(dx/2,dy/2);return;}
+  p.x=e.clientX;p.y=e.clientY;});
+ const up=e=>{P.delete(e.pointerId);};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);cv.addEventListener('contextmenu',e=>e.preventDefault());
+ cv.addEventListener('wheel',e=>{e.preventDefault();zoom(Math.exp(e.deltaY*.0012));},{passive:false});
+ const dB=ov.querySelector('[data-a="door"]');const setDoor=g=>{V.goal=g;dB.querySelector('span').textContent=g?'סגור דלתות':'פתח דלתות';V.dirty=true;};
+ if(!V.doors.length&&!V.covers.length)dB.style.display='none';if(!V.wires)ov.querySelector('[data-a="wires"]').style.display='none';
+ ov.querySelector('.v3bar').onclick=e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.a;
+  if(a==='x')close3D();else if(a==='door')setDoor(V.goal?0:1);else if(a==='front'){V.th=0;V.ph=0;V.dirty=true;}else if(a==='iso'){V.th=V.th>0?-.62:.62;V.ph=.38;V.dirty=true;}
+  else if(a==='wires'){if(V.wires){V.wires.visible=!V.wires.visible;b.classList.toggle('on',V.wires.visible);V.dirty=true;}}
+  else if(a==='shot'){R.render(scene,cam);cv.toBlob(async bl=>{if(!bl)return;const nm=(state.name||'OhadCad')+' 3D.png',f=new File([bl],nm,{type:'image/png'});
+   try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:nm});return;}}catch(e){if(e&&e.name==='AbortError')return;}
+   const u=URL.createObjectURL(bl),A=document.createElement('a');A.href=u;A.download=nm;document.body.appendChild(A);A.click();A.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('התמונה נשמרה');},'image/png');}};
+ V.onKey=e=>{if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close3D();}else e.stopImmediatePropagation();};document.addEventListener('keydown',V.onKey,true);
+ setDoor(0);}
+function close3D(){const V=V3;if(!V)return;V3=null;cancelAnimationFrame(V.raf);removeEventListener('resize',V.onR);document.removeEventListener('keydown',V.onKey,true);
+ V.scene.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)[].concat(o.material).forEach(m=>m.dispose());});V.texs.forEach(t=>t.dispose());V.R.dispose();try{V.R.forceContextLoss();}catch(e){}V.ov.remove();}
 function toggleDoors(){const es=state.objs.filter(o=>(o.type==='enclosure'&&hasDoor(o))||o.type==='cabinet'||o.type==='cibox');if(!es.length){toast('אין לוח עם דלת');return;}
  const hasOD=state.objs.some(o=>o.type==='cabinet'&&(o.p.secs||[]).some(z=>z.f==='cover'&&z.od==='1'));const f=es[0];
  const cur=f.type==='cabinet'?(f.p.view||'inside'):f.type==='cibox'?(ciLidOn(f)?'front':'inside'):(f.p.closed==='1'?'front':'inside');const next=cur==='inside'?'front':(cur==='front'&&hasOD?'door':'inside');

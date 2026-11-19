@@ -27,9 +27,11 @@ Live at https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/ (GitHub Pa
   - Communication racks: `nrack` (19"/10", U count, wall/floor; `nrDim`) and rack equipment `nequip` (`ru:true`, `p.k` kind, `p.u` height); equipment snaps to U slots (`rackU`) and is added into the first free U (`rackFree`).
   - Toolbar order: `tbApply` / `tbStore`, kept per device in localStorage.
   - Pen: free-hand strokes are parts of type `ink` (`p.pts` relative to centre, `icol`, `iw`); pen mode `PEN` / `penSet`, bar `#penBar`, eraser `inkErase`.
+  - 3D view (view only): `open3D` / `close3D`, button `b3d`. Built each time from the panel parts: every part is a box whose front is its own 2D picture (`objSVG` → texture), depth per kind `v3Depth` / `V3DEP`; cabinets, enclosures and CI boxes get walls and doors that swing (parts with `front` ride the door). Uses `vendor/three` (three.js r160), loaded on first use.
 - `sw.js`: offline cache. Pages are network-first with `cache: 'no-cache'`; other assets are stale-while-revalidate.
 - `manifest.webmanifest`, `icons/`, `favicon.ico`: the official OhadCad brand kit (amber "O" ring + crosshair icon, white/amber wordmark for dark backgrounds, amber/dark wordmark for light ones). Colors, fonts (Heebo/Inter/JetBrains Mono) and style are in `icons/wordmark-dark.svg` / `icons/wordmark-light.svg` and documented in the brand kit's own README (not kept in this repo) — the live palette is in both `index.html`'s and `cad.html`'s `:root` CSS variables.
 - `vendor/firebase/`: firebase 12.19 compat bundles (app, auth, firestore).
+- `vendor/three/`: three.js r160 (three.min.js), loaded only when the 3D view opens.
 - `vendor/pdfjs/`: pdf.js 3.11.174 (pdf.min.js + worker), loaded only when a PDF is imported as a background.
 - `LICENSE` (proprietary), `THIRD_PARTY_NOTICES.md`, `legal/` (Hebrew drafts of terms, privacy, accessibility — not linked until approved; then list them in `LEGAL` in `cad.html`, shown in the drawer's "אודות" dialog `aboutDialog`), `docs/COMMERCIAL.md` (commercialisation plan).
 - The title-block default logo (`DEFAULT_LOGO`, the owner's organisation) is used only for the owner (`defLogo()`, bridge `me().owner`).
