@@ -2214,21 +2214,23 @@ function edgeDims(o){const B=bbW(o),cx=(B.x0+B.x1)/2,cy=(B.y0+B.y1)/2,k=1/view.s
  // a drawn rectangle holding this one (the smallest around it) is measured from the inside
  if(!cont&&(o.type==='shrect'||o.type==='shellipse')){const R=state.objs.filter(b=>b!==o&&b.type==='shrect'&&inside(b)).map(b=>[b,bbW(b)]).filter(([,Q])=>Q.x0<=B.x0+.01&&Q.x1>=B.x1-.01&&Q.y0<=B.y0+.01&&Q.y1>=B.y1-.01).sort((a,b)=>(a[1].x1-a[1].x0)*(a[1].y1-a[1].y0)-(b[1].x1-b[1].x0)*(b[1].y1-b[1].y0));if(R.length)cont=R[0][0];}
  if(!cont)for(const c of state.objs){if(c.type!=='cabinet')continue;const g=cabG(c);const sc=g.S.find(z=>cx>z.x0&&cx<z.x1&&cy>g.y0&&cy<g.y0+g.H);if(sc){CR={x0:sc.x0,x1:sc.x1,y0:g.y0,y1:g.y0+g.H};break;}}
- const cands=state.objs.filter(q=>q!==o&&q.type!=='wire'&&q.type!=='enclosure'&&q.type!=='cibox'&&q.type!=='cabinet'&&q.type!=='label'&&!DEF[q.type].front).map(q=>bbW(q)).filter(Q=>!(Q.x0<B.x1-.01&&Q.x1>B.x0+.01&&Q.y0<B.y1-.01&&Q.y1>B.y0+.01));
+ const cands=state.objs.filter(q=>q!==o&&q.type!=='wire'&&q.type!=='mdim'&&q.type!=='enclosure'&&q.type!=='cibox'&&q.type!=='cabinet'&&q.type!=='label'&&!DEF[q.type].front).map(q=>Object.assign(bbW(q),{q})).filter(Q=>!(Q.x0<B.x1-.01&&Q.x1>B.x0+.01&&Q.y0<B.y1-.01&&Q.y1>B.y0+.01));
  const C=cont?bbW(cont):CR;let s='',lab='';
  for(const [key,sg,ax] of [['L',-1,'x'],['R',1,'x'],['T',-1,'y'],['B',1,'y']]){const X=ax==='x';const e=X?(sg<0?B.x0:B.x1):(sg<0?B.y0:B.y1);let best=null;
   for(const Q of cands){const ov=X?(Q.y0<B.y1&&Q.y1>B.y0):(Q.x0<B.x1&&Q.x1>B.x0);if(!ov)continue;const qe=X?(sg<0?Q.x1:Q.x0):(sg<0?Q.y1:Q.y0);const g=(qe-e)*sg;if(g<-.01)continue;
-   const pm=X?(Math.max(Q.y0,B.y0)+Math.min(Q.y1,B.y1))/2:(Math.max(Q.x0,B.x0)+Math.min(Q.x1,B.x1))/2;if(!best||g<best.d)best={d:g,ref:qe,kind:'n',pm};}
+   const pm=X?(Math.max(Q.y0,B.y0)+Math.min(Q.y1,B.y1))/2:(Math.max(Q.x0,B.x0)+Math.min(Q.x1,B.x1))/2;if(!best||g<best.d)best={d:g,ref:qe,kind:'n',pm,qo:Q.q};}
   if(best&&best.d<.5)continue;
-  if(!best&&C){const ce=X?(sg<0?C.x0:C.x1):(sg<0?C.y0:C.y1);const g=(ce-e)*sg;if(g>.5)best={d:g,ref:ce,kind:'b',pm:X?cy:cx};}
-  if(!best)continue;DIMS[key]=Object.assign(best,{sg,ax,edge:1,half:X?(B.x1-B.x0)/2:(B.y1-B.y0)/2});
+  if(!best&&C){const ce=X?(sg<0?C.x0:C.x1):(sg<0?C.y0:C.y1);const g=(ce-e)*sg;if(g>.5)best={d:g,ref:ce,kind:'b',pm:X?cy:cx,qo:cont||null};}
+  if(!best)continue;DIMS[key]=Object.assign(best,{sg,ax,edge:1,e,half:X?(B.x1-B.x0)/2:(B.y1-B.y0)/2});
   const c=EQ[key]?EQC:best.kind==='n'?'#f59e0b':'#22d3ee';const x1=X?e:best.pm,y1=X?best.pm:e,x2=X?best.ref:best.pm,y2=X?best.pm:best.ref;
   const a=Math.min(7*k,best.d/2.2),w=3*k;
   s+=`<path d="M${x1} ${y1}L${x2} ${y2}" stroke="${c}" stroke-width="${1.6*k}"/>`;
   s+=X?`<path d="M${x2} ${y2}l${-sg*a} ${-w}v${2*w}zM${x1} ${y1}l${sg*a} ${-w}v${2*w}z" fill="${c}"/><path d="M${x2} ${y2-7*k}v${14*k}M${x1} ${y1-7*k}v${14*k}" stroke="${c}" stroke-width="${1.4*k}"/>`
       :`<path d="M${x2} ${y2}l${-w} ${-sg*a}h${2*w}zM${x1} ${y1}l${-w} ${sg*a}h${2*w}z" fill="${c}"/><path d="M${x2-7*k} ${y2}h${14*k}M${x1-7*k} ${y1}h${14*k}" stroke="${c}" stroke-width="${1.4*k}"/>`;
   const t=(Math.round(best.d*10)/10).toString(),mx=(x1+x2)/2,my=(y1+y2)/2,pw=(t.length*7.2+12)*k,ph=18*k;
-  lab+=`<g data-dim="${key}" style="cursor:pointer"><rect x="${mx-pw/2}" y="${my-ph/2}" width="${pw}" height="${ph}" rx="${ph/2}" fill="#111" stroke="${c}" stroke-width="${1.4*k}"/><text x="${mx}" y="${my}" font-size="${12*k}" fill="#fff" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Arial">${t}</text></g>`;}
+  lab+=`<g data-dim="${key}" style="cursor:pointer"><rect x="${mx-pw/2}" y="${my-ph/2}" width="${pw}" height="${ph}" rx="${ph/2}" fill="#111" stroke="${c}" stroke-width="${1.4*k}"/><text x="${mx}" y="${my}" font-size="${12*k}" fill="#fff" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Arial">${t}</text></g>`;
+  // 📌 keeps this distance on the drawing as a fixed dimension, pinned to both sides
+  if(DIMS[key]&&DIMS[key].e!=null){const px=mx+pw/2+11*k;lab+=`<g data-dpin="${key}" style="cursor:pointer"><title>קבע את המידה הזו בשרטוט</title><circle cx="${px}" cy="${my}" r="${9*k}" fill="#111" stroke="${c}" stroke-width="${1.4*k}"/><text x="${px}" y="${my+.5*k}" font-size="${10*k}" text-anchor="middle" dominant-baseline="central">📌</text></g>`;}}
  return `<g pointer-events="none">${s}</g>`+lab;}
 /* Equal gaps on both sides (left = right, top = bottom) show green: measured once,
    compared, then drawn. */
@@ -2247,8 +2249,14 @@ function frontDims(o){
   const a=7*k,w=3.2*k;s+=X?`<path d="M${x2} ${y2}l${-sg*a} ${-w}v${2*w}z" fill="${c}"/><path d="M${x2} ${y2-8*k}v${16*k}" stroke="${c}" stroke-width="${1.6*k}"/>`:`<path d="M${x2} ${y2}l${-w} ${-sg*a}h${2*w}z" fill="${c}"/><path d="M${x2-8*k} ${y2}h${16*k}" stroke="${c}" stroke-width="${1.6*k}"/>`;
   s+=`<circle cx="${o.x}" cy="${o.y}" r="${2.2*k}" fill="${c}"/>`;
   const t=(Math.round(best.d*10)/10).toString(),mx=(o.x+x2)/2,my=(o.y+y2)/2,pw=(t.length*7.2+12)*k,ph=18*k;
-  lab+=`<g data-dim="${key}" style="cursor:pointer"><rect x="${mx-pw/2}" y="${my-ph/2}" width="${pw}" height="${ph}" rx="${ph/2}" fill="#111" stroke="${c}" stroke-width="${1.4*k}"/><text x="${mx}" y="${my}" font-size="${12*k}" fill="#fff" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Arial">${t}</text></g>`;}
+  lab+=`<g data-dim="${key}" style="cursor:pointer"><rect x="${mx-pw/2}" y="${my-ph/2}" width="${pw}" height="${ph}" rx="${ph/2}" fill="#111" stroke="${c}" stroke-width="${1.4*k}"/><text x="${mx}" y="${my}" font-size="${12*k}" fill="#fff" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Arial">${t}</text></g>`;
+  // 📌 keeps this distance on the drawing as a fixed dimension, pinned to both sides
+  if(DIMS[key]&&DIMS[key].e!=null){const px=mx+pw/2+11*k;lab+=`<g data-dpin="${key}" style="cursor:pointer"><title>קבע את המידה הזו בשרטוט</title><circle cx="${px}" cy="${my}" r="${9*k}" fill="#111" stroke="${c}" stroke-width="${1.4*k}"/><text x="${px}" y="${my+.5*k}" font-size="${10*k}" text-anchor="middle" dominant-baseline="central">📌</text></g>`;}}
  return `<g pointer-events="none">${s}</g>`+lab;}
+function dimPin(key){const o=sel&&get(sel),d=DIMS[key];if(!o||!d||d.e==null)return;const X=d.ax==='x';
+ const pin=(q,x,y)=>{if(!q)return {x:r2(x),y:r2(y)};const [u,v]=toLocal(q,x,y);return {x:r2(x),y:r2(y),of:q.id,u:r2(u),v:r2(v)};};
+ const A=X?pin(o,d.e,d.pm):pin(o,d.pm,d.e),B=X?pin(d.qo,d.ref,d.pm):pin(d.qo,d.pm,d.ref);
+ const m=mdNew(X?'h':'v',A,B,0);if(o.p&&o.p.color&&(o.type==='shrect'||o.type==='shellipse'))m.p.color=o.p.color;commit();renderNow();toast(`המידה ${mdFmt(mdGeom(m).len)} נקבעה בשרטוט — זזה עם הרכיבים`);}
 function dimEdit(key){const o=sel&&get(sel),d=DIMS[key];if(!o||!d)return;
  if(d.edge){if(o.locked){toast('הרכיב נעול');return;}
   const r=DEF[o.type].rail&&state.objs.find(q=>q.type==='rail'&&onRail(o,q));if(r&&(r.rot%180===0?'y':'x')===d.ax){toast('הרכיב יושב על פס — הזז את הפס עצמו');return;}
@@ -3513,6 +3521,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  const lmEl=e.target.closest('[data-lymv]');if(lmEl&&!wireMode&&layoutRect()){G.mode='lymv';G.o0=Object.assign({},ORG());G.w0=toWorld(e.clientX,e.clientY);return;}
  const lyEl=e.target.closest('[data-lyh]');if(lyEl&&!wireMode){const R=layoutRect();if(R){G.mode='lyr';G.h=lyEl.dataset.lyh;G.R0=R;return;}}
  const rEl=e.target.closest('[data-rot]');if(rEl&&!wireMode){const ro=get(rEl.dataset.rot);if(canRot(ro)){G.mode='rot';G.o=ro;G.r0=ro.rot;if(sel!==ro.id){sel=ro.id;multi.clear();updateBar();}return;}}
+ const pnEl=e.target.closest('[data-dpin]');if(pnEl){G.dpin=pnEl.dataset.dpin;return;}
  const dEl=e.target.closest('[data-dim]');if(dEl){G.dim=dEl.dataset.dim;return;}
  const hEl=e.target.closest('[data-h]'),so=sel&&get(sel);
  const cutEl=e.target.closest('[data-cut]');if(cutEl&&so&&!so.locked&&!globalLock){cutToggle(so,cutEl.dataset.cut);G.mode='cutx';return;}
@@ -3641,7 +3650,7 @@ function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
   const hit=state.objs.filter(o=>!hiddenFront(o)&&boundsOf(o).every(([x,y])=>x>=x0&&x<=x1&&y>=y0&&y<=y1)).map(o=>o.id);
   if(!g.add)multi.clear();if(g.add&&sel)multi.add(sel);hit.forEach(i=>multi.add(i));sel=hit.length?hit[hit.length-1]:(g.add?sel:null);if(multi.size<2)multi.clear();renderNow();updateBar();
   if(hit.length)toast(`נבחרו ${selIds().length} רכיבים`);return;}
- if(!g.moved&&Date.now()-g.t0<600){if(g.dim){dimEdit(g.dim);return;}if(wireMode){const [x,y]=toWorld(e.clientX,e.clientY);wireTap(x,y);}
+ if(!g.moved&&Date.now()-g.t0<600){if(g.dpin){dimPin(g.dpin);return;}if(g.dim){dimEdit(g.dim);return;}if(wireMode){const [x,y]=toWorld(e.clientX,e.clientY);wireTap(x,y);}
   else{const now=Date.now(),dbl=g.id&&LASTTAP.id===g.id&&now-LASTTAP.t<400&&Math.hypot(e.clientX-LASTTAP.x,e.clientY-LASTTAP.y)<24;LASTTAP={id:g.id,t:dbl?0:now,x:e.clientX,y:e.clientY};
    select(g.id,g.add);if(dbl&&!g.add)dblEdit(get(g.id),e);}}
  else if(g.mode==='drag'||g.mode==='resize'){if(g.mode==='drag'&&g.moved&&g.o){splitThrough(g.o);sldJoin([g.o,...(g.kids||[]).map(k=>k.q)]);}commit();renderNow();updateBar();}}
