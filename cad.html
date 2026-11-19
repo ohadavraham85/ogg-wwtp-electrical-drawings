@@ -824,7 +824,7 @@ function awinSVG(o){const W=Math.max(300,+o.p.dwid||1200),t=Math.max(50,+o.p.dth
  if(o.p.tag)s+=txt(0,-(t/2+Math.max(40,W*.07)),o.p.tag,Math.max(30,W*.06),c,700);return s;}
 /* Generator controllers for the door (Deep Sea Electronics style, sizes of the
    bezel approximate) and transfer switches (ATS) between mains and generator. */
-const DSEM={'DSE7320 MKII':{w:245,h:184,t:'AMF + ATS'},'DSE8610 MKII':{w:245,h:184,t:'סנכרון'},'DSE6120 MKIII':{w:216,h:159,t:'AMF'},'DSE4520 MKII':{w:172,h:134,t:'AMF'},'DSE335':{w:172,h:134,t:'בקר החלפה'},'AMD 530':{w:144,h:144,t:'בקר החלפה',b:'עמדר'}};
+const DSEM={'DSE7320 MKII':{w:245,h:184,t:'AMF + ATS'},'DSE8610 MKII':{w:245,h:184,t:'סנכרון'},'DSE6120 MKIII':{w:216,h:159,t:'AMF'},'DSE4520 MKII':{w:172,h:134,t:'AMF'},'DSE335':{w:172,h:134,t:'בקר החלפה'},'AMD 530':{w:144,h:144,t:'בקר החלפה',b:'אמדר'}};
 function dseDraw(o){const M=DSEM[o.p.dsm]||DSEM['DSE7320 MKII'],w=M.w,h=M.h,k='#0b0b0b';
  let s=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${w*.04}" fill="#1c1d20" stroke="${k}" stroke-width="1.2"/><rect x="${-w/2+w*.03}" y="${-h/2+h*.04}" width="${w*.94}" height="${h*.92}" rx="${w*.03}" fill="#26282c"/>`;
  s+=txt(-w/2+w*.07,-h/2+h*.1,M.b||'DEEP SEA ELECTRONICS',Math.max(4,w*.03),'#d1d5db',700,'start')+txt(w/2-w*.07,-h/2+h*.1,(o.p.dsm||'').replace(' MKII','').replace(' MKIII',''),Math.max(4.5,w*.035),'#facc15',800,'end');
@@ -1927,7 +1927,7 @@ const LIB=[
   {g:'מפסקים',items:[{t:'sbrk',n:'מפסק זרם (MCCB / ACB)'},{t:'sacb',n:'מפסק אוויר ACB (נשלף)'},{t:'sacb',n:'מפסק אוויר ACB (קבוע)',p:{acv:'f',rating:'MTZ2 1600A'}},{t:'sbrk',n:'מאמ"ת (MCB)',p:{tag:'Q2',rating:'MCB C16'}},{t:'srcd',n:'מפסק פחת / RCBO'},{t:'smpcb',n:'מגן מנוע (MPCB)'},{t:'siso',n:'מנתק / מפסק ראשי'},{t:'slbs',n:'מנתק עומס'}]},
   {g:'נתיכים',items:[{t:'sfuse',n:'נתיך'},{t:'sfsd',n:'מנתק נתיכים'}]},
   {g:'תלת-פאזי (3 קטבים, ברוחב המהדקים)',items:[{t:'sbrk',n:'מפסק זרם 3P',p:{poles:3}},{t:'sacb',n:'מפסק אוויר ACB 3P',p:{poles:3}},{t:'sbrk',n:'מאמ"ת 3P',p:{poles:3,tag:'Q2',rating:'MCB C16'}},{t:'siso',n:'מנתק 3P',p:{poles:3}},{t:'srcd',n:'מפסק פחת 4P',p:{poles:4}},{t:'smpcb',n:'מגן מנוע 3P',p:{poles:3}},{t:'scont',n:'מגען 3P',p:{poles:3}},{t:'sol',n:'ממסר טרמי 3P',p:{poles:3}},{t:'sfuse',n:'נתיכים 3P',p:{poles:3}},{t:'smot',n:'מנוע (U V W)',p:{poles:3}}]},
-  {g:'מיתוג והתנעה',items:[{t:'scont',n:'מגען'},{t:'srev',n:'זוג מגענים מחוגרים (היפוך)'},{t:'sol',n:'ממסר טרמי'},{t:'svfd',n:'ווסת מהירות (VFD)'},{t:'svfd3',n:'ווסת מהירות תלת-פאזי (L1 L2 L3 → U V W)'},{t:'sss',n:'מתנע רך'},{t:'sats',n:'מחליף אוטומטי (ATS)'},{t:'satsc',n:'בקר החלפה AMD 530 (עמדר) — סמל'}]},
+  {g:'מיתוג והתנעה',items:[{t:'scont',n:'מגען'},{t:'srev',n:'זוג מגענים מחוגרים (היפוך)'},{t:'sol',n:'ממסר טרמי'},{t:'svfd',n:'ווסת מהירות (VFD)'},{t:'svfd3',n:'ווסת מהירות תלת-פאזי (L1 L2 L3 → U V W)'},{t:'sss',n:'מתנע רך'},{t:'sats',n:'מחליף אוטומטי (ATS)'},{t:'satsc',n:'בקר החלפה AMD 530 (אמדר) — סמל'}]},
   {g:'הגנות',items:[{t:'sspd',n:'מגן ברקים (SPD)'}]}]},
  {tab:'פיקוד ובקרה',sld:true,icon:'🎛',hint:'סמלי פיקוד (IEC): מגעים, לחצנים, בוררים, סלילים, טיימרים ושעונים. מחברים ביניהם ב"חיווט". הסימון (למשל K1) והמספרים (13-14) נערכים במאפיינים.',groups:[
   {g:'לחצנים',items:[{t:'spbno',n:'לחצן הפעלה (NO)'},{t:'spbnc',n:'לחצן הפסקה (NC)'},{t:'sestop',n:'לחצן חירום'}]},
