@@ -488,6 +488,7 @@ body.iconsonly .ddbtn .lbl{display:none}
 #v3d .v3sel button,#v3d .v3sel select,#v3d .v3sel input{font:600 14px Heebo,Arial,sans-serif;color:var(--txt);background:var(--ctl);border:1px solid var(--ctl-bd);border-radius:9px;padding:7px 10px;min-width:0}
 #v3d .v3sel input{width:96px;flex:0 0 auto;text-align:center;background:var(--card2)}#v3d .v3sel select{width:74px;flex:0 0 auto}#v3d .v3sel button{flex:0 0 auto;white-space:nowrap}#v3d .v3sel label{color:var(--mut)}
 body.v3on #toast{z-index:400;top:calc(70px + env(safe-area-inset-top))}
+#v3d .v3err{position:absolute;top:110px;inset-inline:8px;z-index:2;background:#7f1d1d;color:#fff;border:1px solid #fca5a5;border-radius:10px;padding:10px 12px;font:13px/1.45 Arial,sans-serif;direction:rtl;word-break:break-word;user-select:text}
 #v3d .v3hint{position:absolute;bottom:calc(10px + env(safe-area-inset-bottom));inset-inline:0;text-align:center;font:13px Heebo,Arial,sans-serif;color:#9ca3af;pointer-events:none;direction:rtl}
 </style>
 </head>
@@ -4496,7 +4497,7 @@ async function open3D(keepV){if(state.tab==='sld'){toast('התלת־ממד מו�
  const sb=ov.querySelector('.v3sel'),zi=sb.querySelector('.v3z'),di=sb.querySelector('.v3d'),st=sb.querySelector('.v3st');let pick=null,hl=null;
  function choose(id){pick=id&&OBJ.has(id)?id:null;if(hl){scene.remove(hl);hl.dispose&&hl.dispose();hl=null;}sb.hidden=!pick;ov.querySelector('.v3hint').style.display=pick?'none':'';
   if(pick){const o=get(pick),E=OBJ.get(pick);hl=new T.BoxHelper(E.n,0xff8c00);scene.add(hl);sb.querySelector('.v3n').textContent=(o.p.name||o.type)+(o.p.tag?' · '+o.p.tag:'');zi.value=+o.p.z3||0;di.value=+o.p.d3||'';toast('נבחר: '+(o.p.name||o.type)+' — הזז קדימה / אחורה למטה');}V.dirty=true;}
- function setZ(v){try{setZ0(v);}catch(e){toast('שגיאה בהזזה: '+(e&&e.message||e));}}
+ function setZ(v){try{setZ0(v);}catch(e){V.onErr({message:'בהזזה: '+(e&&e.message||e),error:e});}}
  function setZ0(v){const o=pick&&get(pick);if(!o)return;v=Math.round(+v||0);if(v)o.p.z3=v;else delete o.p.z3;const E=OBJ.get(pick);E.n.position.z=E.z0+v;hl&&hl.update();zi.value=v;V.dirty=true;commit();}
  function rebuild(){const k={th:V.th,ph:V.ph,dist:V.dist,tg:V.tg.clone(),goal:V.goal,pick,axes:V.axes.visible,wires:V.wires?V.wires.visible:true};close3D();open3D(k);}
  sb.onclick=e=>{const b=e.target.closest('button');if(!b)return;const z=b.dataset.z;if(z==='x')choose(null);else if(z==='0'){const o=get(pick);if(!o)return;const hadD=+o.p.d3>0;delete o.p.d3;setZ(0);if(hadD)rebuild();}else setZ((+zi.value||0)+(+z)*(+st.value));};
@@ -4504,7 +4505,9 @@ async function open3D(keepV){if(state.tab==='sld'){toast('התלת־ממד מו�
  sb.addEventListener('keydown',e=>e.stopPropagation());
  // a phone can drop the 3D picture when it runs short of graphics memory: build it again, keeping the view
  cv.addEventListener('webglcontextlost',e=>{e.preventDefault();if(V.lost)return;V.lost=1;toast('התצוגה נטענת מחדש…');setTimeout(()=>{if(V3===V)rebuild();},400);});
- V.onErr=e=>{if(V3===V)toast('שגיאה בתלת־ממד: '+((e&&(e.message||e.reason&&e.reason.message))||'לא ידועה'));};addEventListener('error',V.onErr);addEventListener('unhandledrejection',V.onErr);
+ V.onErr=e=>{if(V3!==V)return;const m=(e&&(e.message||(e.reason&&(e.reason.message||String(e.reason)))))||'לא ידועה';if(/ResizeObserver loop/.test(m))return;
+  const at=e&&e.filename?' ('+String(e.filename).split('/').pop()+':'+e.lineno+':'+e.colno+')':'',st=e&&e.error&&e.error.stack?String(e.error.stack).split('\n').slice(0,3).join(' | '):(e&&e.reason&&e.reason.stack?String(e.reason.stack).split('\n').slice(0,3).join(' | '):'');
+  let b=ov.querySelector('.v3err');if(!b){b=document.createElement('div');b.className='v3err';b.title='הקש כדי לסגור';b.onclick=()=>b.remove();ov.appendChild(b);}b.textContent='שגיאה בתלת־ממד (צלם מסך ושלח): '+m+at+(st?' — '+st:'');};addEventListener('error',V.onErr);addEventListener('unhandledrejection',V.onErr);
  let tap=null;cv.addEventListener('pointerdown',e=>{tap=P.size===1?{x:e.clientX,y:e.clientY,t:Date.now()}:null;});
  cv.addEventListener('pointerup',e=>{if(!tap||Math.hypot(e.clientX-tap.x,e.clientY-tap.y)>(e.pointerType==='mouse'?6:18)||Date.now()-tap.t>900)return;tap=null;
   const r=cv.getBoundingClientRect(),rc=new T.Raycaster();rc.setFromCamera(new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),cam);
