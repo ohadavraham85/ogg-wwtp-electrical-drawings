@@ -271,6 +271,10 @@ body.uil .tbfly{background:linear-gradient(180deg,#fff3e0,#ffe2b8)!important}
 body.uil #drawer{background:rgba(0,0,0,.3)}body.uil #modal{background:rgba(0,0,0,.35)}
 body.uil #wireBar .wc{border-color:#9aa0a8}body.uil .chip{border-color:#c9ccd2}
 body.uil #saveSt{color:#6b7280}
+#saveSt.svst{display:inline-flex;align-items:center;gap:2px;flex:none;padding:5px 8px;border-radius:6px;border:1.5px solid #6b7280;color:#9ca3af;position:relative;margin-inline-start:4px}
+#saveSt.svst svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+#saveSt.svst[data-k=saved]{border-color:#22c55e;color:#22c55e}#saveSt.svst[data-k=saving]{border-color:#f59e0b;color:#f59e0b;animation:svpulse 1s ease-in-out infinite}#saveSt.svst[data-k=error]{border-color:#ef4444;color:#ef4444}
+#saveSt.svst b{font-size:14px;margin-inline-start:2px}@keyframes svpulse{50%{opacity:.45}}
 /* ---- stronger lettering on buttons and bars (both themes) ---- */
 .rb span,.pb span{font-weight:700;font-size:11.5px;letter-spacing:.1px}
 #docTabs button,.tab,#tabs .tab,.wbtn,.mbtns button,.plist button,#drawer .dbox button,.tbc{font-weight:700}
@@ -2585,8 +2589,10 @@ let saveT=null,saving=false,lastSaved=null,cloudStamp=null;
 function setSaveSt(k){const el=$('saveSt');if(!el)return;if(!SH){el.style.display='none';return;}
  const txt={pending:'● לא נשמר',saving:'⟳ שומר…',saved:'☁ נשמר',error:'⚠ לא נשמר'}[k]||'',ttl={pending:'יישמר אוטומטית בעוד רגע',saving:'שומר בתיקייה המשותפת',saved:'נשמר אוטומטית בתיקייה המשותפת',error:'השמירה נכשלה — ננסה שוב בשינוי הבא'}[k]||'';
  // the app's top bar shows it when the shell offers that; otherwise it stays in the document bar
- if(SH.saveStatus){el.style.display='none';try{SH.saveStatus(k,txt,ttl);return;}catch(e){}}
- el.style.display='';el.textContent=txt;el.dataset.k=k;el.title=ttl;}
+ if(SH.saveStatus){try{SH.saveStatus(k,txt,ttl);}catch(e){}}
+ // in the document bar: a diskette and a cloud, coloured by the state (green = saved this moment)
+ const disk='<svg viewBox="0 0 24 24"><path d="M4 3h13l3 3v15H4z"/><path d="M8 3v5h8V3M7 21v-7h10v7"/></svg>',cloud='<svg viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.1 10.1 4 4 0 0 0 7 18z"/></svg>';
+ el.style.display='';el.className='svst';el.innerHTML=disk+cloud+(k==='saving'?'<span class="svdot"></span>':k==='error'?'<b>!</b>':'');el.dataset.k=k;el.title=txt.replace(/^[^ ]+ /,'')+' — '+ttl;el.setAttribute('aria-label',el.title);}
 function scheduleSave(){if(!SH)return;if(lastSaved!==null&&JSON.stringify(state)===lastSaved){if(!saveT&&!saving)setSaveSt('saved');return;}clearTimeout(saveT);setSaveSt('pending');saveT=setTimeout(doAutoSave,1800);}
 function flushSave(){if(saveT){clearTimeout(saveT);saveT=null;return doAutoSave();}}
 async function doAutoSave(){saveT=null;dwgFix();if(!state.dwgno&&state.objs.length&&!saving){try{await ensureDwgNo();}catch(e){}}const data=JSON.stringify(state);if(data===lastSaved){setSaveSt('saved');return;}if(saving){scheduleSave();return;}saving=true;setSaveSt('saving');
