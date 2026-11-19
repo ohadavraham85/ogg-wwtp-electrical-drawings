@@ -981,6 +981,14 @@ const DEF={
  duct:{layer:1,resize:'len',minLen:30,edit:['len','dw','orient'],def:{len:400,dw:40},size:o=>({w:o.p.len,h:o.p.dw}),
   draw:o=>{const L=o.p.len,d=o.p.dw;let s=`<rect x="${-L/2}" y="${-d/2}" width="${L}" height="${d}" fill="#c9ccd1" stroke="#7b8087" stroke-width=".6"/><rect x="${-L/2}" y="${-d/2+7}" width="${L}" height="${d-14}" fill="#b6bbc1"/>`;
    for(let u=-L/2+3;u<L/2-4;u+=8)s+=`<rect x="${u}" y="${-d/2}" width="3.6" height="6.5" fill="#8d9298"/><rect x="${u}" y="${d/2-6.5}" width="3.6" height="6.5" fill="#8d9298"/>`;return s;}},
+ // Z / C profile for tying cables (front view, slotted), with cable ties along it if asked
+ zprof:{layer:1.2,resize:'len',minLen:60,edit:['tag','len','orient','zt','tsp','tcol'],def:{tag:'',len:600,zt:'z',tsp:'0',tcol:'black'},size:o=>({w:+o.p.len,h:o.p.zt==='c'?36:30}),
+  draw:o=>{const L=+o.p.len,H=o.p.zt==='c'?36:30;let s=`<rect x="${-L/2}" y="${-H/2}" width="${L}" height="${H}" fill="#b8bec6" stroke="#5b6470" stroke-width="1"/><rect x="${-L/2}" y="${-H/2}" width="${L}" height="${H*.22}" fill="#9aa2ac"/>`+(o.p.zt==='c'?`<rect x="${-L/2}" y="${H/2-H*.22}" width="${L}" height="${H*.22}" fill="#9aa2ac"/>`:`<path d="M${-L/2} ${H/2-1}H${L/2}" stroke="#4b5563" stroke-width="2"/>`);
+   for(let x=-L/2+12;x<L/2-8;x+=25)s+=`<rect x="${x}" y="${-H*.12}" width="14" height="${H*.3}" rx="${H*.15}" fill="#6b7280"/>`;
+   const sp=+o.p.tsp||0,tc=o.p.tcol==='white'?'#f4f4f5':'#111';if(sp>0)for(let x=-L/2+sp/2;x<L/2;x+=sp)s+=`<rect x="${x-2.5}" y="${-H/2-6}" width="5" height="${H+12}" rx="1.5" fill="${tc}" stroke="#000" stroke-width=".5"/><rect x="${x-4.5}" y="${H/2+2}" width="9" height="6" rx="1" fill="${tc}" stroke="#000" stroke-width=".5"/>`;
+   if(o.p.tag)s+=txt(0,-H/2-10,o.p.tag,10,'#9ca3af',700);return s;}},
+ // a single cable tie, laid across a cable bundle
+ ctie:{layer:6.2,edit:['tlen','tcol'],def:{tlen:'40',tcol:'black'},size:o=>({w:5,h:+o.p.tlen||40}),draw:o=>{const h=+o.p.tlen||40,tc=o.p.tcol==='white'?'#f4f4f5':'#111';return `<rect x="-2.5" y="${-h/2}" width="5" height="${h}" rx="1.5" fill="${tc}" stroke="#000" stroke-width=".5"/><rect x="-4.5" y="${h/2-6}" width="9" height="6" rx="1" fill="${tc}" stroke="#000" stroke-width=".5"/>`;}},
  partition:{layer:1,resize:'len',minLen:50,edit:['len','orient'],def:{len:700},size:o=>({w:o.p.len,h:20}),
   draw:o=>{const L=o.p.len;let s=`<rect x="${-L/2}" y="-10" width="${L}" height="20" fill="#b9bec4" stroke="#4b5563" stroke-width="1.2"/><rect x="${-L/2}" y="-10" width="${L}" height="4" fill="#d9dde1"/><rect x="${-L/2}" y="6" width="${L}" height="4" fill="#8f959c"/>`;
    for(let u=-L/2+40;u<L/2-30;u+=50)s+=`<rect x="${u-6}" y="-2.5" width="12" height="5" rx="2.5" fill="#6b7280"/>`;
@@ -2045,7 +2053,8 @@ const LIB=[
    {g:'פתחים בחזית למפסקים',items:I('פתח למאמ"תים 12 מודולים','פתח למאמ"תים 24 מודולים','פתח למפסק כוח (MCCB)','פתח למפסק כוח גדול')}]},
   {tab:'פסי DIN ותעלות חיווט',icon:'▤',hint:'לשינוי אורך: בוחרים את הפס או התעלה וגוררים את העיגולים הכחולים שבקצוות.',groups:[
    {g:'פסי DIN',items:I('פס DIN אופקי','פס DIN אנכי','מעצור קצה')},
-   {g:'תעלות חיווט בתוך הלוח — בחר רוחב',widths:true,items:I('תעלה אופקית','תעלה אנכית')}]},
+   {g:'תעלות חיווט בתוך הלוח — בחר רוחב',widths:true,items:I('תעלה אופקית','תעלה אנכית')},
+   {g:'קשירת כבלים',items:[{t:'zprof',n:'פרופיל Z לקשירת כבלים'},{t:'zprof',n:'פרופיל Z עם אזיקונים',p:{tsp:'75'}},{t:'zprof',n:'פרופיל C לקשירת כבלים',p:{zt:'c'}},{t:'ctie',n:'אזיקון'}]}]},
   {tab:'מפסקים והגנות',icon:'⏻',groups:[
    {g:'מפסקים ראשיים',items:I('מפסק ראשי 3P','מפסק ראשי 4P')},
    {g:'שניידר ComPacT NSXm (מיני, על פס DIN)',items:I('NSXm 63A 3P','NSXm 160A 3P','NSXm 160A 4P')},
@@ -4021,6 +4030,10 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='ak')h+=`<div class="fld"><label>סוג</label><select id="f_ak"><option value="a" ${v!=='m'?'selected':''}>ממונע (אוטומטי)</option><option value="m" ${v==='m'?'selected':''}>ידני</option></select></div>`;
   else if(k==='ar')h+=`<div class="fld"><label>זרם נקוב</label><select id="f_ar">${[40,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600].map(a=>`<option value="${a}" ${a==v?'selected':''}>${a}A</option>`).join('')}</select></div>`;
   else if(k==='apos')h+=`<div class="fld"><label>מצב</label><select id="f_apos">${[['1','I — רשת'],['0','0 — מנותק'],['2','II — גנרטור']].map(([a,n])=>`<option value="${a}" ${a===String(v)?'selected':''}>${n}</option>`).join('')}</select></div>`;
+  else if(k==='zt')h+=`<div class="fld"><label>צורת הפרופיל</label><select id="f_zt"><option value="z" ${v!=='c'?'selected':''}>פרופיל Z</option><option value="c" ${v==='c'?'selected':''}>פרופיל C</option></select></div>`;
+  else if(k==='tsp')h+=`<div class="fld"><label>אזיקונים לאורך הפרופיל</label><select id="f_tsp">${[['0','בלי'],['50','כל 50 מ"מ'],['75','כל 75 מ"מ'],['100','כל 100 מ"מ'],['150','כל 150 מ"מ']].map(([a,n])=>`<option value="${a}" ${a===String(v||'0')?'selected':''}>${n}</option>`).join('')}</select></div>`;
+  else if(k==='tcol')h+=`<div class="fld"><label>צבע האזיקון</label><select id="f_tcol"><option value="black" ${v!=='white'?'selected':''}>שחור</option><option value="white" ${v==='white'?'selected':''}>לבן</option></select></div>`;
+  else if(k==='tlen')h+=`<div class="fld"><label>אורך האזיקון הנראה (מ"מ)</label><select id="f_tlen">${['25','40','60','80','120'].map(a=>`<option ${a===String(v)?'selected':''}>${a}</option>`).join('')}</select></div>`;
   else if(k==='wk')h+=`<div class="fld"><label>סוג החלון</label><select id="f_wk">${[['fixed','קבוע'],['slide','הזזה (שתי כנפיים)'],['case','ציר — נפתח']].map(([a,n])=>`<option value="${a}" ${a===String(v)?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='dlv')h+=`<div class="fld"><label>סוג</label><select id="f_dlv">${[['1','דלת — כנף אחת'],['2','דלת דו-כנפית'],['0','פתח בקיר (בלי דלת)']].map(([a,n])=>`<option value="${a}" ${a===String(v)?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='dwid'||k==='dth')h+=`<div class="fld"><label>${k==='dwid'?'רוחב הפתח (מ"מ)':'עובי הקיר (מ"מ)'}</label><input id="f_${k}" type="number" inputmode="decimal" step="10" value="${+v}"></div>`;
