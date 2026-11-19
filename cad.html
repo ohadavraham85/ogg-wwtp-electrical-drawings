@@ -3680,7 +3680,7 @@ function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(!g.moved&&Date.now()-g.t0<600){if(g.dim){const d=DIMS[g.dim];if(d&&d.e!=null)dimPin(g.dim);else dimEdit(g.dim);return;}if(wireMode){const [x,y]=toWorld(e.clientX,e.clientY);wireTap(x,y);}
   else{const now=Date.now(),dbl=g.id&&LASTTAP.id===g.id&&now-LASTTAP.t<400&&Math.hypot(e.clientX-LASTTAP.x,e.clientY-LASTTAP.y)<24;LASTTAP={id:g.id,t:dbl?0:now,x:e.clientX,y:e.clientY};
    select(g.id,g.add);if(dbl&&!g.add)dblEdit(get(g.id),e);}}
- else if(g.mode==='drag'||g.mode==='resize'){if(g.mode==='drag'&&g.moved&&g.o){splitThrough(g.o);sldJoin([g.o,...(g.kids||[]).map(k=>k.q)]);}commit();renderNow();updateBar();}}
+ else if(g.mode==='drag'||g.mode==='resize'){if(g.mode==='resize')GUIDES=[];if(g.mode==='drag'&&g.moved&&g.o){splitThrough(g.o);sldJoin([g.o,...(g.kids||[]).map(k=>k.q)]);}commit();renderNow();updateBar();}}
 function doResize(g,wx,wy){const o=g.o,D=DEF[o.type],[u,v]=toLocal(g.o0,wx,wy);
  if(D.resize==='scale'){const [sx,sy]=g.h,fu=-sx*g.s0.w/2,fv=-sy*g.s0.h/2,k=Math.max(.2,Math.max(sx*(u-fu)/g.s0.w,sy*(v-fv)/g.s0.h));
   o.p.fs=o.type==='underlay'?Math.round(Math.max(.0005,(g.fs0||o.p.fs)*k)*1e5)/1e5:r2(Math.max(1.5,(g.fs0||o.p.fs)*k));const n=sizeOf(o);[o.x,o.y]=fromLocal(g.o0,fu+sx*n.w/2,fv+sy*n.h/2);return;}
@@ -3688,7 +3688,15 @@ function doResize(g,wx,wy){const o=g.o,D=DEF[o.type],[u,v]=toLocal(g.o0,wx,wy);
   const ax=o.rot%180?'y':'x';const [ex,ey]=fromLocal(g.o0,fx+sg*nl,0);const sp=snapPoint(o,ax==='x'?ex:ey,ax);
   if(sp!==null){const [uu]=toLocal(g.o0,ax==='x'?sp:ex,ax==='y'?sp:ey);nl=Math.max(mn,sg*(uu-fx));}
   o.p.len=r2(nl);[o.x,o.y]=fromLocal(g.o0,fx+sg*nl/2,0);}
- else{const [sx,sy]=g.h,fu=-sx*g.s0.w/2,fv=-sy*g.s0.h/2;const mb=D.minBox??100,nw=Math.max(mb,gs(sx*(u-fu))),nh=Math.max(mb,gs(sy*(v-fv)));
+ else{const [sx,sy]=g.h,fu=-sx*g.s0.w/2,fv=-sy*g.s0.h/2;const mb=D.minBox??100;let nw=Math.max(mb,gs(sx*(u-fu))),nh=Math.max(mb,gs(sy*(v-fv)));
+  // the dragged edges (and a wall's outer face) snap onto other parts' edges, with guides
+  GUIDES=[];if((o.rot||0)%90===0&&(o.type==='shrect'||o.type==='shellipse'||o.type==='wall')){const th=10/view.s,od=(o.type==='wall')?0:Math.max(0,+o.p.ofd||0),T={x:[],y:[]};
+   for(const q of state.objs){if(q===o||q.type==='wire'||q.type==='mdim'||q.type==='label'||q.type==='callout'||q.type==='underlay'||hiddenFront(q))continue;const F=boxEdges(q);T.x.push(...F.x.map(c=>({c,b:F.box})));T.y.push(...F.y.map(c=>({c,b:F.box})));}
+   const W=(lu,lv)=>fromLocal(g.o0,lu,lv);let bx=null,by=null;
+   for(const ex of [0,od])for(const t of T.x){const X=W(fu+sx*(nw+ex),0)[0],d=t.c-X;if(Math.abs(d)<th&&Math.abs(W(1,0)[0]-W(0,0)[0])>.5&&(!bx||Math.abs(d)<Math.abs(bx.d)))bx={d,c:t.c,b:t.b,k:Math.sign(W(1,0)[0]-W(0,0)[0])};}
+   for(const ey of [0,od])for(const t of T.y){const Y=W(0,fv+sy*(nh+ey))[1],d=t.c-Y;if(Math.abs(d)<th&&Math.abs(W(0,1)[1]-W(0,0)[1])>.5&&(!by||Math.abs(d)<Math.abs(by.d)))by={d,c:t.c,b:t.b,k:Math.sign(W(0,1)[1]-W(0,0)[1])};}
+   if(bx){nw=Math.max(mb,r2(nw+sx*bx.k*bx.d));GUIDES.push({x:bx.c,y0:Math.min(bx.b.y0,o.y-g.s0.h),y1:Math.max(bx.b.y1,o.y+g.s0.h)});}
+   if(by){nh=Math.max(mb,r2(nh+sy*by.k*by.d));GUIDES.push({y:by.c,x0:Math.min(by.b.x0,o.x-g.s0.w),x1:Math.max(by.b.x1,o.x+g.s0.w)});}}
   o.p.w=nw;o.p.h=nh;[o.x,o.y]=fromLocal(g.o0,fu+sx*nw/2,fv+sy*nh/2);}}
 svg.addEventListener('contextmenu',e=>e.preventDefault());
 svg.addEventListener('pointerleave',()=>{if(HOV){HOV=null;svg.style.cursor='';render();}});
