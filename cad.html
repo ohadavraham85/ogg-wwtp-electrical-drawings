@@ -824,10 +824,10 @@ function awinSVG(o){const W=Math.max(300,+o.p.dwid||1200),t=Math.max(50,+o.p.dth
  if(o.p.tag)s+=txt(0,-(t/2+Math.max(40,W*.07)),o.p.tag,Math.max(30,W*.06),c,700);return s;}
 /* Generator controllers for the door (Deep Sea Electronics style, sizes of the
    bezel approximate) and transfer switches (ATS) between mains and generator. */
-const DSEM={'DSE7320 MKII':{w:245,h:184,t:'AMF + ATS'},'DSE8610 MKII':{w:245,h:184,t:'סנכרון'},'DSE6120 MKIII':{w:216,h:159,t:'AMF'},'DSE4520 MKII':{w:172,h:134,t:'AMF'},'DSE335':{w:172,h:134,t:'בקר החלפה'}};
+const DSEM={'DSE7320 MKII':{w:245,h:184,t:'AMF + ATS'},'DSE8610 MKII':{w:245,h:184,t:'סנכרון'},'DSE6120 MKIII':{w:216,h:159,t:'AMF'},'DSE4520 MKII':{w:172,h:134,t:'AMF'},'DSE335':{w:172,h:134,t:'בקר החלפה'},'AMD 530':{w:144,h:144,t:'בקר החלפה',b:'עמדר'}};
 function dseDraw(o){const M=DSEM[o.p.dsm]||DSEM['DSE7320 MKII'],w=M.w,h=M.h,k='#0b0b0b';
  let s=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${w*.04}" fill="#1c1d20" stroke="${k}" stroke-width="1.2"/><rect x="${-w/2+w*.03}" y="${-h/2+h*.04}" width="${w*.94}" height="${h*.92}" rx="${w*.03}" fill="#26282c"/>`;
- s+=txt(-w/2+w*.07,-h/2+h*.1,'DEEP SEA ELECTRONICS',Math.max(4,w*.03),'#d1d5db',700,'start')+txt(w/2-w*.07,-h/2+h*.1,(o.p.dsm||'').replace(' MKII','').replace(' MKIII',''),Math.max(4.5,w*.035),'#facc15',800,'end');
+ s+=txt(-w/2+w*.07,-h/2+h*.1,M.b||'DEEP SEA ELECTRONICS',Math.max(4,w*.03),'#d1d5db',700,'start')+txt(w/2-w*.07,-h/2+h*.1,(o.p.dsm||'').replace(' MKII','').replace(' MKIII',''),Math.max(4.5,w*.035),'#facc15',800,'end');
  // screen and LEDs
  const sx=-w/2+w*.08,sy=-h/2+h*.18,sw=w*.5,sh=h*.4;s+=`<rect x="${sx}" y="${sy}" width="${sw}" height="${sh}" rx="2" fill="#8fb7a3" stroke="#000" stroke-width=".8"/>`+txt(sx+sw/2,sy+sh*.35,'400V  50.0Hz',Math.max(4,sw*.08),'#0f2a1a',700)+txt(sx+sw/2,sy+sh*.7,'AUTO',Math.max(4,sw*.07),'#0f2a1a',700);
  ['#22c55e','#ef4444','#f59e0b','#22c55e'].forEach((c,j)=>{s+=`<circle cx="${w/2-w*.3+j*w*.06}" cy="${sy+sh*.25}" r="${w*.014}" fill="${c}"/>`;});
@@ -2057,7 +2057,7 @@ const LIB=[
    {g:'מגופים חשמליים',items:[{t:'mvalve',n:'מגוף פרפר חשמלי DN100'},{t:'mvalve',n:'מגוף פרפר חשמלי DN200',p:{rating:'DN200'}},{t:'mvalve',n:'מגוף טריז חשמלי DN150',p:{rating:'DN150',vt:'gate'}},{t:'mvalve',n:'מגוף כדורי חשמלי DN50 230V',p:{rating:'DN50',vt:'ball',act:'1ph'}},{t:'mvalve',n:'מגוף מווסת 4-20mA DN100',p:{act:'mod'}},{t:'mvalve',n:'מגוף פרפר + מפעיל AUMA DN150',p:{rating:'DN150',act:'auma'}},{t:'mvalve',n:'מגוף טריז + מפעיל AUMA DN200',p:{rating:'DN200',vt:'gate',act:'auma'}},{t:'mvalve',n:'מגוף מווסת + מפעיל AUMATIC AC DN150',p:{rating:'DN150',act:'aumac'}},{t:'svalve',n:'ברז חשמלי סולנואיד 24VDC'},{t:'svalve',n:'ברז חשמלי סולנואיד 230VAC',p:{rating:'230VAC'}}]},
    {g:'גששי קרבה',items:[{t:'prox',n:'גשש אינדוקטיבי M12',p:{rating:'M12 PNP NO 10-30VDC'}},{t:'prox',n:'גשש אינדוקטיבי M18'},{t:'prox',n:'גשש אינדוקטיבי M30',p:{rating:'M30 PNP NO 10-30VDC'}},{t:'prox',n:'גשש קיבולי M18',p:{px:'cap'}},{t:'prox',n:'גשש קיבולי M30',p:{px:'cap',rating:'M30 PNP NO 10-30VDC'}}]}]},
   {tab:'גנרטור והחלפה',icon:'⛽',groups:[
-   {g:'בקרי גנרטור (לדלת)',items:Object.keys(DSEM).map(m=>({t:'dsec',n:'בקר גנרטור '+m,p:{dsm:m}}))},
+   {g:'בקרי גנרטור (לדלת)',items:Object.keys(DSEM).map(m=>({t:'dsec',n:(DSEM[m].b?'בקר החלפה '+DSEM[m].b+' ':'בקר גנרטור ')+m,p:{dsm:m}}))},
    {g:'מפסקי החלפה רשת / גנרטור (ATS)',items:[{t:'atsw',n:'מפסק החלפה ממונע 250A 4P',p:{ar:'250'}},{t:'atsw',n:'מפסק החלפה ממונע 630A 4P',p:{ar:'630'}},{t:'atsw',n:'מפסק החלפה ממונע 1600A 4P',p:{ar:'1600'}},{t:'atsw',n:'מפסק החלפה ידני 125A 4P (I-0-II)',p:{ar:'125',ak:'m',apos:'0'}}]}]},
   {tab:'מנועים ומשאבות',icon:'⟲',hint:'מנוע: את ההספק ואת מה שמותקן עליו (משאבה צנטריפוגלית, בורג, מפוח, טבולה) בוחרים במאפיינים. בור שאיבה: רוחב, עומק ומספר מצופים במאפיינים.',groups:[
    {g:'מנועים ומשאבות',items:I('מנוע חשמלי','מנוע + משאבה צנטריפוגלית','מנוע + משאבת בורג','מנוע + מפוח','משאבה טבולה')},
