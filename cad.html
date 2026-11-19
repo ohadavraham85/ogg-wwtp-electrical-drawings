@@ -824,8 +824,34 @@ function awinSVG(o){const W=Math.max(300,+o.p.dwid||1200),t=Math.max(50,+o.p.dth
  if(o.p.tag)s+=txt(0,-(t/2+Math.max(40,W*.07)),o.p.tag,Math.max(30,W*.06),c,700);return s;}
 /* Generator controllers for the door (Deep Sea Electronics style, sizes of the
    bezel approximate) and transfer switches (ATS) between mains and generator. */
-const DSEM={'DSE7320 MKII':{w:245,h:184,t:'AMF + ATS'},'DSE8610 MKII':{w:245,h:184,t:'סנכרון'},'DSE6120 MKIII':{w:216,h:159,t:'AMF'},'DSE4520 MKII':{w:172,h:134,t:'AMF'},'DSE335':{w:172,h:134,t:'בקר החלפה'},'AMD 530':{w:144,h:144,t:'בקר החלפה',b:'אמדר'}};
-function dseDraw(o){const M=DSEM[o.p.dsm]||DSEM['DSE7320 MKII'],w=M.w,h=M.h,k='#0b0b0b';
+const DSEM={'DSE7320 MKII':{w:245,h:184,t:'AMF + ATS'},'DSE8610 MKII':{w:245,h:184,t:'סנכרון'},'DSE6120 MKIII':{w:216,h:159,t:'AMF'},'DSE4520 MKII':{w:172,h:134,t:'AMF'},'DSE335':{w:172,h:134,t:'בקר החלפה'},'AM530D':{w:144,h:144,t:'מחלף הזנות אוטומטי',b:'אמדר',amd:1}};
+/* Amdar AM530D automatic changeover unit, front as in its user guide (§6.1):
+   display with ESC / RESET, mode selector OFF-AUT-MAN, ON/OFF delay
+   potentiometers, per supply a window, U and PR LEDs, CLOSE and OPEN buttons. */
+function am530Draw(o){const k='#111',T=(x,y,t,f,c='#111',w=700,a='middle')=>txt(x,y,t,f,c,w,a);let s='';
+ s+=`<rect x="-72" y="-72" width="144" height="144" rx="3" fill="#33363b" stroke="${k}" stroke-width="1"/><rect x="-69" y="-69" width="138" height="138" rx="2" fill="#d6d8db"/>`;
+ [[-64,-64],[64,-64],[-64,64],[64,64]].forEach(([x,y])=>{s+=`<circle cx="${x}" cy="${y}" r="2" fill="none" stroke="#555" stroke-width=".6"/><path d="M${x-1.4} ${y-1.4}l2.8 2.8" stroke="#555" stroke-width=".6"/>`;});
+ s+=T(0,-60,'AUTOMATIC CHANGEOVER UNIT',7.4,k,800);
+ s+=`<rect x="-30" y="-54" width="60" height="15" rx="1" fill="#b9d94a" stroke="${k}" stroke-width=".8"/>`+T(0,-49.5,'מצב אוטומטי',4,'#1a2e05')+T(0,-43.5,'זינה 1 מחוברת',4,'#1a2e05');
+ s+=`<circle cx="-50" cy="-47" r="6.5" fill="#facc15" stroke="${k}" stroke-width=".7"/><path d="M-52.5 -49h5l-2.5 4z" fill="none" stroke="${k}" stroke-width=".7"/>`+T(-50,-37.5,'ESC',3.4);
+ s+=`<circle cx="50" cy="-47" r="6.5" fill="#4ade80" stroke="${k}" stroke-width=".7"/><path d="M52 -50v4h-4m1.5 -1.5l-1.5 1.5l1.5 1.5" fill="none" stroke="#fff" stroke-width=".8"/>`+T(50,-37.5,'RESET',3.4);
+ s+=`<path d="M-69 -33H69" stroke="#9ca3af" stroke-width=".8"/>`;
+ // blue U frame of the two supplies
+ s+=`<path d="M-67 -30H-42V36H42V-30H67V54H-67Z" fill="#2aa7dc" stroke="#1e6f94" stroke-width=".6"/><rect x="-42" y="-30" width="84" height="66" fill="#cfd2d6"/>`;
+ [[-1,'1'],[1,'2']].forEach(([sg,n])=>{const cx=sg*55;
+  s+=`<rect x="${cx-7}" y="-27" width="14" height="7" fill="#fff" stroke="${k}" stroke-width=".5"/><circle cx="${cx+3}" cy="-13" r="2.6" fill="#fff" stroke="${k}" stroke-width="1"/>`+T(cx-4,-13,'U',3.6,k,800)+T(cx,-6,'SUPPLY',3.2)+T(cx,-1,n,5,k,800)+`<circle cx="${cx}" cy="5" r="2" fill="#fff" stroke="${k}" stroke-width=".9"/>`+T(cx,10,'PR',2.8);
+  s+=`<rect x="${cx-8}" y="15" width="16" height="14" rx="1" fill="#22c55e" stroke="${k}" stroke-width=".7"/>`+T(cx,19,'CLOSE',3.3)+T(cx,25,'I',4.2,k,800);
+  s+=`<rect x="${sg*24-6}" y="38" width="12" height="12" rx="1" fill="#ef4444" stroke="${k}" stroke-width=".7"/>`+T(sg*24,41,'OPEN',2.9,'#fff')+`<circle cx="${sg*24}" cy="46" r="2" fill="none" stroke="#fff" stroke-width=".7"/>`;});
+ s+=`<path d="M-8 40H8M0 40V50M-3 47l3 4l3 -4" fill="none" stroke="#1d4ed8" stroke-width="1.6"/>`;
+ // mode selector
+ s+=`<rect x="-6" y="-29" width="12" height="5" fill="#fff" stroke="${k}" stroke-width=".5"/>`+T(0,-26.5,'OFF',3.2,'#b91c1c',800)+`<rect x="-26" y="-17" width="11" height="5" fill="#fff" stroke="${k}" stroke-width=".5"/>`+T(-20.5,-14.5,'AUT',3.2,'#15803d',800)+`<rect x="15" y="-17" width="11" height="5" fill="#fff" stroke="${k}" stroke-width=".5"/>`+T(20.5,-14.5,'MAN',3.2,'#c2410c',800);
+ s+=`<circle cx="0" cy="-14" r="7" fill="#1f2937" stroke="${k}" stroke-width=".7"/><path d="M0 -14L-5 -18" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>`;
+ // ON / OFF delay potentiometers
+ [['ON',-1],['OFF',13]].forEach(([t,y])=>{s+=`<rect x="-14" y="${y-6}" width="38" height="13" rx="1" fill="#e5e7eb" stroke="${k}" stroke-width=".5"/>`+T(-9,y-1,t,2.9)+T(-9,y+3,'TD',2.9)+`<circle cx="4" cy="${y+.5}" r="4" fill="#1d4ed8" stroke="${k}" stroke-width=".6"/><path d="M4 ${y+.5}l2 -2.5" stroke="#fff" stroke-width=".9"/>`+T(4,y-4.5,'50%',2.2)+`<circle cx="17" cy="${y+.5}" r="2" fill="#facc15" stroke="${k}" stroke-width=".6"/>`;});
+ s+=`<circle cx="-30" cy="8" r="2" fill="#fff" stroke="${k}" stroke-width=".9"/>`+T(-30,2.5,'AUX.',2.6)+T(-30,13,'PWR',2.6);
+ s+=T(-62,62,'AM530D',4.6,k,800,'start')+T(62,62,'AMDAR LTD.',4,k,800,'end');
+ if(o.p.tag)s+=T(0,-77,o.p.tag,7,'#9ca3af',800);return s;}
+function dseDraw(o){if(o.p.dsm==='AMD 530')o.p.dsm='AM530D';const M=DSEM[o.p.dsm]||DSEM['DSE7320 MKII'];if(M.amd)return am530Draw(o);const w=M.w,h=M.h,k='#0b0b0b';
  let s=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${w*.04}" fill="#1c1d20" stroke="${k}" stroke-width="1.2"/><rect x="${-w/2+w*.03}" y="${-h/2+h*.04}" width="${w*.94}" height="${h*.92}" rx="${w*.03}" fill="#26282c"/>`;
  s+=txt(-w/2+w*.07,-h/2+h*.1,M.b||'DEEP SEA ELECTRONICS',Math.max(4,w*.03),'#d1d5db',700,'start')+txt(w/2-w*.07,-h/2+h*.1,(o.p.dsm||'').replace(' MKII','').replace(' MKIII',''),Math.max(4.5,w*.035),'#facc15',800,'end');
  // screen and LEDs
@@ -843,6 +869,12 @@ function atsDraw(o){const {w,h,P}=atsDim(o),k='#0b0b0b',man=o.p.ak==='m';
  const cx=0,cy=h*.1,R=Math.min(w,h)*.22;s+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="#18181b" stroke="${k}" stroke-width="1"/><rect x="${-R*.18}" y="${cy-R*.95}" width="${R*.36}" height="${R*1.9}" rx="${R*.1}" fill="${man?'#dc2626':'#52525b'}" transform="rotate(${o.p.apos==='1'?-45:o.p.apos==='2'?45:0} ${cx} ${cy})"/>`;
  [['I',-45],['0',0],['II',45]].forEach(([t,a])=>{const rr=R*1.32,ar=(a-90)*Math.PI/180;s+=txt(cx+rr*Math.cos(ar),cy+rr*Math.sin(ar),t,Math.max(6,R*.32),'#111',800);});
  s+=txt(0,h/2-h*.07,`${o.p.ar}A ${P}P`,Math.max(6,h*.06),'#111',700);if(o.p.tag)s+=txt(0,-h/2-Math.max(7,h*.05),o.p.tag,Math.max(8,h*.07),'#e5e7eb',800);return s;}
+// AM530D terminals (user guide §8.2): J1/J4 supply sensing, J2/J5 breaker control 1-12, J3 aux DC + relay, J6 inputs + alarm, J7 RS485, GND
+const AM5T=(()=>{const T=[];['N','R','S','T'].forEach((n,j)=>{T.push({s:'t',x:-100+j*10,y:-78,n,l:'J1-'+n});T.push({s:'t',x:70+j*10,y:-78,n,l:'J4-'+n});});
+ for(let j=1;j<=12;j++){T.push({s:'b',x:-112+(j-1)*8,y:78,n:String(j),l:'J2-'+j});T.push({s:'b',x:12+(j-1)*8,y:78,n:String(j),l:'J5-'+j});}
+ [['1','+'],['2','−'],['3','N.O'],['4','COM'],['5','N.C']].forEach(([n,d],j)=>T.push({s:'l',x:-128,y:-40+j*14,n:n+' '+d,l:'J3-'+n}));
+ ['1 EXT.STOP','2 EXT.STOP','3 COM','4 PR','5 Q/C','6 OVERLOAD','7 ACK','8 ALARM NO','9 ALARM COM','10 ALARM NC'].forEach((n,j)=>T.push({s:'r',x:128,y:-44+j*7.6,n,l:'J6-'+(j+1)}));
+ ['A','B','Sh'].forEach((n,j)=>T.push({s:'r',x:128,y:38+j*7,n:'J7 '+n,l:'J7-'+n}));T.push({s:'r',x:128,y:60,n:'GND ⏚',l:'GND'});return T;})();
 const DEF={
  mcb:{layer:4,rail:true,edit:['tag','rating','color'],ratings:['B6','B10','B16','B20','C6','C10','C16','C20','C25','C32','C40','C50','C63','D16','D25','D32'],
   def:{poles:1,rating:'C16'},
@@ -1391,9 +1423,19 @@ const SDEF={
   draw:o=>sSwitch('arc')+sLbl(o,40)},
  sol:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'F2',rating:'LRD 4-6A',desc:''},size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sL(0,-30,0,-10)+sL(0,10,0,30)+sR(-10,-10,20,20)+`<path d="M-6 4h3v-8h6v8h3" fill="none" stroke="${SK}" stroke-width="1.6"/>`+sLbl(o,40)},
- satsc:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'A1',rating:'AMD 530',desc:'בקר החלפה'},ratings:['AMD 530','DSE335','DSE7320 MKII','DSE6120 MKIII'],size:()=>({w:70,h:60}),
+ am530t:{layer:4,sld:true,edit:['tag'],def:{tag:'A1'},size:()=>({w:260,h:176}),terms:()=>AM5T.map(t=>[t.x,t.y,t.l]),
+  draw:o=>{let s=sR(-120,-70,240,140);const k='#374151';
+   AM5T.forEach(t=>{const [x0,y0]=t.s==='t'?[t.x,-70]:t.s==='b'?[t.x,70]:t.s==='l'?[-120,t.y]:[120,t.y];s+=sL(x0,y0,t.x,t.y);
+    const lx=t.s==='l'?-117:t.s==='r'?117:t.x,ly=t.s==='t'?-65:t.s==='b'?65:t.y;s+=txt(lx,ly,t.n,3.6,k,700,t.s==='l'?'start':t.s==='r'?'end':'middle');});
+   const G=(x,y,t,a='middle')=>txt(x,y,t,4,'#1d4ed8',800,a);
+   s+=G(-85,-57,'J1 · זינה 1 (N R S T)')+G(85,-57,'J4 · זינה 2 (N R S T)')+G(-68,55,'J2 · מ"ז / מגען זינה 1')+G(56,55,'J5 · מ"ז / מגען זינה 2');
+   s+=txt(-68,47,'סגירה 1/3 · פתיחה 2/4 · מגע עזר 5-7 · אפס 8',3,k,600)+txt(56,47,'כמו J2 · התנעת גנרטור 11-12',3,k,600);
+   s+=G(-110,-48,'J3',`start`)+txt(-110,32,'הזנת עזר DC · ממסר K-NV2',3,k,600,'start');
+   s+=G(110,-52,'J6','end')+G(110,31,'J7 RS485','end');
+   s+=sT(0,-18,'AM530D',16)+sT(0,-2,'מחלף הזנות אוטומטי — אמדר',6)+sLbl(o,260);return s;}},
+ satsc:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'A1',rating:'AM530D',desc:'מחלף הזנות'},ratings:['AM530D','DSE335','DSE7320 MKII','DSE6120 MKIII'],size:()=>({w:70,h:60}),
   terms:()=>[[-20,-30,'רשת'],[20,-30,'גנר׳'],[-12,30,'ATS'],[12,30,'START']],
-  draw:o=>sL(-20,-30,-20,-16)+sL(20,-30,20,-16)+sL(-12,16,-12,30)+sL(12,16,12,30)+sR(-30,-16,60,32)+sT(0,-3,o.p.rating||'AMD 530',8)+sT(0,9,'בקר החלפה',5.5)+txt(-23,-24,'רשת',5,'#374151',700,'end')+txt(23,-24,'גנר׳',5,'#374151',700,'start')+txt(-15,25,'ATS',5,'#374151',700,'end')+txt(15,25,'התנעה',5,'#374151',700,'start')+sLbl(o,70)},
+  draw:o=>sL(-20,-30,-20,-16)+sL(20,-30,20,-16)+sL(-12,16,-12,30)+sL(12,16,12,30)+sR(-30,-16,60,32)+sT(0,-3,o.p.rating==='AMD 530'?'AM530D':(o.p.rating||'AM530D'),8)+sT(0,9,'מחלף הזנות',5.5)+txt(-23,-24,'J1 זינה 1',4.5,'#374151',700,'end')+txt(23,-24,'J4 זינה 2',4.5,'#374151',700,'start')+txt(-15,25,'J2/J5 מ"ז',4.5,'#374151',700,'end')+txt(15,25,'J5 11-12 התנעה',4.5,'#374151',700,'start')+sLbl(o,70)},
  sats:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'ATS',rating:'400A',desc:'מחליף אוטומטי'},size:()=>({w:50,h:60}),terms:()=>[[-15,-30,''],[15,-30,''],[0,30,'']],
   draw:o=>sL(-15,-30,-15,-14)+sL(15,-30,15,-14)+sL(0,14,0,30)+sR(-22,-14,44,28)+sT(0,0,'ATS',9)+sLbl(o,50)},
  svfd:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'U1',rating:'ATV630 15kW',desc:''},ratings:['ATV630 5.5kW','ATV630 11kW','ATV630 15kW','ATV630 22kW','ATV630 30kW','ATV630 37kW','ATV630 45kW','ATV630 55kW'],size:()=>({w:40,h:60}),terms:IO,
@@ -1927,7 +1969,7 @@ const LIB=[
   {g:'מפסקים',items:[{t:'sbrk',n:'מפסק זרם (MCCB / ACB)'},{t:'sacb',n:'מפסק אוויר ACB (נשלף)'},{t:'sacb',n:'מפסק אוויר ACB (קבוע)',p:{acv:'f',rating:'MTZ2 1600A'}},{t:'sbrk',n:'מאמ"ת (MCB)',p:{tag:'Q2',rating:'MCB C16'}},{t:'srcd',n:'מפסק פחת / RCBO'},{t:'smpcb',n:'מגן מנוע (MPCB)'},{t:'siso',n:'מנתק / מפסק ראשי'},{t:'slbs',n:'מנתק עומס'}]},
   {g:'נתיכים',items:[{t:'sfuse',n:'נתיך'},{t:'sfsd',n:'מנתק נתיכים'}]},
   {g:'תלת-פאזי (3 קטבים, ברוחב המהדקים)',items:[{t:'sbrk',n:'מפסק זרם 3P',p:{poles:3}},{t:'sacb',n:'מפסק אוויר ACB 3P',p:{poles:3}},{t:'sbrk',n:'מאמ"ת 3P',p:{poles:3,tag:'Q2',rating:'MCB C16'}},{t:'siso',n:'מנתק 3P',p:{poles:3}},{t:'srcd',n:'מפסק פחת 4P',p:{poles:4}},{t:'smpcb',n:'מגן מנוע 3P',p:{poles:3}},{t:'scont',n:'מגען 3P',p:{poles:3}},{t:'sol',n:'ממסר טרמי 3P',p:{poles:3}},{t:'sfuse',n:'נתיכים 3P',p:{poles:3}},{t:'smot',n:'מנוע (U V W)',p:{poles:3}}]},
-  {g:'מיתוג והתנעה',items:[{t:'scont',n:'מגען'},{t:'srev',n:'זוג מגענים מחוגרים (היפוך)'},{t:'sol',n:'ממסר טרמי'},{t:'svfd',n:'ווסת מהירות (VFD)'},{t:'svfd3',n:'ווסת מהירות תלת-פאזי (L1 L2 L3 → U V W)'},{t:'sss',n:'מתנע רך'},{t:'sats',n:'מחליף אוטומטי (ATS)'},{t:'satsc',n:'בקר החלפה AMD 530 (אמדר) — סמל'}]},
+  {g:'מיתוג והתנעה',items:[{t:'scont',n:'מגען'},{t:'srev',n:'זוג מגענים מחוגרים (היפוך)'},{t:'sol',n:'ממסר טרמי'},{t:'svfd',n:'ווסת מהירות (VFD)'},{t:'svfd3',n:'ווסת מהירות תלת-פאזי (L1 L2 L3 → U V W)'},{t:'sss',n:'מתנע רך'},{t:'sats',n:'מחליף אוטומטי (ATS)'},{t:'satsc',n:'מחלף הזנות אמדר AM530D — סמל'},{t:'am530t',n:'מחלף הזנות אמדר AM530D — כל ההדקים'}]},
   {g:'הגנות',items:[{t:'sspd',n:'מגן ברקים (SPD)'}]}]},
  {tab:'פיקוד ובקרה',sld:true,icon:'🎛',hint:'סמלי פיקוד (IEC): מגעים, לחצנים, בוררים, סלילים, טיימרים ושעונים. מחברים ביניהם ב"חיווט". הסימון (למשל K1) והמספרים (13-14) נערכים במאפיינים.',groups:[
   {g:'לחצנים',items:[{t:'spbno',n:'לחצן הפעלה (NO)'},{t:'spbnc',n:'לחצן הפסקה (NC)'},{t:'sestop',n:'לחצן חירום'}]},
@@ -2060,7 +2102,7 @@ const LIB=[
    {g:'מגופים חשמליים',items:[{t:'mvalve',n:'מגוף פרפר חשמלי DN100'},{t:'mvalve',n:'מגוף פרפר חשמלי DN200',p:{rating:'DN200'}},{t:'mvalve',n:'מגוף טריז חשמלי DN150',p:{rating:'DN150',vt:'gate'}},{t:'mvalve',n:'מגוף כדורי חשמלי DN50 230V',p:{rating:'DN50',vt:'ball',act:'1ph'}},{t:'mvalve',n:'מגוף מווסת 4-20mA DN100',p:{act:'mod'}},{t:'mvalve',n:'מגוף פרפר + מפעיל AUMA DN150',p:{rating:'DN150',act:'auma'}},{t:'mvalve',n:'מגוף טריז + מפעיל AUMA DN200',p:{rating:'DN200',vt:'gate',act:'auma'}},{t:'mvalve',n:'מגוף מווסת + מפעיל AUMATIC AC DN150',p:{rating:'DN150',act:'aumac'}},{t:'svalve',n:'ברז חשמלי סולנואיד 24VDC'},{t:'svalve',n:'ברז חשמלי סולנואיד 230VAC',p:{rating:'230VAC'}}]},
    {g:'גששי קרבה',items:[{t:'prox',n:'גשש אינדוקטיבי M12',p:{rating:'M12 PNP NO 10-30VDC'}},{t:'prox',n:'גשש אינדוקטיבי M18'},{t:'prox',n:'גשש אינדוקטיבי M30',p:{rating:'M30 PNP NO 10-30VDC'}},{t:'prox',n:'גשש קיבולי M18',p:{px:'cap'}},{t:'prox',n:'גשש קיבולי M30',p:{px:'cap',rating:'M30 PNP NO 10-30VDC'}}]}]},
   {tab:'גנרטור והחלפה',icon:'⛽',groups:[
-   {g:'בקרי גנרטור (לדלת)',items:Object.keys(DSEM).map(m=>({t:'dsec',n:(DSEM[m].b?'בקר החלפה '+DSEM[m].b+' ':'בקר גנרטור ')+m,p:{dsm:m}}))},
+   {g:'בקרי גנרטור (לדלת)',items:Object.keys(DSEM).map(m=>({t:'dsec',n:(DSEM[m].b?'מחלף הזנות '+DSEM[m].b+' ':'בקר גנרטור ')+m,p:{dsm:m}}))},
    {g:'מפסקי החלפה רשת / גנרטור (ATS)',items:[{t:'atsw',n:'מפסק החלפה ממונע 250A 4P',p:{ar:'250'}},{t:'atsw',n:'מפסק החלפה ממונע 630A 4P',p:{ar:'630'}},{t:'atsw',n:'מפסק החלפה ממונע 1600A 4P',p:{ar:'1600'}},{t:'atsw',n:'מפסק החלפה ידני 125A 4P (I-0-II)',p:{ar:'125',ak:'m',apos:'0'}}]}]},
   {tab:'מנועים ומשאבות',icon:'⟲',hint:'מנוע: את ההספק ואת מה שמותקן עליו (משאבה צנטריפוגלית, בורג, מפוח, טבולה) בוחרים במאפיינים. בור שאיבה: רוחב, עומק ומספר מצופים במאפיינים.',groups:[
    {g:'מנועים ומשאבות',items:I('מנוע חשמלי','מנוע + משאבה צנטריפוגלית','מנוע + משאבת בורג','מנוע + מפוח','משאבה טבולה')},
@@ -2538,7 +2580,7 @@ function inCab(c,x,y){const g=cabG(c);return x>g.x0&&x<g.x0+g.W&&y>g.y0&&y<g.y0+
 /* Designations by IEC 81346 letter, numbered as parts are added: the next free
    number for that letter in this document (H1, H2… lamps; Q1, Q2… breakers…). A
    designation typed by hand stays as it is. */
-const SERIAL={satsc:'A',atsw:'Q',dsec:'A',acb:'Q',sacb:'Q',svfd3:'U',xbox:'S',nrack:'RK',lc2d:'K',srev:'K',prox:'B',sprox:'B',mvalve:'MV',svalve:'SV',smv:'MV',ssv:'SV',subpit:'P',ssubp:'P',kflow:'FE',kconv:'FIT',sfe:'FE',sfit:'FIT',lfloat:'LS',ptx:'PT',pgauge:'PI',spt:'PT',spi:'PI',lvlh:'LT',ultra4:'LIC',udb:'LE',slvlh:'LT',sultra:'LIC',sudb:'LE',smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
+const SERIAL={am530t:'A',satsc:'A',atsw:'Q',dsec:'A',acb:'Q',sacb:'Q',svfd3:'U',xbox:'S',nrack:'RK',lc2d:'K',srev:'K',prox:'B',sprox:'B',mvalve:'MV',svalve:'SV',smv:'MV',ssv:'SV',subpit:'P',ssubp:'P',kflow:'FE',kconv:'FIT',sfe:'FE',sfit:'FIT',lfloat:'LS',ptx:'PT',pgauge:'PI',spt:'PT',spi:'PI',lvlh:'LT',ultra4:'LIC',udb:'LE',slvlh:'LT',sultra:'LIC',sudb:'LE',smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
  sbrk:'Q',smpcb:'Q',siso:'Q',slbs:'Q',sfsd:'Q',sats:'Q',srcd:'F',sfuse:'F',sol:'F',sspd:'F',scont:'K',svfd:'U',sss:'U',sups:'U',sgen:'G',sbatt:'G',strafo:'T',sct:'T',svt:'T',skwh:'P',spm:'P',samm:'P',svm:'P',scap:'C',smot:'M',stb:'X',scable:'W'};
 function autoTag(o){const pre=SERIAL[o.type];if(!pre||!o.p||!DEF[o.type].edit?.includes('tag'))return;const re=new RegExp('^'+pre+'(\\d+)$');if(o.p.tag&&!re.test(o.p.tag))return;
  const mine=isSldObj(o),used=new Set();state.objs.forEach(q=>{if(q===o||isSldObj(q)!==mine)return;const m=re.exec(q.p?.tag||'');if(m)used.add(+m[1]);});let n=1;while(used.has(n))n++;o.p.tag=pre+n;}
