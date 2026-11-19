@@ -3764,7 +3764,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  const t=e.target.closest('[data-id]'),id=t?t.dataset.id:null;
  G={sx:e.clientX,sy:e.clientY,t0:Date.now(),id,moved:false,mode:'pan',tx0:view.tx,ty0:view.ty,add:e.shiftKey||e.ctrlKey||e.metaKey};
  if(e.pointerType==='mouse'&&e.button!==0)return;
- if(PEN){const [wx,wy]=toWorld(e.clientX,e.clientY);if(PEN.erase){G.mode='erase';G.n=inkErase(wx,wy);}else{G.mode='ink';INKDRAFT=[[r2(wx),r2(wy)]];}return;}
+ if(PEN){const [wx,wy]=toWorld(e.clientX,e.clientY),penBtn=e.pointerType==='pen'&&((e.buttons&2)||(e.buttons&32)||e.button===2||e.button===5);if(PEN.erase||penBtn){G.mode='erase';G.n=inkErase(wx,wy);}else{G.mode='ink';INKDRAFT=[[r2(wx),r2(wy)]];}return;}
  if(MWM){G.mode='mw';return;}
  if(BRUSH){G.mode='brush';return;}
  {const sd=e.target.closest('[data-sdim]'),so=sd&&id&&get(id);if(so&&!so.locked&&!wireMode&&!globalLock){G.mode='sdim';G.o=so;G.k=sd.dataset.sdim;if(sel!==so.id){sel=so.id;multi.clear();updateBar();}return;}}
@@ -3801,6 +3801,7 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
  if(pinch&&P.size>=2){const [a,b]=[...P.values()];const d=Math.hypot(a.x-b.x,a.y-b.y),cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;const r=svg.getBoundingClientRect();
   const s=Math.min(30,Math.max(.04,pinch.v.s*d/pinch.d));const wx=(pinch.cx-r.left-pinch.v.tx)/pinch.v.s,wy=(pinch.cy-r.top-pinch.v.ty)/pinch.v.s;
   view.s=s;view.tx=cx-r.left-wx*s;view.ty=cy-r.top-wy*s;applyView();return;}
+ if(G&&G.mode==='ink'&&e.pointerType==='pen'&&((e.buttons&2)||(e.buttons&32))){G.mode='erase';G.n=0;INKDRAFT=null;}
  if(G&&(G.mode==='ink'||G.mode==='erase')){if(G.mode==='ink'){const [wx,wy]=toWorld(e.clientX,e.clientY),L=INKDRAFT[INKDRAFT.length-1];if(Math.hypot(wx-L[0],wy-L[1])*view.s>=2){INKDRAFT.push([r2(wx),r2(wy)]);render();}}else{const [wx,wy]=toWorld(e.clientX,e.clientY);G.n+=inkErase(wx,wy);}return;}
  if(!G)return;const dx=e.clientX-G.sx,dy=e.clientY-G.sy;if(!G.moved&&Math.hypot(dx,dy)>7){G.moved=true;if(G.mode==='drag'&&sel!==G.id){sel=G.id;updateBar();}}
  if(!G.moved)return;
@@ -3965,6 +3966,7 @@ function lockSet(){const S=new Set(selIds().map(get).filter(Boolean));[...S].for
 $('bLock').onclick=()=>{const L=lockSet();if(!L.length)return;const all=L.every(o=>o.locked);L.forEach(o=>o.locked=!all);commit();renderNow();updateBar();
  toast(all?(L.length>1?`הנעילה שוחררה (${L.length} רכיבים)`:'הנעילה שוחררה'):(L.length>1?`ננעלו ${L.length} רכיבים`:'הרכיב ננעל'));};
 $('bPen').onclick=()=>penSet(!PEN);
+svg.addEventListener('contextmenu',e=>{if(PEN)e.preventDefault();});
 $('bBrush').onclick=()=>brushSet(!BRUSH);
 $('bMir').onclick=()=>{const L=selIds().map(get).filter(o=>o&&o.type!=='wire'&&o.type!=='mdim'&&!o.locked&&o.type!=='cabinet');if(!L.length)return;
  // several parts flip as one group, about the middle of the selection
