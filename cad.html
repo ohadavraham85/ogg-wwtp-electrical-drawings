@@ -881,24 +881,31 @@ const GKVA=[20,30,45,60,80,100,150,200,250,300,400,500,630,800,1000,1250,1500,17
 const GDIM={open:[[20,1600,1150],[100,2500,1550],[250,3200,1850],[500,4200,2150],[1000,5300,2500],[2000,7000,2900]],canopy:[[20,2000,1300],[100,3300,1850],[250,4300,2150],[500,5400,2500],[1000,7500,2900],[2000,12200,2900]]};
 function genDim(o){const T=GDIM[o.p.gk==='open'?'open':'canopy'],k=Math.max(20,Math.min(2000,+o.p.kva||250));let a=T[0],b=T[T.length-1];for(let i=0;i<T.length-1;i++)if(k>=T[i][0]&&k<=T[i+1][0]){a=T[i];b=T[i+1];break;}
  const t=(k-a[0])/((b[0]-a[0])||1);return {w:Math.round(a[1]+(b[1]-a[1])*t),h:Math.round(a[2]+(b[2]-a[2])*t)};}
-function genDraw(o){const {w,h}=genDim(o),k='#1f2937',sw=Math.max(2,w*.0025),x0=-w/2,y0=-h/2,fs=Math.max(40,Math.min(h*.09,140));let s='';
- const base=h*.12;s+=`<rect x="${x0}" y="${h/2-base}" width="${w}" height="${base}" fill="#374151" stroke="${k}" stroke-width="${sw}"/>`;
+// Caterpillar look: Cat yellow, black trim and base, the engine model that usually drives that rating (approximate)
+const CATE=k=>k<=150?'C4.4':k<=250?'C9':k<=400?'C13':k<=550?'C15':k<=750?'C18':k<=1000?'C27':k<=1250?'C32':k<=1750?'3512':'3516';
+function genDraw(o){const {w,h}=genDim(o),k='#111',Y='#ffcd11',Yd='#e0b000',B='#1a1a1a',sw=Math.max(2,w*.0022),x0=-w/2,y0=-h/2,fs=Math.max(40,Math.min(h*.09,140)),kva=+o.p.kva||250,eng=CATE(kva);let s='';
+ const base=h*.12;s+=`<rect x="${x0}" y="${h/2-base}" width="${w}" height="${base}" fill="${B}" stroke="${k}" stroke-width="${sw}"/>`;
+ // lifting / fork pockets in the base
+ for(const fx of [.18,.78])s+=`<rect x="${x0+w*fx}" y="${h/2-base*.7}" width="${w*.06}" height="${base*.45}" fill="#3a3a3a"/>`;
+ const logo=(x,y,sz)=>`<g transform="translate(${r2(x)} ${r2(y)})"><text x="0" y="0" font-size="${r2(sz)}" font-weight="900" font-family="Arial Black,Arial" fill="${B}" font-style="italic" letter-spacing="${r2(sz*.02)}">CAT</text><path d="M${r2(sz*.62)} ${r2(-sz*.18)}l${r2(sz*.16)} ${r2(-sz*.42)}l${r2(sz*.16)} ${r2(sz*.42)}z" fill="${Y}"/></g>`;
  if(o.p.gk==='open'){const top=y0+h*.08,bh=h/2-base-top;
-  // radiator, engine, alternator, control box, exhaust
-  s+=`<rect x="${x0+w*.02}" y="${top}" width="${w*.16}" height="${bh}" fill="#4b5563" stroke="${k}" stroke-width="${sw}"/>`;for(let y=top+bh*.08;y<top+bh*.95;y+=bh*.07)s+=`<path d="M${x0+w*.03} ${y}h${w*.14}" stroke="#9ca3af" stroke-width="${sw*.8}"/>`;
-  s+=`<rect x="${x0+w*.2}" y="${top+bh*.18}" width="${w*.42}" height="${bh*.82}" rx="${w*.01}" fill="#facc15" stroke="${k}" stroke-width="${sw}"/><rect x="${x0+w*.24}" y="${top+bh*.05}" width="${w*.3}" height="${bh*.2}" fill="#eab308" stroke="${k}" stroke-width="${sw}"/>`;
-  s+=`<circle cx="${x0+w*.3}" cy="${top+bh*.6}" r="${bh*.18}" fill="none" stroke="${k}" stroke-width="${sw}"/><rect x="${x0+w*.45}" y="${top+bh*.45}" width="${w*.12}" height="${bh*.3}" fill="#ca8a04" stroke="${k}" stroke-width="${sw}"/>`;
-  s+=`<rect x="${x0+w*.64}" y="${top+bh*.25}" width="${w*.33}" height="${bh*.75}" rx="${w*.02}" fill="#1e3a8a" stroke="${k}" stroke-width="${sw}"/>`;for(let x=x0+w*.68;x<x0+w*.95;x+=w*.04)s+=`<path d="M${x} ${top+bh*.32}v${bh*.6}" stroke="#3b5bdb" stroke-width="${sw}"/>`;
-  s+=`<rect x="${x0+w*.72}" y="${top-bh*.05}" width="${w*.18}" height="${bh*.28}" fill="#d1d5db" stroke="${k}" stroke-width="${sw}"/><rect x="${x0+w*.76}" y="${top+bh*.01}" width="${w*.1}" height="${bh*.12}" fill="#0f2a1a"/>`;
-  s+=`<path d="M${x0+w*.36} ${top+bh*.05}V${y0}h${w*.06}" fill="none" stroke="#6b7280" stroke-width="${Math.max(6,w*.012)}" stroke-linecap="round"/>`;}
+  // radiator with black guard, yellow engine, generator end, control box, exhaust
+  s+=`<rect x="${x0+w*.02}" y="${top}" width="${w*.15}" height="${bh}" fill="${B}" stroke="${k}" stroke-width="${sw}"/>`;for(let y=top+bh*.08;y<top+bh*.95;y+=bh*.06)s+=`<path d="M${x0+w*.03} ${y}h${w*.13}" stroke="#555" stroke-width="${sw*.8}"/>`;
+  s+=`<rect x="${x0+w*.19}" y="${top+bh*.16}" width="${w*.44}" height="${bh*.84}" rx="${w*.012}" fill="${Y}" stroke="${k}" stroke-width="${sw}"/><rect x="${x0+w*.23}" y="${top+bh*.02}" width="${w*.32}" height="${bh*.2}" rx="${w*.006}" fill="${Yd}" stroke="${k}" stroke-width="${sw}"/>`;
+  s+=`<circle cx="${x0+w*.29}" cy="${top+bh*.6}" r="${bh*.17}" fill="${Yd}" stroke="${k}" stroke-width="${sw}"/><rect x="${x0+w*.44}" y="${top+bh*.44}" width="${w*.13}" height="${bh*.32}" fill="${Yd}" stroke="${k}" stroke-width="${sw}"/>`+logo(x0+w*.24,top+bh*.16,bh*.13)+txt(x0+w*.5,top+bh*.12,eng,bh*.09,B,800);
+  s+=`<rect x="${x0+w*.64}" y="${top+bh*.22}" width="${w*.33}" height="${bh*.78}" rx="${w*.02}" fill="${Y}" stroke="${k}" stroke-width="${sw}"/>`;for(let x=x0+w*.68;x<x0+w*.95;x+=w*.035)s+=`<path d="M${x} ${top+bh*.32}v${bh*.6}" stroke="${B}" stroke-width="${sw}"/>`;
+  s+=`<rect x="${x0+w*.71}" y="${top-bh*.07}" width="${w*.2}" height="${bh*.3}" fill="${B}" stroke="${k}" stroke-width="${sw}"/><rect x="${x0+w*.75}" y="${top}" width="${w*.12}" height="${bh*.12}" fill="#8fb7a3"/>`;
+  s+=`<path d="M${x0+w*.36} ${top+bh*.03}V${y0}h${w*.06}" fill="none" stroke="#4b5563" stroke-width="${Math.max(6,w*.012)}" stroke-linecap="round"/>`;}
  else{const top=y0,bh=h-base;
-  s+=`<rect x="${x0}" y="${top}" width="${w}" height="${bh}" rx="${w*.01}" fill="#e5e7eb" stroke="${k}" stroke-width="${sw}"/><path d="M${x0} ${top+bh*.08}H${x0+w}" stroke="#9ca3af" stroke-width="${sw}"/>`;
-  // air inlet / outlet louvres at the ends, service doors, control window, exhaust on the roof
-  [[x0+w*.02,'in'],[x0+w*.86,'out']].forEach(([x])=>{for(let y=top+bh*.18;y<top+bh*.88;y+=bh*.06)s+=`<path d="M${x} ${y}h${w*.12}" stroke="#6b7280" stroke-width="${sw*1.2}"/>`;});
-  const nd=Math.max(2,Math.round(w/1800));for(let i=0;i<nd;i++){const dw=w*.68/nd,dx=x0+w*.16+i*dw;s+=`<rect x="${dx+dw*.04}" y="${top+bh*.14}" width="${dw*.92}" height="${bh*.8}" fill="none" stroke="#9ca3af" stroke-width="${sw}"/><rect x="${dx+dw*.8}" y="${top+bh*.5}" width="${dw*.06}" height="${bh*.08}" fill="#374151"/>`;}
-  s+=`<rect x="${x0+w*.18}" y="${top+bh*.22}" width="${Math.min(w*.12,500)}" height="${bh*.18}" fill="#0f172a" stroke="${k}" stroke-width="${sw}"/>`;
-  s+=`<rect x="${x0+w*.62}" y="${top-h*.1}" width="${Math.max(80,w*.025)}" height="${h*.1}" fill="#6b7280" stroke="${k}" stroke-width="${sw}"/>`;}
- s+=txt(0,h/2-base/2,`${o.p.kva} kVA${o.p.gk==='open'?'':' · חופה משתיקה'}`,Math.min(fs,base*.7),'#f9fafb',800);
+  s+=`<rect x="${x0}" y="${top}" width="${w}" height="${bh}" rx="${w*.008}" fill="${Y}" stroke="${k}" stroke-width="${sw}"/><rect x="${x0}" y="${top}" width="${w}" height="${bh*.07}" fill="${Yd}" stroke="${k}" stroke-width="${sw*.8}"/>`;
+  // black louvre panels at both ends, service doors with black handles, controller window, exhaust on the roof
+  [x0+w*.015,x0+w*.865].forEach(x=>{s+=`<rect x="${x}" y="${top+bh*.14}" width="${w*.12}" height="${bh*.76}" fill="${B}"/>`;for(let y=top+bh*.18;y<top+bh*.88;y+=bh*.055)s+=`<path d="M${x+w*.006} ${y}h${w*.108}" stroke="#555" stroke-width="${sw*1.1}"/>`;});
+  const nd=Math.max(2,Math.round(w/1800));for(let i=0;i<nd;i++){const dw=w*.70/nd,dx=x0+w*.15+i*dw;s+=`<rect x="${dx+dw*.04}" y="${top+bh*.14}" width="${dw*.92}" height="${bh*.8}" fill="none" stroke="${Yd}" stroke-width="${sw*1.2}"/><rect x="${dx+dw*.8}" y="${top+bh*.48}" width="${dw*.05}" height="${bh*.12}" rx="${dw*.01}" fill="${B}"/>`;}
+  s+=`<rect x="${x0+w*.17}" y="${top+bh*.5}" width="${Math.min(w*.1,450)}" height="${bh*.16}" fill="#0f172a" stroke="${k}" stroke-width="${sw}"/>`;
+  s+=logo(x0+w*.17,top+bh*.36,Math.min(bh*.18,w*.05));
+  s+=txt(x0+w*.17+Math.min(bh*.18,w*.05)*2.4,top+bh*.33,eng,Math.min(bh*.08,w*.025),B,800,'start');
+  s+=`<rect x="${x0+w*.62}" y="${top-h*.1}" width="${Math.max(80,w*.025)}" height="${h*.1}" fill="#4b5563" stroke="${k}" stroke-width="${sw}"/>`;}
+ s+=txt(0,h/2-base/2,`Cat ${eng} · ${kva} kVA${o.p.gk==='open'?'':' · חופה משתיקה'}`,Math.min(fs,base*.62),Y,800);
  if(o.p.tag)s+=txt(0,y0-fs*(o.p.gk==='open'?.6:1.6),o.p.tag,fs,'#9ca3af',800);return s;}
 const DEF={
  mcb:{layer:4,rail:true,edit:['tag','rating','color'],ratings:['B6','B10','B16','B20','C6','C10','C16','C20','C25','C32','C40','C50','C63','D16','D25','D32'],
@@ -2152,7 +2159,7 @@ const LIB=[
    {g:'מגופים חשמליים',items:[{t:'mvalve',n:'מגוף פרפר חשמלי DN100'},{t:'mvalve',n:'מגוף פרפר חשמלי DN200',p:{rating:'DN200'}},{t:'mvalve',n:'מגוף טריז חשמלי DN150',p:{rating:'DN150',vt:'gate'}},{t:'mvalve',n:'מגוף כדורי חשמלי DN50 230V',p:{rating:'DN50',vt:'ball',act:'1ph'}},{t:'mvalve',n:'מגוף מווסת 4-20mA DN100',p:{act:'mod'}},{t:'mvalve',n:'מגוף פרפר + מפעיל AUMA DN150',p:{rating:'DN150',act:'auma'}},{t:'mvalve',n:'מגוף טריז + מפעיל AUMA DN200',p:{rating:'DN200',vt:'gate',act:'auma'}},{t:'mvalve',n:'מגוף מווסת + מפעיל AUMATIC AC DN150',p:{rating:'DN150',act:'aumac'}},{t:'svalve',n:'ברז חשמלי סולנואיד 24VDC'},{t:'svalve',n:'ברז חשמלי סולנואיד 230VAC',p:{rating:'230VAC'}}]},
    {g:'גששי קרבה',items:[{t:'prox',n:'גשש אינדוקטיבי M12',p:{rating:'M12 PNP NO 10-30VDC'}},{t:'prox',n:'גשש אינדוקטיבי M18'},{t:'prox',n:'גשש אינדוקטיבי M30',p:{rating:'M30 PNP NO 10-30VDC'}},{t:'prox',n:'גשש קיבולי M18',p:{px:'cap'}},{t:'prox',n:'גשש קיבולי M30',p:{px:'cap',rating:'M30 PNP NO 10-30VDC'}}]}]},
   {tab:'גנרטור והחלפה',icon:'⛽',groups:[
-   {g:'גנרטורים (מבט צד, בקנה מידה)',items:[{t:'genset',n:'גנרטור עם חופה משתיקה',p:{gk:'canopy',kva:'250'}},{t:'genset',n:'גנרטור פתוח (בלי חופה)',p:{gk:'open',kva:'250'}}]},
+   {g:'גנרטורים Caterpillar (מבט צד, בקנה מידה)',items:[{t:'genset',n:'גנרטור Caterpillar עם חופה משתיקה',p:{gk:'canopy',kva:'250'}},{t:'genset',n:'גנרטור Caterpillar פתוח (בלי חופה)',p:{gk:'open',kva:'250'}}]},
    {g:'בקרי גנרטור (לדלת)',items:Object.keys(DSEM).map(m=>({t:'dsec',n:(DSEM[m].b?'מחלף הזנות '+DSEM[m].b+' ':'בקר גנרטור ')+m,p:{dsm:m}}))},
    {g:'מפסקי החלפה רשת / גנרטור (ATS)',items:[{t:'atsw',n:'מפסק החלפה ממונע 250A 4P',p:{ar:'250'}},{t:'atsw',n:'מפסק החלפה ממונע 630A 4P',p:{ar:'630'}},{t:'atsw',n:'מפסק החלפה ממונע 1600A 4P',p:{ar:'1600'}},{t:'atsw',n:'מפסק החלפה ידני 125A 4P (I-0-II)',p:{ar:'125',ak:'m',apos:'0'}}]}]},
   {tab:'מנועים ומשאבות',icon:'⟲',hint:'מנוע: את ההספק ואת מה שמותקן עליו (משאבה צנטריפוגלית, בורג, מפוח, טבולה) בוחרים במאפיינים. בור שאיבה: רוחב, עומק ומספר מצופים במאפיינים.',groups:[
@@ -4363,7 +4370,7 @@ function bomDataSld(){return withDoc('sld',()=>{const rows={},SKIP=['wire','sfra
   const k=(o.p.name||o.type)+(o.p.rating?' '+o.p.rating:'');const r=rows[k]=rows[k]||{n:0,tags:[]};r.n++;if(o.p.tag)r.tags.push(o.p.tag);});
  return Object.keys(rows).map(k=>{const r=rows[k],tg=r.tags.sort((a,b)=>a.localeCompare(b,'he',{numeric:true}));return [k+(tg.length?` (${tg.length>6?tg.slice(0,6).join(', ')+'…':tg.join(', ')})`:''),`${r.n} יח'`];});});}
 function bomData0(){const rows={};state.objs.forEach(o=>{if(o.type==='underlay'||o.type==='nmap')return;if(o.type==='wire'){const k=`חוט ${WCOL[o.p.color]?.n} ${o.p.sec} ממ"ר`;rows[k]=rows[k]||{n:0,len:0,w:1};rows[k].len+=wireLen(o);return;}
-  if(o.type==='genset'){const kl=`גנרטור ${o.p.kva} kVA ${o.p.gk==='open'?'פתוח':'עם חופה משתיקה'}`;rows[kl]=rows[kl]||{n:0};rows[kl].n++;return;}
+  if(o.type==='genset'){const kl=`גנרטור Caterpillar ${CATE(+o.p.kva||250)} ${o.p.kva} kVA ${o.p.gk==='open'?'פתוח':'עם חופה משתיקה'}`;rows[kl]=rows[kl]||{n:0};rows[kl].n++;return;}
   if(o.type==='acb'){const kl=`מפסק אוויר MasterPacT ${o.p.acs} ${o.p.acr}A ${+o.p.poles===4?4:3}P ${o.p.acv==='f'?'קבוע':'נשלף'} · ${o.p.mlu}`;rows[kl]=rows[kl]||{n:0};rows[kl].n++;return;}
   if(o.type==='hpipe'){const M=HMAT[o.p.mat]||HMAT.pvc,kl=`צינור ${M.n.replace(/ \(.*\)/,'')} ${HDNL(+o.p.dn,o.p.mat)}`;rows[kl]=rows[kl]||{n:0,len:0};rows[kl].len+=cabLength(o);rows[kl].n++;const nb=cabBends(o).filter(Boolean).length;if(nb){const kb=`קשת 90° ${M.s} ${HDNL(+o.p.dn,o.p.mat)}`;rows[kb]=rows[kb]||{n:0};rows[kb].n+=nb;}return;}
   if(o.type==='hvalve'||o.type==='hfit'){const kl=(o.type==='hvalve'?HVK[o.p.vk]:HFK[o.p.fk]+' '+(HMAT[o.p.mat]||HMAT.steel).s)+' '+HDNL(+o.p.dn,o.p.mat)+(o.type==='hfit'&&['red','tee'].includes(o.p.fk)?'×'+o.p.dn2:'');rows[kl]=rows[kl]||{n:0};rows[kl].n++;return;}
