@@ -982,13 +982,24 @@ const DEF={
   draw:o=>{const L=o.p.len,d=o.p.dw;let s=`<rect x="${-L/2}" y="${-d/2}" width="${L}" height="${d}" fill="#c9ccd1" stroke="#7b8087" stroke-width=".6"/><rect x="${-L/2}" y="${-d/2+7}" width="${L}" height="${d-14}" fill="#b6bbc1"/>`;
    for(let u=-L/2+3;u<L/2-4;u+=8)s+=`<rect x="${u}" y="${-d/2}" width="3.6" height="6.5" fill="#8d9298"/><rect x="${u}" y="${d/2-6.5}" width="3.6" height="6.5" fill="#8d9298"/>`;return s;}},
  // Z / C profile for tying cables (front view, slotted), with cable ties along it if asked
- zprof:{layer:1.2,resize:'len',minLen:60,edit:['tag','len','orient','zt','tsp','tcol'],def:{tag:'',len:600,zt:'z',tsp:'0',tcol:'black'},size:o=>({w:+o.p.len,h:o.p.zt==='c'?36:30}),
-  draw:o=>{const L=+o.p.len,H=o.p.zt==='c'?36:30;let s=`<rect x="${-L/2}" y="${-H/2}" width="${L}" height="${H}" fill="#b8bec6" stroke="#5b6470" stroke-width="1"/><rect x="${-L/2}" y="${-H/2}" width="${L}" height="${H*.22}" fill="#9aa2ac"/>`+(o.p.zt==='c'?`<rect x="${-L/2}" y="${H/2-H*.22}" width="${L}" height="${H*.22}" fill="#9aa2ac"/>`:`<path d="M${-L/2} ${H/2-1}H${L/2}" stroke="#4b5563" stroke-width="2"/>`);
-   for(let x=-L/2+12;x<L/2-8;x+=25)s+=`<rect x="${x}" y="${-H*.12}" width="14" height="${H*.3}" rx="${H*.15}" fill="#6b7280"/>`;
-   const sp=+o.p.tsp||0,tc=o.p.tcol==='white'?'#f4f4f5':'#111';if(sp>0)for(let x=-L/2+sp/2;x<L/2;x+=sp)s+=`<rect x="${x-2.5}" y="${-H/2-6}" width="5" height="${H+12}" rx="1.5" fill="${tc}" stroke="#000" stroke-width=".5"/><rect x="${x-4.5}" y="${H/2+2}" width="9" height="6" rx="1" fill="${tc}" stroke="#000" stroke-width=".5"/>`;
-   if(o.p.tag)s+=txt(0,-H/2-10,o.p.tag,10,'#9ca3af',700);return s;}},
+ zprof:{layer:1.2,resize:'len',minLen:60,edit:['tag','len','orient','zt','tsp','tcol'],def:{tag:'',len:600,zt:'z',tsp:'0',tcol:'black'},size:o=>({w:+o.p.len,h:o.p.zt==='c'?40:40}),
+  draw:o=>{const L=+o.p.len,H=40,k='#4b5563',f='#b8bec6',d='#8d949e',l='#d7dbe0';let s='';
+   if(o.p.zt==='c'){// C: web with both lips turned toward you
+    s+=`<rect x="${-L/2}" y="${-H/2}" width="${L}" height="${H}" fill="${d}" stroke="${k}" stroke-width="1"/><rect x="${-L/2}" y="${-H/2+7}" width="${L}" height="${H-14}" fill="${f}"/><path d="M${-L/2} ${-H/2+7}H${L/2}M${-L/2} ${H/2-7}H${L/2}" stroke="${k}" stroke-width=".8"/>`;
+    s+=`<path d="M${-L/2-10} ${-H/2}h8v${H}h-8v-6h4v${-H+12}h-4z" fill="${l}" stroke="${k}" stroke-width=".8"/>`;}
+   else{// Z: the top flange folds back, the bottom one forward — seen in light and shade, with the Z section at the end
+    s+=`<path d="M${-L/2+6} ${-H/2}H${L/2+6}L${L/2} ${-H/2+6}H${-L/2}Z" fill="${d}" stroke="${k}" stroke-width=".8"/>`;
+    s+=`<rect x="${-L/2}" y="${-H/2+6}" width="${L}" height="${H-16}" fill="${f}" stroke="${k}" stroke-width=".9"/>`;
+    s+=`<path d="M${-L/2} ${H/2-10}H${L/2}L${L/2-7} ${H/2}H${-L/2-7}Z" fill="${l}" stroke="${k}" stroke-width=".8"/>`;
+    s+=`<path d="M${-L/2-16} ${-H/2+2}h12l-8 ${H-4}h12" fill="none" stroke="#374151" stroke-width="3" stroke-linejoin="miter"/>`;}
+   // tie slots
+   for(let x=-L/2+15;x<L/2-10;x+=25)s+=`<rect x="${x}" y="-3" width="12" height="5" rx="2.5" fill="#5b6470"/>`;
+   // cable ties tied crosswise (X)
+   const sp=+o.p.tsp||0,tc=o.p.tcol==='white'?'#f4f4f5':'#111',X=(x)=>`<g transform="translate(${r2(x)} 0)"><path d="M-9 ${-H/2-5}L9 ${H/2+5}M9 ${-H/2-5}L-9 ${H/2+5}" stroke="#000" stroke-width="5.6" stroke-linecap="round"/><path d="M-9 ${-H/2-5}L9 ${H/2+5}M9 ${-H/2-5}L-9 ${H/2+5}" stroke="${tc}" stroke-width="4" stroke-linecap="round"/><rect x="-4" y="-4" width="8" height="8" rx="1.5" fill="${tc}" stroke="#000" stroke-width=".6"/></g>`;
+   if(sp>0)for(let x=-L/2+sp/2;x<L/2;x+=sp)s+=X(x);
+   if(o.p.tag)s+=txt(0,-H/2-12,o.p.tag,10,'#9ca3af',700);return s;}},
  // a single cable tie, laid across a cable bundle
- ctie:{layer:6.2,edit:['tlen','tcol'],def:{tlen:'40',tcol:'black'},size:o=>({w:5,h:+o.p.tlen||40}),draw:o=>{const h=+o.p.tlen||40,tc=o.p.tcol==='white'?'#f4f4f5':'#111';return `<rect x="-2.5" y="${-h/2}" width="5" height="${h}" rx="1.5" fill="${tc}" stroke="#000" stroke-width=".5"/><rect x="-4.5" y="${h/2-6}" width="9" height="6" rx="1" fill="${tc}" stroke="#000" stroke-width=".5"/>`;}},
+ ctie:{layer:6.2,edit:['tlen','tcol'],def:{tlen:'40',tcol:'black'},size:o=>{const h=+o.p.tlen||40;return {w:h*.5+6,h};},draw:o=>{const h=+o.p.tlen||40,w=h*.45,tc=o.p.tcol==='white'?'#f4f4f5':'#111',P=`M${-w/2} ${-h/2}L${w/2} ${h/2}M${w/2} ${-h/2}L${-w/2} ${h/2}`;return `<path d="${P}" stroke="#000" stroke-width="5.6" stroke-linecap="round"/><path d="${P}" stroke="${tc}" stroke-width="4" stroke-linecap="round"/><rect x="-4" y="-4" width="8" height="8" rx="1.5" fill="${tc}" stroke="#000" stroke-width=".6"/>`;}},
  partition:{layer:1,resize:'len',minLen:50,edit:['len','orient'],def:{len:700},size:o=>({w:o.p.len,h:20}),
   draw:o=>{const L=o.p.len;let s=`<rect x="${-L/2}" y="-10" width="${L}" height="20" fill="#b9bec4" stroke="#4b5563" stroke-width="1.2"/><rect x="${-L/2}" y="-10" width="${L}" height="4" fill="#d9dde1"/><rect x="${-L/2}" y="6" width="${L}" height="4" fill="#8f959c"/>`;
    for(let u=-L/2+40;u<L/2-30;u+=50)s+=`<rect x="${u-6}" y="-2.5" width="12" height="5" rx="2.5" fill="#6b7280"/>`;
