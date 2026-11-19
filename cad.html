@@ -4041,7 +4041,7 @@ $('bText').onclick=()=>{if(wireMode||globalLock)return;const o=sel&&get(sel);con
  setTimeout(()=>$('f_newtxt')&&$('f_newtxt').focus(),60);};
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;
 $('bFit').onclick=fit;$('bGrid').onclick=()=>gridDialog();
-$('bDoor').onclick=()=>{toggleDoors();updateBar();};$('b3d').onclick=open3D;$('bLockAll').onclick=toggleLockAll;
+$('bDoor').onclick=()=>{toggleDoors();updateBar();};$('b3d').onclick=()=>open3D();$('bLockAll').onclick=toggleLockAll;
 /* Keyboard: Delete removes what's selected, Esc lets go, Ctrl+Z / Ctrl+Y undo and redo, Ctrl+A takes all. */
 document.addEventListener('keydown',e=>{const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;if(!$('modal').classList.contains('hidden'))return;
  const k=e.key,mod=e.ctrlKey||e.metaKey;
@@ -4353,7 +4353,7 @@ const V3DEP={mcb:72,rcd:72,spd:72,iso:72,gv2:88,mpcb:88,cont:88,lc1d:88,lc2d:92,
 function v3Depth(o){if(+o.p.d3>0)return +o.p.d3;const D=DEF[o.type],L=D.layer;if(V3DEP[o.type]!=null)return V3DEP[o.type];if(D.front)return 22;if(L<1)return 3;if(L<2)return 50;if(L<3)return 8;if(L<3.6)return 120;if(L<4.6){const {w,h}=sizeOf(o);return Math.max(30,Math.min(200,Math.min(w,h)*.7));}return 18;}
 function v3Base(o){return o.type==='busbar'?36:0;}
 let V3=null;
-async function open3D(keepV){if(state.tab==='sld'){toast('התלת־ממד מוצג לחזית הלוח — עבור ללשונית "לוח"');return;}
+async function open3D(keepV){if(!keepV||!keepV.tg)keepV=null;if(state.tab==='sld'){toast('התלת־ממד מוצג לחזית הלוח — עבור ללשונית "לוח"');return;}
  const objs=state.objs.filter(o=>!isSldObj(o)&&(o.type==='wire'||DEF[o.type]));if(!objs.some(o=>!V3SKIP.has(o.type)&&!DEF[o.type].sld)){toast('אין עדיין רכיבים בחזית הלוח');return;}
  toast('בונה תלת־ממד…');try{await loadThree();}catch(e){toast('לא הצלחתי לטעון את מנוע התלת־ממד — בדוק חיבור לאינטרנט ונסה שוב');return;}
  const T=THREE,ov=document.createElement('div');ov.id='v3d';ov.innerHTML=`<div class="v3bar"><button data-a="x" title="סגור (Esc)">✕</button><button data-a="door" class="on">🚪 <span>פתח דלתות</span></button><button data-a="front">⬜ חזית</button><button data-a="iso">🧊 זווית</button><button data-a="wires" class="on">〰 חוטים</button><button data-a="axes" class="on">📐 צירים</button><button data-a="shot">📷 תמונה</button></div><div class="v3hint">גרירה: סיבוב · שתי אצבעות / גלגלת: זום והזזה · הקשה על רכיב: הזזה קדימה / אחורה</div><div class="v3sel" hidden><b class="v3n"></b><div class="v3row"><label>מיקום Z</label><button data-z="-1">אחורה ⬇</button><input class="v3z" type="number" inputmode="decimal" step="10" title="מיקום בעומק (מ&quot;מ) — חיובי = קדימה"><button data-z="1">⬆ קדימה</button><select class="v3st" title="צעד"><option value="10">10</option><option value="50">50</option><option value="100" selected>100</option><option value="500">500</option></select></div><div class="v3row"><label>עובי (מ"מ)</label><input class="v3d" type="number" inputmode="decimal" step="10" placeholder="אוטומטי"><button data-z="0">איפוס</button><button data-z="x">✕</button></div></div>`;
