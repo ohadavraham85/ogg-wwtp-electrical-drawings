@@ -3413,6 +3413,11 @@ function mdMake(a,b){MS.a=null;MS.cur=null;if(Math.hypot(a.x-b.x,a.y-b.y)<.5){to
  else{const mode=mdMode(null,a.x,a.y,b.x,b.y);made=mdNew(mode,a,b,0);toast(`מידה: ${mdFmt(mdGeom(made).len)} מ"מ`);}
  commit();renderNow();}
 // typing a new length: a part measured edge to edge is resized; otherwise the far end (its part, or the free point) moves along the measure
+// double-click a dimension: type its length (Enter applies), or delete it
+function mdQuick(o){const L0=mdGeom(o).len;modal('אורך המידה',`<div class="fld"><label>אורך (מ"מ)</label><input id="f_qlen" type="number" inputmode="decimal" step="0.1" dir="ltr" style="text-align:right;font-size:20px;font-weight:800" value="${mdFmt(L0)}"></div><div class="hint">${o.p.a.of||o.p.b.of?'הרכיב שנמדד זז / משתנה לאורך החדש.':'קצה המידה זז לאורך החדש.'}</div>`,
+  [{t:'החל',cls:'pri',fn:()=>{const v=parseFloat($('f_qlen').value);if(!(v>0)){toast('ערך לא תקין');return false;}if(Math.abs(v-mdGeom(o).len)>.05)mdSetLen(o,v);commit();renderNow();updateBar();}},
+   {t:'🗑 מחק',fn:()=>{state.objs=state.objs.filter(q=>q!==o);sel=null;commit();renderNow();updateBar();toast('המידה נמחקה');}},{t:'ביטול'}]);
+ setTimeout(()=>{const e=$('f_qlen');if(!e)return;e.focus();e.select();e.onkeydown=k=>{if(k.key==='Enter'){k.preventDefault();const b=[...document.querySelectorAll('#mBtns button')].find(x=>x.textContent==='החל');if(b)b.click();}};},60);}
 function mdSetLen(o,L){const g=mdGeom(o),d=L-g.len,ax=Math.abs(g.P2[0]-g.P1[0])>=Math.abs(g.P2[1]-g.P1[1])?'x':'y',[ax0,ay0]=mdPt(o.p.a),[bx0,by0]=mdPt(o.p.b),sg=Math.sign(ax==='x'?bx0-ax0:by0-ay0)||1;
  const qa=o.p.a.of&&get(o.p.a.of),qb=o.p.b.of&&get(o.p.b.of);
  if(qa&&qa===qb&&(qa.type==='shrect'||qa.type==='shellipse'||qa.type==='wall')&&!qa.locked){const lw=Math.abs(rotp(1,0,qa.rot||0)[0])>.5;const key=(ax==='x')===lw?'w':'h';const z=sizeOf(qa);const nv=r2(Math.max(5,(key==='w'?z.w:z.h)+d));
@@ -3635,7 +3640,7 @@ function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(g.mode==='rot'){if(g.moved){commit();renderNow();updateBar();toast(`סובב ל-${Math.round(g.o.rot)}°`);}else renderNow();return;}
  if(g.mode==='tip'){if(g.moved){commit();renderNow();}return;}
  if(g.mode==='wmid'){if(g.moved){commit();renderNow();updateBar();toast('החוט הוזז — הוא נשאר בגובה הזה');}else select(g.id,g.add);return;}
- if(g.mode==='mdoff'){GUIDES=[];if(g.moved){commit();renderNow();updateBar();}else{select(g.id,g.add);if(!g.add&&get(g.id))editDialog();}return;}
+ if(g.mode==='mdoff'){GUIDES=[];if(g.moved){commit();renderNow();updateBar();}else{const now=Date.now(),dbl=LASTTAP.id===g.id&&now-LASTTAP.t<450&&Math.hypot(e.clientX-LASTTAP.x,e.clientY-LASTTAP.y)<24;LASTTAP={id:g.id,t:dbl?0:now,x:e.clientX,y:e.clientY};select(g.id,g.add);if(dbl&&get(g.id))mdQuick(get(g.id));}return;}
  if(DROPFULL&&g.mode==='drag'&&g.moved)toast('אין מקום פנוי בפס הזה לרכיב — פנה מקום או הארך את הפס');DROPR=null;DROPFULL=false;if(PORTHIT){PORTHIT=null;render();}if(GUIDES.length){GUIDES=[];render();}
  if(g.mode==='cutx')return;
  if(g.mode==='cpt'){CGUIDE=[];PORTHIT=null;const o=g.o,R=o.p.route;if(!g.moved){if(g.added){R.splice(g.i,1);}else if(g.i>0&&g.i<R.length-1){R.splice(g.i,1);toast('הכיפוף הוסר');}else{renderNow();return;}}
