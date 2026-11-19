@@ -3597,9 +3597,23 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
   if(nb.length===2){const a=R[i-1],b=R[i+1],ax=Math.abs(a.x-lx)<.01||Math.abs(a.y-ly)<.01,bx=Math.abs(b.x-lx)<.01||Math.abs(b.y-ly)<.01;
    if(ax&&bx&&!(Math.abs(a.x-b.x)<.01||Math.abs(a.y-b.y)<.01)){const k=8/view.s,ua=[Math.sign(a.x-lx),Math.sign(a.y-ly)],ub=[Math.sign(b.x-lx),Math.sign(b.y-ly)];const p1=W(lx+ua[0]*k,ly+ua[1]*k),p2=W(lx+(ua[0]+ub[0])*k,ly+(ua[1]+ub[1])*k),p3=W(lx+ub[0]*k,ly+ub[1]*k);CGUIDE.push({corner:`M${p1[0]} ${p1[1]}L${p2[0]} ${p2[1]}L${p3[0]} ${p3[1]}`});}}
   render();}
- else{const [wx,wy]=toWorld(e.clientX,e.clientY);const o=G.o;DROPR=null;DROPFULL=false;const [sx,sy]=snapPos(o,G.ox+wx-G.w0[0],G.oy+wy-G.w0[1]);o.x=sx;o.y=sy;const onR=DEF[o.type].rail&&state.objs.some(r=>r.type==='rail'&&onRail(o,r));alignSnap(o,G.kids,!onR&&!HYD(o));portMagnet(o);if(DEF[o.type]?.sld||isSldObj(o))termMagnet(o,G.kids);const nx=o.x,ny=o.y;
+ else{const [wx,wy]=toWorld(e.clientX,e.clientY);const o=G.o;DROPR=null;DROPFULL=false;const [sx,sy]=snapPos(o,G.ox+wx-G.w0[0],G.oy+wy-G.w0[1]);o.x=sx;o.y=sy;const onR=DEF[o.type].rail&&state.objs.some(r=>r.type==='rail'&&onRail(o,r));alignSnap(o,G.kids,!onR&&!HYD(o));portMagnet(o);if(o.type==='shrect'||o.type==='shellipse'||o.type==='wall')edgeSnap(o,G.kids);if(DEF[o.type]?.sld||isSldObj(o))termMagnet(o,G.kids);const nx=o.x,ny=o.y;
   const ddx=nx-G.ox,ddy=ny-G.oy;G.kids.forEach(k=>{if(k.q.type==='mdim'){if(!k.e)k.e=[k.q.p.a,k.q.p.b].map(p=>[p,p.x,p.y]);k.e.forEach(([p,x,y])=>{if(!p.of||!get(p.of)){p.x=r2(x+ddx);p.y=r2(y+ddy);}});return;}k.q.x=r2(k.x+ddx);k.q.y=r2(k.y+ddy);});render();}});
 let GUIDES=[];
+/* Walls and shapes: while one is dragged, its edges — the outline and, for a
+   wall made by offset, the outer face too — snap onto the edges of the others
+   nearby, so two walls butt exactly; a guide marks the joint. */
+function boxEdges(q){const B=[bbW(q)];const od=(q.type==='shrect'||q.type==='shellipse')?(+q.p.ofd||0):0;
+ if(od){const {w,h}=sizeOf(q),P=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>fromLocal(q,a*(w/2+od),b*(h/2+od)));B.push({x0:Math.min(...P.map(p=>p[0])),x1:Math.max(...P.map(p=>p[0])),y0:Math.min(...P.map(p=>p[1])),y1:Math.max(...P.map(p=>p[1]))});}
+ return {x:B.flatMap(b=>[b.x0,b.x1]),y:B.flatMap(b=>[b.y0,b.y1]),box:B[B.length-1]};}
+function edgeSnap(o,kids){const th=10/view.s,ks=new Set((kids||[]).map(k=>k.q)),E=boxEdges(o);let bx=null,by=null;
+ for(const q of state.objs){if(q===o||ks.has(q)||q.type==='wire'||q.type==='mdim'||q.type==='label'||q.type==='callout'||q.type==='underlay'||hiddenFront(q))continue;const F=boxEdges(q);
+  // only parts near each other count: their outer boxes within reach
+  const A=E.box,Bx=F.box;if(A.x0>Bx.x1+th*4||Bx.x0>A.x1+th*4||A.y0>Bx.y1+th*4||Bx.y0>A.y1+th*4)continue;
+  for(const a of E.x)for(const b of F.x){const d=b-a;if(Math.abs(d)<th&&(!bx||Math.abs(d)<Math.abs(bx.d)))bx={d,c:b,y0:Math.min(A.y0,Bx.y0),y1:Math.max(A.y1,Bx.y1)};}
+  for(const a of E.y)for(const b of F.y){const d=b-a;if(Math.abs(d)<th&&(!by||Math.abs(d)<Math.abs(by.d)))by={d,c:b,x0:Math.min(A.x0,Bx.x0),x1:Math.max(A.x1,Bx.x1)};}}
+ if(!bx&&!by)return;const ddx=bx?bx.d:0,ddy=by?by.d:0;o.x=r2(o.x+ddx);o.y=r2(o.y+ddy);
+ GUIDES=[...(bx?[{x:bx.c,y0:bx.y0,y1:bx.y1}]:[]),...(by?[{y:by.c,x0:by.x0,x1:by.x1}]:[])];}
 /* Hydraulic connection points (flange faces / pipe ends) with the way they face.
    Dragging a pipe, valve or fitting near another one's flange snaps them face to
    face; with nothing that close, its flanges line up with others' axes (guides). */
