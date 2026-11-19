@@ -4400,6 +4400,36 @@ async function open3D(keepV){if(!keepV||!keepV.tg)keepV=null;if(state.tab==='sld
   const m=side(0x2b2b2b);const c=()=>{if(f.avg)m.color.copy(f.avg);V.dirty=true;};if(f.avg)c();else f.cbs.push(c);const zc=inB?20+D/2:0,grp=new T.Group();(parent||root).add(grp);
   for(let k=0;k<pts.length;k++){const [x,y]=pts[k];const sp=new T.Mesh(new T.SphereGeometry(D/2,16,10),m);sp.position.set(x,-y,zc);grp.add(sp);
    if(k){const [px,py]=pts[k-1],L=Math.hypot(x-px,y-py);if(L<.1)continue;const cy=new T.Mesh(new T.CylinderGeometry(D/2,D/2,L,18,1,true),m);cy.position.set((x+px)/2,-(y+py)/2,zc);cy.rotation.z=Math.atan2(-(y-py),x-px)-Math.PI/2;grp.add(cy);}}return grp;}
+ // a motor (and its pump) as a real 3D model — round frame with cooling fins, fan cowl, shaft,
+ // terminal box, and the pump on the same base — built from the same sizes as its 2D drawing (motG)
+ function motor3D(o){const g=motG(o),{L,H}=g,G=new T.Group(),M=c=>new T.MeshLambertMaterial({color:c}),Y=v=>-v;
+  const cylX=(r,x0,x1,y,mat,seg=32)=>{const m=new T.Mesh(new T.CylinderGeometry(r,r,x1-x0,seg),mat);m.rotation.z=Math.PI/2;m.position.set((x0+x1)/2,Y(y),0);G.add(m);return m;};
+  const cylY=(r,y0,y1,x,mat,z=0,seg=28)=>{const m=new T.Mesh(new T.CylinderGeometry(r,r,Math.abs(y1-y0),seg),mat);m.position.set(x,Y((y0+y1)/2),z);G.add(m);return m;};
+  const bx=(x0,x1,y0,y1,d,mat,z=0)=>{const m=new T.Mesh(new T.BoxGeometry(x1-x0,y1-y0,d),mat);m.position.set((x0+x1)/2,Y((y0+y1)/2),z);G.add(m);return m;};
+  const body=M(0x3b5b8c),dark=M(0x26405f),cowl=M(0x4b5563),endS=M(0x4a6fa5),metal=M(0x9aa0a6);
+  if(g.pu==='sub'){const W=g.w,h=g.h,pm=h*.42,r=W*.5;cylY(W*.32,-h/2,-h/2+pm,0,M(0x4b5563));for(let y=-h/2+pm*.15;y<-h/2+pm*.9;y+=pm*.12)cylY(W*.335,y-2,y+2,0,M(0x374151));
+   bx(W*.3,W*.52,-h/2+pm*.25,-h/2+pm*.53,W*.2,M(0x6b7280));cylY(r,-h/2+pm,h/2-18,0,body);cylY(r*.76,h/2-22,h/2,0,dark);cylY(r*.1,-h/2-60,-h/2,0,M(0x111111));}
+  else{const x0=-g.w/2,gy=g.h/2,cy=gy-H*.56,Rr=H*.4,D=Rr*2.3;
+   bx(x0+L*.08,x0+L*.78+(g.PL?g.PL:0),gy-H*.12,gy,D,dark);// base frame under motor and pump
+   bx(x0+L*.18,x0+L*.68,cy+Rr*.6,gy-H*.12,Rr*1.5,body);// feet
+   cylX(Rr*.92,x0,x0+L*.16,cy,cowl);
+   for(let k=0;k<10;k++){const a=k/10*Math.PI*2;const m=new T.Mesh(new T.BoxGeometry(L*.012,Rr*.08,Rr*1.86),M(0x2b313a));m.position.set(x0+L*.005,Y(cy),0);m.rotation.x=a;G.add(m);}
+   cylX(Rr,x0+L*.15,x0+L*.73,cy,body,40);
+   for(let k=0;k<16;k++){const a=k/16*Math.PI*2,f=new T.Mesh(new T.BoxGeometry(L*.56,Rr*.05,Rr*.16),dark);f.position.set(x0+L*.44,Y(cy)+Math.sin(a)*Rr*1.02,Math.cos(a)*Rr*1.02);f.rotation.x=-a;if(Math.sin(a)>-.3||Math.abs(Math.cos(a))>.6)G.add(f);}
+   cylX(Rr*.9,x0+L*.72,x0+L*.8,cy,endS);cylX(Rr*.13,x0+L*.8,x0+L+(g.PL?g.PL*.1:0),cy,metal,20);
+   const tbx=x0+L*.42,bw=L*.2;bx(tbx-bw/2,tbx+bw/2,-g.h/2,cy-Rr*.8,Rr*.9,endS);bx(tbx-bw*.4,tbx+bw*.4,-g.h/2-6,-g.h/2,Rr*.75,dark);
+   const np=new T.Mesh(new T.PlaneGeometry(L*.14,Rr*.42),M(0xe5e7eb));np.position.set(x0+L*.57,Y(cy+Rr*.46),Rr*1.06);G.add(np);
+   const px=x0+L;
+   if(g.pu==='centrifugal'){const r=g.PL*.42,c=px+g.PL*.5,red=M(0xb91c1c),dr=M(0x7f1d1d);
+    cylX(r*.38,px,c-r*.25,cy,dr,24);// bearing bracket
+    const v=cylX(r,c-r*.28,c+r*.28,cy,red,40);cylX(r*.75,c+r*.28,c+r*.42,cy,red,32);// volute and cover
+    cylX(r*.32,c+r*.42,px+g.PL,cy,red,24);cylX(r*.45,px+g.PL-14,px+g.PL,cy,dr,28);// suction + flange
+    cylY(r*.32,cy-r*1.45,cy-r*.6,c,red);cylY(r*.45,cy-r*1.6,cy-r*1.42,c,dr);// discharge + flange
+    bx(c-r*.5,c+r*.5,cy+r*.7,gy-H*.12,r*1.3,dr);}
+   if(g.pu==='screw'){const hh=Rr*.9,gr=M(0x6b7280);bx(px,px+g.PL*.32,cy-hh,cy+hh,hh*2,gr);bx(px+g.PL*.08,px+g.PL*.24,cy-hh*1.5,cy-hh*.95,hh*.9,M(0x4b5563));
+    cylX(hh*.55,px+g.PL*.32,px+g.PL*.92,cy,M(0x9ca3af));cylX(hh*.8,px+g.PL*.92,px+g.PL,cy,M(0x4b5563));}
+   if(g.pu==='blower'){const W=g.PL*.9,c=px+g.PL*.55,te=M(0x0f766e);bx(c-W/2,c+W/2,cy-Rr*1.1,cy+Rr*1.1,Rr*2.2,te);bx(c-W*.18,c+W*.18,cy-Rr*1.55,cy-Rr*1.05,W*.36,M(0x115e59));}}
+  G.position.set(o.x,-o.y,0);G.rotation.z=-(o.rot||0)*Math.PI/180;if(o.mx)G.scale.x=-1;root.add(G);return G;}
  const ZF=new Map(),OBJ=new Map();let cur=null;
  // every part's node, so it can be picked and pushed forward / back (p.z3, mm toward the viewer)
  const reg=(o,n)=>{if(!n)return n;n.userData.oid=o.id;const z=+o.p.z3||0;OBJ.set(o.id,{n,z0:n.position.z});n.position.z+=z;return n;};
@@ -4444,6 +4474,7 @@ async function open3D(keepV){if(!keepV||!keepV.tg)keepV=null;if(state.tab==='sld
    if(host){reg(o,box(P.b.x0,P.b.y0,P.b.x1,P.b.y1,P.z0,P.z0+P.d,P.f,null,host.g));ZF.set(o.id,P.z0+P.d);continue;}
    if(o.type==='lpole'){const L=lpGeo(o),gb=L.H/2+200,db=Math.max(110,L.H*.016),dt=Math.max(60,L.H*.008),d=dt*.5,[bx,by]=fromLocal(o,0,gb-20),[tx,ty]=fromLocal(o,0,gb-L.H);
     const pg=new T.Group();root.add(pg);solid(o,P.b,P.f,d,-d/2,pg,P);const cy=new T.Mesh(new T.CylinderGeometry(dt*.56,db*.56,Math.hypot(tx-bx,ty-by),28),side(0x9ca3af));cy.position.set((bx+tx)/2,-(by+ty)/2,0);cy.rotation.z=Math.atan2(-(ty-by),tx-bx)-Math.PI/2;pg.add(cy);reg(o,pg);ZF.set(o.id,d/2);continue;}
+   if(o.type==='emotor'){reg(o,motor3D(o));ZF.set(o.id,motG(o).H*.46);continue;}
    if(V3CIV.has(o.type)){const d=+o.p.d3||(o.type==='subpit'?Math.max(800,sizeOf(o).w):RD);reg(o,solid(o,P.b,P.f,d,-d/2,null,P));ZF.set(o.id,d/2);continue;}
    const d=v3Free(o);reg(o,solid(o,P.b,P.f,d,-d/2,null,P));ZF.set(o.id,d/2);}
   // wires: one sheet just above the plate, under the ducts and parts

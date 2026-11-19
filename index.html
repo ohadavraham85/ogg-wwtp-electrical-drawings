@@ -179,11 +179,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 202;
+const VERSION = 203;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'תיקון: כפתור התלת־ממד פותח שוב את התצוגה כמו שצריך';
+const WHATS_NEW = 'תלת־ממד: מנועים ומשאבות כמודל אמיתי — מנוע עגול עם צלעות, משאבה צנטריפוגלית, בורגית, מפוח וטבולה';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
