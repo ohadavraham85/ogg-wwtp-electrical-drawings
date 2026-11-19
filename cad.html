@@ -565,7 +565,7 @@ const uid=()=>Math.random().toString(36).slice(2,10);
 
 /* ================= drawing helpers ================= */
 /* The terminals in a terminal block set: single-phase, three-phase, four and five pole. */
-const TBSETS={'S':[''],'1P':['L','N','PE'],'3P':['L1','L2','L3'],'4P':['L1','L2','L3','N'],'5P':['L1','L2','L3','N','PE']};
+const TBSETS={'S':[''],'2':['1','2'],'DC':['+','−'],'1P':['L','N','PE'],'3P':['L1','L2','L3'],'4P':['L1','L2','L3','N'],'5P':['L1','L2','L3','N','PE']};
 const TBSET=o=>TBSETS[o.p.set]||TBSETS['5P'];
 function screw(x,y,r=4.2){const k=r*.62;return `<circle cx="${x}" cy="${y}" r="${r}" fill="#d4d4d4" stroke="#666" stroke-width=".6"/><path d="M${x-k} ${y-k}L${x+k} ${y+k}M${x+k} ${y-k}L${x-k} ${y+k}" stroke="#4a4a4a" stroke-width="${r*.22}"/>`;}
 function txt(x,y,s,size=4,fill='#333',w=400,anchor='middle',fam='Arial,Helvetica,sans-serif'){if(LODMIN&&size<LODMIN)return '';return `<text x="${x}" y="${y}" font-size="${size}" fill="${fill}" font-weight="${w}" text-anchor="${anchor}" dominant-baseline="central" font-family="${fam}">${esc(s)}</text>`;}
@@ -1433,6 +1433,10 @@ const SDEF={
    s+=G(-110,-48,'J3',`start`)+txt(-110,32,'הזנת עזר DC · ממסר K-NV2',3,k,600,'start');
    s+=G(110,-52,'J6','end')+G(110,31,'J7 RS485','end');
    s+=sT(0,-18,'AM530D',16)+sT(0,-2,'מחלף הזנות אוטומטי — אמדר',6)+sLbl(o,260);return s;}},
+ smem:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Q1',rating:'MT400',desc:'מנוע מפסק (MEM)'},size:()=>({w:96,h:60}),
+  terms:()=>[[-36,-30,'אפס'],[-12,-30,'חיבור'],[12,-30,'ניתוק'],[36,-30,'מנוע'],[-14,30,'13'],[14,30,'14']],
+  draw:o=>{let s=sR(-44,-16,88,32)+[-36,-12,12,36].map(x=>sL(x,-30,x,-16)).join('')+sL(-14,16,-14,30)+sL(14,16,14,30)+sT(0,-4,'MEM',9)+sT(0,7,'מגע עזר 13-14',4.5);
+   [['אפס',-36],['חיבור',-12],['ניתוק',12],['מנוע',36]].forEach(([t,x])=>{s+=txt(x+2,-22,t,4.2,'#374151',700,'start');});return s+sLbl(o,96);}},
  satsc:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'A1',rating:'AM530D',desc:'מחלף הזנות'},ratings:['AM530D','DSE335','DSE7320 MKII','DSE6120 MKIII'],size:()=>({w:70,h:60}),
   terms:()=>[[-20,-30,'רשת'],[20,-30,'גנר׳'],[-12,30,'ATS'],[12,30,'START']],
   draw:o=>sL(-20,-30,-20,-16)+sL(20,-30,20,-16)+sL(-12,16,-12,30)+sL(12,16,12,30)+sR(-30,-16,60,32)+sT(0,-3,o.p.rating==='AMD 530'?'AM530D':(o.p.rating||'AM530D'),8)+sT(0,9,'מחלף הזנות',5.5)+txt(-23,-24,'J1 זינה 1',4.5,'#374151',700,'end')+txt(23,-24,'J4 זינה 2',4.5,'#374151',700,'start')+txt(-15,25,'J2/J5 מ"ז',4.5,'#374151',700,'end')+txt(15,25,'J5 11-12 התנעה',4.5,'#374151',700,'start')+sLbl(o,70)},
@@ -2580,7 +2584,7 @@ function inCab(c,x,y){const g=cabG(c);return x>g.x0&&x<g.x0+g.W&&y>g.y0&&y<g.y0+
 /* Designations by IEC 81346 letter, numbered as parts are added: the next free
    number for that letter in this document (H1, H2… lamps; Q1, Q2… breakers…). A
    designation typed by hand stays as it is. */
-const SERIAL={am530t:'A',satsc:'A',atsw:'Q',dsec:'A',acb:'Q',sacb:'Q',svfd3:'U',xbox:'S',nrack:'RK',lc2d:'K',srev:'K',prox:'B',sprox:'B',mvalve:'MV',svalve:'SV',smv:'MV',ssv:'SV',subpit:'P',ssubp:'P',kflow:'FE',kconv:'FIT',sfe:'FE',sfit:'FIT',lfloat:'LS',ptx:'PT',pgauge:'PI',spt:'PT',spi:'PI',lvlh:'LT',ultra4:'LIC',udb:'LE',slvlh:'LT',sultra:'LIC',sudb:'LE',smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
+const SERIAL={smem:'Q',am530t:'A',satsc:'A',atsw:'Q',dsec:'A',acb:'Q',sacb:'Q',svfd3:'U',xbox:'S',nrack:'RK',lc2d:'K',srev:'K',prox:'B',sprox:'B',mvalve:'MV',svalve:'SV',smv:'MV',ssv:'SV',subpit:'P',ssubp:'P',kflow:'FE',kconv:'FIT',sfe:'FE',sfit:'FIT',lfloat:'LS',ptx:'PT',pgauge:'PI',spt:'PT',spi:'PI',lvlh:'LT',ultra4:'LIC',udb:'LE',slvlh:'LT',sultra:'LIC',sudb:'LE',smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
  sbrk:'Q',smpcb:'Q',siso:'Q',slbs:'Q',sfsd:'Q',sats:'Q',srcd:'F',sfuse:'F',sol:'F',sspd:'F',scont:'K',svfd:'U',sss:'U',sups:'U',sgen:'G',sbatt:'G',strafo:'T',sct:'T',svt:'T',skwh:'P',spm:'P',samm:'P',svm:'P',scap:'C',smot:'M',stb:'X',scable:'W'};
 function autoTag(o){const pre=SERIAL[o.type];if(!pre||!o.p||!DEF[o.type].edit?.includes('tag'))return;const re=new RegExp('^'+pre+'(\\d+)$');if(o.p.tag&&!re.test(o.p.tag))return;
  const mine=isSldObj(o),used=new Set();state.objs.forEach(q=>{if(q===o||isSldObj(q)!==mine)return;const m=re.exec(q.p?.tag||'');if(m)used.add(+m[1]);});let n=1;while(used.has(n))n++;o.p.tag=pre+n;}
@@ -4132,7 +4136,51 @@ function sldKit(){const o=[],ws=[];
  const feeders=(b,cols,x0,step=110)=>cols.forEach((col,i)=>{const x=x0+i*step,c=chain(col,x,70);wire(b,bt(b,x),c[0],top(c[0]));});
  const intoBus=(e,b)=>wire(e,bot(e),b,bt(b,e.x));
  return {o,ws,add,wire,chain,bus,bt,feeders,intoBus,top,bot,all:()=>[...o,...ws]};}
+/* Changeover with the Amdar AM530D (wiring from its user guide §8.2): mains and
+   generator each through their own switching device into one busbar; the
+   controller senses both supplies (J1 / J4), drives the two devices (J2 / J5),
+   reads their auxiliary contacts and starts the generator (J5 11-12). */
+function tplATS(kind){const P=tplKit(),S=sldKit(),mot=kind==='mot',W=(a,ta,b,tb,col)=>S.ws.push({id:uid(),type:'wire',p:{color:col||'brown',sec:'1.5',name:'חוט',auto:1},pts:[{r:a.id,t:ta},{r:b.id,t:tb}]});
+ // panel front
+ P.add('cabinet',{tag:'ATS-1',secs:[{w:800,f:'door',hinge:'L'}]},0,0,'ארון 800');
+ P.label(0,-1120,mot?'ATS-1 — מחלף הזנות במפסקים ממונעים':'ATS-1 — מחלף הזנות במגענים',30);
+ P.duct(0,-940,700);
+ if(mot){[[-190,'Q1','רשת'],[190,'Q2','גנרטור']].forEach(([x,t,n])=>{const q=P.add('nsx',{rating:'NSX400F Micrologic 2.3',poles:4,tag:t},x,-760,'NSX400F 4P');P.tag(q,x,-905,t+' · '+n+' · מנוע MT400',13);});}
+ else{const r=P.rail(0,-800,660,[['nsxm',{rating:'NSXm160F TM160D',poles:4,tag:'Q1'},'NSXm 160A 4P'],['nsxm',{rating:'NSXm160F TM160D',poles:4,tag:'Q2'},'NSXm 160A 4P'],['lc2d',{rating:'LC2D80 80A',tag:'K1',tag2:'K2',coil:'230VAC'},'זוג מגענים מחוגרים LC2D 80A']]);P.label(-150,-905,'Q1 רשת · Q2 גנרטור · K1/K2 מגענים מחוגרים',13);P.duct(0,-690,700);}
+ [['L1','orange'],['L2','black'],['L3','grey'],['N','blue'],['PE','green']].forEach(([t,c],i)=>P.add('busbar',{len:600,color:c,tag:t},0,-560+i*40,'פס צבירה'));
+ P.duct(0,-330,700);
+ P.rail(0,-240,660,[['mcb',{poles:4,rating:'C6',tag:'F1'},'MCB 4P'],['mcb',{poles:4,rating:'C6',tag:'F2'},'MCB 4P'],['psu',{rating:'24VDC 2.5A',tag:'G1'},'ספק כוח'],['tbg',{set:'5P',tag:'X1'},'מהדקים 5 קטבים +N +PE'],['tbg',{set:'5P',tag:'X4'},'מהדקים 5 קטבים +N +PE'],...Array.from({length:8},(_,i)=>['tb',{kind:'grey',tag:String(i+1)},'מהדק אפור'])]);
+ P.duct(0,-150,700);P.duct(-355,-560,780,40,90);P.duct(355,-560,780,40,90);
+ const am=P.add('dsec',{dsm:'AM530D',tag:'A1'},0,-640,'מחלף הזנות אמדר AM530D');
+ const h1=P.add('pl22',{color:'green',tag:'H1'},-120,-450,'נורית 22'),h2=P.add('pl22',{color:'yellow',tag:'H2'},120,-450,'נורית 22');P.tag(h1,-120,-500,'רשת',12);P.tag(h2,120,-500,'גנרטור',12);
+ P.add('floor',{kind:'concrete',th:200,len:1600,tag:'±0.00'},0,1170,'רצפת בטון');
+ P.cable([{x:-250,y:-100},{x:-250,y:1070}],{tag:'W1',cores:'5',sec:'95'});P.cable([{x:-150,y:-100},{x:-150,y:1070}],{tag:'W2',cores:'5',sec:'95'});P.cable([{x:200,y:-100},{x:200,y:1070}],{tag:'W3',cores:'5',sec:'95'});
+ // single line: the power
+ const g1=S.add('sgrid',{rating:'400V',desc:'רשת חח"י'},-260,-470),g2=S.add('sgen',{tag:'G1',rating:'250kVA',desc:'גנרטור'},-40,-470);
+ let d1,d2;
+ if(mot){d1=S.add('sbrk',{tag:'Q1',rating:'NSX400F 400A',desc:'ממונע — רשת',poles:4},-260,-340);d2=S.add('sbrk',{tag:'Q2',rating:'NSX400F 400A',desc:'ממונע — גנרטור',poles:4},-40,-340);S.wire(g1,0,d1,0);S.wire(g2,0,d2,0);}
+ else{const q1=S.add('sbrk',{tag:'Q1',rating:'NSXm160F 160A',desc:'רשת'},-260,-360),q2=S.add('sbrk',{tag:'Q2',rating:'NSXm160F 160A',desc:'גנרטור'},-40,-360);S.wire(g1,0,q1,0);S.wire(g2,0,q2,0);
+  d1=S.add('scont',{tag:'K1',rating:'LC2D 80A',desc:'רשת'},-260,-260);d2=S.add('scont',{tag:'K2',rating:'LC2D 80A',desc:'גנרטור'},-40,-260);S.wire(q1,1,d1,0);S.wire(q2,1,d2,0);}
+ const b=S.bus(-150,-40,420,{tag:'BB',rating:'3×400/230V 50Hz'});S.wire(d1,termsOf(d1).length>2?termsOf(d1).length/2:1,b,S.bt(b,d1.x));S.wire(d2,termsOf(d2).length>2?termsOf(d2).length/2:1,b,S.bt(b,d2.x));
+ S.feeders(b,[[['sbrk',{tag:'Q3',rating:'NSX250F 250A'}],['sload',{desc:'לוח ראשי'}]],[['sbrk',{tag:'Q4',rating:'NSX100F 100A'}],['sload',{desc:'צרכנים חיוניים'}]]],-260,220);
+ if(mot){/* (wired from the device's 4 poles in the panel; here one line per supply) */}
+ // single line: the controller and its control wiring
+ const A=S.add('am530t',{tag:'A1'},560,-160),ti=l=>AM5T.findIndex(t=>t.l===l);
+ const x1=S.add('stb',{set:'4P',tag:'X1',desc:'חישת זינה 1 — לפני '+(mot?'Q1':'K1')},450,-420),x4=S.add('stb',{set:'4P',tag:'X4',desc:'חישת זינה 2 — לפני '+(mot?'Q2':'K2')},660,-420);
+ ['R','S','T','N'].forEach((n,j)=>{W(x1,4+j,A,ti('J1-'+n),n==='N'?'blue':PH3[j]);W(x4,4+j,A,ti('J4-'+n),n==='N'?'blue':PH3[j]);});
+ const xd=S.add('stb',{set:'DC',tag:'X3',desc:'הזנת עזר 24VDC (G1)'},300,-40);W(xd,2,A,ti('J3-1'),'red');W(xd,3,A,ti('J3-2'),'blue');
+ const xg=S.add('stb',{set:'2',tag:'X2',desc:'התנעת גנרטור'},820,110);W(A,ti('J5-11'),xg,0,'grey');W(A,ti('J5-12'),xg,1,'grey');
+ if(mot){const m1=S.add('smem',{tag:'Q1',rating:'MT400',desc:'מנוע מפסק רשת'},440,90),m2=S.add('smem',{tag:'Q2',rating:'MT400',desc:'מנוע מפסק גנרטור'},640,90);
+  [[m1,'J2'],[m2,'J5']].forEach(([m,j])=>{W(A,ti(j+'-8'),m,0,'blue');W(A,ti(j+'-1'),m,1,'grey');W(A,ti(j+'-2'),m,2,'grey');W(A,ti(j+'-10'),m,3,'brown');W(A,ti(j+'-7'),m,4,'grey');W(A,ti(j+'-5'),m,5,'grey');});}
+ else{const L=[];[['K1','K2','J2',440],['K2','K1','J5',640]].forEach(([k,o,j,x])=>{const il=S.add('snc',{tag:o,rating:'21-22',desc:'נעילה חשמלית'},x,60),co=S.add('scoil',{tag:k,rating:'A1-A2 230VAC',desc:'סליל מגען'},x,160),ax=S.add('sno',{tag:k,rating:'13-14',desc:'מגע עזר — משוב'},x+90,60);
+   W(A,ti(j+'-1'),il,0,'grey');W(il,1,co,0,'grey');W(co,1,A,ti(j+'-8'),'blue');W(A,ti(j+'-7'),ax,0,'grey');W(ax,1,A,ti(j+'-5'),'grey');});}
+ S.add('sframe',{tag:'ATS-1',w:1300,h:820},170,-90);
+ return {name:mot?'דוגמה — מחלף הזנות במפסקים ממונעים':'דוגמה — מחלף הזנות במגענים',objs:P.o,sld:S.all()};}
 const TEMPLATES=[
+ {name:'מחלף הזנות רשת / גנרטור — מפסקים ממונעים (אמדר AM530D)',kind:'ארון 800',desc:'שני מפסקי NSX400 4P ממונעים (רשת / גנרטור), פסי צבירה, מאמ"תים לחישה, ספק 24V ומהדקים. בדלת: מחלף אמדר AM530D ונוריות רשת / גנרטור. בחד קווי: מסלול הכוח, והבקר עם כל ההדקים מחווט — חישת זינות (J1/J4), מנועי המפסקים MEM (J2/J5: חיבור, ניתוק, מנוע, אפס, מגע עזר), הזנת עזר 24VDC (J3) והתנעת גנרטור (J5 11-12).',
+  build(){return tplATS('mot');}},
+ {name:'מחלף הזנות רשת / גנרטור — מגענים (אמדר AM530D)',kind:'ארון 800',desc:'מפסקי הגנה NSXm 160A ושני מגענים מחוגרים LC2D 80A (רשת / גנרטור) על פס DIN, פסי צבירה, מאמ"תים לחישה, ספק 24V ומהדקים. בדלת: מחלף אמדר AM530D ונוריות. בחד קווי: מסלול הכוח, והבקר עם כל ההדקים מחווט — סלילי המגענים דרך נעילה חשמלית (J2/J5 1 ו-8), מגעי עזר למשוב (5-7), חישת זינות, הזנת עזר והתנעת גנרטור.',
+  build(){return tplATS('cont');}},
  {name:'MCC משאבות — 3 משאבות בווסתים',kind:'ארון מתכת כפול 2×800',desc:'שדה כניסה ופיקוד (מפסק ראשי, מגן ברקים, מונה, הזנות לווסתים, ספק 24V, ממסרים, מהדקים) ושדה ווסתים עם 3 ATV630 11kW. בדלתות: נוריות פעולה ותקלה ובורר יד-0-אוטו לכל משאבה, ולחצן חירום. רצפה, כבלי הזנה ומנועים עם משאבות.',
   build(){const P=tplKit(),S=sldKit();
    P.add('cabinet',{tag:'MCC-1',secs:[{w:800,f:'door',hinge:'L'},{w:800,f:'door',hinge:'R'}]},0,0,'ארון כפול 2×800');
