@@ -4300,7 +4300,10 @@ $('drawer').addEventListener('click',e=>{if(e.target.id==='drawer')$('drawer').c
    that suits its kind; boards get walls and doors that swing on their hinges;
    parts mounted on a door ride on it. Three.js (vendor/three) loads on first use. */
 function loadThree(){return window.THREE?Promise.resolve():new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='vendor/three/three.min.js';sc.onload=()=>res();sc.onerror=()=>rej(new Error('three'));document.head.appendChild(sc);});}
-const V3SKIP=new Set(['wire','mdim','label','callout','underlay','ink','shline','shrect','shellipse','person','sframe','floor','wall','adoor','awin','subpit','cable','conduit','hpipe','hfit','hvalve']);
+const V3SKIP=new Set(['wire','mdim','underlay','sframe']);
+const V3FLAT=new Set(['label','callout','shline','ink','nplate']);
+/* depth of a part that stands on its own (not inside a board): about its real thickness */
+function v3Free(o){const {w,h}=sizeOf(o),m=Math.min(w,h);if(o.type==='genset')return h*.85;if(o.type==='emotor')return h*.8;if(o.type==='person')return 260;if(o.type==='shrect'||o.type==='shellipse')return Math.max(20,m*.15);return Math.max(v3Depth(o),Math.min(3000,m*.8));}
 const V3DEP={mcb:72,rcd:72,spd:72,iso:72,gv2:88,mpcb:88,cont:88,lc1d:88,lc2d:92,relay:62,rxm:48,lrd:72,nsx:98,nsxm:82,acb:330,atv630:230,psu:62,meter:62,m340mod:110,clxmod:120,kconv:62,socket:52,comb:14,gland:30,ctie:5,zprof:40,rail:7.5,duct:62,busbar:12,partition:2,traysh:60,traymesh:60};
 function v3Depth(o){const D=DEF[o.type],L=D.layer;if(V3DEP[o.type]!=null)return V3DEP[o.type];if(D.front)return 22;if(L<1)return 3;if(L<2)return 50;if(L<3)return 8;if(L<3.6)return 120;if(L<4.6){const {w,h}=sizeOf(o);return Math.max(30,Math.min(200,Math.min(w,h)*.7));}return 18;}
 function v3Base(o){return o.type==='busbar'?36:0;}
@@ -4317,8 +4320,8 @@ async function open3D(){if(state.tab==='sld'){toast('התלת־ממד מוצג �
  // a picture of an SVG fragment inside a box of the world (mm) → texture + its average colour
  function tex(inner,x0,y0,w,h,maxPx=2048){const key=inner+'|'+[x0,y0,w,h].join(',');if(cache.has(key))return cache.get(key);
   const k=Math.max(.25,Math.min(5,maxPx/Math.max(w,h))),W=Math.max(2,Math.ceil(w*k)),H=Math.max(2,Math.ceil(h*k)),cv=document.createElement('canvas');cv.width=W;cv.height=H;
-  const t=new T.CanvasTexture(cv);t.colorSpace=T.SRGBColorSpace;t.anisotropy=4;const r={t,avg:null,cbs:[]};cache.set(key,r);V.texs.push(t);
-  const img=new Image();pend.push(new Promise(res=>{img.onload=()=>{try{const c=cv.getContext('2d');c.drawImage(img,0,0,W,H);t.needsUpdate=true;
+  const t=new T.CanvasTexture(cv);t.colorSpace=T.SRGBColorSpace;t.anisotropy=4;const r={t,avg:null,cbs:[],cv,ok:false};cache.set(key,r);V.texs.push(t);
+  const img=new Image();pend.push(r.ready=new Promise(res=>{img.onload=()=>{r.ok=true;try{const c=cv.getContext('2d');c.drawImage(img,0,0,W,H);t.needsUpdate=true;
      const s=document.createElement('canvas');s.width=s.height=8;const sc=s.getContext('2d');sc.drawImage(cv,0,0,8,8);const d=sc.getImageData(0,0,8,8).data;let R0=0,G0=0,B0=0,n=0;for(let i=0;i<d.length;i+=4)if(d[i+3]>128){R0+=d[i];G0+=d[i+1];B0+=d[i+2];n++;}
      if(n){r.avg=new T.Color(`rgb(${R0/n|0},${G0/n|0},${B0/n|0})`);r.cbs.forEach(f=>f(r.avg));}}catch(e){}res();};img.onerror=()=>res();}));
   img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg ${svgNS} width="${W}" height="${H}" viewBox="${x0} ${y0} ${w} ${h}" style="direction:ltr">${inner}</svg>`);return r;}
@@ -4329,12 +4332,36 @@ async function open3D(){if(state.tab==='sld'){toast('התלת־ממד מוצג �
   if(front&&!col){const f=c=>sm.color.copy(c).multiplyScalar(.82);if(front.avg)f(front.avg);else front.cbs.push(c=>{f(c);V.dirty=true;});}
   const m=new T.Mesh(new T.BoxGeometry(w,h,d),[sm,sm,sm,sm,fm,sm]);m.position.set((x0+x1)/2,-(y0+y1)/2,(z0+z1)/2);(parent||root).add(m);return m;}
  function plane(x0,y0,x1,y1,z,front,parent,dbl){const m=new T.Mesh(new T.PlaneGeometry(x1-x0,y1-y0),new T.MeshLambertMaterial({map:front.t,transparent:true,alphaTest:.08,side:dbl?T.DoubleSide:T.FrontSide}));m.position.set((x0+x1)/2,-(y0+y1)/2,z);(parent||root).add(m);return m;}
+ // the outline of a picture (its opaque pixels) as flat shapes in world mm, for extruding
+ function sil(r,x0,y0,w,h){if(r.sh)return r.sh;const n=Math.max(8,Math.min(180,Math.round(180*Math.max(w,h)/Math.max(w,h)))),gw=Math.max(4,Math.round(w>=h?n:n*w/h)),gh=Math.max(4,Math.round(h>=w?n:n*h/w));
+  const c=document.createElement('canvas');c.width=gw;c.height=gh;const g=c.getContext('2d');g.drawImage(r.cv,0,0,gw,gh);const A=g.getImageData(0,0,gw,gh).data,F=(i,j)=>i>=0&&j>=0&&i<gw&&j<gh&&A[(j*gw+i)*4+3]>14;
+  const E=new Map(),V1=gw+1,add=(a,b)=>{(E.get(a)||E.set(a,[]).get(a)).push(b);};
+  for(let j=0;j<gh;j++)for(let i=0;i<gw;i++){if(!F(i,j))continue;const v=(x,y)=>y*V1+x;
+   if(!F(i,j-1))add(v(i+1,j),v(i,j));if(!F(i+1,j))add(v(i+1,j+1),v(i+1,j));if(!F(i,j+1))add(v(i,j+1),v(i+1,j+1));if(!F(i-1,j))add(v(i,j),v(i,j+1));}
+  const shapes=[],sx=w/gw,sy=h/gh;
+  for(const [st] of E){while(E.get(st)&&E.get(st).length){const L=[st];let cur=E.get(st).pop();while(cur!==st&&L.length<1e5){L.push(cur);const nx=E.get(cur);if(!nx||!nx.length)break;cur=nx.pop();}
+    let P=L.map(q=>[q%V1,Math.floor(q/V1)]);P=P.filter((q,k)=>{const a=P[(k+P.length-1)%P.length],b=P[(k+1)%P.length];return (q[0]-a[0])*(b[1]-q[1])!==(q[1]-a[1])*(b[0]-q[0]);});
+    let ar=0;for(let k=0;k<P.length;k++){const a=P[k],b=P[(k+1)%P.length];ar+=a[0]*b[1]-b[0]*a[1];}if(ar>=-2||P.length<3)continue;
+    shapes.push(new T.Shape(P.map(([x,y])=>new T.Vector2(x0+x*sx,-(y0+y*sy)))));}}
+  return r.sh=shapes;}
+ // a part standing on its own: its outline pushed out to its real thickness, the picture on both faces
+ function solid(o,b,f,d,z0,parent,P){const grp=new T.Group();(parent||root).add(grp);const sm=side(0xb8bcc2);
+  const pf=new T.MeshLambertMaterial({map:f.t,transparent:true,alphaTest:.08}),pb=new T.MeshLambertMaterial({map:f.t,transparent:true,alphaTest:.08,side:T.BackSide});
+  const w=b.x1-b.x0,h=b.y1-b.y0,mk=(m,z)=>{const q=new T.Mesh(new T.PlaneGeometry(w,h),m);q.position.set((b.x0+b.x1)/2,-(b.y0+b.y1)/2,z);grp.add(q);};mk(pf,z0+d+.8);mk(pb,z0-.8);
+  const sf=P&&/<text/.test(P.inner)?tex(P.inner.replace(/<text[\s\S]*?<\/text>/g,''),b.x0-P.pad,b.y0-P.pad,w+2*P.pad,h+2*P.pad,1024):f;
+  Promise.all([f.ready,sf.ready]).then(()=>{try{const S=sil(sf,b.x0-(P?P.pad:0),b.y0-(P?P.pad:0),w+(P?2*P.pad:0),h+(P?2*P.pad:0));if(f.avg)sm.color.copy(f.avg).multiplyScalar(.8);if(S.length){const m=new T.Mesh(new T.ExtrudeGeometry(S,{depth:d,bevelEnabled:false,curveSegments:1}),sm);m.position.z=z0;grp.add(m);}V.dirty=true;}catch(e){}});return grp;}
+ // a cable, conduit or pipe: a round tube along its route
+ function tube(o,z,parent){const g=cabG2(o),D=Math.max(4,g.D),pts=cabRoute(o).map(q=>fromLocal(o,q.x,q.y)),f=tex(objSVG(o,false),...(b=>[b.x0-1,b.y0-1,b.x1-b.x0+2,b.y1-b.y0+2])(bbW(o)),256);
+  const m=side(0x2b2b2b);const c=()=>{if(f.avg)m.color.copy(f.avg);V.dirty=true;};if(f.avg)c();else f.cbs.push(c);const zc=z+D/2,grp=parent||root;
+  for(let k=0;k<pts.length;k++){const [x,y]=pts[k];const sp=new T.Mesh(new T.SphereGeometry(D/2,16,10),m);sp.position.set(x,-y,zc);grp.add(sp);
+   if(k){const [px,py]=pts[k-1],L=Math.hypot(x-px,y-py);if(L<.1)continue;const cy=new T.Mesh(new T.CylinderGeometry(D/2,D/2,L,18,1,true),m);cy.position.set((x+px)/2,-(y+py)/2,zc);cy.rotation.z=Math.atan2(-(y-py),x-px)-Math.PI/2;grp.add(cy);}}}
+ const ZF=new Map();
  const keep=[];const setP=(o,k,v)=>{keep.push([o,k,o.p[k]]);o.p[k]=v;};const LOD0=LODMIN;LODMIN=0;
  try{
   // every board shown closed while its pictures are drawn, so door parts and cut-outs are all present
   objs.forEach(o=>{if(o.type==='cabinet')setP(o,'view','door');if(o.type==='enclosure'&&hasDoor(o))setP(o,'closed','1');if(o.type==='cibox')setP(o,'lid','1');});
   const hosts=[];// {o, inside(x,y), plateZ, D, front groups}
-  const partBox=(o,host)=>{const b=bbW(o),pad=1,inner=objSVG(o,false);const f=tex(inner,b.x0-pad,b.y0-pad,b.x1-b.x0+2*pad,b.y1-b.y0+2*pad,1024);const z0=v3Base(o),d=v3Depth(o);return {b,f,z0,d};};
+  const partBox=(o,host)=>{const b=bbW(o),pad=1,inner=objSVG(o,false);const f=tex(inner,b.x0-pad,b.y0-pad,b.x1-b.x0+2*pad,b.y1-b.y0+2*pad,1024);const z0=v3Base(o),d=v3Depth(o);return {b,f,z0,d,inner,pad};};
   // boards
   for(const c of objs){if(c.type==='cabinet'){const g=cabG(c),D=+c.p.d||(g.W>=1000?500:400),x1=g.x0+g.W,y1=g.y0+g.H,wl=0x9aa0a6;
     const pl=tex(DEF.cabinet.draw(Object.assign({},c,{x:0,y:0})).replace(/^/,`<g transform="translate(${c.x} ${c.y})">`)+'</g>',g.x0,g.y0,g.W,g.H);plane(g.x0,g.y0,x1,y1,-2,pl);
@@ -4357,12 +4384,19 @@ async function open3D(){if(state.tab==='sld'){toast('התלת־ממד מוצג �
      const G={grp,x0,x1,y0,y1,ox,hg,z:D+3};groups.push(G);(hg==='C'?V.covers:V.doors).push(G);}
     hosts.push({o:c,inside:(x,y)=>Math.abs(x-c.x)<w/2&&Math.abs(y-c.y)<h/2,groups,D});}}
   // parts
-  for(const o of objs){if(V3SKIP.has(o.type)||DEF[o.type].sld||o.type==='cabinet'||o.type==='enclosure'||o.type==='cibox'||DEF[o.type].layer<0||(DEF[o.type].layer>=7&&o.type!=='nplate'))continue;
-   const host=hosts.find(H=>H.inside(o.x,o.y)),fr=DEF[o.type].front||o.type==='nplate';
+  const order=objs.filter(o=>o.type!=='wire'&&!V3SKIP.has(o.type)&&!DEF[o.type].sld&&o.type!=='cabinet'&&o.type!=='enclosure'&&o.type!=='cibox').sort((a,b)=>(V3FLAT.has(a.type)&&a.type!=='nplate'?1:0)-(V3FLAT.has(b.type)&&b.type!=='nplate'?1:0));
+  for(const o of order){const host=hosts.find(H=>H.inside(o.x,o.y)),fr=DEF[o.type].front||o.type==='nplate';
    if(DEF[o.type].cut&&host&&host.groups.length)continue;// a cut-out is a hole in the door picture
+   const G=fr&&host?host.groups.find(G=>o.x>=G.x0&&o.x<=G.x1&&o.y>=G.y0&&o.y<=G.y1):null;
+   if(o.type==='cable'||isPipe(o)){tube(o,host?20:0);continue;}
+   if(V3FLAT.has(o.type)&&!G){// notes, tags and pen: flat on the face of whatever they belong to
+    const b=bbW(o),f=tex(objSVG(o,false),b.x0-2,b.y0-2,b.x1-b.x0+4,b.y1-b.y0+4,1024),z=(o.p&&o.p.of&&ZF.get(o.p.of))||(host?host.D*.5:2);plane(b.x0-2,b.y0-2,b.x1+2,b.y1+2,z+1,f);continue;}
    const P=partBox(o);
-   if(fr&&host){const G=host.groups.find(G=>o.x>=G.x0&&o.x<=G.x1&&o.y>=G.y0&&o.y<=G.y1);if(G){const m=box(P.b.x0,P.b.y0,P.b.x1,P.b.y1,3,3+P.d,P.f,null,G.grp);m.position.x-=G.ox;continue;}}
-   box(P.b.x0,P.b.y0,P.b.x1,P.b.y1,P.z0,P.z0+P.d,P.f);}
+   if(G){const m=box(P.b.x0,P.b.y0,P.b.x1,P.b.y1,3,3+P.d,P.f,null,G.grp);m.position.x-=G.ox;continue;}
+   if(host){box(P.b.x0,P.b.y0,P.b.x1,P.b.y1,P.z0,P.z0+P.d,P.f);ZF.set(o.id,P.z0+P.d);continue;}
+   if(o.type==='lpole'){const L=lpGeo(o),gb=L.H/2+200,db=Math.max(110,L.H*.016),dt=Math.max(60,L.H*.008),d=dt*.5,[bx,by]=fromLocal(o,0,gb-20),[tx,ty]=fromLocal(o,0,gb-L.H);
+    solid(o,P.b,P.f,d,0,null,P);const cy=new T.Mesh(new T.CylinderGeometry(dt*.56,db*.56,Math.hypot(tx-bx,ty-by),28),side(0x9ca3af));cy.position.set((bx+tx)/2,-(by+ty)/2,d/2);cy.rotation.z=Math.atan2(-(ty-by),tx-bx)-Math.PI/2;root.add(cy);ZF.set(o.id,d);continue;}
+   const d=v3Free(o);solid(o,P.b,P.f,d,0,null,P);ZF.set(o.id,d);}
   // wires: one sheet just above the plate, under the ducts and parts
   const W=objs.filter(o=>o.type==='wire');if(W.length){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;W.forEach(w=>boundsOf(w).forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}));
    if(x1>x0){x0-=5;y0-=5;x1+=5;y1+=5;V.wires=plane(x0,y0,x1,y1,9,tex(W.map(w=>drawWire0(w,false)).join(''),x0,y0,x1-x0,y1-y0,4096));}}
