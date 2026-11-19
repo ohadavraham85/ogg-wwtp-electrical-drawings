@@ -241,6 +241,7 @@ body:has(#panel:not(.hidden)) #libStrip{display:none}
 body.tbmoving,body.tbmoving *{cursor:grabbing!important;user-select:none;-webkit-user-select:none}
 #rail,#docTabs{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 #measBar{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));background:var(--card);border:1.5px solid var(--acc);border-radius:4px;padding:10px;z-index:6;box-shadow:0 4px 16px rgba(0,0,0,.6)}
+#penBar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(64px + env(safe-area-inset-bottom));background:var(--card);border:1.5px solid var(--acc);border-radius:8px;padding:6px 8px;z-index:6;box-shadow:0 4px 16px rgba(0,0,0,.6);display:flex;gap:6px;align-items:center;flex-wrap:wrap;max-width:calc(100vw - 20px)}#penBar.hidden{display:none}#penBar .pc{width:26px;height:26px;border-radius:50%;border:2px solid #555;cursor:pointer;flex:none}#penBar .pc.on{outline:3px solid var(--acc);outline-offset:1px}#penBar .wbtn{padding:6px 10px;font-size:13.5px}#penBar .wbtn.on{background:var(--acc);color:#000}
 #measBar.hidden{display:none}#measBar .row{display:flex;gap:6px;flex-wrap:wrap}#measBar .wbtn{padding:9px 12px;font-size:14.5px}
 @media (min-width:900px){#measBar{left:auto;width:520px}}
 #ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 4px);transform:translate(-50%,0);opacity:0;z-index:40;pointer-events:none;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:20px;background:#000;border:2px solid var(--acc);color:var(--acc-light);font-weight:700;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.7);transition:opacity .15s}
@@ -494,6 +495,7 @@ body.iconsonly .ddbtn .lbl{display:none}
 <div class="ddmenu hidden" id="mMeas"></div>
 <div class="ddmenu hidden" id="mOrder"><div class="ddt">סדר הרכיבים</div><button data-zo="front" title="Ctrl+Shift+]">⬆ הבא לחזית — מעל כולם</button><button data-zo="up" title="Ctrl+]">↑ קדימה צעד אחד</button><button data-zo="down" title="Ctrl+[">↓ אחורה צעד אחד</button><button data-zo="back" title="Ctrl+Shift+[">⬇ שלח לרקע — מתחת לכולם</button></div>
 <div id="favBar"></div>
+<div id="penBar" class="hidden"></div>
 <div id="top" class="card">
   <button class="tb" id="bMenu" title="תפריט"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
   <div id="selInfo" title="מאפיינים"><div id="selThumb"></div><div id="selName"></div></div>
@@ -509,6 +511,7 @@ body.iconsonly .ddbtn .lbl{display:none}
     <button class="rb" id="bDup"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="13" rx="1.5"/><path d="M5 16V4.5A1.5 1.5 0 0 1 6.5 3H16"/></svg><span>שכפול</span></button>
     <button class="rb" id="bOrder" data-dd="mOrder" title="סדר: מעל / מתחת לרכיבים אחרים"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 16l9 5 9-5"/></svg><span>סדר</span></button>
     <button class="rb" id="bRot"><svg viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4.6h-4.6"/></svg><span>סיבוב</span></button>
+    <button class="rb" id="bPen" title="עט: כתיבה ושרטוט ביד חופשית על גבי השרטוט — ואחר כך מחק"><svg viewBox="0 0 24 24"><path d="M3 21c3-1 5-3 7-6"/><path d="M14.5 4.5l5 5L11 18l-5 1 1-5z"/></svg><span>עט</span></button>
     <button class="rb" id="bBrush" title="מברשת עיצוב: מעתיקה צבע, עובי קו, מקווקו, מילוי וגודל טקסט מהרכיב הנבחר לרכיבים שתקיש עליהם"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="14" height="6" rx="1.5"/><path d="M17 6h3v5h-8v3"/><rect x="10.5" y="14" width="3" height="7" rx="1"/></svg><span>מברשת</span></button>
     <button class="rb" id="bMir" title="מראה: הפוך את הרכיב ימין ↔ שמאל"><svg viewBox="0 0 24 24"><path d="M12 3v18" stroke-dasharray="2 2"/><path d="M9 6L3 18h6z"/><path d="M15 6l6 12h-6z" fill="#fff" fill-opacity=".25"/></svg><span>מראה</span></button>
     <button class="rb" id="bLock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1.5" fill="#fff"/><path id="lockShackle" d="M8 11V8a4 4 0 0 1 7.6-1.7"/></svg><span id="lockLbl">נעל רכיב</span></button>
@@ -967,6 +970,12 @@ function hmiDraw(o){const M=HMIM[o.p.hm]||HMIM['HMIGTO4310 — GTO 7" W'],w=M.w,
  const by=Math.min(h/2-h*.05,cy+SH/2+(h/2-(cy+SH/2))*.55);s+=txt(-w/2+w*.05,by,'Schneider Electric',Math.max(4,h*.045),'#3dcd58',800,'start')+txt(w/2-w*.05,by,'Harmony '+M.s,Math.max(4,h*.045),'#d1d5db',700,'end');
  s+=`<circle cx="${w/2-w*.05}" cy="${-h/2+h*.07}" r="${Math.max(1.2,h*.012)}" fill="#22c55e"/>`;
  if(o.p.tag)s+=txt(0,-h/2-Math.max(6,h*.06),o.p.tag,Math.max(6,h*.07),'#9ca3af',800);return s;}
+/* ================= pen (free hand) =================
+   Ink strokes drawn over the drawing, kept as parts ('ink', points relative to
+   their centre) so they save, export, move, and delete like anything else; the
+   pen bar picks colour and width, and the eraser removes whole strokes it touches. */
+const INKC={red:{c:'#dc2626',o:1,n:'אדום'},blue:{c:'#2563eb',o:1,n:'כחול'},black:{c:'#111',o:1,n:'שחור'},green:{c:'#16a34a',o:1,n:'ירוק'},hl:{c:'#facc15',o:.38,n:'מרקר צהוב'}};
+function inkPath(P){if(P.length===1)return `M${P[0][0]} ${P[0][1]}l.01 0`;let d=`M${r2(P[0][0])} ${r2(P[0][1])}`;for(let i=1;i<P.length-1;i++){const mx=(P[i][0]+P[i+1][0])/2,my=(P[i][1]+P[i+1][1])/2;d+=`Q${r2(P[i][0])} ${r2(P[i][1])} ${r2(mx)} ${r2(my)}`;}const L=P[P.length-1];return d+`L${r2(L[0])} ${r2(L[1])}`;}
 const DEF={
  mcb:{layer:4,rail:true,edit:['tag','rating','color'],ratings:['B6','B10','B16','B20','C6','C10','C16','C20','C25','C32','C40','C50','C63','D16','D25','D32'],
   def:{poles:1,rating:'C16'},
@@ -1771,6 +1780,8 @@ const FDEF={
  shead:{layer:4.5,edit:['tag','fw'],def:{tag:'',fw:'100'},size:()=>({w:700,h:110}),draw:o=>shDraw(o)},
  lpole:{layer:4,edit:['tag','ph','parm','phead','pfn','fw','fcol'],def:{tag:'',ph:'6',parm:'none',phead:'flood',pfn:'1',fw:'200',fcol:'grey'},size:o=>{const G=lpGeo(o);return {w:G.w,h:G.h};},draw:o=>lpoleDraw(o)},
  genset:{layer:4,edit:['tag','gk','kva'],def:{tag:'G1',gk:'canopy',kva:'250'},size:o=>genDim(o),draw:o=>genDraw(o)},
+ ink:{layer:9,edit:['icol','iw'],def:{icol:'red',iw:'3',pts:[]},size:o=>{const P=o.p.pts||[];if(!P.length)return {w:1,h:1};let a=1e9,b=-1e9,c=1e9,d=-1e9;P.forEach(([x,y])=>{a=Math.min(a,x);b=Math.max(b,x);c=Math.min(c,y);d=Math.max(d,y);});const w=+o.p.iw||3;return {w:Math.max(2,b-a+w),h:Math.max(2,d-c+w)};},
+  draw:o=>{const P=o.p.pts||[];if(!P.length)return '';const C=INKC[o.p.icol]||INKC.red,w=+o.p.iw||3;return `<path d="${inkPath(P)}" fill="none" stroke="${C.c}" stroke-opacity="${C.o}" stroke-width="${C.o<1?w*3:w}" stroke-linecap="round" stroke-linejoin="round"/>`;}},
  hmis:{layer:6.6,front:true,edit:['tag','hm'],def:{tag:'HMI1',hm:'HMIGTO4310 — GTO 7" W'},size:o=>{const M=HMIM[o.p.hm]||HMIM['HMIGTO4310 — GTO 7" W'];return {w:M.w,h:M.h};},draw:o=>hmiDraw(o)},
  dsec:{layer:6.6,front:true,edit:['tag','dsm'],def:{tag:'',dsm:'DSE7320 MKII'},size:o=>{const M=DSEM[o.p.dsm]||DSEM['DSE7320 MKII'];return {w:M.w,h:M.h};},draw:o=>dseDraw(o)},
  atsw:{layer:4,edit:['tag','ak','ar','poles','apos'],def:{tag:'ATS1',ak:'a',ar:'250',poles:4,apos:'1'},size:o=>{const {w,h}=atsDim(o);return {w,h};},
@@ -2541,7 +2552,7 @@ function renderNow(){drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=ne
  const fast=state.tab!=='both'&&!(state.tab==='sld'&&sldDark);LODMIN=2.2/view.s;let s,P=null;
  try{if(fast){PIECES=[];content({sel:true});P=PIECES;}else s=layoutSVG()+axesSVG()+content({sel:true});}finally{PIECES=null;}
  const pre=fast?layoutSVG()+axesSVG():'';
- let tail=handlesSVG()+dimsSVG()+guidesSVG()+portHitSVG()+dropSVG()+measSVG()+rotSVG()+layHandlesSVG()+calSVG()+cableGuideSVG()+(DRAGNEW?`<g opacity=".8" pointer-events="none">${objSVG(DRAGNEW,true)}</g>`:'')+bandSVG()+qWireSVG();
+ let tail=handlesSVG()+dimsSVG()+guidesSVG()+portHitSVG()+inkDraftSVG()+dropSVG()+measSVG()+rotSVG()+layHandlesSVG()+calSVG()+cableGuideSVG()+(DRAGNEW?`<g opacity=".8" pointer-events="none">${objSVG(DRAGNEW,true)}</g>`:'')+bandSVG()+qWireSVG();
  const terms=termsSVG();LODMIN=0;if(!fast)s+=terms+tail,tail='';
  if(s===undefined)s='';if(wireMode){for(const o of state.objs){if(o.type==='wire')continue;termsOf(o).forEach(t=>{const [x,y]=fromLocal(o,t[0],t[1]);s+=`<circle cx="${x}" cy="${y}" r="2.8" fill="rgba(34,211,238,.25)" stroke="#22d3ee" stroke-width=".7" pointer-events="none"/>`;});}
   if(draft&&draft.pts.length){const c=WCOL[wireColor];const d=wirePath(null,draft.pts);if(d)s+=`<path d="${d}" fill="none" stroke="${c.base}" stroke-width="${SEC[wireSec]}" stroke-linecap="round" stroke-linejoin="round" opacity=".85" pointer-events="none"/>`;
@@ -3115,6 +3126,23 @@ function brushSet(on){const o=sel&&get(sel);if(on&&!o){toast('בחר קודם ר
 function brushApply(id){const o=id&&get(id);if(!o||!BRUSH){return;}if(o.locked){toast('הרכיב נעול');return;}const D=DEF[o.type],has=k=>o.type==='wire'?(k==='color'||k==='sec'):!!D&&((D.def&&k in D.def)||(D.edit||[]).includes(k)||(BRUSH.t===o.type));let n=0;
  BRK.forEach(k=>{if(k in BRUSH.p&&has(k)){o.p[k]=JSON.parse(JSON.stringify(BRUSH.p[k]));n++;}else if(BRUSH.t===o.type&&!(k in BRUSH.p)&&k in o.p&&['sdw','sdh','hq'].includes(k))delete o.p[k];});
  if(!n){toast('אין עיצוב משותף לרכיב הזה');return;}commit();renderNow();toast('העיצוב הועתק');}
+let PEN=null;try{PEN=null;}catch(e){}
+function penSet(on){if(on){if(wireMode)setWire(false);if(measMode)setMeas(null);if(MWM)mwSet(false);if(BRUSH)brushSet(false);PEN=PEN||{c:(()=>{try{return localStorage.getItem('ohadcad.penc')||'red';}catch(e){return 'red';}})(),w:(()=>{try{return localStorage.getItem('ohadcad.penw')||'3';}catch(e){return '3';}})(),erase:false};sel=null;multi.clear();}else PEN=null;
+ $('bPen').classList.toggle('on',!!PEN);penBar();svg.style.cursor=PEN?(PEN.erase?'cell':'crosshair'):'';renderNow();updateBar();}
+function penBar(){const B=$('penBar');if(!PEN){B.classList.add('hidden');return;}B.classList.remove('hidden');
+ B.innerHTML=Object.entries(INKC).map(([k,c])=>`<span class="pc${!PEN.erase&&PEN.c===k?' on':''}" data-pc="${k}" title="${c.n}" style="background:${c.c};opacity:${c.o<1?.75:1}"></span>`).join('')+
+  `<span style="width:1px;align-self:stretch;background:var(--line,#555)"></span>`+[['2','דק'],['3','בינוני'],['6','עבה']].map(([w,n])=>`<button class="wbtn${!PEN.erase&&PEN.w===w?' on':''}" data-pw="${w}">${n}</button>`).join('')+
+  `<button class="wbtn${PEN.erase?' on':''}" data-pe="1" title="מחק: גרור על קו כדי למחוק אותו">🧽 מחק</button><button class="wbtn" data-pclr="1" title="מחק את כל הכתב היד בשרטוט">🗑 נקה הכל</button><button class="wbtn pri" data-pdone="1">סיום</button>`;}
+document.addEventListener('click',e=>{const B=e.target.closest('#penBar');if(!B||!PEN)return;const t=e.target.closest('[data-pc],[data-pw],[data-pe],[data-pclr],[data-pdone]');if(!t)return;
+ if(t.dataset.pc){PEN.c=t.dataset.pc;PEN.erase=false;try{localStorage.setItem('ohadcad.penc',PEN.c);}catch(_){}}else if(t.dataset.pw){PEN.w=t.dataset.pw;PEN.erase=false;try{localStorage.setItem('ohadcad.penw',PEN.w);}catch(_){}}
+ else if(t.dataset.pe)PEN.erase=!PEN.erase;else if(t.dataset.pclr){const n=state.objs.filter(o=>o.type==='ink').length;if(!n){toast('אין כתב יד בשרטוט');return;}state.objs=state.objs.filter(o=>o.type!=='ink');commit();renderNow();toast(`נמחקו ${n} קווי כתב יד`);}
+ else if(t.dataset.pdone){penSet(false);return;}svg.style.cursor=PEN.erase?'cell':'crosshair';penBar();});
+let INKDRAFT=null;
+function inkFinish(P){if(P.length<1)return;let a=1e9,b=-1e9,c=1e9,d=-1e9;P.forEach(([x,y])=>{a=Math.min(a,x);b=Math.max(b,x);c=Math.min(c,y);d=Math.max(d,y);});const cx=r2((a+b)/2),cy=r2((c+d)/2);
+ const o=mkObj({t:'ink',n:'כתב יד',p:{icol:PEN.c,iw:String(r2(+PEN.w/view.s)),pts:P.map(([x,y])=>[r2(x-cx),r2(y-cy)])}});o.x=cx;o.y=cy;o.id=uid();state.objs.push(o);commit();}
+// the eraser takes every stroke passing within reach of the pointer
+function inkErase(x,y){const R=8/view.s;let n=0;state.objs=state.objs.filter(o=>{if(o.type!=='ink')return true;const P=o.p.pts||[];for(let i=0;i<P.length;i++){const [px,py]=fromLocal(o,P[i][0],P[i][1]);if(Math.hypot(px-x,py-y)<R+(+o.p.iw||3)/2){n++;return false;}if(i){const [qx,qy]=fromLocal(o,P[i-1][0],P[i-1][1]),dx=px-qx,dy=py-qy,L=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((x-qx)*dx+(y-qy)*dy)/L));if(Math.hypot(qx+t*dx-x,qy+t*dy-y)<R+(+o.p.iw||3)/2){n++;return false;}}}return true;});if(n)renderNow();return n;}
+function inkDraftSVG(){if(!INKDRAFT||!PEN)return '';const C=INKC[PEN.c]||INKC.red,w=+PEN.w/view.s;return `<path d="${inkPath(INKDRAFT)}" fill="none" stroke="${C.c}" stroke-opacity="${C.o}" stroke-width="${C.o<1?w*3:w}" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>`;}
 let MWM=null;
 function mwFace(o,other){const ts=termsOf(o).map((t,i)=>{const [x,y]=fromLocal(o,t[0],t[1]);return {i,x,y,d:tDir({r:o.id,t:i}),l:String(t[2]==null?'':t[2]).trim()};});
  if(!ts.length)return [];const up=other.y<o.y,f=ts.filter(t=>up?t.d<0:t.d>0),pool=f.length?f:ts,ey=up?Math.min(...pool.map(t=>t.y)):Math.max(...pool.map(t=>t.y));
@@ -3736,6 +3764,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  const t=e.target.closest('[data-id]'),id=t?t.dataset.id:null;
  G={sx:e.clientX,sy:e.clientY,t0:Date.now(),id,moved:false,mode:'pan',tx0:view.tx,ty0:view.ty,add:e.shiftKey||e.ctrlKey||e.metaKey};
  if(e.pointerType==='mouse'&&e.button!==0)return;
+ if(PEN){const [wx,wy]=toWorld(e.clientX,e.clientY);if(PEN.erase){G.mode='erase';G.n=inkErase(wx,wy);}else{G.mode='ink';INKDRAFT=[[r2(wx),r2(wy)]];}return;}
  if(MWM){G.mode='mw';return;}
  if(BRUSH){G.mode='brush';return;}
  {const sd=e.target.closest('[data-sdim]'),so=sd&&id&&get(id);if(so&&!so.locked&&!wireMode&&!globalLock){G.mode='sdim';G.o=so;G.k=sd.dataset.sdim;if(sel!==so.id){sel=so.id;multi.clear();updateBar();}return;}}
@@ -3772,6 +3801,7 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
  if(pinch&&P.size>=2){const [a,b]=[...P.values()];const d=Math.hypot(a.x-b.x,a.y-b.y),cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;const r=svg.getBoundingClientRect();
   const s=Math.min(30,Math.max(.04,pinch.v.s*d/pinch.d));const wx=(pinch.cx-r.left-pinch.v.tx)/pinch.v.s,wy=(pinch.cy-r.top-pinch.v.ty)/pinch.v.s;
   view.s=s;view.tx=cx-r.left-wx*s;view.ty=cy-r.top-wy*s;applyView();return;}
+ if(G&&(G.mode==='ink'||G.mode==='erase')){if(G.mode==='ink'){const [wx,wy]=toWorld(e.clientX,e.clientY),L=INKDRAFT[INKDRAFT.length-1];if(Math.hypot(wx-L[0],wy-L[1])*view.s>=2){INKDRAFT.push([r2(wx),r2(wy)]);render();}}else{const [wx,wy]=toWorld(e.clientX,e.clientY);G.n+=inkErase(wx,wy);}return;}
  if(!G)return;const dx=e.clientX-G.sx,dy=e.clientY-G.sy;if(!G.moved&&Math.hypot(dx,dy)>7){G.moved=true;if(G.mode==='drag'&&sel!==G.id){sel=G.id;updateBar();}}
  if(!G.moved)return;
  if(G.mode==='sdim'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY),[u,v]=toLocal(o,wx,wy);const od=Math.max(0,+o.p.ofd||0);let uu=u,vv=v;
@@ -3866,6 +3896,8 @@ function guidesSVG(){if(!GUIDES.length)return '';const k=1/view.s,ext=12*k;retur
 function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(pinch){if(P.size<2)pinch=null;G=null;return;}
  if(!G)return;const g=G;G=null;if(g.mode==='meas'){MS.cur=null;measUp(g,e);render();return;}
+ if(g.mode==='ink'){const P=INKDRAFT||[];INKDRAFT=null;if(P.length)inkFinish(P);renderNow();return;}
+ if(g.mode==='erase'){if(g.n){commit();toast(g.n>1?`נמחקו ${g.n} קווים`:'הקו נמחק');}return;}
  if(g.mode==='brush'){if(!g.moved)brushApply(g.id);return;}
  if(g.mode==='sdim'){GUIDES=[];if(g.moved){commit();renderNow();toast('קו המידה הוזז');}else shDimEdit(g.o,g.k);return;}
  if(g.mode==='mw'){if(!g.moved){const [x,y]=toWorld(e.clientX,e.clientY),tr=g.id?null:nearestTerm(x,y,Math.max(5,20/view.s));mwTap(g.id||(tr&&tr.r));}return;}
@@ -3932,6 +3964,7 @@ function lockSet(){const S=new Set(selIds().map(get).filter(Boolean));[...S].for
    if(Math.abs(q.x-o.x)<w/2&&Math.abs(q.y-o.y)<h/2)S.add(q);});});return [...S];}
 $('bLock').onclick=()=>{const L=lockSet();if(!L.length)return;const all=L.every(o=>o.locked);L.forEach(o=>o.locked=!all);commit();renderNow();updateBar();
  toast(all?(L.length>1?`הנעילה שוחררה (${L.length} רכיבים)`:'הנעילה שוחררה'):(L.length>1?`ננעלו ${L.length} רכיבים`:'הרכיב ננעל'));};
+$('bPen').onclick=()=>penSet(!PEN);
 $('bBrush').onclick=()=>brushSet(!BRUSH);
 $('bMir').onclick=()=>{const L=selIds().map(get).filter(o=>o&&o.type!=='wire'&&o.type!=='mdim'&&!o.locked&&o.type!=='cabinet');if(!L.length)return;
  // several parts flip as one group, about the middle of the selection
@@ -3968,7 +4001,7 @@ document.addEventListener('keydown',e=>{const t=e.target;if(t&&(t.isContentEdita
  const k=e.key,mod=e.ctrlKey||e.metaKey;
  if((k==='Delete'||k==='Backspace')&&!globalLock&&!wireMode&&selIds().length){e.preventDefault();deleteSelected();}
  else if(mod&&(e.code==='BracketRight'||e.code==='BracketLeft')&&selIds().length&&!globalLock){e.preventDefault();zOrder(e.code==='BracketRight'?(e.shiftKey?'front':'up'):(e.shiftKey?'back':'down'));}
- else if(k==='Escape'){if(BRUSH){brushSet(false);return;}if(MWM){mwSet(false);return;}if(measMode){setMeas(null);toast('יצאת ממצב מדידה');return;}if(wireMode)return;clearSel();}
+ else if(k==='Escape'){if(PEN){penSet(false);return;}if(BRUSH){brushSet(false);return;}if(MWM){mwSet(false);return;}if(measMode){setMeas(null);toast('יצאת ממצב מדידה');return;}if(wireMode)return;clearSel();}
  else if(mod&&(k==='z'||k==='Z')&&!e.shiftKey){e.preventDefault();undo();}
  else if(mod&&(k==='y'||k==='Y'||((k==='z'||k==='Z')&&e.shiftKey))){e.preventDefault();redo();}
  else if(mod&&(k==='a'||k==='A')){e.preventDefault();state.objs.filter(o=>!hiddenFront(o)).forEach(o=>multi.add(o.id));sel=state.objs.length?state.objs[state.objs.length-1].id:null;if(multi.size<2)multi.clear();renderNow();updateBar();}});$('bHelp').onclick=()=>help();
@@ -4071,7 +4104,7 @@ let tt=0;function toast(s){const t=$('toast');t.textContent=s;t.classList.add('s
 function ctTip(o){if(!o.p.tip)o.p.tip={x:r2(o.x+(+o.p.tx||0)),y:r2(o.y+(+o.p.ty||0))};return mdPt(o.p.tip);}
 const NPCOL={white:{bg:'#f7f7f5',fg:'#111'},black:{bg:'#1f1f1f',fg:'#f5f5f5'},red:{bg:'#c62828',fg:'#fff'},yellow:{bg:'#f5c400',fg:'#111'},blue:{bg:'#1d4ed8',fg:'#fff'},green:{bg:'#15803d',fg:'#fff'}};
 const ISO=v=>'\u2068'+v+'\u2069',npRows=o=>[o.p.from&&'מוזן מ: '+ISO(o.p.from),o.p.volt&&'מתח: '+ISO(o.p.volt),o.p.ic&&'זרם קצר: '+ISO(o.p.ic),o.p.main&&'מפסק ראשי: '+ISO(o.p.main),...String(o.p.notes||'').split('\n')].filter(Boolean);
-const DRAWT=new Set(['label','mdim','callout','person','wall','shline','shrect','shellipse']);
+const DRAWT=new Set(['ink','label','mdim','callout','person','wall','shline','shrect','shellipse']);
 function shDash(o){const w=Math.max(.2,+o.p.lw||2);return o.p.dash==='dash'?`stroke-dasharray="${w*4} ${w*3}"`:o.p.dash==='dot'?`stroke-dasharray="${w} ${w*2}" stroke-linecap="round"`:o.p.dash==='dashdot'?`stroke-dasharray="${w*6} ${w*2.5} ${w} ${w*2.5}"`:'';}
 function shFill(o){const c=col(o,'blue');return o.p.fill==='light'?c+'33':o.p.fill==='solid'?c:'transparent';}
 // half fill: a diagonal corner to corner, one triangle in colour (solid or light) and the diagonal drawn
@@ -4150,6 +4183,8 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='ofd')h+=`<div class="fld"><label>אופסט — קו מתאר נוסף (מ"מ; חיובי = החוצה, שלילי = פנימה, 0 = בלי)</label><input id="f_ofd" type="number" inputmode="decimal" step="1" value="${+v||0}"></div>`;
   else if(k==='ofh')h+=`<div class="fld"><label>מילוי בין הקווים (קיר)</label><select id="f_ofh">${[['none','ללא'],...Object.entries(HATCH).filter(([a])=>a!=='none')].map(([a,n])=>`<option value="${a}" ${a===String(v||'none')?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='ofs'||k==='ofc'){if(!(+o.p.ofd)||!o.p.ofh||o.p.ofh==='none')return;h+=k==='ofs'?`<div class="fld"><label>צפיפות מילוי הקיר</label><select id="f_ofs">${[['0.5','צפופה'],['1','רגילה'],['2','דלילה'],['4','דלילה מאוד']].map(([a,n])=>`<option value="${a}" ${a===String(v||'1')?'selected':''}>${n}</option>`).join('')}</select></div>`:`<div class="fld"><label>צבע מילוי הקיר</label><select id="f_ofc">${Object.entries(HATCHC).map(([a,c])=>`<option value="${a}" ${a===String(v||'grey')?'selected':''}>${c.n}</option>`).join('')}</select></div>`;}
+  else if(k==='icol')h+=`<div class="fld"><label>צבע</label><select id="f_icol">${Object.entries(INKC).map(([a,c])=>`<option value="${a}" ${a===v?'selected':''}>${c.n}</option>`).join('')}</select></div>`;
+  else if(k==='iw')h+=`<div class="fld"><label>עובי הקו (מ"מ)</label><input id="f_iw" type="number" step="0.5" value="${+v}"></div>`;
   else if(k==='hm')h+=`<div class="fld"><label>דגם</label><select id="f_hm">${Object.keys(HMIM).map(a=>`<option ${a===v?'selected':''}>${esc(a)}</option>`).join('')}</select></div>`;
   else if(k==='fw')h+=`<div class="fld"><label>הספק (W)</label><select id="f_fw">${FLW.map(a=>`<option value="${a}" ${a==v?'selected':''}>${a}W</option>`).join('')}</select></div>`;
   else if(k==='fcol')h+=`<div class="fld"><label>צבע הגוף</label><select id="f_fcol">${[['grey','אפור'],['black','שחור'],['white','לבן']].map(([a,n])=>`<option value="${a}" ${a===v?'selected':''}>${n}</option>`).join('')}</select></div>`;
@@ -4454,7 +4489,7 @@ function openProjects(){const p=loadProjects(),ks=Object.keys(p);
   if(d){delete p[d.dataset.d];saveProjects(p);openProjects();}};}
 function bomData(){return withPanel(bomData0);}
 // single-line diagram: one row per kind of symbol (name + rating), with the tags drawn on it
-function bomDataSld(){return withDoc('sld',()=>{const rows={},SKIP=['wire','sframe','sfeed','label','mdim','underlay'];state.objs.forEach(o=>{if(SKIP.includes(o.type)||DRAWT.has(o.type)||!DEF[o.type])return;
+function bomDataSld(){return withDoc('sld',()=>{const rows={},SKIP=['wire','sframe','sfeed','label','mdim','underlay','ink'];state.objs.forEach(o=>{if(SKIP.includes(o.type)||DRAWT.has(o.type)||!DEF[o.type])return;
   const k=(o.p.name||o.type)+(o.p.rating?' '+o.p.rating:'');const r=rows[k]=rows[k]||{n:0,tags:[]};r.n++;if(o.p.tag)r.tags.push(o.p.tag);});
  return Object.keys(rows).map(k=>{const r=rows[k],tg=r.tags.sort((a,b)=>a.localeCompare(b,'he',{numeric:true}));return [k+(tg.length?` (${tg.length>6?tg.slice(0,6).join(', ')+'…':tg.join(', ')})`:''),`${r.n} יח'`];});});}
 function bomData0(){const rows={};state.objs.forEach(o=>{if(o.type==='underlay'||o.type==='nmap')return;if(o.type==='wire'){const k=`חוט ${WCOL[o.p.color]?.n} ${o.p.sec} ממ"ר`;rows[k]=rows[k]||{n:0,len:0,w:1};rows[k].len+=wireLen(o);return;}

@@ -26,6 +26,7 @@ Live at https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/ (GitHub Pa
   - Background pictures: part type `underlay` (`p.src` JPEG data URL ≤ ~420 KB, or `p.svg`+`p.vb` from a DXF; size `iw×ih` × `fs`). Drawn on its own layer `#ulay` (`renderUlay`), only placeholders in `#world`; exports include it only with `exp:'1'`. Import `ulImport` (image / PDF via `vendor/pdfjs` / DXF), calibration `calStart`, manager `ulManager`.
   - Communication racks: `nrack` (19"/10", U count, wall/floor; `nrDim`) and rack equipment `nequip` (`ru:true`, `p.k` kind, `p.u` height); equipment snaps to U slots (`rackU`) and is added into the first free U (`rackFree`).
   - Toolbar order: `tbApply` / `tbStore`, kept per device in localStorage.
+  - Pen: free-hand strokes are parts of type `ink` (`p.pts` relative to centre, `icol`, `iw`); pen mode `PEN` / `penSet`, bar `#penBar`, eraser `inkErase`.
 - `sw.js`: offline cache. Pages are network-first with `cache: 'no-cache'`; other assets are stale-while-revalidate.
 - `manifest.webmanifest`, `icons/`, `favicon.ico`: the official OhadCad brand kit (amber "O" ring + crosshair icon, white/amber wordmark for dark backgrounds, amber/dark wordmark for light ones). Colors, fonts (Heebo/Inter/JetBrains Mono) and style are in `icons/wordmark-dark.svg` / `icons/wordmark-light.svg` and documented in the brand kit's own README (not kept in this repo) — the live palette is in both `index.html`'s and `cad.html`'s `:root` CSS variables.
 - `vendor/firebase/`: firebase 12.19 compat bundles (app, auth, firestore).
