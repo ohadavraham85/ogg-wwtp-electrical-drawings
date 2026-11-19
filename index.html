@@ -179,11 +179,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 166;
+const VERSION = 167;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'מברשת עיצוב; קווי מידה נתפסים זה מול זה בגרירה; מחיקת מידה בודדת של צורה';
+const WHATS_NEW = 'יציאה ממצב מדידה בלחיצה על כפתור המידה או ב-Esc';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -424,6 +424,8 @@ function applyUI() {
   const b = $('tbTheme'); if (b) b.textContent = l ? '🌙' : '☀';
 }
 applyUI(); applyFontScale();
+// Esc pressed while the shell (not the drawing) has the keyboard still reaches the drawing tool
+addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; const f = $('cad'); try { const w = f && f.contentWindow; if (w) w.document.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); } catch (_) {} });
 addEventListener('storage', (e) => { if (e.key === 'ohadcad.ui') applyUI(); if (e.key === 'ohadcad.font' || e.key === 'ohadcad.uiscale') applyFontScale(); });
 $('tbTheme').onclick = () => {
   let l = false; try { l = localStorage.getItem('ohadcad.ui') === 'light'; } catch (e) {}

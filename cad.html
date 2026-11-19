@@ -3011,7 +3011,9 @@ applyFontScale();
    closes it, a click anywhere else closes it. */
 function ddClose(){document.querySelectorAll('.ddmenu').forEach(m=>m.classList.add('hidden'));document.querySelectorAll('[data-dd].open').forEach(b=>b.classList.remove('open'));}
 function ddPlace(b,m){if(m.id==='mDraw')buildDrawMenu();if(m.id==='mMeas')buildMeasMenu();const r=b.getBoundingClientRect();m.classList.remove('hidden');b.classList.add('open');const w=m.offsetWidth,h=m.offsetHeight;m.style.top=(r.bottom+4+h>innerHeight-4&&r.top-4-h>4?r.top-4-h:r.bottom+4)+'px';m.style.left=Math.max(6,Math.min(innerWidth-w-6,r.right-w))+'px';}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-dd]');if(b){if(typeof swallowBar!=='undefined'&&swallowBar)return;const m=$(b.dataset.dd),was=!m.classList.contains('hidden');ddClose();if(was)return;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-dd]');if(b){if(typeof swallowBar!=='undefined'&&swallowBar)return;
+  // the measure button ends measuring when a measuring mode is on
+  if(b.id==='bMeas'&&measMode){e.stopPropagation();ddClose();setMeas(null);toast('יצאת ממצב מדידה');return;}const m=$(b.dataset.dd),was=!m.classList.contains('hidden');ddClose();if(was)return;
   ddPlace(b,m);return;}
  if(!e.target.closest('.ddmenu'))ddClose();},true);
 addEventListener('resize',ddClose);document.addEventListener('keydown',e=>{if(e.key==='Escape')ddClose();});
@@ -3688,7 +3690,7 @@ document.addEventListener('keydown',e=>{const t=e.target;if(t&&(t.isContentEdita
  const k=e.key,mod=e.ctrlKey||e.metaKey;
  if((k==='Delete'||k==='Backspace')&&!globalLock&&!wireMode&&selIds().length){e.preventDefault();deleteSelected();}
  else if(mod&&(e.code==='BracketRight'||e.code==='BracketLeft')&&selIds().length&&!globalLock){e.preventDefault();zOrder(e.code==='BracketRight'?(e.shiftKey?'front':'up'):(e.shiftKey?'back':'down'));}
- else if(k==='Escape'){if(BRUSH){brushSet(false);return;}if(MWM){mwSet(false);return;}if(measMode){if(MS.a){MS.a=MS.cur=null;render();}else setMeas(null);return;}if(wireMode)return;clearSel();}
+ else if(k==='Escape'){if(BRUSH){brushSet(false);return;}if(MWM){mwSet(false);return;}if(measMode){setMeas(null);toast('יצאת ממצב מדידה');return;}if(wireMode)return;clearSel();}
  else if(mod&&(k==='z'||k==='Z')&&!e.shiftKey){e.preventDefault();undo();}
  else if(mod&&(k==='y'||k==='Y'||((k==='z'||k==='Z')&&e.shiftKey))){e.preventDefault();redo();}
  else if(mod&&(k==='a'||k==='A')){e.preventDefault();state.objs.filter(o=>!hiddenFront(o)).forEach(o=>multi.add(o.id));sel=state.objs.length?state.objs[state.objs.length-1].id:null;if(multi.size<2)multi.clear();renderNow();updateBar();}});$('bHelp').onclick=()=>help();
