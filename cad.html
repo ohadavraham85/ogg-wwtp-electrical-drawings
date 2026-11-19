@@ -4356,14 +4356,14 @@ async function open3D(keepV){if(state.tab==='sld'){toast('התלת־ממד מו�
  const objs=state.objs.filter(o=>!isSldObj(o)&&(o.type==='wire'||DEF[o.type]));if(!objs.some(o=>!V3SKIP.has(o.type)&&!DEF[o.type].sld)){toast('אין עדיין רכיבים בחזית הלוח');return;}
  toast('בונה תלת־ממד…');try{await loadThree();}catch(e){toast('לא הצלחתי לטעון את מנוע התלת־ממד — בדוק חיבור לאינטרנט ונסה שוב');return;}
  const T=THREE,ov=document.createElement('div');ov.id='v3d';ov.innerHTML=`<div class="v3bar"><button data-a="x" title="סגור (Esc)">✕</button><button data-a="door" class="on">🚪 <span>פתח דלתות</span></button><button data-a="front">⬜ חזית</button><button data-a="iso">🧊 זווית</button><button data-a="wires" class="on">〰 חוטים</button><button data-a="axes" class="on">📐 צירים</button><button data-a="shot">📷 תמונה</button></div><div class="v3hint">גרירה: סיבוב · שתי אצבעות / גלגלת: זום והזזה · הקשה על רכיב: הזזה קדימה / אחורה</div><div class="v3sel" hidden><b class="v3n"></b><div class="v3row"><label>מיקום Z</label><button data-z="-1">אחורה ⬇</button><input class="v3z" type="number" inputmode="decimal" step="10" title="מיקום בעומק (מ&quot;מ) — חיובי = קדימה"><button data-z="1">⬆ קדימה</button><select class="v3st" title="צעד"><option value="10">10</option><option value="50">50</option><option value="100" selected>100</option><option value="500">500</option></select></div><div class="v3row"><label>עובי (מ"מ)</label><input class="v3d" type="number" inputmode="decimal" step="10" placeholder="אוטומטי"><button data-z="0">איפוס</button><button data-z="x">✕</button></div></div>`;
- document.body.appendChild(ov);document.body.classList.add('v3on');const R=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});R.setPixelRatio(Math.min(2,devicePixelRatio||1));R.outputColorSpace=T.SRGBColorSpace;ov.prepend(R.domElement);
+ document.body.appendChild(ov);document.body.classList.add('v3on');const R=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});const TOUCH=matchMedia('(pointer:coarse)').matches;R.setPixelRatio(Math.min(TOUCH?1.5:2,devicePixelRatio||1));R.outputColorSpace=T.SRGBColorSpace;ov.prepend(R.domElement);
  const scene=new T.Scene();scene.background=new T.Color(isLight()?0xeef0f3:0x1a1b1e);scene.add(new T.HemisphereLight(0xffffff,0x8a8f99,1.6));const sun=new T.DirectionalLight(0xffffff,1.5);sun.position.set(-.6,.9,1.2);scene.add(sun);
  const cam=new T.PerspectiveCamera(30,1,10,1e6),root=new T.Group();scene.add(root);
  const V={R,scene,cam,ov,root,doors:[],covers:[],wires:null,open:0,goal:0,texs:[],th:.38,ph:.14,dist:3000,tg:new T.Vector3(),raf:0,dirty:true};V3=V;
  const svgNS='xmlns="http://www.w3.org/2000/svg"',cache=new Map(),pend=[];
  // a picture of an SVG fragment inside a box of the world (mm) → texture + its average colour
  function tex(inner,x0,y0,w,h,maxPx=2048){const key=inner+'|'+[x0,y0,w,h].join(',');if(cache.has(key))return cache.get(key);
-  const k=Math.max(.25,Math.min(5,maxPx/Math.max(w,h))),W=Math.max(2,Math.ceil(w*k)),H=Math.max(2,Math.ceil(h*k)),cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const k=Math.max(.25,Math.min(TOUCH?3:5,(TOUCH?Math.min(maxPx,1536):maxPx)/Math.max(w,h))),W=Math.max(2,Math.ceil(w*k)),H=Math.max(2,Math.ceil(h*k)),cv=document.createElement('canvas');cv.width=W;cv.height=H;
   const t=new T.CanvasTexture(cv);t.colorSpace=T.SRGBColorSpace;t.anisotropy=4;const r={t,avg:null,cbs:[],cv,ok:false};cache.set(key,r);V.texs.push(t);
   const img=new Image();pend.push(r.ready=new Promise(res=>{img.onload=()=>{r.ok=true;try{const c=cv.getContext('2d');c.drawImage(img,0,0,W,H);t.needsUpdate=true;
      const s=document.createElement('canvas');s.width=s.height=8;const sc=s.getContext('2d');sc.drawImage(cv,0,0,8,8);const d=sc.getImageData(0,0,8,8).data;let R0=0,G0=0,B0=0,n=0;for(let i=0;i<d.length;i+=4)if(d[i+3]>128){R0+=d[i];G0+=d[i+1];B0+=d[i+2];n++;}
@@ -4413,7 +4413,7 @@ async function open3D(keepV){if(state.tab==='sld'){toast('התלת־ממד מו�
     const pl=tex(DEF.cabinet.draw(Object.assign({},c,{x:0,y:0})).replace(/^/,`<g transform="translate(${c.x} ${c.y})">`)+'</g>',g.x0,g.y0,g.W,g.H);plane(g.x0,g.y0,x1,y1,-2,pl);
     box(g.x0,g.y0,g.x0+18,y1,-30,D,null,wl);box(x1-18,g.y0,x1,y1,-30,D,null,wl);box(g.x0,g.y0,x1,g.y0+18,-30,D,null,wl);box(g.x0,y1-18,x1,y1,-30,D,null,wl);box(g.x0,g.y0,x1,y1,-34,-30,null,0x7d838a);
     g.S.slice(1).forEach(sc=>box(sc.x0-3,g.y0,sc.x0+3,y1,-30,D-10,null,wl));if(g.P)box(g.x0+10,y1,x1-10,y1+g.P,10,D-10,null,0x2f3235);
-    const m=holesMask(c.id,c.x,c.y,q=>inCab(c,q.x,q.y)),fr=`<g transform="translate(${c.x} ${c.y})">${m?m.svg+`<g mask="url(#${m.id})">`:''}${cabFront(c)}${m?'</g>':''}</g>`,ft=tex(fr,g.x0,g.y0,g.W,g.H,2600);
+    const m=holesMask(c.id,c.x,c.y,q=>inCab(c,q.x,q.y)),fr=`<g transform="translate(${c.x} ${c.y})">${m?m.svg+`<g mask="url(#${m.id})">`:''}${cabFront(c)}${m?'</g>':''}</g>`,ft=null;
     const groups=[];
     g.S.forEach(sc=>{const face=secFace(c,sc);if(face==='none')return;const fx0=sc.x0+3,fx1=sc.x1-3,fy0=g.y0+3,fy1=y1-3;
      const leafs=face==='double'?[[fx0,fx0+(fx1-fx0)/2-2,'L'],[fx0+(fx1-fx0)/2+2,fx1,'R']]:face==='cover'?[[fx0,fx1,'C']]:[[fx0,fx1,sc.hinge==='R'?'R':'L']];
@@ -4447,7 +4447,7 @@ async function open3D(keepV){if(state.tab==='sld'){toast('התלת־ממד מו�
    const d=v3Free(o);reg(o,solid(o,P.b,P.f,d,-d/2,null,P));ZF.set(o.id,d/2);}
   // wires: one sheet just above the plate, under the ducts and parts
   const W=objs.filter(o=>o.type==='wire');if(W.length){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;W.forEach(w=>boundsOf(w).forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}));
-   if(x1>x0){x0-=5;y0-=5;x1+=5;y1+=5;V.wires=plane(x0,y0,x1,y1,9,tex(W.map(w=>drawWire0(w,false)).join(''),x0,y0,x1-x0,y1-y0,4096));}}
+   if(x1>x0){x0-=5;y0-=5;x1+=5;y1+=5;V.wires=plane(x0,y0,x1,y1,9,tex(W.map(w=>drawWire0(w,false)).join(''),x0,y0,x1-x0,y1-y0,2048));}}
  }finally{LODMIN=LOD0;keep.reverse().forEach(([o,k,v])=>{if(v===undefined)delete o.p[k];else o.p[k]=v;});}
  // frame the scene
  const bb=new T.Box3().setFromObject(root),sz=bb.getSize(new T.Vector3());bb.getCenter(V.tg);V.span=Math.max(sz.x,sz.y,300);V.sz=sz;cam.near=V.span/200;cam.far=V.span*40;
@@ -4496,18 +4496,22 @@ async function open3D(keepV){if(state.tab==='sld'){toast('התלת־ממד מו�
  const sb=ov.querySelector('.v3sel'),zi=sb.querySelector('.v3z'),di=sb.querySelector('.v3d'),st=sb.querySelector('.v3st');let pick=null,hl=null;
  function choose(id){pick=id&&OBJ.has(id)?id:null;if(hl){scene.remove(hl);hl.dispose&&hl.dispose();hl=null;}sb.hidden=!pick;ov.querySelector('.v3hint').style.display=pick?'none':'';
   if(pick){const o=get(pick),E=OBJ.get(pick);hl=new T.BoxHelper(E.n,0xff8c00);scene.add(hl);sb.querySelector('.v3n').textContent=(o.p.name||o.type)+(o.p.tag?' · '+o.p.tag:'');zi.value=+o.p.z3||0;di.value=+o.p.d3||'';toast('נבחר: '+(o.p.name||o.type)+' — הזז קדימה / אחורה למטה');}V.dirty=true;}
- function setZ(v){const o=pick&&get(pick);if(!o)return;v=Math.round(+v||0);if(v)o.p.z3=v;else delete o.p.z3;const E=OBJ.get(pick);E.n.position.z=E.z0+v;hl&&hl.update();zi.value=v;V.dirty=true;commit();}
+ function setZ(v){try{setZ0(v);}catch(e){toast('שגיאה בהזזה: '+(e&&e.message||e));}}
+ function setZ0(v){const o=pick&&get(pick);if(!o)return;v=Math.round(+v||0);if(v)o.p.z3=v;else delete o.p.z3;const E=OBJ.get(pick);E.n.position.z=E.z0+v;hl&&hl.update();zi.value=v;V.dirty=true;commit();}
  function rebuild(){const k={th:V.th,ph:V.ph,dist:V.dist,tg:V.tg.clone(),goal:V.goal,pick,axes:V.axes.visible,wires:V.wires?V.wires.visible:true};close3D();open3D(k);}
  sb.onclick=e=>{const b=e.target.closest('button');if(!b)return;const z=b.dataset.z;if(z==='x')choose(null);else if(z==='0'){const o=get(pick);if(!o)return;const hadD=+o.p.d3>0;delete o.p.d3;setZ(0);if(hadD)rebuild();}else setZ((+zi.value||0)+(+z)*(+st.value));};
  zi.onchange=()=>setZ(zi.value);di.onchange=()=>{const o=get(pick);if(!o)return;const v=Math.round(+di.value||0);if(v>0)o.p.d3=Math.max(1,v);else delete o.p.d3;commit();rebuild();};
  sb.addEventListener('keydown',e=>e.stopPropagation());
+ // a phone can drop the 3D picture when it runs short of graphics memory: build it again, keeping the view
+ cv.addEventListener('webglcontextlost',e=>{e.preventDefault();if(V.lost)return;V.lost=1;toast('התצוגה נטענת מחדש…');setTimeout(()=>{if(V3===V)rebuild();},400);});
+ V.onErr=e=>{if(V3===V)toast('שגיאה בתלת־ממד: '+((e&&(e.message||e.reason&&e.reason.message))||'לא ידועה'));};addEventListener('error',V.onErr);addEventListener('unhandledrejection',V.onErr);
  let tap=null;cv.addEventListener('pointerdown',e=>{tap=P.size===1?{x:e.clientX,y:e.clientY,t:Date.now()}:null;});
  cv.addEventListener('pointerup',e=>{if(!tap||Math.hypot(e.clientX-tap.x,e.clientY-tap.y)>(e.pointerType==='mouse'?6:18)||Date.now()-tap.t>900)return;tap=null;
   const r=cv.getBoundingClientRect(),rc=new T.Raycaster();rc.setFromCamera(new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),cam);
   for(const h of rc.intersectObject(root,true)){if(!h.object.visible)continue;let n=h.object;while(n&&!n.userData.oid)n=n.parent;if(n){choose(n.userData.oid);return;}}choose(null);});
  if(keepV){V.th=keepV.th;V.ph=keepV.ph;V.dist=keepV.dist;V.tg.copy(keepV.tg);V.fit=1;V.open=V.goal=keepV.goal;setDoor(keepV.goal);V.axes.visible=keepV.axes;ov.querySelector('[data-a="axes"]').classList.toggle('on',keepV.axes);if(V.wires){V.wires.visible=keepV.wires;ov.querySelector('[data-a="wires"]').classList.toggle('on',keepV.wires);}if(keepV.pick)choose(keepV.pick);V.dirty=true;return;}
  setDoor(0);}
-function close3D(){const V=V3;if(!V)return;V3=null;cancelAnimationFrame(V.raf);removeEventListener('resize',V.onR);document.removeEventListener('keydown',V.onKey,true);
+function close3D(){const V=V3;if(!V)return;V3=null;removeEventListener('error',V.onErr);removeEventListener('unhandledrejection',V.onErr);cancelAnimationFrame(V.raf);removeEventListener('resize',V.onR);document.removeEventListener('keydown',V.onKey,true);
  V.scene.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)[].concat(o.material).forEach(m=>m.dispose());});V.texs.forEach(t=>t.dispose());V.R.dispose();try{V.R.forceContextLoss();}catch(e){}V.ov.remove();document.body.classList.remove('v3on');}
 function toggleDoors(){const es=state.objs.filter(o=>(o.type==='enclosure'&&hasDoor(o))||o.type==='cabinet'||o.type==='cibox');if(!es.length){toast('אין לוח עם דלת');return;}
  const hasOD=state.objs.some(o=>o.type==='cabinet'&&(o.p.secs||[]).some(z=>z.f==='cover'&&z.od==='1'));const f=es[0];
