@@ -2891,7 +2891,7 @@ function hopPath(ps,hops,gaps){const R=5,GP=3.4;let d='M'+r2(ps[0].x)+' '+r2(ps[
    H.forEach(h=>{d+='L'+r2(h.x-dir*R)+' '+r2(a.y)+'A'+R+' '+R+' 0 0 '+(dir>0?1:0)+' '+r2(h.x+dir*R)+' '+r2(a.y);});}
   d+='L'+r2(b.x)+' '+r2(b.y);}
  return d;}
-function drawWire(w,isSel){const s=drawWire0(w,isSel),l=s?wnLabel(w):'';return (DMS&&!isSel&&s&&!(state.tab==='sld'||isSldObj(w))?s.replace('<g data-id=','<g mask="url(#dM)" data-id='):s)+l;}
+function drawWire(w,isSel){const s=drawWire0(w,isSel),l=s?wnLabel(w)+(ABI?abMark(w):''):'';return (DMS&&!isSel&&s&&!(state.tab==='sld'||isSldObj(w))?s.replace('<g data-id=','<g mask="url(#dM)" data-id='):s)+l;}
 function drawWire0(w,isSel){const LP=WL.get(w.id);const d=LP&&LP.length>1?hopPath(LP,WG.get(w.id),WB.get(w.id)):wirePath(w);if(!d)return '';if(w.p.joint){const a=resolve(w.pts[0]),b=resolve(w.pts[1]);if(a&&b&&Math.hypot(a.x-b.x,a.y-b.y)<.6)return `<g data-id="${w.id}"><circle cx="${a.x}" cy="${a.y}" r="6" fill="transparent"/><circle cx="${a.x}" cy="${a.y}" r="${isSel?3.2:2.2}" fill="${isSel?'#60a5fa':'#8b5a2b'}"/></g>`;}const sld=state.tab==='sld'||isSldObj(w);let sw=SEC[w.p.sec]||2.3;if(sld)sw=1.3;if(EXPMIN)sw=Math.max(sw,EXPMIN);const c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
  if(w.p.ph==='3'){const ps=LP&&LP.length>1?LP:wirePs(w),gap=sld?2.4:sw*1.25;let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${gap*2+sw+8}"/>`;if(isSel)s+=`<path ${P} stroke="#60a5fa" stroke-width="${gap*2+sw+3}"/>`;
   PH3.forEach((k,i)=>{const q=offPoly(ps,(i-1)*gap),dd='M'+q.map(p=>r2(p.x)+' '+r2(p.y)).join('L');s+=`<path d="${dd}" fill="none" stroke-linejoin="round" stroke="${WCOL[k].base}" stroke-width="${sw}"/>`;if(WCOL[k].dash)s+=`<path d="${dd}" fill="none" stroke="${WCOL[k].dash}" stroke-width="${sw}" stroke-dasharray="5 5"/>`;});return s+'</g>';}
@@ -2908,7 +2908,7 @@ function objSVG(o,isSel){const D=DEF[o.type];if(!D)return '';const {w,h}=sizeOf(
  let s=`<g data-id="${o.id}"${o.type==='mdim'?' data-t="mdim"':''} transform="translate(${o.x} ${o.y}) rotate(${o.rot})${o.mx?' scale(-1 1)':''}">`+(D.sld&&o.type!=='sframe'?`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" fill="transparent"/>`:'')+(o.mx?unmirrorText(D.draw(o)):D.draw(o));
  if(o.locked)s+=`<circle cx="${w/2-2}" cy="${-h/2+2}" r="2.6" fill="#f59e0b" stroke="#000" stroke-width=".4"/>`;
  if(isSel)s+=`<rect x="${-w/2-2.5}" y="${-h/2-2.5}" width="${w+5}" height="${h+5}" rx="2" fill="rgba(59,130,246,.08)" stroke="#3b82f6" stroke-width="1.6" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"/>`;
- return s+'</g>'+(XRI?xrLabel(o):'');}
+ return s+'</g>'+(XRI?xrLabel(o):'')+(ABI?abMark(o):'');}
 /* Parts mounted on a door (buttons, lights, e-stop…) ride along with it when it
    swings open — see doorRideOffset — instead of vanishing, except on a bolted
    cover (nothing to swing) or a CI box, whose lid just lifts off entirely. */
@@ -3083,7 +3083,7 @@ function patchWorld(items){const seen=new Map();for(const n of [...world.childre
   if(n.__s!==str){n.innerHTML=str;n.__s=str;}
   if(n!==cur)world.insertBefore(n,cur);else cur=cur.nextSibling;}
  while(cur){const nx=cur.nextSibling;cur.remove();cur=nx;}}
-function renderNow(){XRI=state.xrShow?xrIndex():null;if(state.tab!=='sld')glandAuto();drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}
+function renderNow(){XRI=state.xrShow?xrIndex():null;ABI=state.ab&&state.ab.on?abIndex():null;if(state.tab!=='sld')glandAuto();drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}
  const fast=state.tab!=='both'&&!(state.tab==='sld'&&sldDark);LODMIN=2.2/view.s;let s,P=null;
  try{if(fast){PIECES=[];content({sel:true});P=PIECES;}else s=layoutSVG()+axesSVG()+content({sel:true});}finally{PIECES=null;}
  const pre=fast?layoutSVG()+axesSVG():'';
@@ -4986,7 +4986,7 @@ function aboutDialog(){const v=(SH&&SH.version)||'';modal('אודות OhadCad',`
 /* ================= drawer / menu ================= */
 function openDrawer(){const items=[['פרויקט'],['📄 פרויקט חדש',newProject],['🗂 פרויקט חדש מתבנית (דוגמאות)',templatesDialog],...(SH?[['📂 פתח מהתיקייה המשותפת',openShared],['💾 שמור עכשיו (נשמר גם אוטומטית)',saveShared],['📑 שמור עותק בשם…',()=>saveSharedAs(true)]]:[['📂 פתח פרויקט שמור',openProjects],['💾 שמור בשם…',saveAs]]),
  ...(SH&&SH.prefs&&SH.prefs.test?[['☁ בדיקת סנכרון מועדפים בין מכשירים',prefsCheck]]:[]),['תצוגה'],['⚙ הגדרות תצוגה — גופן והגדלה…',displayDialog],[uiLight()?'🌙 מצב כהה לאפליקציה':'☀ מצב בהיר לאפליקציה',toggleUI],['🧩 הסתרת כפתורים / איפוס הסרגלים…',tbEditor],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
- ['רקע לשרטוט'],['🖼 ייבוא תמונה / PDF / DXF כרקע',ulImport],['🗂 תמונות רקע — נעילה, שקיפות, כיול…',ulManager],['בדיקה וחיווט'],['🔗 בדיקת התאמה: חזית ↔ חד קווי',xcheckDialog],[(state.xrShow?'⇄ הסתר':'⇄ הצג')+' הפניות חזית ↔ חד קווי (ליד כל רכיב)',toggleXR],['🔢 מספר חוטים (לפי נקודות פוטנציאל)',numberWires],['📋 טבלאות חיווט: חוטים, מהדקים, כבלים',()=>wireTables()],[(state.wnShow?'🏷 הסתר':'🏷 הצג')+' מספרי חוטים',toggleWN],['🖨 מדבקות מספרי חוטים',printLabels],['ייצוא ושיתוף'],['📋 רשימת ציוד (BOM)',bom],['👁 תצוגה לפני הדפסה',printPreview],['📄 ייצוא PDF עם טבלת שרטוט',pdfDialog],['🖼️ ייצוא תמונה (PNG)',exportImage],['📐 ייצוא DXF ל-AutoCAD (נשמר כ-DWG)',dxfExport],['💾 הורד קובץ פרויקט (JSON)',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state))],['📤 העתק קובץ פרויקט',copyJSON],['📥 ייבוא קובץ פרויקט',importJSON],['OhadCad'],...(SH&&SH.menu?SH.menu():[]),['ℹ אודות OhadCad',aboutDialog]];
+ ['רקע לשרטוט'],['🖼 ייבוא תמונה / PDF / DXF כרקע',ulImport],['🗂 תמונות רקע — נעילה, שקיפות, כיול…',ulManager],['בדיקה וחיווט'],[state.ab&&state.ab.on?'📝 As-Built — רשימת שינויים / קבלה':'📝 התחל As-Built (סימון שינויים בענן)',abList],['🔗 בדיקת התאמה: חזית ↔ חד קווי',xcheckDialog],[(state.xrShow?'⇄ הסתר':'⇄ הצג')+' הפניות חזית ↔ חד קווי (ליד כל רכיב)',toggleXR],['🔢 מספר חוטים (לפי נקודות פוטנציאל)',numberWires],['📋 טבלאות חיווט: חוטים, מהדקים, כבלים',()=>wireTables()],[(state.wnShow?'🏷 הסתר':'🏷 הצג')+' מספרי חוטים',toggleWN],['🖨 מדבקות מספרי חוטים',printLabels],['ייצוא ושיתוף'],['📋 רשימת ציוד (BOM)',bom],['👁 תצוגה לפני הדפסה',printPreview],['📄 ייצוא PDF עם טבלת שרטוט',pdfDialog],['🖼️ ייצוא תמונה (PNG)',exportImage],['📐 ייצוא DXF ל-AutoCAD (נשמר כ-DWG)',dxfExport],['💾 הורד קובץ פרויקט (JSON)',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state))],['📤 העתק קובץ פרויקט',copyJSON],['📥 ייבוא קובץ פרויקט',importJSON],['OhadCad'],...(SH&&SH.menu?SH.menu():[]),['ℹ אודות OhadCad',aboutDialog]];
  $('dbox').innerHTML=`<div style="display:flex;align-items:center;justify-content:flex-end;margin:4px 8px 0"><img src="icons/wordmark-${uiLight()?'light':'dark'}.svg" alt="OhadCad" height="26"></div><h2>${esc(state.name)}</h2>`+items.map((it,i)=>it[1]?`<button data-i="${i}">${it[0]}</button>`:`<div style="color:#8a8a8a;font-size:13px;margin:12px 12px 2px">${it[0]}</div>`).join('');
  $('drawer').classList.remove('hidden');$('dbox').onclick=e=>{const b=e.target.closest('button');if(!b)return;$('drawer').classList.add('hidden');items[+b.dataset.i][1]();};}
 $('drawer').addEventListener('click',e=>{if(e.target.id==='drawer')$('drawer').classList.add('hidden');});
@@ -5090,6 +5090,37 @@ function xrBlock(o){if(!xrOk(o))return '';const L=xrOther(o),d=xrDocOf(o),od=d==
 function xrBind(o){const B=$('propsBody');if(!B||!xrOk(o))return;const od=xrDocOf(o)==='sld'?'panel':'sld',ids=xrOther(o).map(q=>q.id);
  B.querySelectorAll('[data-xr]').forEach(b=>b.onclick=()=>{const id=b.dataset.xr;if(state.tab==='both'){xcGo('both',id);}else xcGo(od,id);setTimeout(editDialog,0);});
  const f=$('f_tag');if(!f||!ids.length)return;f.addEventListener('change',()=>{const nt=f.value.trim();if(!nt)return;const L=[...state.objs,...(state.alt||[])].filter(q=>ids.includes(q.id));let n=0;L.forEach(q=>{if(q.p.tag!==nt){q.p.tag=nt;n++;}});if(n){commit();renderNow();toast(`התג עודכן גם ${od==='sld'?'בחד קווי':'בחזית'} (${n})`);}});}
+/* As-Built: "start" takes a fingerprint of every part in both documents
+   (state.ab.base = {id:[hash,label,doc]}); from then on each part that is new or
+   changed gets a red revision cloud with a Δ and the coming revision number (it
+   prints, so the marked-up sheet goes to the field / office). The list shows
+   new / changed / removed parts with a jump; "accept" clears the marks and raises
+   the revision. */
+let ABI=null;
+function abHash(o){const sh=state.tab==='both'&&isSldObj(o)?(state.sldDx||0):0,c={t:o.type,x:o.x==null?null:r2(o.x-sh),y:o.y,r:o.rot,m:o.mx,p:o.p,l:o.locked};
+ if(o.type==='wire')c.pts=o.pts.map(q=>q.r?q:{x:r2(q.x-sh),y:q.y});let h=5381;const j=JSON.stringify(c);for(let i=0;i<j.length;i++)h=((h<<5)+h+j.charCodeAt(i))|0;return (h>>>0).toString(36);}
+function abAll(){const {panel,sld}={panel:state.tab==='sld'?state.alt||[]:state.tab==='both'?state.objs.filter(q=>!isSldObj(q)):state.objs,sld:state.tab==='sld'?state.objs:state.tab==='both'?state.objs.filter(isSldObj):state.alt||[]};
+ return [...panel.map(o=>[o,'panel']),...sld.map(o=>[o,'sld'])].filter(([o])=>o.type!=='underlay'&&o.type!=='mdim');}
+const abLbl=o=>o.type==='wire'?'חוט'+(o.p.wn?' '+o.p.wn:''):((o.p.tag?o.p.tag+' · ':'')+(o.p.name||o.p.text||o.type));
+function abIndex(){const B=state.ab.base||{},m=new Map();abAll().forEach(([o])=>{const b=B[o.id];if(!b)m.set(o.id,'new');else if(b[0]!==abHash(o))m.set(o.id,'chg');});return m;}
+function abCloud(x0,y0,x1,y1,r){const seg=(ax,ay,bx,by)=>{const L=Math.hypot(bx-ax,by-ay),n=Math.max(1,Math.round(L/(1.6*r)));let d='';for(let i=1;i<=n;i++){const x=ax+(bx-ax)*i/n,y=ay+(by-ay)*i/n,rr=L/n/2*1.15;d+=`A${r2(rr)} ${r2(rr)} 0 0 1 ${r2(x)} ${r2(y)}`;}return d;};
+ return `M${r2(x0)} ${r2(y0)}`+seg(x0,y0,x1,y0)+seg(x1,y0,x1,y1)+seg(x1,y1,x0,y1)+seg(x0,y1,x0,y0)+'Z';}
+function abMark(o){const k=ABI.get(o.id);if(!k)return '';let b;if(o.type==='wire'){const ps=wirePs(o);if(ps.length<2)return '';b={x0:Math.min(...ps.map(q=>q.x)),x1:Math.max(...ps.map(q=>q.x)),y0:Math.min(...ps.map(q=>q.y)),y1:Math.max(...ps.map(q=>q.y))};}else b=bbW(o);
+ const sld=isSldObj(o),w=b.x1-b.x0,h=b.y1-b.y0,r=sld?Math.max(2.5,Math.min(8,Math.max(w,h)/6)):Math.max(3,Math.min(25,Math.sqrt(Math.max(1,w*h))/6.5)),pd=r*.9,lw=sld?.7:Math.max(.8,r/6);
+ const x0=b.x0-pd,y0=b.y0-pd,x1=b.x1+pd,y1=b.y1+pd,t=r*1.3,rv=nextRev();
+ return `<g pointer-events="none"><path d="${abCloud(x0,y0,x1,y1,r)}" fill="none" stroke="#dc2626" stroke-width="${r2(lw)}" stroke-linejoin="round"/><path d="M${r2(x1)} ${r2(y0-t*1.6)}l${r2(t)} ${r2(t*1.6)}h${r2(-2*t)}z" fill="#fff" stroke="#dc2626" stroke-width="${r2(lw)}"/><text x="${r2(x1)}" y="${r2(y0-t*.35)}" font-size="${r2(t*.95)}" fill="#dc2626" font-weight="800" text-anchor="middle" font-family="Arial">${esc(String(rv))}</text></g>`;}
+function abStart(){const base={};abAll().forEach(([o,d])=>base[o.id]=[abHash(o),abLbl(o),d]);state.ab={on:1,base,t:Date.now()};commit();renderNow();toast('As-Built פעיל — כל רכיב שנוסף או שונה יסומן בענן אדום (Rev '+nextRev()+')');}
+function abList(){if(!(state.ab&&state.ab.on)){abStart();return;}const I=abIndex(),cur=new Map(abAll().map(([o,d])=>[o.id,[o,d]])),B=state.ab.base,del=Object.keys(B).filter(id=>!cur.has(id));
+ const nw=[...I].filter(([,k])=>k==='new').map(([id])=>cur.get(id)),ch=[...I].filter(([,k])=>k==='chg').map(([id])=>cur.get(id));
+ const DN={panel:'חזית',sld:'חד קווי'},row=([o,d])=>`<div style="display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line)"><span style="color:#999;font-size:12px;min-width:52px">${DN[d]}</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(abLbl(o))}</span><button class="wbtn" data-go="${d}:${o.id}">הצג</button></div>`;
+ let h=`<div class="hint">As-Built מאז ${new Date(state.ab.t).toLocaleString('he-IL')}. הסימונים יקבלו Rev ${nextRev()}.</div>`;
+ h+=`<div class="grp">נוספו (${nw.length})</div>`+(nw.map(row).join('')||'<div class="hint">—</div>');
+ h+=`<div class="grp">שונו (${ch.length})</div>`+(ch.map(row).join('')||'<div class="hint">—</div>');
+ h+=`<div class="grp">הוסרו (${del.length})</div>`+(del.map(id=>`<div style="padding:5px 0;border-bottom:1px solid var(--line)"><span style="color:#999;font-size:12px;min-width:52px;display:inline-block">${DN[B[id][2]]||''}</span> ${esc(B[id][1])}</div>`).join('')||'<div class="hint">—</div>');
+ modal('As-Built — רשימת שינויים',h,[{t:'✓ קבל שינויים והעלה גרסה',cls:'pri',fn:abAccept},{t:'בטל מצב As-Built (בלי לשנות גרסה)',fn:abCancel},{t:'סגור',fn:closeModal}]);
+ $('mBody').onclick=e=>{const g=e.target.closest('[data-go]');if(!g)return;const [d,id]=g.dataset.go.split(':');xcGo(state.tab==='both'?'both':d,id);};}
+function abAccept(){const rv=nextRev();state.rev=rv;delete state.ab;commit();renderNow();closeModal();toast('השינויים התקבלו — גרסה Rev '+rv);}
+function abCancel(){delete state.ab;commit();renderNow();closeModal();toast('מצב As-Built בוטל — הסימונים הוסרו');}
 function toggleXR(){state.xrShow=state.xrShow?0:1;commit();renderNow();toast(state.xrShow?'הפניות חזית ↔ חד קווי מוצגות (גם בהדפסה)':'ההפניות הוסתרו');}
 function toggleWN(){state.wnShow=state.wnShow?0:1;commit();renderNow();toast(state.wnShow?'מספרי החוטים מוצגים':'מספרי החוטים מוסתרים');}
 function endDesc(p){if(!p||!p.r)return '—';const o=get(p.r);if(!o)return '?';const T=termsOf(o)[p.t],nm=o.p.tag||o.p.name||o.type,tl=T&&T[2]?String(T[2]):String(p.t+1);return `${nm}:${tl}`;}
