@@ -1884,7 +1884,7 @@ Object.assign(DEF,SDEF);
 // Core colours by IEC 60445: L1 brown, L2 black, L3 grey, N blue, PE green-yellow.
 const CORESETS={'2':[['L','#8b5a2b'],['N','#2563eb']],'3':[['L','#8b5a2b'],['N','#2563eb'],['PE','pe']],'4':[['L1','#8b5a2b'],['L2','#1d1d1d'],['L3','#8f8f8f'],['PE','pe']],'5':[['L1','#8b5a2b'],['L2','#1d1d1d'],['L3','#8f8f8f'],['N','#2563eb'],['PE','pe']]};
 const CSECS=['1.5','2.5','4','6','10','16','25','35','50','70','95','120','150','185','240'];
-function cabG2(o){if(CABRT[o.type]){const D=CABRT[o.type];return {C:[],n:0,sec:0,D,cw:2,pitch:10,span:0,len:0,brk:0,w:D+6,h:0};}if(isPipe(o)){const D=+o.p.dn||20,len=Math.max(20,+o.p.len||1000);return {C:[],n:0,sec:0,D,cw:2,pitch:10,span:0,len,brk:0,w:D+6,h:len};}const C=CORESETS[o.p.cores]||CORESETS['5'],n=C.length,sec=+o.p.sec||2.5,D=Math.round(6+2.2*Math.sqrt(sec*n)),cw=Math.max(1.8,Math.sqrt(sec)*1.25),pitch=Math.max(cw+5,10),span=(n-1)*pitch;
+function cabG2(o){if(CABRT[o.type]){const D=CABRT[o.type];return {C:[],n:0,sec:0,D,cw:2,pitch:10,span:0,len:0,brk:0,w:D+6,h:0};}if(isPipe(o)){const D=o.type==='lan'?(LANC[o.p.cat]||LANC['7'])[1]:+o.p.dn||20,len=Math.max(20,+o.p.len||1000);return {C:[],n:0,sec:0,D,cw:2,pitch:10,span:0,len,brk:0,w:D+6,h:len};}const C=CORESETS[o.p.cores]||CORESETS['5'],n=C.length,sec=+o.p.sec||2.5,D=Math.round(6+2.2*Math.sqrt(sec*n)),cw=Math.max(1.8,Math.sqrt(sec)*1.25),pitch=Math.max(cw+5,10),span=(n-1)*pitch;
  const len=Math.max(20,+o.p.len||200),brk=Math.max(30,+o.p.brk||120),w=Math.max(D,span+cw)+6,h=len+brk;return {C,n,sec,D,cw,pitch,span,len,brk,w,h};}
 /* A cable runs along a route of points (its own, relative to it) and can be opened
    at either end: there its cores fan out, in the direction it arrives from, each
@@ -1923,7 +1923,7 @@ const CKIND={mar:'מרירון (צינור קשיח)',flex:'שרשורי (גמי
    stainless), drawn to scale from above. A pipe is routed like a cable (drag the
    ends, + makes a turn, every turn an elbow); valves and fittings are placed on it
    and take its diameter from their properties. */
-const isPipe=o=>o&&(o.type==='conduit'||o.type==='hpipe');
+const isPipe=o=>o&&(o.type==='conduit'||o.type==='hpipe'||o.type==='lan');
 const HMAT={pvc:{n:'PVC (פלסטיק)',s:'PVC',b:'#a8b0ba',e:'#4b5563',pl:1},hdpe:{n:'HDPE פוליאתילן (פלסטיק)',s:'HDPE',b:'#26292e',e:'#000',st:'#2563eb',pl:1},
  steel:{n:'פלדה (ברזל)',s:'ST',b:'#6b7a8c',e:'#1e293b'},di:{n:'ברזל יציקה (DI)',s:'DI',b:'#3b4a63',e:'#111827'},ss:{n:'נירוסטה',s:'SS',b:'#d5d9de',e:'#6b7280'}};
 const HDN=[25,32,40,50,63,75,80,90,100,110,150,160,200,250,300,315,400,500];
@@ -1969,6 +1969,28 @@ function hfitSVG(o){const {D,D2,k,L}=hfitGeo(o),M=HMAT[o.p.mat]||HMAT.steel,sw=M
  if(o.p.tag)s+=txt(0,F+Math.max(9,D*.35),o.p.tag,Math.max(9,D*.35),'#9ca3af',700);return s;}
 /* מרירון: rigid grey PVC conduit, 20 or 25 mm, along a route of points like a cable; every turn is a bend
    (קשת) of at least 4× its diameter with its two sockets marked, and couplings every 3 m of straight run. */
+/* LAN cable: category → [name, outer Ø mm]; sheath colours; connectors at the ends (drawn inside the cable's length,
+   ending at the route's end): boot, then the plug with its latch; S/FTP plugs are metal-shielded. */
+const LANC={'5e':['CAT5e U/UTP',5.5],'6':['CAT6 U/UTP',6.2],'6a':['CAT6A S/FTP',7.2],'7':['CAT7 S/FTP',7.5],'7a':['CAT7A S/FTP',8]};
+const LANCOL={orange:['כתום','#f28c28','#b45309'],grey:['אפור','#9ca3af','#4b5563'],blue:['כחול','#3b82f6','#1d4ed8'],green:['ירוק','#22c55e','#15803d'],yellow:['צהוב','#facc15','#a16207'],red:['אדום','#ef4444','#991b1b'],black:['שחור','#2b2b2b','#000'],white:['לבן','#f4f4f2','#9ca3af'],purple:['סגול','#8b5cf6','#5b21b6']};
+const LANPLG={rj45s:'RJ45 מסוכך (מתכת)',rj45:'RJ45 רגיל (שקוף)',gg45:'GG45 (CAT7)',tera:'TERA (CAT7)',none:'בלי ראשים'};
+function lanSVG(o){const G=cabGeo(o),D=G.g.D,R=G.R,d=cabPathD(o),C=LANCOL[o.p.lc]||LANCOL.orange,P=`d="${d}" fill="none" stroke-linejoin="round" stroke-linecap="${(o.p.plg||'rj45s')==='none'?'round':'butt'}"`;
+ let s=`<path ${P} stroke="${C[2]}" stroke-width="${D+1}"/><path ${P} stroke="${C[1]}" stroke-width="${D}"/><path ${P} stroke="#fff" stroke-opacity=".28" stroke-width="${D*.2}"/>`;
+ const pg=o.p.plg||'rj45s';if(pg!=='none'&&R.length>1)[[R[R.length-1],R[R.length-2]],[R[0],R[1]]].forEach(([p,q])=>{let ux=p.x-q.x,uy=p.y-q.y;const l=Math.hypot(ux,uy)||1;const a=Math.atan2(uy/l,ux/l)*180/Math.PI;
+  const met=pg==='rj45s'||pg==='gg45'||pg==='tera',tera=pg==='tera';let g=`<g transform="translate(${p.x} ${p.y}) rotate(${r2(a)})">`;
+  // boot (strain relief) then the plug body, its contacts end and the latch
+  g+=`<path d="M-39 ${-D/2-.6}L-22 ${-5.6}H-21V5.6H-22L-39 ${D/2+.6}Z" fill="${C[1]}" stroke="${C[2]}" stroke-width=".5"/>`+[-36,-32,-28,-24].map(x=>`<path d="M${x} ${-(D/2+.6+(x+39)*.12)}V${D/2+.6+(x+39)*.12}" stroke="${C[2]}" stroke-width=".35" opacity=".6"/>`).join('');
+  g+=tera?`<rect x="-21" y="-6.5" width="21" height="13" rx="1.4" fill="#c9cdd2" stroke="#4b5563" stroke-width=".5"/><path d="M-4 -6.5V6.5" stroke="#4b5563" stroke-width=".4"/>`
+   :`<rect x="-21" y="-5.85" width="21" height="11.7" rx="1" fill="${met?'#c9cdd2':'#e8f1f5'}" fill-opacity="${met?1:.75}" stroke="${met?'#4b5563':'#94a3b8'}" stroke-width=".5"/>`;
+  if(!met)g+=[0,1,2,3,4,5,6,7].map(i=>`<rect x="-3.2" y="${-4.6+i*1.3}" width="2.6" height=".7" fill="#d4a017"/>`).join('');else g+=`<rect x="-3.6" y="-4.8" width="2.8" height="9.6" fill="#9ca3af"/>`;
+  g+=`<path d="M-17 -5.85L-6 ${-8.5}H-3" fill="none" stroke="${met?'#6b7280':'#94a3b8'}" stroke-width="1"/>`+(pg==='gg45'?`<g transform="rotate(${Math.abs(a)>90?180:0} -11 0)">${txt(-11,0,'GG45',2.6,'#1f2937',800)}</g>`:'');
+  s+=g+'</g>';});
+ if(o.p.tag){const k=Math.max(0,Math.floor((R.length-1)/2)),a=R[k],b=R[Math.min(R.length-1,k+1)];s+=txt((a.x+b.x)/2+D,(a.y+b.y)/2-D,o.p.tag,Math.max(4,D*.7),'#1d4ed8',700,'start');}return s;}
+/* keystone jack (front: ~14.9 × 20.6 mm) and the wall plate (86 × 86) that takes 1, 2 or 4 of them */
+const KSCOL={white:['לבן','#f4f4f2','#9ca3af'],black:['שחור','#26282b','#000'],blue:['כחול','#3b6fd8','#1e3a8a'],red:['אדום','#d33','#7f1d1d'],green:['ירוק','#16a34a','#14532d'],yellow:['צהוב','#facc15','#a16207'],orange:['כתום','#f28c28','#9a3412'],metal:['מסוכך (מתכת)','#c9cdd2','#4b5563']};
+function ksJack(x,y,col,cat){const C=KSCOL[col]||KSCOL.white;let s=`<rect x="${x-7.45}" y="${y-10.3}" width="14.9" height="20.6" rx="1.2" fill="${C[1]}" stroke="${C[2]}" stroke-width=".5"/>`;
+ s+=`<path d="M${x-5.8} ${y-6.2}H${x+5.8}V${y+3.4}H${x+3}V${y+5.6}H${x-3}V${y+3.4}H${x-5.8}Z" fill="#1a1b1d"/>`+[0,1,2,3,4,5,6,7].map(i=>`<rect x="${x-4.55+i*1.3}" y="${y-6}" width=".6" height="3.2" fill="#d4a017"/>`).join('');
+ return s+txt(x,y+8.3,cat||'',2.2,col==='black'||col==='blue'||col==='red'||col==='green'?'#fff':'#333',800);}
 function conduitSVG(o){const G=cabGeo(o),D=G.g.D,R=G.R,B=cabBends(o),d=cabPathD(o);
  // שרשורי (corrugated PVC, grey) and קוברה (PVC-coated flexible steel, black): ribbed all along, a fitting at each end, no sockets or couplings
  if(o.p.ck==='flex'||o.p.ck==='cobra'){const cb=o.p.ck==='cobra',P=`d="${d}" fill="none" stroke-linejoin="round"`,rib=Math.max(1.6,D*.16);
@@ -2019,6 +2041,15 @@ const FDEF={
  hpipe:{layer:5,edit:['tag','mat','dn','rad'],def:{tag:'',mat:'pvc',dn:'110',len:3000,rad:1.5},size:o=>{const G=cabGeo(o);return {w:G.w,h:G.h};},terms:()=>[],draw:o=>hpipeSVG(o)},
  hvalve:{layer:5.2,edit:['tag','vk','dn'],def:{tag:'',vk:'gate',dn:'110'},size:o=>{const D=+o.p.dn||110;return {w:hvL(o),h:D*2.5+8};},draw:o=>hvalveSVG(o)},
  hfit:{layer:5.2,edit:['tag','fk','mat','dn','dn2'],def:{tag:'',fk:'elbow',mat:'steel',dn:'110',dn2:'63'},size:o=>{const {D,D2,k,L}=hfitGeo(o),F=D*.8+4;return k==='elbow'?{w:D*1.5+F*2,h:D*1.5+F*2}:k==='tee'?{w:L,h:L}:{w:L,h:F*2};},draw:o=>hfitSVG(o)},
+ lan:{layer:5,edit:['tag','cat','lc','plg','rad'],def:{tag:'',cat:'7',lc:'orange',plg:'rj45s',len:1000,rad:4},size:o=>{const G=cabGeo(o);return {w:G.w,h:G.h};},terms:()=>[],draw:o=>lanSVG(o)},
+ keyst:{layer:4,edit:['tag','cat','kcol'],def:{tag:'',cat:'6a',kcol:'white'},size:()=>({w:14.9,h:20.6}),
+  draw:o=>ksJack(0,0,o.p.kcol,(LANC[o.p.cat]||LANC['6a'])[0].split(' ')[0])+(o.p.tag?txt(0,14,o.p.tag,3.4,'#1d4ed8',700):'')},
+ kplate:{layer:4,edit:['tag','kn','cat','kcol','pcol'],def:{tag:'',kn:'2',cat:'6a',kcol:'white',pcol:'white'},size:()=>({w:86,h:86}),
+  draw:o=>{const n=+o.p.kn||2,P=o.p.pcol==='black'?['#26282b','#000']:['#f4f4f2','#9ca3af'];let s=`<rect x="-43" y="-43" width="86" height="86" rx="6" fill="${P[0]}" stroke="${P[1]}" stroke-width=".8"/><rect x="-35" y="-35" width="70" height="70" rx="4" fill="none" stroke="${P[1]}" stroke-width=".5" opacity=".6"/>`;
+   const cat=(LANC[o.p.cat]||LANC['6a'])[0].split(' ')[0],pos=n===1?[[0,0]]:n===2?[[-12,0],[12,0]]:[[-12,-13],[12,-13],[-12,13],[12,13]];
+   pos.forEach(([x,y],i)=>{s+=`<rect x="${x-9}" y="${y-12}" width="18" height="24" rx="1.5" fill="none" stroke="${P[1]}" stroke-width=".5"/>`+ksJack(x,y,o.p.kcol,cat);});
+   [[-30,0],[30,0]].forEach(([x,y])=>s+=`<circle cx="${x}" cy="${y}" r="2.2" fill="none" stroke="${P[1]}" stroke-width=".6"/>`);
+   return s+(o.p.tag?txt(0,38.5,o.p.tag,4,'#1d4ed8',700):'');}},
  conduit:{layer:5,edit:['tag','ck','fc','dn','rad'],def:{tag:'',ck:'mar',fc:'black',dn:'20',len:1000,rad:4},size:o=>{const G=cabGeo(o);return {w:G.w,h:G.h};},terms:()=>[],draw:o=>conduitSVG(o)},
  traysh:{layer:.5,resize:'len',minLen:200,edit:['tag','tw','len','orient'],def:{tw:200,len:1500,tag:''},size:o=>({w:o.p.len,h:+o.p.tw}),
   draw:o=>{const L=o.p.len,W=+o.p.tw;let s=`<rect x="${-L/2}" y="${-W/2}" width="${L}" height="${W}" fill="#c7cbd0" stroke="#5f6670" stroke-width="1.6"/><rect x="${-L/2}" y="${-W/2}" width="${L}" height="9" fill="#a9aeb5"/><rect x="${-L/2}" y="${W/2-9}" width="${L}" height="9" fill="#a9aeb5"/>`;
@@ -2487,6 +2518,8 @@ const LIB=[
    {g:'ארונות תקשורת 19" — קיר (רוחב 600)',items:[6,9,12,15,18,22].map(u=>({t:'nrack',n:`ארון תקשורת קיר ${u}U 19"`,p:{u}}))},
    {g:'ארונות תקשורת 19" — עומדים',items:[[24,600],[32,600],[42,600],[42,800],[47,800]].map(([u,w])=>({t:'nrack',n:`ארון תקשורת עומד ${u}U ${w}×${w===800?800:600}`,p:{u,w,kind:'floor'}}))},
    {g:'טבלת מיפוי לארון — שורה מול כל U: מה מותקן ומה ייעודו (את הייעוד כותבים במאפייני כל פריט)',items:[{t:'nmap',n:'טבלת מיפוי לארון'}]},
+   {g:'כבלי תקשורת עם ראשים — קטגוריה, צבע וראשים בעריכה; מסלול בגרירת הנקודות',items:[{t:'lan',n:'כבל CAT7 S/FTP עם ראשי RJ45 מסוככים'},{t:'lan',n:'כבל CAT7 עם ראשי GG45',p:{plg:'gg45',lc:'green'}},{t:'lan',n:'כבל CAT7A S/FTP עם ראשי RJ45 מסוככים',p:{cat:'7a',lc:'yellow'}},{t:'lan',n:'כבל CAT6A עם ראשי RJ45 מסוככים',p:{cat:'6a',lc:'blue'}},{t:'lan',n:'כבל CAT6 עם ראשי RJ45',p:{cat:'6',lc:'grey',plg:'rj45'}},{t:'lan',n:'כבל CAT5e עם ראשי RJ45',p:{cat:'5e',lc:'blue',plg:'rj45'}},{t:'lan',n:'כבל CAT7 בלי ראשים',p:{plg:'none'}}]},
+   {g:'שקעי קיסטון ופנלי קיר',items:[{t:'keyst',n:'שקע קיסטון CAT6A לבן'},{t:'keyst',n:'שקע קיסטון CAT6A מסוכך',p:{kcol:'metal'}},{t:'keyst',n:'שקע קיסטון CAT7 מסוכך',p:{cat:'7',kcol:'metal'}},{t:'keyst',n:'שקע קיסטון CAT6 כחול',p:{cat:'6',kcol:'blue'}},{t:'kplate',n:'פנל קיר 86×86 עם 2 קיסטונים'},{t:'kplate',n:'פנל קיר 86×86 עם קיסטון אחד',p:{kn:'1'}},{t:'kplate',n:'פנל קיר 86×86 עם 4 קיסטונים',p:{kn:'4'}}]},
    {g:'ארונות 10"',items:[4,6,9,12].map(u=>({t:'nrack',n:`ארון 10" ${u}U`,p:{u,inch:'10',w:312}}))},
    {g:'פאנלים 19"',items:[{t:'nequip',n:'פאנל שערות 1U',p:{k:'brush',rating:'Brush panel'}},{t:'nequip',n:'פאץ\' פאנל 24 פורט Cat6 1U',p:{k:'patch',ports:24,rating:'24×RJ45 Cat6'}},{t:'nequip',n:'פאץ\' פאנל 48 פורט Cat6 2U',p:{k:'patch',ports:48,u:2,rating:'48×RJ45 Cat6'}},{t:'nequip',n:'פאנל אופטי 24 LC 1U',p:{k:'fiber',ports:24,rating:'24×LC duplex'}},{t:'nequip',n:'פאנל אופטי 12 SC 1U',p:{k:'fiber',ports:12,fc:'sc',rating:'12×SC'}},{t:'nequip',n:'מארגן כבלים 1U',p:{k:'cm',rating:'Cable manager'}},{t:'nequip',n:'מארגן כבלים 2U',p:{k:'cm',u:2,rating:'Cable manager'}},{t:'nequip',n:'פאנל עיוור 1U',p:{k:'blank'}},{t:'nequip',n:'פאנל עיוור 2U',p:{k:'blank',u:2}}]},
    {g:'ציוד פעיל 19"',items:[{t:'nequip',n:'סוויץ\' 24 פורט + 4 SFP',p:{k:'sw',ports:24,sfp:4,rating:'24×1G + 4×SFP'}},{t:'nequip',n:'סוויץ\' 48 פורט + 4 SFP',p:{k:'sw',ports:48,sfp:4,rating:'48×1G + 4×SFP+'}},{t:'nequip',n:'סוויץ\' 8 פורט 1U',p:{k:'sw',ports:8,sfp:2,rating:'8×1G + 2×SFP'}},{t:'nequip',n:'נתב (Router) 1U',p:{k:'router'}},{t:'nequip',n:'חומת אש (Firewall) 1U',p:{k:'fw'}},{t:'nequip',n:'UPS 2U',p:{k:'ups',u:2}},{t:'nequip',n:'UPS 3U',p:{k:'ups',u:3}}]},
@@ -2919,7 +2952,7 @@ function toWorld(cx,cy){const r=svg.getBoundingClientRect();return [(cx-r.left-v
 
 /* ================= thumbnails ================= */
 function thumbSVG(o){let {w,h}=sizeOf(o);const p=o.type==='cabinet'?20:3,v=(o.rot||0)%180;if(v)[w,h]=[h,w];return `<svg viewBox="${-w/2-p} ${-h/2-p} ${w+2*p} ${h+2*p}" style="direction:ltr"><g transform="rotate(${v?90:0})">${DEF[o.type].draw(o)}${o.type==='cabinet'&&o.p.view==='front'?cabFront(o):''}</g></svg>`;}
-function mkObj(e,forThumb){const D=DEF[e.t];const p=JSON.parse(JSON.stringify(Object.assign({},D.def,e.p||{},{name:e.n})));if((e.t==='conduit'||e.t==='hpipe')&&!p.route){const L=+p.len||1000;p.route=[{x:-L/2,y:0},{x:L/2,y:0}];}if(ACC.includes(e.t)&&!(e.p&&e.p.color))p.color=curColor;
+function mkObj(e,forThumb){const D=DEF[e.t];const p=JSON.parse(JSON.stringify(Object.assign({},D.def,e.p||{},{name:e.n})));if((e.t==='conduit'||e.t==='hpipe'||e.t==='lan')&&!p.route){const L=+p.len||1000;p.route=[{x:-L/2,y:0},{x:L/2,y:0}];}if(ACC.includes(e.t)&&!(e.p&&e.p.color))p.color=curColor;
 if(forThumb&&THUMBP[e.t])Object.assign(p,THUMBP[e.t]);
  if(e.t==='duct')p.dw=curDW;
  return {id:uid(),type:e.t,x:0,y:0,rot:e.rot||0,p};}
@@ -4586,6 +4619,12 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='cut')h+=`<div class="fld"><label>ראש הכבל</label><select id="f_cut"><option value="0" ${v!=='1'?'selected':''}>פתוח — גידים ונקודות חיבור</option><option value="1" ${v==='1'?'selected':''}>מקוצץ — בלי גידים</option></select></div>`;
   else if(k==='nl')h+=`<div class="fld"><label>קווים</label><select id="f_nl">${[['3','3 — L1 L2 L3'],['4','4 — L1 L2 L3 N'],['5','5 — L1 L2 L3 N PE']].map(([a,b])=>`<option value="${a}" ${a===String(v)?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='vt')h+=`<div class="fld"><label>סוג המגוף</label><select id="f_vt">${[['bfly','פרפר (Butterfly)'],['gate','טריז (Gate)'],['ball','כדורי (Ball)']].map(([a,b])=>`<option value="${a}" ${a===(v||'bfly')?'selected':''}>${b}</option>`).join('')}</select></div>`;
+  else if(k==='cat'&&(o.type==='lan'||o.type==='keyst'||o.type==='kplate'))h+=`<div class="fld"><label>קטגוריה</label><select id="f_cat">${Object.entries(LANC).map(([a,q])=>`<option value="${a}" ${a===String(v)?'selected':''}>${q[0]}${o.type==='lan'?' — Ø'+q[1]+' מ"מ':''}</option>`).join('')}</select></div>`;
+  else if(k==='lc')h+=`<div class="fld"><label>צבע המעטה</label><select id="f_lc">${Object.entries(LANCOL).map(([a,q])=>`<option value="${a}" ${a===String(v)?'selected':''}>${q[0]}</option>`).join('')}</select></div>`;
+  else if(k==='plg')h+=`<div class="fld"><label>ראשים בקצוות</label><select id="f_plg">${Object.entries(LANPLG).map(([a,n])=>`<option value="${a}" ${a===String(v)?'selected':''}>${n}</option>`).join('')}</select></div>`;
+  else if(k==='kcol')h+=`<div class="fld"><label>צבע השקע</label><select id="f_kcol">${Object.entries(KSCOL).map(([a,q])=>`<option value="${a}" ${a===String(v)?'selected':''}>${q[0]}</option>`).join('')}</select></div>`;
+  else if(k==='kn')h+=`<div class="fld"><label>מספר שקעים בפנל</label><select id="f_kn">${['1','2','4'].map(a=>`<option ${a===String(v)?'selected':''}>${a}</option>`).join('')}</select></div>`;
+  else if(k==='pcol')h+=`<div class="fld"><label>צבע הפנל</label><select id="f_pcol"><option value="white" ${v!=='black'?'selected':''}>לבן</option><option value="black" ${v==='black'?'selected':''}>שחור</option></select></div>`;
   else if(k==='nph')h+=`<div class="fld"><label>הזנה</label><select id="f_nph"><option value="3" ${v!=='1'?'selected':''}>תלת-פאזי — L1 L2 L3</option><option value="1" ${v==='1'?'selected':''}>חד-פאזי — A1 / A2</option></select></div>`;
   else if(k==='cact')h+=`<div class="fld"><label>מופעל על ידי</label><select id="f_cact">${[['none','ממסר / מגען (בלי מפעיל)'],['push','לחצן'],['turn','בורר'],['key','מפתח'],['limit','מפסק גבול'],['float','מצוף'],['press','לחץ'],['temp','טמפרטורה'],['delay','טיימר']].map(([a,n])=>`<option value="${a}" ${a===String(v||'none')?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='cn')h+=`<div class="fld"><label>מספרי ההדקים: משותף-NC-NO</label><select id="f_cn">${['11-12-14','21-22-24','31-32-34','41-42-44','15-16-18','25-26-28','95-96-98'].map(a=>`<option ${a===String(v)?'selected':''}>${a}</option>`).join('')}</select></div>`;
@@ -5120,6 +5159,8 @@ function bomData0(){const rows={};state.objs.forEach(o=>{if(o.type==='tbf'){cons
   if(o.type==='acb'){const kl=`מפסק אוויר MasterPacT ${o.p.acs} ${o.p.acr}A ${+o.p.poles===4?4:3}P ${o.p.acv==='f'?'קבוע':'נשלף'} · ${o.p.mlu}`;rows[kl]=rows[kl]||{n:0};rows[kl].n++;return;}
   if(o.type==='hpipe'){const M=HMAT[o.p.mat]||HMAT.pvc,kl=`צינור ${M.n.replace(/ \(.*\)/,'')} ${HDNL(+o.p.dn,o.p.mat)}`;rows[kl]=rows[kl]||{n:0,len:0};rows[kl].len+=cabLength(o);rows[kl].n++;const nb=cabBends(o).filter(Boolean).length;if(nb){const kb=`קשת 90° ${M.s} ${HDNL(+o.p.dn,o.p.mat)}`;rows[kb]=rows[kb]||{n:0};rows[kb].n+=nb;}return;}
   if(o.type==='hvalve'||o.type==='hfit'){const kl=(o.type==='hvalve'?HVK[o.p.vk]:HFK[o.p.fk]+' '+(HMAT[o.p.mat]||HMAT.steel).s)+' '+HDNL(+o.p.dn,o.p.mat)+(o.type==='hfit'&&['red','tee'].includes(o.p.fk)?'×'+o.p.dn2:'');rows[kl]=rows[kl]||{n:0};rows[kl].n++;return;}
+  if(o.type==='lan'){const c=(LANC[o.p.cat]||LANC['7'])[0],kl=`כבל תקשורת ${c} ${(LANCOL[o.p.lc]||LANCOL.orange)[0]}`;rows[kl]=rows[kl]||{n:0,len:0};rows[kl].len+=cabLength(o);rows[kl].n++;if((o.p.plg||'rj45s')!=='none'){const kp=`ראש ${LANPLG[o.p.plg||'rj45s']}`;rows[kp]=rows[kp]||{n:0};rows[kp].n+=2;}return;}
+  if(o.type==='keyst'||o.type==='kplate'){const c=(LANC[o.p.cat]||LANC['6a'])[0].split(' ')[0],n=o.type==='kplate'?+o.p.kn||2:1;if(o.type==='kplate'){const kp=`פנל קיר לקיסטון ${n} שקעים ${o.p.pcol==='black'?'שחור':'לבן'}`;rows[kp]=rows[kp]||{n:0};rows[kp].n++;}const kl=`שקע קיסטון ${c} ${(KSCOL[o.p.kcol]||KSCOL.white)[0]}`;rows[kl]=rows[kl]||{n:0};rows[kl].n+=n;return;}
   if(o.type==='conduit'){const D=+o.p.dn||20,kn={mar:'מרירון',flex:'שרשורי',cobra:'קוברה'}[o.p.ck||'mar'],kl=`צינור ${kn}${o.p.ck==='flex'?' '+(FLEXC[o.p.fc]||FLEXC.black).n:''} ${D} מ"מ`,kb=o.p.ck&&o.p.ck!=='mar'?null:`קשת מרירון ${D} מ"מ`,nb=cabBends(o).filter(Boolean).length;rows[kl]=rows[kl]||{n:0,len:0};rows[kl].len+=cabLength(o);rows[kl].n++;if(nb&&kb){rows[kb]=rows[kb]||{n:0};rows[kb].n+=nb;}return;}
   let k=o.p.name+(o.p.rating&&!['label'].includes(o.type)?' '+o.p.rating:'');if(o.type==='cable'||o.type==='traysh'||o.type==='traymesh'){const g=o.type==='cable'?cabG2(o):null;k=o.type==='cable'?`כבל ${CNAME[o.p.color]||''} ${g.n}×${o.p.sec} ממ"ר`:`${o.type==='traysh'?'תעלת פח':'תעלת רשת'} ${o.p.tw} מ"מ`;rows[k]=rows[k]||{n:0,len:0};rows[k].len+=o.type==='cable'?cabLength(o):o.p.len;rows[k].n++;return;}
   if(o.type==='rail'||o.type==='duct'||o.type==='busbar'||o.type==='partition'){k=o.p.name+(o.type==='duct'?` ${o.p.dw}מ"מ`:'');rows[k]=rows[k]||{n:0,len:0};rows[k].len+=o.p.len;rows[k].n++;return;}
