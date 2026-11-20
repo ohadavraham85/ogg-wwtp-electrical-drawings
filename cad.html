@@ -1538,10 +1538,11 @@ const sT=(x,y,s,size=9,w=700,anchor='middle')=>txt(x,y,s,size,SK,w,anchor);
 const IO=()=>[[0,-30,''],[0,30,'']],TOP=()=>[[0,-30,'']];
 function sLbl(o,w){const ls=[[o.p.tag,9,700],[o.p.rating,7.5,400],[o.p.desc,7.5,400]].filter(l=>l[0]);const x=w/2+5;return ls.map((l,i)=>txt(x,-10+i*10.5,l[0],l[1],SK,l[2],'start')).join('');}
 // A switching contact: the fixed contact's mark tells breaker / isolator / contactor / switch.
-function sSwitch(mark){let s=sL(0,-30,0,-12)+sL(0,12,0,30)+sL(0,12,-11,-13);
+function sSwitch(mark){let s=(mark==='arc'?sL(0,-30,0,-17):sL(0,-30,0,-12))+sL(0,12,0,30)+sL(0,12,-11,-13);
  if(mark==='x')s+=sL(-4,-16,4,-8)+sL(-4,-8,4,-16);
  if(mark==='bar')s+=sL(-5,-12,5,-12);
- if(mark==='arc')s+=`<path d="M-5 -12a5 5 0 0 0 10 0" fill="none" stroke="${SK}" stroke-width="2"/>`;
+ // IEC 60617 S00284 — contactor main contact: the contactor semicircle sits on the fixed contact, its arc away from the blade
+ if(mark==='arc')s+=`<path d="M-5 -12a5 5 0 0 1 10 0" fill="none" stroke="${SK}" stroke-width="2"/>`;
  if(mark==='circ')s+=sC(0,-12,3);
  return s;}
 // Control circuit pieces (IEC 60617): a contact drawn on the 60-tall line, and the
