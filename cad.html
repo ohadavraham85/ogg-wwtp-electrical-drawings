@@ -491,6 +491,102 @@ body.iconsonly .ddbtn .lbl{display:none}
 body.v3on #toast{z-index:400;top:calc(70px + env(safe-area-inset-top))}
 #v3d .v3err{position:absolute;top:110px;inset-inline:8px;z-index:2;background:#7f1d1d;color:#fff;border:1px solid #fca5a5;border-radius:10px;padding:10px 12px;font:13px/1.45 Arial,sans-serif;direction:rtl;word-break:break-word;user-select:text}
 #v3d .v3hint{position:absolute;bottom:calc(10px + env(safe-area-inset-bottom));inset-inline:0;text-align:center;font:13px Heebo,Arial,sans-serif;color:#9ca3af;pointer-events:none;direction:rtl}
+/* ================= "pro" look (default; the drawer can switch back to the classic one) =================
+   Graphite layers instead of black, thin neutral lines instead of orange outlines,
+   flat controls, amber only for what is active or the main action, rounder
+   corners, smaller fields and labels, notices at the bottom. */
+body.pro{--bg:#0f1115;--card:#171a1f;--card2:#1f2329;--line:#2b3038;--line-acc:#2b3038;--txt:#eef0f3;--mut:#98a1ad;--acc:#ff9a1f;--acc-light:#ffb24d;--ink:#0f1115;--fab:#171a1f;--ctl:#1f2329;--ctl-bd:#2f353e;--on-acc:#1a1206;--acc-tint:rgba(255,154,31,.14);--hov:#262b33;--r:8px;--rc:6px}
+body.pro #stage{background-color:#0f1115}
+body.pro .card,body.pro #panel,body.pro #libStrip,body.pro #wireBar,body.pro #docTabs,body.pro .mbox,body.pro #coord,body.pro #measBar,body.pro #penBar,body.pro .ddmenu,body.pro #sbar,body.pro #lyTabs,body.pro .pill,body.pro #toast,body.pro #ldGhost{border:1px solid var(--line)}
+body.pro #panel,body.pro #docTabs,body.pro #wireBar,body.pro .mbox,body.pro .ddmenu{box-shadow:0 12px 32px rgba(0,0,0,.45)}
+body.pro #top{background:var(--card);border:0;border-bottom:1px solid var(--line)}
+body.pro #docTabs{border:0;border-bottom:1px solid var(--line);box-shadow:none;background:var(--card)}
+body.pro #favBar{border-bottom:1px solid var(--line);background:var(--bg);box-shadow:none}
+body.pro #favBar .item.fav{border-radius:var(--rc);border:1px solid var(--line);background:var(--card2);height:38px}
+body.pro #favBar .favlbl{color:var(--mut);font-weight:700}
+/* wide screens: the recent parts share the file / export row — one bar less */
+@media (min-width:700px) and (min-height:501px){
+ body.pro{--toph3:0px!important}
+ body.pro #favBar{top:calc(env(safe-area-inset-top) + var(--toph));height:var(--toph2);right:var(--dtw,210px);left:0;background:transparent;border:0;z-index:6}
+ body.pro #docTabs{border-bottom:1px solid var(--line)}}
+body.pro #panel{border:0;border-left:1px solid var(--line);box-shadow:-8px 0 28px rgba(0,0,0,.35)}
+body.pro #panel.half{border-top:1px solid var(--line)}
+body.pro .mbox,body.pro .ddmenu{border-radius:var(--r)}
+body.pro #drawer .dbox{border-left:1px solid var(--line)}
+/* controls: flat, quiet, hover lifts a shade; on = amber tint, not a solid block */
+body.pro .tb:not(:disabled),body.pro .rb:not(:disabled),body.pro .pb,body.pro .fab,body.pro .tab,body.pro .wbtn,body.pro .mbtns button,body.pro #pClose,body.pro #bSheet,body.pro #docTabs button,body.pro #tabs .tab,body.pro .plist button,body.pro #sbar button,body.pro #lyTabs button,body.pro #rail>button:not(.rb),body.pro .tbc{background:var(--ctl);border:1px solid var(--ctl-bd);box-shadow:none;border-radius:var(--rc);color:var(--txt)}
+body.pro .tb:not(:disabled),body.pro .rb:not(:disabled){background:transparent;border-color:transparent}
+body.pro #docTabs button{background:transparent;border-color:transparent}
+@media (hover:hover){body.pro .tb:not(:disabled):hover,body.pro .rb:not(:disabled):hover,body.pro .pb:hover,body.pro .tab:hover,body.pro .wbtn:hover,body.pro .mbtns button:hover,body.pro #pClose:hover,body.pro #docTabs button:hover,body.pro #tabs .tab:hover,body.pro .plist button:hover,body.pro #drawer .dbox button:hover,body.pro #sbar button:hover,body.pro #lyTabs button:hover,body.pro .item:hover{background:var(--hov);border-color:#3a414b}}
+body.pro .tb:not(:disabled):active,body.pro .rb:not(:disabled):active,body.pro .pb:active,body.pro .tab:active,body.pro .wbtn:active,body.pro .mbtns button:active,body.pro #docTabs button:active,body.pro .plist button:active,body.pro .item:active{transform:none;background:#2c323b}
+body.pro .tb.on,body.pro .rb.on,body.pro .pb.on,body.pro .fab.on,body.pro .tab.on,body.pro #tabs .tab.on,body.pro #docTabs button.on,body.pro #docTabs #bDark.on,body.pro #sbar button.on,body.pro #lyTabs button.on,body.pro #rail>button.on:not(.rb){background:var(--acc-tint);border-color:rgba(255,154,31,.55);color:var(--acc-light);box-shadow:none}
+body.pro .tb.on svg,body.pro .rb.on svg,body.pro .pb.on svg,body.pro .fab.on svg{stroke:var(--acc-light)}
+body.pro .rb.on span,body.pro .pb.on span{color:var(--acc-light)}
+body.pro .wbtn.pri,body.pro .mbtns button.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);box-shadow:none}
+@media (hover:hover){body.pro .wbtn.pri:hover,body.pro .mbtns button.pri:hover{background:var(--acc-light);border-color:var(--acc-light)}}
+body.pro .mbtns button.dng{background:#b91c1c;border-color:#b91c1c;color:#fff}
+body.pro .wbtn.on{background:rgba(34,197,94,.14);border-color:rgba(34,197,94,.55);color:#4ade80}
+body.pro .tb svg,body.pro .rb svg,body.pro .pb svg,body.pro .fab svg,body.pro #libStrip svg{stroke:#d5dae1;stroke-width:1.9}
+body.pro .rb span,body.pro .pb span{color:var(--mut);font-weight:600;font-size:11px}
+body.pro .sep{background:var(--line);opacity:1}
+/* menu button and "add part": amber, but without the glow */
+body.pro #bMenu{background:transparent;border:1px solid transparent;box-shadow:none}
+body.pro #bMenu svg{stroke:var(--acc);stroke-width:2.4}
+@media (hover:hover){body.pro #bMenu:hover{background:var(--hov)}}
+body.pro #libStrip{background:var(--acc);border:1px solid var(--acc);box-shadow:0 6px 18px rgba(0,0,0,.35);border-radius:var(--r) 0 0 var(--r)}
+@media (hover:hover){body.pro #libStrip:hover{background:var(--acc-light)}}
+body.pro #libStrip span{color:var(--on-acc)}body.pro #libStrip svg{stroke:var(--on-acc)}
+/* fields and labels */
+body.pro select,body.pro input,body.pro textarea{background:var(--bg);border:1px solid var(--ctl-bd);border-radius:var(--rc);padding:8px 10px;font-size:15px;color:var(--txt)}
+body.pro select:focus,body.pro input:focus,body.pro textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,154,31,.18)}
+body.pro .fld{margin-bottom:12px}
+body.pro .fld label{font-size:12.5px;font-weight:600;color:var(--mut);margin-bottom:5px}
+body.pro .hint{color:var(--mut);font-size:13px}
+body.pro .phead{border-bottom:1px solid var(--line);padding:12px 14px 10px}
+body.pro .phead b,body.pro #pTitle{color:var(--txt);font-size:16px;font-weight:700}
+body.pro #pClose{width:34px;height:34px;background:transparent;border-color:transparent}
+body.pro .grp,body.pro #sheetBody .grp,body.pro .tbzt{color:var(--txt);font-size:13px;font-weight:700;letter-spacing:.2px}
+body.pro #sheetBody .grp{background:var(--card);border-bottom:1px solid var(--line)}
+body.pro .ddmenu .ddt{color:var(--mut)}
+body.pro .item{background:var(--card2);border:1px solid var(--line);border-radius:var(--r)}
+body.pro .item:active{border-color:var(--acc)}
+body.pro .chip.on,body.pro #wireBar .wc.on{border-color:var(--acc);box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--acc)}
+body.pro .mbox h3{font-size:17px;font-weight:700}
+body.pro .mbtns button{font-size:15px;padding:10px}
+body.pro #modal{background:rgba(8,10,13,.55);backdrop-filter:blur(2px)}
+body.pro #drawer{background:rgba(8,10,13,.45)}
+body.pro #drawer .dbox button{font-weight:500;font-size:15px;padding:9px 12px}
+body.pro #drawer .dbox>div{color:var(--mut)!important;font-size:11.5px!important;font-weight:700;letter-spacing:.4px}
+/* rulers, status bar, sheet tabs */
+body.pro #rulX,body.pro #rulY{background:var(--card)}
+body.pro #rulX{border-top:1px solid var(--line)}body.pro #rulY{border-right:1px solid var(--line)}
+body.pro #rulX i,body.pro #rulY i{background:#59616c}
+body.pro #rulX b,body.pro #rulY b{color:var(--mut);font-weight:500}
+body.pro #rulX .cur,body.pro #rulY .cur{background:var(--acc);box-shadow:none}
+body.pro #coord{background:transparent;color:var(--acc-light);font-weight:500;font-size:12.5px;box-shadow:none}
+body.pro #sbar{background:var(--card);border-width:1px 1px 0 0;border-color:var(--line)}
+body.pro #sbar #coord{border-left:1px solid var(--line)}
+body.pro #sbar button,body.pro #lyTabs button{font-weight:600;background:transparent;border-color:transparent}
+body.pro #lyTabs{box-shadow:none}
+body.pro #saveSt.svst{border-width:1px}
+/* notices: bottom centre, small, out of the drawing's way */
+body.pro #toast{top:auto;bottom:calc(64px + env(safe-area-inset-bottom));background:rgba(23,26,31,.94);backdrop-filter:blur(6px);border-radius:var(--r);font-size:14px;padding:9px 14px;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:min(560px,calc(100vw - 32px));text-align:center}
+body.pro #xh,body.pro #yh{background:rgba(255,154,31,.35)}
+body.pro .tbzl{border:1px dashed var(--ctl-bd);background:var(--bg);border-radius:var(--r)}
+/* light app theme on top of "pro" */
+body.pro.uil{--bg:#f4f5f7;--card:#ffffff;--card2:#f1f3f6;--line:#e1e4e9;--line-acc:#e1e4e9;--txt:#14171c;--mut:#5b6472;--ink:#ffffff;--fab:#ffffff;--ctl:#ffffff;--ctl-bd:#d5d9df;--acc:#f28a00;--acc-light:#c86f00;--acc-tint:rgba(242,138,0,.12);--hov:#eef0f3}
+body.pro.uil .tb svg,body.pro.uil .rb svg,body.pro.uil .pb svg,body.pro.uil .tbc svg{stroke:#2a313b;stroke-width:1.9}
+body.pro.uil .rb span,body.pro.uil .pb span{color:var(--mut)}
+body.pro.uil .tb.on svg,body.pro.uil .rb.on svg{stroke:#c86f00}body.pro.uil .rb.on span{color:#c86f00}
+body.pro.uil #docTabs button,body.pro.uil .tab,body.pro.uil #tabs .tab,body.pro.uil .wbtn,body.pro.uil .mbtns button,body.pro.uil .plist button,body.pro.uil #drawer .dbox button,body.pro.uil .item .nm,body.pro.uil #selName{color:var(--txt)}
+body.pro.uil .fld label{color:var(--mut)}
+body.pro.uil .wbtn.pri,body.pro.uil .mbtns button.pri{color:#fff}
+body.pro.uil #toast{background:rgba(255,255,255,.96);color:var(--txt)}
+body.pro.uil #panel,body.pro.uil .mbox,body.pro.uil .ddmenu{box-shadow:0 10px 30px rgba(15,20,30,.12)}
+body.pro.uil #rulX i,body.pro.uil #rulY i{background:#9aa3ae}
+body.pro.uil #modal{background:rgba(20,24,30,.25)}
+body.pro.uil #docTabs,body.pro.uil #top,body.pro.uil #panel,body.pro.uil .mbox,body.pro.uil #measBar,body.pro.uil #wireBar{border-width:0 0 1px 0}
+body.pro.uil #panel{border-width:0 0 0 1px}
 </style>
 <script src="vendor/qrcode/qrcode.js"></script>
 </head>
@@ -3186,7 +3282,7 @@ function togglePaper(){showGridBg=!showGridBg;try{localStorage.setItem('epd.grid
 function applyView(){world.setAttribute('transform',`translate(${view.tx} ${view.ty}) scale(${view.s})`);$('ulay').setAttribute('transform',`translate(${view.tx} ${view.ty}) scale(${view.s})`);drawRulers();if(drawnS&&Math.abs(view.s-drawnS)/view.s>.02)render();
  $('bPaper')&&$('bPaper').classList.toggle('on',!showGridBg);if(!showGridBg){stage.style.backgroundImage='none';const so=sel&&get(sel);if(so&&so.type!=='wire')render();return;}
  const st=GRID>0?GRID:10,mj=st*5*view.s,mn=st*view.s,showMn=mn>=7;
- const SL=document.body.classList.contains('sld'),gM=SL?'#d6d6cf':'#383838',gm=SL?'#ebebe5':'#2e2e2e';
+ const SL=document.body.classList.contains('sld'),PR=document.body.classList.contains('pro'),gM=SL?'#d6d6cf':PR?'#272c33':'#383838',gm=SL?'#ebebe5':PR?'#1a1e23':'#2e2e2e';
  stage.style.backgroundImage=`linear-gradient(${gM} 1px,transparent 1px),linear-gradient(90deg,${gM} 1px,transparent 1px)`+(showMn?`,linear-gradient(${gm} 1px,transparent 1px),linear-gradient(90deg,${gm} 1px,transparent 1px)`:'');
  stage.style.backgroundSize=`${mj}px ${mj}px,${mj}px ${mj}px`+(showMn?`,${mn}px ${mn}px,${mn}px ${mn}px`:'');
  const p=`${view.tx}px ${view.ty}px`;stage.style.backgroundPosition=[p,p,p,p].join(',');const so=sel&&get(sel);if(so&&so.type!=='wire')render();}
@@ -3809,9 +3905,14 @@ function dropSVG(){if(!DROPR||!G||G.mode!=='drag')return '';const B=bbW(DROPR),m
    tool follows it (same localStorage key, picked up by its storage event). */
 const UI_KEY='ohadcad.ui';
 function uiLight(){try{return localStorage.getItem(UI_KEY)==='light';}catch(e){return false;}}
-function applyUI(){document.body.classList.toggle('uil',uiLight());}
+const PRO_KEY='ohadcad.look';
+function uiPro(){try{return localStorage.getItem(PRO_KEY)!=='classic';}catch(e){return true;}}
+function applyUI(){document.body.classList.toggle('uil',uiLight());document.body.classList.toggle('pro',uiPro());}
+function dtwSync(){try{const D=$('docTabs');if(!D)return;let mn=innerWidth;[...D.children].forEach(c=>{const r=c.getBoundingClientRect();if(r.width)mn=Math.min(mn,r.left);});document.body.style.setProperty('--dtw',Math.max(120,innerWidth-mn+10)+'px');}catch(e){}}
+addEventListener('resize',()=>setTimeout(dtwSync,50));setTimeout(dtwSync,400);
+function togglePro(){const p=!uiPro();try{localStorage.setItem(PRO_KEY,p?'pro':'classic');}catch(e){}applyUI();if(typeof applyView==='function')applyView();toast(p?'עיצוב מקצועי (חדש)':'עיצוב קלאסי (כתום־שחור)');}
 function toggleUI(){const l=!uiLight();try{localStorage.setItem(UI_KEY,l?'light':'dark');}catch(e){}applyUI();try{SH&&SH.applyUI&&SH.applyUI();}catch(e){}toast(l?'☀ האפליקציה במצב בהיר':'🌙 האפליקציה במצב כהה');}
-applyUI();addEventListener('storage',e=>{if(e.key===UI_KEY)applyUI();});
+applyUI();addEventListener('storage',e=>{if(e.key===UI_KEY||e.key===PRO_KEY)applyUI();});
 
 /* ================= display settings: font and overall size =================
    Kept per device. The font is applied here and in the shell; the size scales
@@ -4985,7 +5086,7 @@ function aboutDialog(){const v=(SH&&SH.version)||'';modal('אודות OhadCad',`
  <div class="grp" style="margin-top:12px">אחריות מקצועית</div><div class="hint" style="line-height:1.7">שרטוטים שהוכנו ב-OhadCad הם כלי עזר. התכנון, הבחירה והביצוע באחריות מתכנן / חשמלאי מוסמך, לפי התקנות והתקנים.</div>`,[{t:'סגור',cls:'pri'}]);}
 /* ================= drawer / menu ================= */
 function openDrawer(){const items=[['פרויקט'],['📄 פרויקט חדש',newProject],['🗂 פרויקט חדש מתבנית (דוגמאות)',templatesDialog],...(SH?[['📂 פתח מהתיקייה המשותפת',openShared],['💾 שמור עכשיו (נשמר גם אוטומטית)',saveShared],['📑 שמור עותק בשם…',()=>saveSharedAs(true)]]:[['📂 פתח פרויקט שמור',openProjects],['💾 שמור בשם…',saveAs]]),
- ...(SH&&SH.prefs&&SH.prefs.test?[['☁ בדיקת סנכרון מועדפים בין מכשירים',prefsCheck]]:[]),['תצוגה'],['⚙ הגדרות תצוגה — גופן והגדלה…',displayDialog],[uiLight()?'🌙 מצב כהה לאפליקציה':'☀ מצב בהיר לאפליקציה',toggleUI],['🧩 הסתרת כפתורים / איפוס הסרגלים…',tbEditor],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
+ ...(SH&&SH.prefs&&SH.prefs.test?[['☁ בדיקת סנכרון מועדפים בין מכשירים',prefsCheck]]:[]),['תצוגה'],['⚙ הגדרות תצוגה — גופן והגדלה…',displayDialog],[uiLight()?'🌙 מצב כהה לאפליקציה':'☀ מצב בהיר לאפליקציה',toggleUI],[uiPro()?'🎨 חזור לעיצוב הקלאסי (כתום־שחור)':'🎨 עיצוב מקצועי (חדש)',togglePro],['🧩 הסתרת כפתורים / איפוס הסרגלים…',tbEditor],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
  ['רקע לשרטוט'],['🖼 ייבוא תמונה / PDF / DXF כרקע',ulImport],['🗂 תמונות רקע — נעילה, שקיפות, כיול…',ulManager],['בדיקה וחיווט'],[state.ab&&state.ab.on?'📝 As-Built — רשימת שינויים / קבלה':'📝 התחל As-Built (סימון שינויים בענן)',abList],['🔗 בדיקת התאמה: חזית ↔ חד קווי',xcheckDialog],[(state.xrShow?'⇄ הסתר':'⇄ הצג')+' הפניות חזית ↔ חד קווי (ליד כל רכיב)',toggleXR],['🔢 מספר חוטים (לפי נקודות פוטנציאל)',numberWires],['📋 טבלאות חיווט: חוטים, מהדקים, כבלים',()=>wireTables()],[(state.wnShow?'🏷 הסתר':'🏷 הצג')+' מספרי חוטים',toggleWN],['🖨 מדבקות מספרי חוטים',printLabels],['ייצוא ושיתוף'],['📋 רשימת ציוד (BOM)',bom],['👁 תצוגה לפני הדפסה',printPreview],['📄 ייצוא PDF עם טבלת שרטוט',pdfDialog],['🖼️ ייצוא תמונה (PNG)',exportImage],['📐 ייצוא DXF ל-AutoCAD (נשמר כ-DWG)',dxfExport],['💾 הורד קובץ פרויקט (JSON)',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state))],['📤 העתק קובץ פרויקט',copyJSON],['📥 ייבוא קובץ פרויקט',importJSON],['OhadCad'],...(SH&&SH.menu?SH.menu():[]),['ℹ אודות OhadCad',aboutDialog]];
  $('dbox').innerHTML=`<div style="display:flex;align-items:center;justify-content:flex-end;margin:4px 8px 0"><img src="icons/wordmark-${uiLight()?'light':'dark'}.svg" alt="OhadCad" height="26"></div><h2>${esc(state.name)}</h2>`+items.map((it,i)=>it[1]?`<button data-i="${i}">${it[0]}</button>`:`<div style="color:#8a8a8a;font-size:13px;margin:12px 12px 2px">${it[0]}</div>`).join('');
  $('drawer').classList.remove('hidden');$('dbox').onclick=e=>{const b=e.target.closest('button');if(!b)return;$('drawer').classList.add('hidden');items[+b.dataset.i][1]();};}
