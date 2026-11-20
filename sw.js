@@ -1,13 +1,14 @@
 // OhadCad service worker: keeps the app on the device so it opens offline.
 // Pages are network-first (an update you push shows up on the next open);
 // everything else is served from the cache and refreshed in the background.
-const CACHE = 'ohadcad-v243';
+const CACHE = 'ohadcad-v244';
 const CORE = [
   './', './index.html', './cad.html', './manifest.webmanifest',
   './vendor/firebase/firebase-app-compat.js',
   './vendor/firebase/firebase-auth-compat.js',
   './vendor/firebase/firebase-firestore-compat.js',
   './vendor/three/three.min.js',
+  './vendor/qrcode/qrcode.js',
   './icons/icon.svg', './icons/ohadcad-192.png', './icons/ohadcad-512.png',
   './icons/ohadcad-maskable-192.png', './icons/ohadcad-maskable-512.png',
   './icons/ohadcad-apple-180.png', './icons/ohadcad-32.png', './icons/ohadcad-16.png', './icons/ohadcad.ico', './favicon.ico',

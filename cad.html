@@ -492,6 +492,7 @@ body.v3on #toast{z-index:400;top:calc(70px + env(safe-area-inset-top))}
 #v3d .v3err{position:absolute;top:110px;inset-inline:8px;z-index:2;background:#7f1d1d;color:#fff;border:1px solid #fca5a5;border-radius:10px;padding:10px 12px;font:13px/1.45 Arial,sans-serif;direction:rtl;word-break:break-word;user-select:text}
 #v3d .v3hint{position:absolute;bottom:calc(10px + env(safe-area-inset-bottom));inset-inline:0;text-align:center;font:13px Heebo,Arial,sans-serif;color:#9ca3af;pointer-events:none;direction:rtl}
 </style>
+<script src="vendor/qrcode/qrcode.js"></script>
 </head>
 <body>
 <div id="stage"><svg id="svg"><g id="ulay"></g><g id="world"></g></svg></div>
@@ -772,6 +773,34 @@ function anmDraw(o){const S=+o.p.anz===96?96:72,k=S/72,a=o.p.anv==='a',rg=o.p.ra
  s+=txt(0,cy-R*.42,u,8*k,'#111',800)+txt(-S/2+9*k,S/2-9*k,a?(mx+'/5A'):'AC',3.2*k,'#555',700,'start')+txt(S/2-9*k,S/2-9*k,'Cl.1.5',3.2*k,'#555',700,'end');
  return s+(o.p.tag?txt(0,S/2+6*k,o.p.tag,5*k,'#1d4ed8',800):'');}
 function lg(o,y=21.5){return o.p.tag?`<rect x="-15" y="${y-4.5}" width="30" height="9" rx="1" fill="#f3f3f0" stroke="#888" stroke-width=".4"/>`+txt(0,y,o.p.tag,4.2,'#222',700):'';}
+/* QR code on the panel: 'doc' links to this drawing in the shared folder
+   (APP_URL?d=id — index.html passes it on and the tool opens it), 'info' is the
+   drawing's name / number / revision as text, 'url' any text or link. */
+const APP_URL='https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/';
+const QRK={doc:'קישור לשרטוט הזה (בתיקייה המשותפת)',info:'פרטי השרטוט (שם, מספר, גרסה)',url:'קישור / טקסט חופשי'};
+function qrText(o){const k=o.p.qk||'doc';if(k==='url')return o.p.qt||APP_URL;
+ if(k==='info')return ['OhadCad',state.name,state.dwgno?'DWG '+state.dwgno:'',state.rev!=null&&state.rev!==''?'Rev '+state.rev:''].filter(Boolean).join(' | ');
+ return cloudId?APP_URL+'?d='+encodeURIComponent(cloudId):APP_URL;}
+const QRC={};
+function qrMat(t){if(QRC[t])return QRC[t];if(typeof qrcode!=='function')return null;try{const q=qrcode(0,'M');q.addData(t);q.make();const n=q.getModuleCount(),m=[];for(let r=0;r<n;r++){m.push([]);for(let c=0;c<n;c++)m[r].push(q.isDark(r,c));}return QRC[t]=m;}catch(e){return null;}}
+const qrPad=q=>Math.max(5,q*.12);
+function qrSz(o){const q=+o.p.qs||60;return {w:q+2*qrPad(q),h:q+2*qrPad(q)+(o.p.ql?Math.max(7,q*.13):0)};}
+function qrDraw(o){const q=+o.p.qs||60,{w,h}=qrSz(o),m=qrMat(qrText(o));let s=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="3" fill="#fff" stroke="#9ca3af" stroke-width=".8"/>`;
+ const x0=-q/2,y0=-h/2+qrPad(q);
+ if(m){const n=m.length,c=q/n;let d='';for(let r=0;r<n;r++)for(let k=0;k<n;k++)if(m[r][k])d+=`M${r2(x0+k*c)} ${r2(y0+r*c)}h${r2(c+.02)}v${r2(c+.02)}h${-r2(c+.02)}z`;s+=`<path d="${d}" fill="#000"/>`;}
+ else s+=`<rect x="${x0}" y="${y0}" width="${q}" height="${q}" fill="#eee" stroke="#999" stroke-dasharray="3 2"/>`+txt(0,y0+q/2,'QR',q*.2,'#999',700);
+ if(o.p.ql)s+=txt(0,y0+q+Math.max(7,q*.13)/2+2,o.p.ql,Math.max(4,q*.075),'#111',700);
+ if((o.p.qk||'doc')==='doc'&&!cloudId)s+=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="3" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+ return s;}
+function qrDialog(o){const k=o.p.qk||'doc';
+ panelForm('קוד QR',`<div class="fld"><label>מה הקוד יכיל</label><select id="f_qk">${Object.entries(QRK).map(([a,b])=>`<option value="${a}" ${a===k?'selected':''}>${b}</option>`).join('')}</select></div>
+ ${k==='url'?`<div class="fld"><label>קישור או טקסט</label><input id="f_qt" dir="ltr" value="${esc(o.p.qt||'')}" placeholder="https://..."></div>`:''}
+ <div class="fld"><label>גודל הריבוע (מ"מ)</label><input id="f_qs" type="number" min="15" max="300" dir="ltr" style="text-align:right" value="${o.p.qs}"></div>
+ <div class="fld"><label>כיתוב מתחת</label><input id="f_ql" value="${esc(o.p.ql||'')}"></div>
+ <div class="hint" style="direction:ltr;text-align:left;word-break:break-all">${esc(qrText(o))}</div>
+ ${k==='doc'&&!cloudId?'<div class="hint" style="color:#f59e0b">השרטוט עוד לא שמור בתיקייה המשותפת — הקוד מוביל כרגע רק לאפליקציה. אחרי "שמור בתיקייה המשותפת" הוא יוביל לשרטוט הזה (המסגרת הכתומה תיעלם).</div>':''}
+ <div class="hint">מי שסורק צריך להיות מחובר ומאושר באפליקציה כדי לראות את השרטוט.</div>`,
+ ()=>{const k0=o.p.qk;o.p.qk=$('f_qk').value;if($('f_qt'))o.p.qt=$('f_qt').value.trim();o.p.qs=Math.max(15,Math.min(300,Math.round(+$('f_qs').value)||60));o.p.ql=$('f_ql').value;commit();renderNow();updateBar();if(k0!==o.p.qk)setTimeout(()=>qrDialog(o),0);});}
 /* Enclosure brands: door colour and the maker's badge. Rittal VX25 / AE are RAL 7035
    light grey; Schneider PrismaSeT P / G are RAL 9003 white. '' = generic. */
 const BRANDS={'':'כללי',rittal:'Rittal (VX25 / AE)',prisma:'Schneider PrismaSeT (P / G)'};
@@ -1659,6 +1688,7 @@ const DEF={
    if(R.length)s+=`<line x1="${-w/2+f*1.6}" y1="${y}" x2="${w/2-f*1.6}" y2="${y}" stroke="${C.fg}" stroke-width="${f*.06}"/>`;y+=f*.85;
    R.forEach(r=>{s+=T(y,r,f,600);y+=f*1.45;});return s;}},
  /* ---- drawing & markup: callout, person, wall, shapes (not equipment, not in the BOM) ---- */
+ qr:{layer:7,edit:[],def:{qk:'doc',qt:'',qs:60,ql:'סרוק לתוכניות הלוח'},size:o=>qrSz(o),draw:o=>qrDraw(o)},
  callout:{layer:7,resize:'scale',edit:['text','fs','color'],def:{text:'הערה',color:'red',fs:8,tx:-60,ty:-40},
   size:o=>{const f=lblFs(o),ls=lblLines(o);return {w:Math.max(3*f,Math.max(...ls.map(l=>l.length))*f*.77+f*1.4),h:ls.length*f*1.3+f*.6};},
   draw:o=>{const {w,h}=DEF.callout.size(o),f=lblFs(o),ls=lblLines(o),y0=-(ls.length-1)*f*1.3/2,c=col(o,'red'),[TX,TY]=ctTip(o),tx=TX-o.x,ty=TY-o.y;
@@ -2778,7 +2808,7 @@ const LIB=[
    {g:'קירות',items:[{t:'wall',n:'קיר אופקי'},{t:'wall',n:'קיר אנכי',p:{w:200,h:2000}}]},
    {g:'קנה מידה',items:[{t:'person',n:'אדם (קנה מידה)'}]}]},
   {tab:'שרטוט וסימון',icon:'✎',draw:true,any:true,hint:'תיבת טקסט עם חץ: אחרי ההוספה גוררים את העיגול הכתום שבקצה החץ אל מה שרוצים להצביע עליו. אדם: נכנס ליד הרכיב הנבחר, עם הרגליים על ציר X. קו / חץ: אורך בגרירת העיגולים, וזווית במאפיינים.',groups:[
-   {g:'טקסט והפניות',items:[...I('תווית טקסט'),{t:'callout',n:'תיבת טקסט עם חץ'}]},
+   {g:'טקסט והפניות',items:[...I('תווית טקסט'),{t:'callout',n:'תיבת טקסט עם חץ'},{t:'qr',n:'קוד QR לשרטוט'},{t:'qr',n:'קוד QR עם פרטי השרטוט',p:{qk:'info',ql:'פרטי הלוח'}}]},
    {g:'שלטי לוח',items:[{t:'nplate',n:'שלט לוח (לבן)'},{t:'nplate',n:'שלט לוח (שחור)',p:{pcol:'black'}},{t:'nplate',n:'שלט לוח חירום (אדום)',p:{pcol:'red',title:'לוח חירום'}},{t:'nplate',n:'שלט אזהרה (צהוב)',p:{pcol:'yellow',title:'זהירות — מתח חשמלי',from:'',volt:'',ic:'',notes:'אין לפתוח ללא אישור'}}]},
    {g:'קווים וחצים',items:[{t:'shline',n:'קו'},{t:'shline',n:'קו מקווקו',p:{dash:'dash'}},{t:'shline',n:'חץ',p:{head:'end'}},{t:'shline',n:'חץ כפול',p:{head:'both'}},{t:'shline',n:'קו אנכי',rot:90}]},
    {g:'צורות',items:[{t:'shrect',n:'ריבוע / מלבן'},{t:'shrect',n:'מלבן מקווקו (אזור)',p:{dash:'dash',fill:'light'}},{t:'shellipse',n:'עיגול'},{t:'shellipse',n:'אליפסה',p:{w:300,h:180}}]}]}];
@@ -3341,6 +3371,8 @@ function redo(){if(hi<hist.length-1){hi++;restore(hist[hi]);}}
    and who changed it last. Opened outside the app, saving stays in the browser. */
 const SH=(()=>{try{return window.parent!==window&&window.parent.panelDesignsBridge||null;}catch(e){return null;}})();
 let cloudId=null;try{cloudId=localStorage.getItem('epd.cloudId')||null;}catch(e){}
+const DEEP=(()=>{try{return new URLSearchParams(location.search).get('d');}catch(e){return null;}})();
+async function openCloudDoc(id){const r=await SH.load(id);if(!r){toast('הלוח לא נמצא');return false;}await flushSave();state=JSON.parse(r.data);state.name=r.name;setCloud(r.id||id);sel=null;hist=[];hi=-1;lastSaved=JSON.stringify(state);commit();markSaved();renderNow();fit();toast('נפתח: '+r.name);return true;}
 function setCloud(id){cloudId=id;try{if(id)localStorage.setItem('epd.cloudId',id);else localStorage.removeItem('epd.cloudId');}catch(e){}}
 function fmtWhen(iso){try{return new Date(iso).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return iso||'';}}
 function partsCount(){return panelObjs().filter(o=>o.type!=='wire'&&o.type!=='label').length;}
@@ -3383,7 +3415,7 @@ async function openShared(){let ds=[];try{ds=await SH.list();}catch(e){toast('ל
  if(lk.length)h+=`<div style="color:#8a8a8a;font-size:13px;margin:16px 2px 6px">שמורים רק במכשיר הזה — אפשר להעביר לתיקייה המשותפת</div><div class="plist">${lk.map(k=>`<div style="display:flex;gap:8px"><button data-lo="${esc(k)}">📋 ${esc(k)} <span style="color:#999;font-size:13px">(${loc[k].objs.length} רכיבים)</span></button><button data-up="${esc(k)}" style="width:auto;flex:none;padding:0 12px">⬆ העבר</button></div>`).join('')}</div>`;
  modal('התיקייה המשותפת',h);
  $('mBody').onclick=async e=>{const o=e.target.closest('[data-k]'),d=e.target.closest('[data-d]'),lo=e.target.closest('[data-lo]'),up=e.target.closest('[data-up]');
-  if(o){const r=await SH.load(o.dataset.k);if(!r){toast('הלוח לא נמצא');openShared();return;}await flushSave();state=JSON.parse(r.data);state.name=r.name;setCloud(r.id);sel=null;hist=[];hi=-1;lastSaved=JSON.stringify(state);commit();markSaved();renderNow();fit();closeModal();toast('נפתח: '+r.name);}
+  if(o){if(await openCloudDoc(o.dataset.k))closeModal();else openShared();}
   if(d){const it=ds.find(x=>x.id===d.dataset.d);modal('מחיקת לוח',`<div class="hint">למחוק את "${esc(it?it.name:'')}" מהתיקייה המשותפת? הוא יימחק לכולם.</div>`,[{t:'מחק',cls:'pri',fn:async()=>{await SH.remove(d.dataset.d);if(cloudId===d.dataset.d)setCloud(null);toast('נמחק');openShared();}},{t:'ביטול',fn:()=>openShared()}]);}
   if(lo){setCloud(null);state=JSON.parse(JSON.stringify(loc[lo.dataset.lo]));sel=null;hist=[];hi=-1;commit();renderNow();fit();closeModal();toast('נפתח: '+lo.dataset.lo);}
   if(up){const k=up.dataset.up,s0=loc[k];try{await SH.save({name:k,data:JSON.stringify(s0),parts:s0.objs.filter(o=>o.type!=='wire'&&o.type!=='label').length});delete loc[k];saveProjects(loc);toast('הועבר לתיקייה המשותפת: '+k);openShared();}catch(err){toast('ההעברה נכשלה');}}};}
@@ -4758,6 +4790,7 @@ function editDialog(){const o=sel&&get(sel);
   if(!state.dwgno&&state.objs.length)ensureDwgNo().then(n=>{const el=$('f_dwgno');if(el&&!el.value)el.value=n;}).catch(()=>{});
   if(SH&&cloudId)SH.info(cloudId).then(d=>{const el=$('cloudInfo');if(!el)return;el.innerHTML=d?`☁ בתיקייה המשותפת<br>נוצר ע״י ${esc(d.createdBy)} · ${fmtWhen(d.createdAt)}<br>נערך לאחרונה ע״י ${esc(d.updatedBy)} · ${fmtWhen(d.updatedAt)}<br>שינויים נשמרים לכולם רק ב"שמור בתיקייה המשותפת".`:'הלוח נמחק מהתיקייה המשותפת. שמירה תיצור אותו מחדש.';}).catch(()=>{});return;}
  if(o.type==='cabinet'){cabDialog(o);return;}
+ if(o.type==='qr'){qrDialog(o);return;}
  if(o.type==='mdim'){const pin=o.p.a.of||o.p.b.of,L0=mdGeom(o).len;panelForm('מידה: '+mdFmt(L0)+' מ"מ',`<div class="fld"><label>אורך (מ"מ) — שינוי מזיז / משנה את מה שנמדד</label><input id="f_mlen" dir="ltr" style="text-align:right;font-size:18px;font-weight:800" type="number" step="0.1" value="${mdFmt(L0)}"></div><button class="wbtn dng" id="f_mdel" style="width:100%;margin:2px 0 10px">🗑 מחק את המידה</button><div class="fld"><label>כיוון המדידה</label><select id="f_mm">${[['h','אופקי (רוחב)'],['v','אנכי (גובה)']].map(([a,b])=>`<option value="${a}" ${a===mdMode(o.p.mode,...mdPt(o.p.a),...mdPt(o.p.b))?'selected':''}>${b}</option>`).join('')}</select></div>
 <div class="fld"><label>טקסט לפני המספר (לא חובה, למשל "רווח")</label><input id="f_mt" value="${esc(o.p.txt||'')}"></div>
 <div class="fld"><label>גודל הכתב (מ"מ בשרטוט)</label><input id="f_mfs" dir="ltr" style="text-align:right" type="number" step="0.5" min="1" value="${o.p.fs}"></div>
@@ -5785,7 +5818,8 @@ function starter(full=true){state={name:'לוח הדגמה',objs:[]};
 (function init(){let s=null;try{s=JSON.parse(localStorage.getItem('epd.current')||'null');}catch(e){}
  if(s&&Array.isArray(s.objs)&&s.objs.length){s.objs=s.objs.filter(o=>o.type==='wire'||DEF[o.type]);state=s;}else starter(true);
  gridLbl();buildSheet();commit();clearTimeout(saveT);saveT=null;markSaved();if(SH&&!cloudId&&state.name!=='לוח הדגמה'){lastSaved=null;scheduleSave();}applyView();renderNow();updateBar();setTimeout(fit,30);
- window.addEventListener('resize',()=>applyView());})();
+ window.addEventListener('resize',()=>applyView());
+ if(DEEP&&SH&&DEEP!==cloudId)setTimeout(()=>openCloudDoc(DEEP).catch(e=>toast('לא הצלחתי לפתוח את הלוח מהקישור')),600);})();
 </script>
 </body>
 </html>
