@@ -504,6 +504,7 @@ body.v3on #toast{z-index:400;top:calc(70px + env(safe-area-inset-top))}
 
 <div class="ddmenu hidden" id="mDraw"></div>
 <div class="ddmenu hidden" id="mMeas"></div>
+<div class="ddmenu hidden" id="mAlign"><div class="ddt">מרחקים שווים</div><button data-al="dist">📏 מרחק קבוע ביניהם… (אני קובע במ"מ)</button><button data-al="eqh">↔ רווחים שווים לרוחב — בין הקצוות</button><button data-al="eqv">↕ רווחים שווים לגובה — בין הקצוות</button><div class="ddt">יישור</div><button data-al="top">⬆ יישור לקצה העליון</button><button data-al="cy">⬌ יישור למרכז — בשורה אחת</button><button data-al="bottom">⬇ יישור לקצה התחתון</button><button data-al="left">⇤ יישור לשמאל</button><button data-al="cx">⇕ יישור למרכז — בטור אחד</button><button data-al="right">⇥ יישור לימין</button></div>
 <div class="ddmenu hidden" id="mOrder"><div class="ddt">סדר הרכיבים</div><button data-zo="front" title="Ctrl+Shift+]">⬆ הבא לחזית — מעל כולם</button><button data-zo="up" title="Ctrl+]">↑ קדימה צעד אחד</button><button data-zo="down" title="Ctrl+[">↓ אחורה צעד אחד</button><button data-zo="back" title="Ctrl+Shift+[">⬇ שלח לרקע — מתחת לכולם</button></div>
 <div id="favBar"></div>
 <div id="penBar" class="hidden"></div>
@@ -521,6 +522,7 @@ body.v3on #toast{z-index:400;top:calc(70px + env(safe-area-inset-top))}
     <div class="sep"></div>
     <button class="rb" id="bDup"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="13" rx="1.5"/><path d="M5 16V4.5A1.5 1.5 0 0 1 6.5 3H16"/></svg><span>שכפול</span></button>
     <button class="rb" id="bOrder" data-dd="mOrder" title="סדר: מעל / מתחת לרכיבים אחרים"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 16l9 5 9-5"/></svg><span>סדר</span></button>
+    <button class="rb" id="bAlign" data-dd="mAlign" title="יישור ומרחקים שווים — בחר כמה רכיבים (גרירת מסגרת או Shift / לחיצה ארוכה)"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="4" height="8" rx="1"/><rect x="10" y="8" width="4" height="8" rx="1"/><rect x="17" y="8" width="4" height="8" rx="1"/><path d="M5 4v2M12 4v2M19 4v2M5 18v2M12 18v2M19 18v2" stroke-opacity=".6"/></svg><span>יישור</span></button>
     <button class="rb" id="bRot"><svg viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4.6h-4.6"/></svg><span>סיבוב</span></button>
     <button class="rb" id="bPen" title="עט: כתיבה ושרטוט ביד חופשית על גבי השרטוט — ואחר כך מחק"><svg viewBox="0 0 24 24"><path d="M3 21c3-1 5-3 7-6"/><path d="M14.5 4.5l5 5L11 18l-5 1 1-5z"/></svg><span>עט</span></button>
     <button class="rb" id="bBrush" title="מברשת עיצוב: מעתיקה צבע, עובי קו, מקווקו, מילוי וגודל טקסט מהרכיב הנבחר לרכיבים שתקיש עליהם"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="14" height="6" rx="1.5"/><path d="M17 6h3v5h-8v3"/><rect x="10.5" y="14" width="3" height="7" rx="1"/></svg><span>מברשת</span></button>
@@ -3064,7 +3066,7 @@ function loadProjects(){try{return JSON.parse(localStorage.getItem('epd.projects
 function saveProjects(p){try{localStorage.setItem('epd.projects',JSON.stringify(p));return true;}catch(e){return false;}}
 
 /* ================= UI: top bar ================= */
-function updateBar(){const o=sel&&get(sel);{const df=doorsFront();$('bDoor').disabled=df===null;$('bDoor').classList.toggle('on',df===true);$('bDoor').title=df?'הצג את פנים הלוח':'הצג את חזית הלוח (דלת סגורה)';}$('bLockAll').classList.toggle('on',globalLock);$('bText').disabled=wireMode||globalLock;{const o2=sel&&get(sel);$('bText').title=o2&&o2.type!=='wire'&&o2.type!=='label'?'הוסף תיבת טקסט ל'+o2.p.name:'הוסף תיבת טקסט';}$('bLockAll').title=globalLock?'פתח עריכה':'נעל עריכה (צפייה בלבד)';['bDel','bLock','bRot','bMir','bDup'].forEach(b=>$(b).disabled=!o||wireMode);if(!o)$('bMir').classList.remove('on');$('bOrder').disabled=!selIds().length||wireMode||globalLock;$('bLock').disabled=!selIds().length||wireMode;$('rWire').classList.toggle('on',wireMode);$('bMeas').classList.toggle('on',!!measMode);if(pMode!=='lib')DRAWOPEN=false;$('rAdd').classList.toggle('on',pMode==='lib'&&!DRAWOPEN);$('bDraw').classList.toggle('on',pMode==='lib'&&DRAWOPEN);$('rProps').classList.toggle('on',pMode==='props');$('libStrip').classList.toggle('on',pMode==='lib');
+function updateBar(){const o=sel&&get(sel);if($('bAlign'))$('bAlign').disabled=selIds().length<2;{const df=doorsFront();$('bDoor').disabled=df===null;$('bDoor').classList.toggle('on',df===true);$('bDoor').title=df?'הצג את פנים הלוח':'הצג את חזית הלוח (דלת סגורה)';}$('bLockAll').classList.toggle('on',globalLock);$('bText').disabled=wireMode||globalLock;{const o2=sel&&get(sel);$('bText').title=o2&&o2.type!=='wire'&&o2.type!=='label'?'הוסף תיבת טקסט ל'+o2.p.name:'הוסף תיבת טקסט';}$('bLockAll').title=globalLock?'פתח עריכה':'נעל עריכה (צפייה בלבד)';['bDel','bLock','bRot','bMir','bDup'].forEach(b=>$(b).disabled=!o||wireMode);if(!o)$('bMir').classList.remove('on');$('bOrder').disabled=!selIds().length||wireMode||globalLock;$('bLock').disabled=!selIds().length||wireMode;$('rWire').classList.toggle('on',wireMode);$('bMeas').classList.toggle('on',!!measMode);if(pMode!=='lib')DRAWOPEN=false;$('rAdd').classList.toggle('on',pMode==='lib'&&!DRAWOPEN);$('bDraw').classList.toggle('on',pMode==='lib'&&DRAWOPEN);$('rProps').classList.toggle('on',pMode==='props');$('libStrip').classList.toggle('on',pMode==='lib');
  {const ids=selIds(),many=ids.length>1||(o&&isBox(o)),lk=ids.length&&ids.every(i=>get(i)?.locked);if(ids.length)$('lockLbl').textContent=lk?(many?'שחרר הכל':'שחרר רכיב'):(many?'נעל הכל':'נעל רכיב');}
  if(o){$('selName').textContent=o.type==='wire'?`חוט ${WCOL[o.p.color]?.n||''} ${o.p.sec} ממ"ר`:(o.p.name+(o.p.tag&&o.type!=='label'?' · '+o.p.tag:''));
   $('selThumb').innerHTML=o.type==='wire'?`<svg viewBox="0 0 24 24"><path d="M3 18C9 18 9 6 21 6" stroke="${WCOL[o.p.color]?.base}" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>`:thumbSVG(Object.assign({},o,{p:Object.assign({},o.p,THUMBP[o.type]||{})}));
@@ -3745,6 +3747,34 @@ function ulManager(){const U=state.objs.filter(o=>o.type==='underlay');
    an offset (o.z) on the part's layer. */
 // where a part is really drawn: a cabinet's front / a closed door / a lid sits over everything at 6.5
 function drawnRank(q){if((q.type==='cabinet'&&isFrontV(q))||(q.type==='enclosure'&&hasDoor(q)&&q.p.closed==='1')||(q.type==='cibox'&&ciLidOn(q)))return 6.5+(+q.z||0);return rank(q);}
+/* Align / distribute the selected parts. Distances are between the parts' outlines (gap) or their
+   centres (centre to centre); the first part (left / top) stays where it is. */
+function alSel(){return selIds().map(get).filter(o=>o&&o.type!=='wire'&&o.type!=='mdim'&&!o.locked);}
+function alMove(o,dx,dy){if(!dx&&!dy)return;o.x=r2(o.x+dx);o.y=r2(o.y+dy);}
+function alignDo(m){const L=alSel();if(L.length<2){toast('בחר לפחות 2 רכיבים (גרירת מסגרת, או Shift + לחיצה)');return;}
+ if(m==='dist'){distDialog(L);return;}const B=L.map(o=>({o,b:bbW(o)}));
+ if(['top','bottom','left','right','cx','cy'].includes(m)){const r=B[0].b,t=Math.min(...B.map(q=>q.b.y0)),bo=Math.max(...B.map(q=>q.b.y1)),le=Math.min(...B.map(q=>q.b.x0)),ri=Math.max(...B.map(q=>q.b.x1));
+  const ref=(()=>{const a=sel&&get(sel),q=a&&B.find(z=>z.o===a)||B[0];return q.b;})();
+  B.forEach(({o,b})=>{if(m==='top')alMove(o,0,t-b.y0);if(m==='bottom')alMove(o,0,bo-b.y1);if(m==='left')alMove(o,le-b.x0,0);if(m==='right')alMove(o,ri-b.x1,0);
+   if(m==='cy')alMove(o,0,(ref.y0+ref.y1)/2-(b.y0+b.y1)/2);if(m==='cx')alMove(o,(ref.x0+ref.x1)/2-(b.x0+b.x1)/2,0);});}
+ else{const ax=m==='eqh'?'x':'y';if(L.length<3){toast('לרווחים שווים בין הקצוות צריך לפחות 3 רכיבים — או "מרחק קבוע ביניהם"');return;}
+  const k0=ax+'0',k1=ax+'1';B.sort((p,q)=>(p.b[k0]+p.b[k1])-(q.b[k0]+q.b[k1]));const span=B[B.length-1].b[k1]-B[0].b[k0],sum=B.reduce((a,q)=>a+q.b[k1]-q.b[k0],0),g=(span-sum)/(B.length-1);
+  let at=B[0].b[k1];for(let i=1;i<B.length;i++){const q=B[i],d=at+g-q.b[k0];alMove(q.o,ax==='x'?d:0,ax==='y'?d:0);at=at+g+(q.b[k1]-q.b[k0]);}toast(`רווח שווה: ${Math.round(g*10)/10} מ"מ`);}
+ commit();renderNow();updateBar();}
+function distDialog(L){const B=L.map(o=>({o,b:bbW(o)})),sx=Math.max(...B.map(q=>q.b.x1))-Math.min(...B.map(q=>q.b.x0)),sy=Math.max(...B.map(q=>q.b.y1))-Math.min(...B.map(q=>q.b.y0)),ax0=sx>=sy?'x':'y';
+ const cur=(ax,mode)=>{const k0=ax+'0',k1=ax+'1',S=[...B].sort((p,q)=>(p.b[k0]+p.b[k1])-(q.b[k0]+q.b[k1]));let t=0;for(let i=1;i<S.length;i++)t+=mode==='cc'?((S[i].b[k0]+S[i].b[k1])-(S[i-1].b[k0]+S[i-1].b[k1]))/2:S[i].b[k0]-S[i-1].b[k1];return Math.round(t/(S.length-1)*10)/10;};
+ modal(`מרחק קבוע בין ${L.length} רכיבים`,`<div class="fld"><label>כיוון</label><select id="dd_ax"><option value="x" ${ax0==='x'?'selected':''}>לרוחב (שורה) ↔</option><option value="y" ${ax0==='y'?'selected':''}>לגובה (טור) ↕</option></select></div>
+<div class="fld"><label>מודדים</label><select id="dd_md"><option value="cc">ממרכז למרכז</option><option value="gap">רווח בין הקצוות</option></select></div>
+<div class="fld"><label>המרחק (מ"מ)</label><input id="dd_v" type="number" inputmode="decimal" step="1" min="0" value="${cur(ax0,'cc')}"></div>
+<label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="dd_al" checked> וגם ליישר אותם בקו אחד (לפי הראשון)</label>
+<div class="hint">הרכיב הראשון (השמאלי / העליון) נשאר במקומו, והשאר מסתדרים אחריו לפי הסדר.</div>`,
+ [{t:'ביטול'},{t:'החל',cls:'pri',fn:()=>{const ax=$('dd_ax').value,md=$('dd_md').value,v=+$('dd_v').value;if(!(v>=0)){toast('הקלד מרחק');return false;}
+  const k0=ax+'0',k1=ax+'1',o0=ax==='x'?'y':'x',S=[...B].sort((p,q)=>(p.b[k0]+p.b[k1])-(q.b[k0]+q.b[k1])),line=(S[0].b[o0+'0']+S[0].b[o0+'1'])/2;
+  let prev=S[0].b;for(let i=1;i<S.length;i++){const q=S[i],b=q.b,w=b[k1]-b[k0],want0=md==='cc'?(prev[k0]+prev[k1])/2+v-w/2:prev[k1]+v,d=want0-b[k0];
+   const dd=$('dd_al').checked?line-(b[o0+'0']+b[o0+'1'])/2:0;alMove(q.o,ax==='x'?d:dd,ax==='y'?d:dd);prev={[k0]:want0,[k1]:want0+w};}
+  commit();renderNow();updateBar();toast(`סודר: ${v} מ"מ ${md==='cc'?'ממרכז למרכז':'בין הקצוות'}`);}}]);
+ const sync=()=>{$('dd_v').value=cur($('dd_ax').value,$('dd_md').value);};$('dd_ax').onchange=sync;$('dd_md').onchange=sync;}
+document.addEventListener('click',e=>{const b=e.target.closest('#mAlign [data-al]');if(b){ddClose();alignDo(b.dataset.al);}});
 function zOrder(mode){const ids=selIds(),S=new Set(ids);if(!ids.length){toast('בחר רכיב קודם');return;}
  const ov=(a,b)=>{const A=bbW(a),B=bbW(b);return A.x0<B.x1&&B.x0<A.x1&&A.y0<B.y1&&B.y0<A.y1;};let moved=0;
  ids.map(get).filter(o=>o&&o.type!=='underlay').sort((a,b)=>(mode==='front'||mode==='up'?1:-1)*(rank(a)-rank(b))).forEach((o,i)=>{
