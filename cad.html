@@ -636,9 +636,12 @@ const XCS={xcks:['XCKS — מתכת',31,64,16,'#b9bec4','#5b636b'],xckp:['XCKP �
 const XCH={roller:'זרוע עם גלגלת',adj:'זרוע מתכווננת עם גלגלת',rod:'זרוע מוט',plunger:'בוכנה מתכת',rplunger:'בוכנה עם גלגלת',spring:'מוט קפיץ (שפם חתול)'};
 const XCM={xcks:{roller:'XCKS131',adj:'XCKS139',rod:'XCKS141',plunger:'XCKS110',rplunger:'XCKS102',spring:'XCKS106'},xckp:{roller:'XCKP2118G11',adj:'XCKP2145G11',rod:'XCKP2149G11',plunger:'XCKP2110G11',rplunger:'XCKP2102G11',spring:'XCKP2106G11'},
  xckj:{roller:'XCKJ10511',adj:'XCKJ10541',rod:'XCKJ10559',plunger:'XCKJ161',rplunger:'XCKJ167',spring:'XCKJ106'},xcmd:{roller:'XCMD2115L1',adj:'XCMD2145L1',rod:'XCMD2159L1',plunger:'XCMD2110L1',rplunger:'XCMD2102L1',spring:'XCMD2106L1'}};
+function xckLA(o){const A=+o.p.xa||0,r=+o.rot||0;return o.mx?180-A-r:A+r;}// lever angle in the part's own frame
 function xckGeo(o){const S=XCS[o.p.xs]||XCS.xcks,[,bw,bh,hh]=S,hd=o.p.xh||'roller',en=8,arm={roller:bw*.95,adj:bw*1.6,rod:bw*4.2}[hd]||0,rr=hd==='rod'?2:9,
- top={plunger:12,rplunger:15,spring:110}[hd]||(arm?rr+2:0),reach=arm+rr,W=Math.max(bw,2*reach+4),H=en+bh+hh+top;return {S,bw,bh,hh,hd,en,arm,rr,top,W,H};}
-function xckDraw(o){const g=xckGeo(o),{S,bw,bh,hh,hd,en,arm,rr,top,H}=g,[,,,,c,e]=S,yb=H/2,yB=yb-en,yT=yB-bh,yH=yT-hh,cy=yH+hh/2;let s='';
+ an=xckLA(o)*Math.PI/180,ex=arm*Math.cos(an),ey=arm*Math.sin(an),// the lever's angle: 0 = to the right, 90 = straight up
+ top={plunger:12,rplunger:15,spring:110}[hd]||(arm?Math.max(rr+2,ey+rr+2-hh/2):0),bot=arm?Math.max(0,-ey+rr+2-(hh/2+bh+en)):0,reach=arm?Math.abs(ex)+rr:0,W=r2(Math.max(bw,2*reach+4)),H=r2(en+bh+hh+top+bot);
+ return {S,bw,bh,hh,hd,en,arm,rr,top,bot,an,W,H};}
+function xckDraw(o){const g=xckGeo(o),{S,bw,bh,hh,hd,en,arm,rr,top,H}=g,[,,,,c,e]=S,yb=H/2-g.bot,yB=yb-en,yT=yB-bh,yH=yT-hh,cy=yH+hh/2;let s='';
  // cable entry (M20 gland stub)
  s+=`<rect x="-7" y="${yB}" width="14" height="${en}" fill="#6b7280" stroke="${e}" stroke-width=".6"/>`+[2,4,6].map(d=>`<path d="M-7 ${yB+d}h14" stroke="${e}" stroke-width=".35"/>`).join('');
  // body with its cover and screws
@@ -647,11 +650,11 @@ function xckDraw(o){const g=xckGeo(o),{S,bw,bh,hh,hd,en,arm,rr,top,H}=g,[,,,,c,e
  s+=`<rect x="${-bw/2+5}" y="${yT+bh*.38}" width="${bw-10}" height="${bh*.2}" rx="1" fill="#f3f4f6" stroke="#9ca3af" stroke-width=".4"/>`+txt(0,yT+bh*.44,'Telemecanique',Math.min(2.6,bw/12),'#3dcd58',800)+txt(0,yT+bh*.53,(XCM[o.p.xs]||XCM.xcks)[hd]||'',Math.min(2.4,bw/13),'#111',700);
  // head
  s+=`<rect x="${-bw*.42}" y="${yH}" width="${bw*.84}" height="${hh}" rx="2.4" fill="${c}" stroke="${e}" stroke-width=".8"/>`;
- if(arm){s+=`<circle cx="0" cy="${cy}" r="${hh*.32}" fill="#4b5563" stroke="#111" stroke-width=".5"/>`;
+ if(arm){s+=`<circle cx="0" cy="${cy}" r="${hh*.32}" fill="#4b5563" stroke="#111" stroke-width=".5"/><g transform="rotate(${r2(-xckLA(o))} 0 ${cy})">`;
   if(hd==='rod')s+=`<path d="M0 ${cy}H${arm}" stroke="#9ca3af" stroke-width="3" stroke-linecap="round"/><path d="M0 ${cy}H${arm}" stroke="#4b5563" stroke-width=".6"/>`;
   else{s+=`<rect x="-2" y="${cy-3}" width="${arm+2}" height="6" rx="2" fill="#6b7280" stroke="#111" stroke-width=".5"/>`;if(hd==='adj')s+=`<rect x="${arm*.35}" y="${cy-1}" width="${arm*.45}" height="2" rx="1" fill="#1f2937"/>`;
    s+=`<circle cx="${arm}" cy="${cy}" r="${rr}" fill="#1f2937" stroke="#000" stroke-width=".6"/><circle cx="${arm}" cy="${cy}" r="${rr*.38}" fill="#9ca3af" stroke="#111" stroke-width=".4"/>`;}
-  s+=`<circle cx="0" cy="${cy}" r="1.6" fill="#d1d5db"/>`;}
+  s+=`</g><circle cx="0" cy="${cy}" r="1.6" fill="#d1d5db"/>`;}
  if(hd==='plunger')s+=`<rect x="-5" y="${yH-top}" width="10" height="${top+1}" rx="1.5" fill="#d1d5db" stroke="#4b5563" stroke-width=".6"/><rect x="-5" y="${yH-top}" width="10" height="2.4" rx="1.2" fill="#e5e7eb"/>`;
  if(hd==='rplunger')s+=`<rect x="-4" y="${yH-top+6}" width="8" height="${top-5}" fill="#d1d5db" stroke="#4b5563" stroke-width=".6"/><circle cx="0" cy="${yH-top+6.5}" r="6.5" fill="#1f2937" stroke="#000" stroke-width=".5"/><circle cx="0" cy="${yH-top+6.5}" r="2.4" fill="#9ca3af"/>`;
  if(hd==='spring'){s+=`<rect x="-4" y="${yH-12}" width="8" height="12" fill="#9ca3af" stroke="#4b5563" stroke-width=".5"/>`;for(let y=yH-12;y>yH-34;y-=2.4)s+=`<path d="M-3.5 ${y}l7 -1.2" stroke="#4b5563" stroke-width=".9"/>`;s+=`<path d="M0 ${yH-34}V${yH-top+2}" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round"/><circle cx="0" cy="${yH-top+2}" r="2.2" fill="#ef4444"/>`;}
@@ -2198,8 +2201,8 @@ const WDEF={
    s+=`<rect x="-9" y="${-z.h*.05}" width="18" height="${z.h*.18}" rx="2" fill="#1f2937" stroke="#000" stroke-width=".6"/><path d="M-6 ${z.h*.04}h12M-6 ${z.h*.08}l6 4l6 -4" stroke="#9ca3af" stroke-width="1" fill="none"/>`+txt(0,z.h*.155,'LAD9V2',2.4,'#e5e7eb',700);
    [-1,1].forEach(a=>s+=`<rect x="${-dx-z.w*.32}" y="${a*(z.h/2+1.5)-1.5}" width="${2*dx+z.w*.64}" height="3" rx="1" fill="#9ca3af" opacity=".85"/>`);return s;}},
  /* inductive / capacitive proximity sensor: threaded barrel with lock nuts, LED and sensing face, 3-wire cable (BN +, BU −, BK out) */
- xck:{layer:4,edit:['tag','xs','xh'],def:{tag:'S1',xs:'xcks',xh:'roller'},size:o=>{const g=xckGeo(o);return {w:g.W,h:g.H};},
-  terms:o=>{const g=xckGeo(o);return spread(14,4).map((x,i)=>[r2(x*1.4),r2(g.H/2),['21','22','13','14'][i]]);},draw:o=>xckDraw(o)},
+ xck:{layer:4,edit:['tag','xs','xh','xa'],def:{tag:'S1',xs:'xcks',xh:'roller',xa:'0'},size:o=>{const g=xckGeo(o);return {w:g.W,h:g.H};},
+  terms:o=>{const g=xckGeo(o);return spread(14,4).map((x,i)=>[r2(x*1.4),r2(g.H/2-g.bot),['21','22','13','14'][i]]);},draw:o=>xckDraw(o)},
  prox:{layer:4,edit:['tag','rating','px','cl'],def:{tag:'B1',rating:'M18 PNP NO 10-30VDC',px:'ind'},ratings:['M12 PNP NO 10-30VDC','M18 PNP NO 10-30VDC','M30 PNP NO 10-30VDC','M18 NPN NO 10-30VDC','M18 PNP NC 10-30VDC'],
   size:o=>{const m=proxM(o);return {w:m+16,h:m*3.2+70+cabX(o)};},
   terms:o=>{const {h}=(DEF.prox.size0||DEF.prox.size)(o);return [[-8,-h/2,'+'],[0,-h/2,'−'],[8,-h/2,'OUT']];},
@@ -4373,6 +4376,7 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='tcol')h+=`<div class="fld"><label>צבע האזיקון</label><select id="f_tcol"><option value="black" ${v!=='white'?'selected':''}>שחור</option><option value="white" ${v==='white'?'selected':''}>לבן</option></select></div>`;
   else if(k==='tlen')h+=`<div class="fld"><label>אורך האזיקון הנראה (מ"מ)</label><select id="f_tlen">${['25','40','60','80','120'].map(a=>`<option ${a===String(v)?'selected':''}>${a}</option>`).join('')}</select></div>`;
   else if(k==='xs')h+=`<div class="fld"><label>סדרה</label><select id="f_xs">${Object.entries(XCS).map(([a,q])=>`<option value="${a}" ${a===String(v)?'selected':''}>${q[0]}</option>`).join('')}</select></div>`;
+  else if(k==='xa'){if(!['roller','adj','rod'].includes(o.p.xh||'roller'))return;h+=`<div class="fld"><label>זווית הזרוע על המסך (מעלות) — 0 ימינה, 90 למעלה, 180 שמאלה, 270 למטה</label><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input id="f_xa" type="number" inputmode="numeric" step="15" value="${+v||0}" style="width:80px;flex:0 0 80px">${[0,45,90,135,180,270].map(a=>`<button type="button" class="wbtn" style="padding:6px 8px" onclick="(function(){const i=document.getElementById('f_xa');i.value=${a};i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}));})()">${a}°</button>`).join('')}</div></div>`;}
   else if(k==='xh')h+=`<div class="fld"><label>ראש / מפעיל</label><select id="f_xh">${Object.entries(XCH).map(([a,n])=>`<option value="${a}" ${a===String(v)?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='hmat')h+=`<div class="fld"><label>סדרה</label><select id="f_hmat"><option value="xb5" ${v!=='xb4'?'selected':''}>Harmony XB5 — פלסטיק שחור</option><option value="xb4" ${v==='xb4'?'selected':''}>Harmony XB4 — מתכת (כרום)</option></select></div>`;
   else if(k==='leg')h+=`<div class="fld"><label>סימון הלחצנים</label><select id="f_leg">${[['io','I ירוק למעלה / O אדום למטה (התנע / עצור)'],['ud','חץ ▲ ירוק למעלה / חץ ▼ אדום למטה'],['udk','חץ ▲ / חץ ▼ — שני לחצנים שחורים']].map(([a,n])=>`<option value="${a}" ${a===String(v||'io')?'selected':''}>${n}</option>`).join('')}</select></div>`;
