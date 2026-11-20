@@ -3620,7 +3620,8 @@ async function openShared(){let ds=[];try{ds=await SH.list();}catch(e){toast('ל
    main switch and any meter over a busbar, then a feeder per protective device —
    drives and motor breakers to a motor, the rest to a load named after the part.
    The panel doesn't say what feeds what, so it's a draft to correct. */
-const SLD_MAP={mcb:'sbrk',rcd:'srcd',mpcb:'smpcb',gv2:'smpcb',vsd:'svfd',atv630:'svfd',cont:'scont',lc1d:'scont',spd:'sspd',psu:'sbrk'};
+const SLD_MAP={mcb:'sbrk',rcd:'srcd',mpcb:'smpcb',gv2:'smpcb',vsd:'svfd',atv630:'svfd',cont:'scont',lc1d:'scont',lc1k:'scont',lc2d:'srev',lc2k:'srev',nsx:'sbrk',nsxm:'sbrk',acb:'sacb',ats480:'sats480',spd:'sspd',psu:'sbrk'};
+function sldFromPanel(){if(curView()!=='sld')switchDoc('sld');genSld();}
 function genSld(){if(state.tab==='both')switchDoc('sld');delete state.originS;const P=panelObjs().filter(o=>o.type!=='wire'&&o.type!=='label').slice().sort((a,b)=>a.y-b.y||a.x-b.x);
  if(!P.length){toast('אין רכיבים בחזית הלוח');return;}
  const go=()=>{const objs=[],W=[],add=(t,p,x,y,rot=0)=>{const o=mkObj({t,n:(LIB.flatMap(T=>T.groups.flatMap(g=>g.items)).find(e=>e.t===t)||{n:t}).n,p});o.x=x;o.y=y;o.rot=rot;objs.push(o);return o;};
@@ -5223,7 +5224,7 @@ function openDrawer(){const T=(ic,n,fn,tip,on)=>({ic,n,fn,tip:tip||n,on:!!on});
    T('info','פרטי פרויקט',()=>{sel=null;multi.clear();renderNow();editDialog();},'שם, מספר שרטוט, גרסה')]},
   {k:'out',t:'הדפסה וייצוא',it:[T('print','הדפסה',printPreview,'תצוגה לפני הדפסה (Ctrl+P)'),T('pdf','PDF',pdfDialog,'ייצוא PDF עם טבלת שרטוט'),T('png','תמונה',exportImage,'ייצוא תמונה (PNG)'),T('dxf','AutoCAD',dxfExport,'ייצוא DXF ל-AutoCAD'),
    T('bom','רשימת ציוד',bom,'רשימת ציוד (BOM)'),T('exp','הורד קובץ',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state)),'הורד קובץ פרויקט (JSON)'),T('imp','ייבוא קובץ',importJSON,'ייבוא קובץ פרויקט'),T('clip','העתק קובץ',copyJSON,'העתק את קובץ הפרויקט')]},
-  {k:'chk',t:'בדיקה וחיווט',it:[T('check','התאמת מסמכים',xcheckDialog,'בדיקת התאמה: חזית ↔ חד קווי'),T('link','הפניות',toggleXR,'הצג / הסתר הפניות חזית ↔ חד קווי ליד כל רכיב',state.xrShow),
+  {k:'chk',t:'בדיקה וחיווט',it:[T('check','התאמת מסמכים',xcheckDialog,'בדיקת התאמה: חזית ↔ חד קווי'),T('sld','חד קווי מהלוח',sldFromPanel,'צור טיוטת חד קווי מרכיבי חזית הלוח (מחליף את החד קווי הנוכחי — אפשר לבטל)'),T('link','הפניות',toggleXR,'הצג / הסתר הפניות חזית ↔ חד קווי ליד כל רכיב',state.xrShow),
    T('num','מספור חוטים',numberWires,'מספר חוטים לפי נקודות פוטנציאל'),T('tag','מספרי חוטים',toggleWN,'הצג / הסתר את מספרי החוטים',state.wnShow),T('table','טבלאות',()=>wireTables(),'טבלאות חוטים, מהדקים וכבלים'),T('labels','מדבקות',printLabels,'מדבקות מספרי חוטים'),
    T('cloudr','As-Built',abList,state.ab&&state.ab.on?'As-Built פעיל — רשימת שינויים / קבלה':'התחל As-Built: סימון שינויים בענן',state.ab&&state.ab.on)]},
   {k:'bg',t:'רקע לשרטוט',it:[T('png','ייבוא רקע',ulImport,'ייבוא תמונה / PDF / DXF כרקע'),T('layers','ניהול רקעים',ulManager,'תמונות רקע — נעילה, שקיפות, כיול')]},
