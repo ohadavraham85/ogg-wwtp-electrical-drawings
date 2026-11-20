@@ -4093,7 +4093,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  if(o&&!wireMode&&!globalLock&&!o.locked&&o.type!=='wire'&&((o.type!=='enclosure'&&o.type!=='cibox'&&o.type!=='cabinet')||sel===o.id)){
   if(o.type==='mdim'){G.mode='mdoff';G.o=o;G.off0=+o.p.off||0;G.w0=toWorld(e.clientX,e.clientY);return;}
   G.mode='drag';G.o=o;G.ox=o.x;G.oy=o.y;G.w0=toWorld(e.clientX,e.clientY);G.kids=[];
-  if(isSelId(o.id)&&selIds().length>1)selIds().forEach(i=>{const q=get(i);if(q!==o&&!q.locked&&q.type!=='wire')G.kids.push({q,x:q.x,y:q.y});});
+  if(isSelId(o.id)&&selIds().length>1){selIds().forEach(i=>{const q=get(i);if(q!==o&&!q.locked&&q.type!=='wire')G.kids.push({q,x:q.x,y:q.y});});if(selIds().some(i=>get(i)?.locked))toast('🔒 יש בבחירה רכיב נעול — הוא לא זז (בטל נעילה כדי להזיז)');}
   if(o.type==='rail')state.objs.forEach(q=>{if(q!==o&&onRail(q,o))G.kids.push({q,x:q.x,y:q.y});});
   if(isBox(o)){const {w,h}=sizeOf(o);state.objs.forEach(q=>{if(q===o||isBox(q))return;if(q.type==='nmap'&&q.p.rk===o.id){G.kids.push({q,x:q.x,y:q.y});return;}
     if(q.type==='wire')q.pts.forEach(p=>{if(!p.r&&Math.abs(p.x-o.x)<w/2&&Math.abs(p.y-o.y)<h/2)G.kids.push({q:p,x:p.x,y:p.y});});
@@ -4310,7 +4310,7 @@ document.addEventListener('keydown',e=>{const t=e.target;if(t&&(t.isContentEdita
  const k=e.key,mod=e.ctrlKey||e.metaKey;
  if((k==='Delete'||k==='Backspace')&&!globalLock&&!wireMode&&selIds().length){e.preventDefault();deleteSelected();}
  else if(k.startsWith('Arrow')&&!mod&&!globalLock&&selIds().length){// nudge the selection: 1 mm, with Shift 10 mm
-  const L=selIds().map(get).filter(o=>o&&o.type!=='wire'&&o.type!=='mdim'&&!o.locked);if(!L.length)return;e.preventDefault();
+  const L=selIds().map(get).filter(o=>o&&o.type!=='wire'&&o.type!=='mdim'&&!o.locked);if(selIds().some(i=>get(i)?.locked)&&!NUDGE_T)toast('🔒 יש בבחירה רכיב נעול — הוא לא זז (בטל נעילה כדי להזיז)');if(!L.length)return;e.preventDefault();
   const st=e.shiftKey?10:1,dx=k==='ArrowLeft'?-st:k==='ArrowRight'?st:0,dy=k==='ArrowUp'?-st:k==='ArrowDown'?st:0;
   L.forEach(o=>{o.x=r2(o.x+dx);o.y=r2(o.y+dy);});
   renderNow();clearTimeout(NUDGE_T);NUDGE_T=setTimeout(()=>{commit();updateBar();},450);}
