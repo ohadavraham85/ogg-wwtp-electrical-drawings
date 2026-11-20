@@ -2680,8 +2680,8 @@ const LIB=[
   {tab:'לחצנים ונוריות',icon:'◉',hint:all['לחצן']?LIB.find(T=>T.groups.some(g=>g.items.includes(all['לחצן']))).hint:'',groups:[
    {g:'קופסאות לחצנים שניידר Harmony (XALD / XALK) — בוחרים במאפיינים מה בכל קדח',items:[{t:'xbox',n:'קופסת לחצנים 1 קדח — XALD01',p:{n:1,h1:'start'}},{t:'xbox',n:'קופסת לחצנים 2 קדחים — XALD02',p:{n:2,h1:'start',h2:'stop'}},{t:'xbox',n:'קופסת לחצנים 3 קדחים — XALD03',p:{n:3,h1:'start',h2:'stop',h3:'lampg'}},{t:'xbox',n:'קופסת חירום צהובה — XALK',p:{n:1,h1:'estop',yel:'1'}}]},
    {g:'לחצנים כפולים Harmony לחור 22 — I ירוק למעלה, נורה באמצע, O אדום למטה',items:[{t:'pbdbl',n:'לחצן כפול XB5 עם נורה לבנה 230V — XB5AW73731M5',p:{lcol:'w'}},{t:'pbdbl',n:'לחצן כפול XB5 עם נורה ירוקה 230V — XB5AW73733M5',p:{lcol:'g'}},{t:'pbdbl',n:'לחצן כפול XB5 עם נורה אדומה 230V — XB5AW73734M5',p:{lcol:'r'}},{t:'pbdbl',n:'לחצן כפול XB5 עם נורה כתומה 24V — XB5AW73735B5',p:{lcol:'o',pv:'B'}},{t:'pbdbl',n:'לחצן כפול XB5 בלי נורה — XB5AL73415',p:{lcol:'none'}},{t:'pbdbl',n:'לחצן כפול מתכת XB4 עם נורה לבנה 230V — XB4BW73731M5',p:{hmat:'xb4',lcol:'w'}},{t:'pbdbl',n:'לחצן כפול מתכת XB4 עם נורה ירוקה 24V — XB4BW73733B5',p:{hmat:'xb4',lcol:'g',pv:'B'}},{t:'pbdbl',n:'לחצן כפול מתכת XB4 בלי נורה — XB4BL73415',p:{hmat:'xb4',lcol:'none'}},{t:'pbdbl',n:'לחצן כפול חצים ▲▼ XB5 עם נורה לבנה 230V',p:{leg:'ud',lcol:'w'}},{t:'pbdbl',n:'לחצן כפול חצים ▲▼ XB5 שחור, בלי נורה',p:{leg:'udk',lcol:'none'}},{t:'pbdbl',n:'לחצן כפול חצים ▲▼ מתכת XB4 עם נורה לבנה 24V',p:{hmat:'xb4',leg:'ud',lcol:'w',pv:'B'}}]},
-   {g:'אביזרי 22 מ"מ לחזית — בחר צבע ואז אביזר',colors:true,items:I('חור 22 מ"מ','לחצן','לחצן מואר','נורית 22','בורר 2 מצבים','בורר 3 מצבים','בורר מפתח','לחצן חירום','פוטנציומטר','זמזם')}]},
-   {g:'נורית 22 מ"מ עם מד מתח / זרם — ומשנה הזרם הקטן שלה',items:[{t:'pl22m',n:'נורית 22 עם מד מתח + זרם'},{t:'pl22m',n:'נורית 22 עם מד מתח',p:{mm:'v',rating:'AC 60-500V'}},{t:'pl22m',n:'נורית 22 עם מד זרם',p:{mm:'a',rating:'AC 0-100A'}},{t:'pl22m',n:'נורית 22 ירוקה עם מד מתח + זרם',p:{color:'green',dc:'green'}},{t:'ctmini',n:'משנה זרם קטן לנורית (טבעת)'}]},
+   {g:'אביזרי 22 מ"מ לחזית — בחר צבע ואז אביזר',colors:true,items:I('חור 22 מ"מ','לחצן','לחצן מואר','נורית 22','בורר 2 מצבים','בורר 3 מצבים','בורר מפתח','לחצן חירום','פוטנציומטר','זמזם')},
+   {g:'נורית 22 מ"מ עם מד מתח / זרם — ומשנה הזרם הקטן שלה',items:[{t:'pl22m',n:'נורית 22 עם מד מתח + זרם'},{t:'pl22m',n:'נורית 22 עם מד מתח',p:{mm:'v',rating:'AC 60-500V'}},{t:'pl22m',n:'נורית 22 עם מד זרם',p:{mm:'a',rating:'AC 0-100A'}},{t:'pl22m',n:'נורית 22 ירוקה עם מד מתח + זרם',p:{color:'green',dc:'green'}},{t:'ctmini',n:'משנה זרם קטן לנורית (טבעת)'}]}]},
   {tab:'בקרים (PLC)',icon:'▣',hint:'מוסיפים קודם שאסי (Rack), ואז ספק, מעבד וכרטיסים — כל אחד נתפס לחריץ הקרוב בשאסי (הספק לחריץ PS). הדגם נבחר במאפיינים.',groups:[
    {g:'Schneider Modicon M340 — שאסי',items:[{t:'m340rack',n:'שאסי M340 BMXXBP0400 (4 חריצים)',p:{slots:4}},{t:'m340rack',n:'שאסי M340 BMXXBP0600 (6 חריצים)',p:{slots:6}},{t:'m340rack',n:'שאסי M340 BMXXBP0800 (8 חריצים)',p:{slots:8}},{t:'m340rack',n:'שאסי M340 BMXXBP1200 (12 חריצים)',p:{slots:12}}]},
    {g:'M340 — ספקי כוח',items:[{t:'m340mod',n:'BMXCPS2000 — ספק 100-240VAC 20W',p:{model:'BMXCPS2000'}},{t:'m340mod',n:'BMXCPS3500 — ספק 100-240VAC 36W',p:{model:'BMXCPS3500'}},{t:'m340mod',n:'BMXCPS2010 — ספק 24VDC',p:{model:'BMXCPS2010'}}]},
@@ -2840,7 +2840,7 @@ function hopPath(ps,hops,gaps){const R=5,GP=3.4;let d='M'+r2(ps[0].x)+' '+r2(ps[
    H.forEach(h=>{d+='L'+r2(h.x-dir*R)+' '+r2(a.y)+'A'+R+' '+R+' 0 0 '+(dir>0?1:0)+' '+r2(h.x+dir*R)+' '+r2(a.y);});}
   d+='L'+r2(b.x)+' '+r2(b.y);}
  return d;}
-function drawWire(w,isSel){const s=drawWire0(w,isSel);return DMS&&!isSel&&s&&!(state.tab==='sld'||isSldObj(w))?s.replace('<g data-id=','<g mask="url(#dM)" data-id='):s;}
+function drawWire(w,isSel){const s=drawWire0(w,isSel),l=s?wnLabel(w):'';return (DMS&&!isSel&&s&&!(state.tab==='sld'||isSldObj(w))?s.replace('<g data-id=','<g mask="url(#dM)" data-id='):s)+l;}
 function drawWire0(w,isSel){const LP=WL.get(w.id);const d=LP&&LP.length>1?hopPath(LP,WG.get(w.id),WB.get(w.id)):wirePath(w);if(!d)return '';if(w.p.joint){const a=resolve(w.pts[0]),b=resolve(w.pts[1]);if(a&&b&&Math.hypot(a.x-b.x,a.y-b.y)<.6)return `<g data-id="${w.id}"><circle cx="${a.x}" cy="${a.y}" r="6" fill="transparent"/><circle cx="${a.x}" cy="${a.y}" r="${isSel?3.2:2.2}" fill="${isSel?'#60a5fa':'#8b5a2b'}"/></g>`;}const sld=state.tab==='sld'||isSldObj(w);let sw=SEC[w.p.sec]||2.3;if(sld)sw=1.3;if(EXPMIN)sw=Math.max(sw,EXPMIN);const c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
  if(w.p.ph==='3'){const ps=LP&&LP.length>1?LP:wirePs(w),gap=sld?2.4:sw*1.25;let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${gap*2+sw+8}"/>`;if(isSel)s+=`<path ${P} stroke="#60a5fa" stroke-width="${gap*2+sw+3}"/>`;
   PH3.forEach((k,i)=>{const q=offPoly(ps,(i-1)*gap),dd='M'+q.map(p=>r2(p.x)+' '+r2(p.y)).join('L');s+=`<path d="${dd}" fill="none" stroke-linejoin="round" stroke="${WCOL[k].base}" stroke-width="${sw}"/>`;if(WCOL[k].dash)s+=`<path d="${dd}" fill="none" stroke="${WCOL[k].dash}" stroke-width="${sw}" stroke-dasharray="5 5"/>`;});return s+'</g>';}
@@ -4744,8 +4744,8 @@ function editDialog(){const o=sel&&get(sel);
 <div class="hint">${pin?'המידה מחוברת לרכיב שנמדד וזזה איתו. ':''}כדי להרחיק או לקרב את קו המידה — גרור אותו.</div>`,
   ()=>{o.p.mode=$('f_mm').value;o.p.txt=$('f_mt').value;o.p.fs=+$('f_mfs').value||o.p.fs;o.p.off=+$('f_moff').value||0;o.p.color=$('f_color').value;const nl=parseFloat($('f_mlen').value);if(nl>0&&Math.abs(nl-mdGeom(o).len)>.05)mdSetLen(o,nl);commit();renderNow();updateBar();});
   $('f_mdel').onclick=()=>{state.objs=state.objs.filter(q=>q!==o);sel=null;closePanel();commit();renderNow();updateBar();toast('המידה נמחקה');};return;}
- if(o.type==='wire'){panelForm('חוט',`<div class="fld"><label>צבע</label><select id="f_wc">${Object.keys(WCOL).map(c=>`<option value="${c}" ${c===o.p.color?'selected':''}>${WCOL[c].n}</option>`).join('')}</select></div><div class="fld"><label>חתך (ממ"ר)</label><select id="f_sec">${SECK.map(s=>`<option ${s===o.p.sec?'selected':''}>${s}</option>`).join('')}</select></div><div class="fld"><label>פאזות</label><select id="f_wph"><option value="1" ${o.p.ph!=='3'?'selected':''}>קו אחד (בצבע שנבחר)</option><option value="3" ${o.p.ph==='3'?'selected':''}>תלת-פאזי — 3 קווים: חום, כתום, שחור</option></select></div><div class="fld"><label>סימון חוט</label><input id="f_wtag" value="${esc(o.p.tag||'')}"></div><div class="hint">אורך משוער: ${(wireLen(o)/1000).toFixed(2)} מ'</div>`,
-  ()=>{o.p.color=$('f_wc').value;o.p.sec=$('f_sec').value;o.p.ph=$('f_wph').value;o.p.tag=$('f_wtag').value;commit();renderNow();updateBar();});return;}
+ if(o.type==='wire'){panelForm('חוט',`<div class="fld"><label>צבע</label><select id="f_wc">${Object.keys(WCOL).map(c=>`<option value="${c}" ${c===o.p.color?'selected':''}>${WCOL[c].n}</option>`).join('')}</select></div><div class="fld"><label>חתך (ממ"ר)</label><select id="f_sec">${SECK.map(s=>`<option ${s===o.p.sec?'selected':''}>${s}</option>`).join('')}</select></div><div class="fld"><label>פאזות</label><select id="f_wph"><option value="1" ${o.p.ph!=='3'?'selected':''}>קו אחד (בצבע שנבחר)</option><option value="3" ${o.p.ph==='3'?'selected':''}>תלת-פאזי — 3 קווים: חום, כתום, שחור</option></select></div><div class="fld"><label>סימון חוט</label><input id="f_wtag" value="${esc(o.p.tag||'')}"></div><div class="fld"><label>מספר חוט (מתמלא ב"מספר חוטים", אפשר לשנות)</label><input id="f_wn" value="${esc(o.p.wn||'')}"></div><div class="hint">אורך משוער: ${(wireLen(o)/1000).toFixed(2)} מ'</div>`,
+  ()=>{o.p.color=$('f_wc').value;o.p.sec=$('f_sec').value;o.p.ph=$('f_wph').value;o.p.tag=$('f_wtag').value;if($('f_wn')){const v=$('f_wn').value.trim();if(v)o.p.wn=v;else delete o.p.wn;}commit();renderNow();updateBar();});return;}
  const D=DEF[o.type];let h=`<div class="fld"><label>שם הרכיב</label><input id="f_name" value="${esc(o.p.name)}"></div>`;
  D.edit.forEach(k=>{const v=o.p[k]??'';
   if(k==='color')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_color">${Object.keys(COLORS).map(c=>`<option value="${c}" ${c===o.p.color?'selected':''}>${CNAME[c]}</option>`).join('')}</select></div>`;
@@ -4929,10 +4929,102 @@ function aboutDialog(){const v=(SH&&SH.version)||'';modal('אודות OhadCad',`
 /* ================= drawer / menu ================= */
 function openDrawer(){const items=[['פרויקט'],['📄 פרויקט חדש',newProject],['🗂 פרויקט חדש מתבנית (דוגמאות)',templatesDialog],...(SH?[['📂 פתח מהתיקייה המשותפת',openShared],['💾 שמור עכשיו (נשמר גם אוטומטית)',saveShared],['📑 שמור עותק בשם…',()=>saveSharedAs(true)]]:[['📂 פתח פרויקט שמור',openProjects],['💾 שמור בשם…',saveAs]]),
  ...(SH&&SH.prefs&&SH.prefs.test?[['☁ בדיקת סנכרון מועדפים בין מכשירים',prefsCheck]]:[]),['תצוגה'],['⚙ הגדרות תצוגה — גופן והגדלה…',displayDialog],[uiLight()?'🌙 מצב כהה לאפליקציה':'☀ מצב בהיר לאפליקציה',toggleUI],['🧩 הסתרת כפתורים / איפוס הסרגלים…',tbEditor],[(showTerms?'🔵 הסתר':'🔵 הדגש')+' נקודות חיבור',toggleTerms],[(showAxes?'📏 הסתר':'📏 הצג')+' צירים וסרגלים',toggleAxes],['📍 קבע ראשית צירים בפינת הרכיב הנבחר',setOrigin],['↺ ראשית צירים בפינת השרטוט',resetOrigin],
- ['רקע לשרטוט'],['🖼 ייבוא תמונה / PDF / DXF כרקע',ulImport],['🗂 תמונות רקע — נעילה, שקיפות, כיול…',ulManager],['ייצוא ושיתוף'],['📋 רשימת ציוד (BOM)',bom],['👁 תצוגה לפני הדפסה',printPreview],['📄 ייצוא PDF עם טבלת שרטוט',pdfDialog],['🖼️ ייצוא תמונה (PNG)',exportImage],['📐 ייצוא DXF ל-AutoCAD (נשמר כ-DWG)',dxfExport],['💾 הורד קובץ פרויקט (JSON)',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state))],['📤 העתק קובץ פרויקט',copyJSON],['📥 ייבוא קובץ פרויקט',importJSON],['OhadCad'],...(SH&&SH.menu?SH.menu():[]),['ℹ אודות OhadCad',aboutDialog]];
+ ['רקע לשרטוט'],['🖼 ייבוא תמונה / PDF / DXF כרקע',ulImport],['🗂 תמונות רקע — נעילה, שקיפות, כיול…',ulManager],['בדיקה וחיווט'],['🔗 בדיקת התאמה: חזית ↔ חד קווי',xcheckDialog],['🔢 מספר חוטים (לפי נקודות פוטנציאל)',numberWires],['📋 טבלאות חיווט: חוטים, מהדקים, כבלים',()=>wireTables()],[(state.wnShow?'🏷 הסתר':'🏷 הצג')+' מספרי חוטים',toggleWN],['🖨 מדבקות מספרי חוטים',printLabels],['ייצוא ושיתוף'],['📋 רשימת ציוד (BOM)',bom],['👁 תצוגה לפני הדפסה',printPreview],['📄 ייצוא PDF עם טבלת שרטוט',pdfDialog],['🖼️ ייצוא תמונה (PNG)',exportImage],['📐 ייצוא DXF ל-AutoCAD (נשמר כ-DWG)',dxfExport],['💾 הורד קובץ פרויקט (JSON)',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state))],['📤 העתק קובץ פרויקט',copyJSON],['📥 ייבוא קובץ פרויקט',importJSON],['OhadCad'],...(SH&&SH.menu?SH.menu():[]),['ℹ אודות OhadCad',aboutDialog]];
  $('dbox').innerHTML=`<div style="display:flex;align-items:center;justify-content:flex-end;margin:4px 8px 0"><img src="icons/wordmark-${uiLight()?'light':'dark'}.svg" alt="OhadCad" height="26"></div><h2>${esc(state.name)}</h2>`+items.map((it,i)=>it[1]?`<button data-i="${i}">${it[0]}</button>`:`<div style="color:#8a8a8a;font-size:13px;margin:12px 12px 2px">${it[0]}</div>`).join('');
  $('drawer').classList.remove('hidden');$('dbox').onclick=e=>{const b=e.target.closest('button');if(!b)return;$('drawer').classList.add('hidden');items[+b.dataset.i][1]();};}
 $('drawer').addEventListener('click',e=>{if(e.target.id==='drawer')$('drawer').classList.add('hidden');});
+/* ================= panel ↔ single-line cross-check ================= */
+/* Devices are matched by tag (Q1, K1, U1…). Listed: what the single-line has but the panel front doesn't, what the
+   front has but the single-line doesn't, and the same tag with a different rating (amps / kW). A missing device can be
+   added to the front in the matching panel part with its tag and the nearest rating. */
+const XC_SKIP=new Set(['cable','lan','scable','conduit','hpipe','stb','sfeed','sbus','sbusm','scable','smot','sgrid','sgen','sgencat','sload','sheat','slight','ssock','sfe','sprox','sfloat','spress','spt','sultra','smv','ssv','sthermo','slimit','svfdc','tb','tbd','tbf','ctmini','ctr','xck','prox','emotor','genset','lpole','flood','hbay','batten','shead','mvalve','kflow','pillar','gland']);
+function xcItems(objs){const m=new Map();objs.forEach(o=>{if(!o.p||!o.p.tag||XC_SKIP.has(o.type)||!SERIAL[o.type])return;const t=String(o.p.tag).trim();if(!t)return;if(!m.has(t))m.set(t,o);});return m;}
+const xcAmp=o=>{const r=String(o.p.rating||'')+' '+String(o.p.name||''),a=r.match(/(\d+(?:\.\d+)?)\s*A\b/),k=r.match(/(\d+(?:\.\d+)?)\s*kW/);return a?[+a[1],'A']:k?[+k[1],'kW']:null;};
+function nearestR(list,v,unit){let best=list[0],bd=1e9;list.forEach(r=>{const m=String(r).match(unit==='kW'?/(\d+(?:\.\d+)?)\s*kW/:/(\d+(?:\.\d+)?)\s*A\b/)||String(r).match(/(\d+)/);if(!m)return;const d=Math.abs(+m[1]-v);if(d<bd){bd=d;best=r;}});return best;}
+// the panel part for a single-line symbol
+function xcPanelFor(o){const r=String(o.p.rating||''),n=Math.max(1,+o.p.poles||3),A=xcAmp(o),v=A?A[0]:0;
+ switch(o.type){
+  case 'sbrk':if(/MCB/i.test(r))return {t:'mcb',p:{poles:Math.min(4,n),rating:r.replace(/MCB\s*/i,'')}};if(/ACB|MTZ/i.test(r))return {t:'acb',p:{}};if(/NSXm/i.test(r))return {t:'nsxm',p:{rating:nearestR(DEF.nsxm.ratings,v)}};return {t:'nsx',p:{rating:v?nearestR(DEF.nsx.ratings.filter(z=>/TM/.test(z)),v):'NSX250F TM250D'}};
+  case 'sacb':return {t:'acb',p:{}};
+  case 'scont':return {t:'lc1d',p:{rating:v?nearestR(DEF.lc1d.ratings,v):'LC1D25 25A'}};
+  case 'srev':return {t:'lc2d',p:{rating:v?nearestR(DEF.lc2d.ratings,v):'LC2D25 25A'}};
+  case 'smpcb':return {t:'gv2',p:{}};
+  case 'sol':return {t:'lrd',p:{}};
+  case 'svfd':case 'svfd3':{const k=xcAmp(o);return {t:'atv630',p:{rating:k&&k[1]==='kW'?nearestR(ATVR.map(z=>z[0]),k[0],'kW'):'ATV630U75N4 7.5kW'}};}
+  case 'sss':case 'sats480':{const k=xcAmp(o);return {t:'ats480',p:{rating:k&&k[1]==='kW'?nearestR(ATSR.map(z=>z[0]),k[0],'kW'):'ATS480D47Y 47A 22kW'}};}
+  case 'srcd':return {t:'rcd',p:{poles:n>=3?4:2}};
+  case 'siso':case 'sdisc':case 'slbs':return {t:'iso',p:{poles:n>=4?4:3}};
+  case 'sspd':return {t:'spd',p:{}};
+  case 'slamp':return {t:'pl22',p:{color:o.p.color||'green'}};
+  case 'spbno':return {t:'pb',p:{color:'green'}};case 'spbnc':return {t:'pb',p:{color:'red'}};
+  case 'sestop':return {t:'estop',p:{}};case 'ssel':return {t:'sel2',p:{}};case 'skeysw':return {t:'key',p:{}};
+  case 'ssatec':return {t:'satec',p:{sm:/135/.test(r)?'pm135':/172/.test(r)?'pm172':'pm175'}};
+  case 'spl22m':return {t:'pl22m',p:{mm:o.p.mm||'va'}};
+  case 'snvr':return {t:'rm22',p:{}};
+  case 'skwh':return {t:'meter',p:{}};
+ }return null;}
+function xcData(){const {panel,sld}=splitDocs(),P=xcItems(panel),S=xcItems(sld),miss=[],extra=[],diff=[];
+ S.forEach((o,t)=>{const q=P.get(t);if(!q)miss.push(o);else{const a=xcAmp(o),b=xcAmp(q);if(a&&b&&a[1]===b[1]&&Math.abs(a[0]-b[0])>.01)diff.push([o,q,a,b]);}});
+ P.forEach((o,t)=>{if(!S.has(t))extra.push(o);});return {miss,extra,diff};}
+function xcGo(doc,id){closeModal();if(curView()!==doc&&doc!=='both')switchDoc(doc);const o=get(id);if(!o){toast('לא נמצא');return;}multi.clear();sel=id;ensureVisible(o);renderNow();updateBar();}
+function xcAdd(ids){const {sld}=splitDocs(),L=ids.map(id=>sld.find(o=>o.id===id)).filter(Boolean);if(!L.length)return;closeModal();if(curView()!=='panel')switchDoc('panel');
+ const [cx,cy]=viewCenter();let x=cx-((L.length-1)*70)/2,n=0;const made=[];
+ L.forEach(o=>{const m=xcPanelFor(o);if(!m)return;const it=(LIB.flatMap(T=>T.groups||[]).flatMap(g=>g.items).find(e=>e.t===m.t)||{n:m.t});const q=mkObj({t:m.t,n:it.n,p:m.p});q.p.tag=o.p.tag;q.x=r2(x);q.y=r2(cy);x+=Math.max(70,sizeOf(q).w+20);state.objs.push(q);made.push(q);n++;});
+ if(!n){toast('לרכיבים האלה אין מקבילה בחזית — הוסף ידנית');return;}multi.clear();made.forEach(q=>multi.add(q.id));sel=made[0].id;commit();renderNow();updateBar();toast(`נוספו ${n} רכיבים לחזית — גרור אותם למקומם`);}
+function xcheckDialog(){const {miss,extra,diff}=xcData(),nm=o=>esc((o.p.name||o.type)+(o.p.rating?' · '+o.p.rating:''));
+ const row=(o,doc,btn)=>`<div style="display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line)"><b style="min-width:52px">${esc(o.p.tag)}</b><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nm(o)}</span><button class="wbtn" data-go="${doc}:${o.id}">הצג</button>${btn||''}</div>`;
+ let h=`<div class="hint">ההשוואה לפי התג (Q1, K1, U1…). ${miss.length+extra.length+diff.length?'':'<b style="color:#22c55e">הכול תואם ✓</b>'}</div>`;
+ h+=`<h4 style="margin:12px 0 4px">בחד קווי ועוד לא בחזית (${miss.length})</h4>`+(miss.length?miss.map(o=>row(o,'sld',xcPanelFor(o)?`<button class="wbtn pri" data-add="${o.id}">➕ לחזית</button>`:'')).join('')+(miss.some(o=>xcPanelFor(o))?`<button class="wbtn pri" style="margin-top:8px" data-addall="1">➕ הוסף את כולם לחזית</button>`:''):'<div class="hint">אין</div>');
+ h+=`<h4 style="margin:14px 0 4px">בחזית ולא בחד קווי (${extra.length})</h4>`+(extra.length?extra.map(o=>row(o,'panel')).join(''):'<div class="hint">אין</div>');
+ h+=`<h4 style="margin:14px 0 4px">אותו תג — דירוג שונה (${diff.length})</h4>`+(diff.length?diff.map(([a,b,x,y])=>`<div style="padding:5px 0;border-bottom:1px solid var(--line)"><b>${esc(a.p.tag)}</b> — חד קווי ${x[0]}${x[1]} · חזית ${y[0]}${y[1]} <button class="wbtn" data-go="sld:${a.id}">בחד קווי</button> <button class="wbtn" data-go="panel:${b.id}">בחזית</button></div>`).join(''):'<div class="hint">אין</div>');
+ modal('בדיקת התאמה: חזית ↔ חד קווי',h,[{t:'סגור'}]);modalFloat();
+ $('mBody').onclick=e=>{const g=e.target.closest('[data-go]'),a=e.target.closest('[data-add]'),all=e.target.closest('[data-addall]');
+  if(g){const [d,id]=g.dataset.go.split(':');xcGo(d,id);}else if(a)xcAdd([a.dataset.add]);else if(all)xcAdd(miss.filter(o=>xcPanelFor(o)).map(o=>o.id));};}
+
+/* ================= wire numbers, terminal table, wire and cable lists ================= */
+/* Wires are grouped into electrical nets: joined at a terminal or at a free end, and carried through terminal
+   blocks (top ↔ bottom of the same level), busbars and combs. A net touching a busbar or a terminal named L1 / L2 /
+   L3 / N / PE / + / − takes that name; the others are numbered 1, 2, 3… from the top left. */
+function wireNets(objs){const par=new Map(),f=k=>{if(!par.has(k))par.set(k,k);let r=k;while(par.get(r)!==r)r=par.get(r);par.set(k,r);return r;},u=(a,b)=>{const ra=f(a),rb=f(b);if(ra!==rb)par.set(ra,rb);};
+ const key=p=>p.r?`r:${p.r}:${p.t}`:`p:${Math.round(p.x*2)/2},${Math.round(p.y*2)/2}`,W=objs.filter(o=>o.type==='wire'&&o.pts&&o.pts.length>1),names=new Map();
+ W.forEach(w=>{u(key(w.pts[0]),key(w.pts[w.pts.length-1]));});
+ const NM=/^(L1|L2|L3|N|PE|L|\+|−|-|0V|24V)$/;
+ objs.forEach(o=>{if(o.type==='wire')return;const T=termsOf(o);if(!T.length)return;const k=i=>`r:${o.id}:${i}`,nm=(i,l)=>{if(l&&NM.test(l))names.set(k(i),l);};
+  if(o.type==='tb')u(k(0),k(1));
+  else if(o.type==='tbd'){u(k(0),k(3));u(k(1),k(2));}
+  else if(o.type==='tbf'){if(o.p.lv!=='1')u(k(1),k(2));}
+  else if(o.type==='tbg'||o.type==='stb'){const n=T.length/2;for(let i=0;i<n;i++){u(k(i),k(n+i));nm(i,T[i][2]);}}
+  else if(o.type==='busbar'||o.type==='sbus'||o.type==='comb'){for(let i=1;i<T.length;i++)u(k(0),k(i));if(o.type==='busbar')nm(0,String(o.p.tag||'').trim());}
+  else if(o.type==='sbusm'){const N=busN(o),g={};T.forEach((t,i)=>{(g[t[1]]=g[t[1]]||[]).push(i);});Object.keys(g).sort((a,b)=>a-b).forEach((y,li)=>{const L=g[y];L.forEach(i=>u(k(L[0]),k(i)));nm(L[0],N[li]);});}});
+ const nets=new Map();W.forEach(w=>{const r=f(key(w.pts[0]));(nets.get(r)||nets.set(r,[]).get(r)).push(w);});
+ const rootName=new Map();names.forEach((l,k)=>{const r=f(k);if(!rootName.has(r))rootName.set(r,l);});
+ return {nets,rootName,f,key};}
+function numberWires(){const {nets,rootName}=wireNets(state.objs);let n=1;
+ const order=[...nets.entries()].map(([r,ws])=>{let y=1e9,x=1e9;ws.forEach(w=>{const p=resolve(w.pts[0]);if(p&&(p.y<y-1||(Math.abs(p.y-y)<=1&&p.x<x))){y=p.y;x=p.x;}});return {r,ws,y,x};}).sort((a,b)=>a.y-b.y||a.x-b.x);
+ order.forEach(({r,ws})=>{const nm=rootName.get(r)||String(n++);ws.forEach(w=>w.p.wn=nm);});state.wnShow=1;commit();renderNow();toast(`מוספרו ${[...nets.values()].reduce((a,b)=>a+b.length,0)} חוטים ב-${nets.size} נקודות פוטנציאל`);}
+function wnLabel(w){if(!state.wnShow||!w.p.wn)return '';const ps=wirePs(w);if(ps.length<2)return '';let bi=0,bl=-1;for(let i=1;i<ps.length;i++){const l=Math.hypot(ps[i].x-ps[i-1].x,ps[i].y-ps[i-1].y);if(l>bl){bl=l;bi=i;}}
+ const a=ps[bi-1],b=ps[bi],x=(a.x+b.x)/2,y=(a.y+b.y)/2,sld=state.tab==='sld'||isSldObj(w),fs=sld?5:3.6,t=String(w.p.wn),tw=t.length*fs*.62+fs*.8;
+ return `<g pointer-events="none"><rect x="${r2(x-tw/2)}" y="${r2(y-fs*.75)}" width="${r2(tw)}" height="${r2(fs*1.5)}" rx="${fs*.3}" fill="#fff" stroke="#6b7280" stroke-width="${fs*.08}"/>`+txt(r2(x),r2(y),t,fs,'#111',800)+'</g>';}
+function toggleWN(){state.wnShow=state.wnShow?0:1;commit();renderNow();toast(state.wnShow?'מספרי החוטים מוצגים':'מספרי החוטים מוסתרים');}
+function endDesc(p){if(!p||!p.r)return '—';const o=get(p.r);if(!o)return '?';const T=termsOf(o)[p.t],nm=o.p.tag||o.p.name||o.type,tl=T&&T[2]?String(T[2]):String(p.t+1);return `${nm}:${tl}`;}
+function wireRows(){return state.objs.filter(o=>o.type==='wire').map(w=>[w.p.wn||'',endDesc(w.pts[0]),endDesc(w.pts[w.pts.length-1]),(WCOL[w.p.color]||{}).n||w.p.color||'',w.p.sec?w.p.sec+' ממ"ר':'',(wireLen(w)/1000).toFixed(2)]).sort((a,b)=>String(a[0]).localeCompare(String(b[0]),'he',{numeric:true}));}
+function termRows(){const TB=new Set(['tb','tbd','tbf','tbg','stb']),W=state.objs.filter(o=>o.type==='wire'),rows=[];
+ state.objs.filter(o=>TB.has(o.type)).sort((a,b)=>String(a.p.tag||'').localeCompare(String(b.p.tag||''),'he',{numeric:true})||a.x-b.x).forEach(o=>{const T=termsOf(o);
+  T.forEach((t,i)=>{const con=[];W.forEach(w=>{[[0,w.pts.length-1],[w.pts.length-1,0]].forEach(([a,b])=>{const p=w.pts[a];if(p&&p.r===o.id&&p.t===i)con.push([endDesc(w.pts[b]),w.p.wn||'']);});});
+   const strip=o.type==='tbg'||o.type==='stb'?o.p.tag||'':(o.type==='tbd'?'מהדק כפול':o.type==='tbf'?'מהדק פיוז':'מהדק'),term=o.type==='tbg'||o.type==='stb'?(t[2]||String(i+1)):(o.p.tag||'')+(o.type==='tbd'||o.type==='tbf'?' / '+(i+1):''),side=t[1]<0?'עליון':'תחתון';
+   if(con.length)con.forEach(c=>rows.push([strip,term,side,c[0],c[1]]));else rows.push([strip,term,side,'—','']);});});return rows;}
+function cableRows(){return state.objs.filter(o=>o.type==='cable'||o.type==='lan'||o.type==='scable').map(o=>[o.p.tag||'',o.type==='lan'?(LANC[o.p.cat]||LANC['7'])[0]:o.type==='scable'?(o.p.rating||''):`${o.p.cores||''}×${o.p.sec||''} ממ"ר`,o.type==='scable'?'':(cabLength(o)/1000).toFixed(2)]);}
+function csvOf(head,rows){return '﻿'+[head,...rows].map(r=>r.map(c=>{const v=String(c==null?'':c);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(',')).join('\r\n');}
+function printLabels(){const L=[...new Set(state.objs.filter(o=>o.type==='wire'&&o.p.wn).map(w=>String(w.p.wn)))].sort((a,b)=>a.localeCompare(b,'he',{numeric:true}));if(!L.length){toast('מספר קודם את החוטים');return;}
+ const html=`<!doctype html><html dir="rtl"><head><meta charset="utf-8"><title>מדבקות חוטים</title><style>body{font-family:Arial;margin:8mm}div.g{display:grid;grid-template-columns:repeat(8,1fr);gap:2mm}span{border:.3mm solid #333;border-radius:1mm;text-align:center;font:700 11pt Arial;padding:1.5mm 0}@media print{button{display:none}}</style></head><body><button onclick="print()">🖨 הדפס</button><h3>${esc(state.name||'')} — מדבקות מספרי חוטים (כל מספר פעמיים, לשני הקצוות)</h3><div class="g">${L.flatMap(t=>[t,t]).map(t=>`<span>${esc(t)}</span>`).join('')}</div></body></html>`;
+ const wdw=window.open('','_blank');if(!wdw){saveFile(safeName(state.name)+' - מדבקות.html',new Blob([html],{type:'text/html'}));return;}wdw.document.write(html);wdw.document.close();}
+function wireTables(tab){tab=tab||'wires';const T={wires:['רשימת חוטים',['מספר','מ-','אל','צבע','חתך','אורך (מ\')'],wireRows],terms:['טבלת מהדקים',['פס','מהדק','צד','מחובר אל','מספר חוט'],termRows],cables:['רשימת כבלים',['תג','סוג','אורך (מ\')'],cableRows]};
+ const [title,head,fn]=T[tab],rows=fn(),doc=curView()==='sld'?'חד קווי':curView()==='both'?'משולב':'חזית הלוח';
+ let h=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">${Object.entries(T).map(([k,v])=>`<button class="wbtn ${k===tab?'pri':''}" data-wt="${k}">${v[0]}</button>`).join('')}</div>`;
+ h+=`<div class="hint">מתוך: ${doc}. ${tab==='wires'&&!state.objs.some(o=>o.type==='wire'&&o.p.wn)?'החוטים עוד לא ממוספרים — לחץ "🔢 מספר חוטים".':''}</div>`;
+ h+=`<div style="max-height:52vh;overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><tr>${head.map(c=>`<th style="text-align:right;border-bottom:1px solid var(--line);padding:4px">${c}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(c=>`<td style="border-bottom:1px solid var(--line);padding:3px 4px">${esc(String(c))}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${head.length}" style="padding:8px">אין נתונים</td></tr>`}</table></div>`;
+ modal(title,h,[{t:'🔢 מספר חוטים',fn:()=>{numberWires();setTimeout(()=>wireTables(tab),0);}},{t:'⬇ אקסל (CSV)',fn:()=>{saveFile(safeName(state.name)+' - '+title+'.csv',new Blob([csvOf(head,rows)],{type:'text/csv;charset=utf-8'}));return false;}},{t:'🏷 מדבקות',fn:()=>{printLabels();return false;}},{t:'סגור'}]);modalFloat();
+ $('mBody').onclick=e=>{const b=e.target.closest('[data-wt]');if(b)wireTables(b.dataset.wt);};}
 /* ---------- 3D view of the panel front (view only) ----------
    Built from the 2D drawing every time it opens: each part becomes a box whose
    front face is its own 2D picture, standing off the mounting plate by a depth
