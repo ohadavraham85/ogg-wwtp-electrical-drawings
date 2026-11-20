@@ -608,6 +608,25 @@ function cutSVG(o){const {w,h}=sizeOf(o),H=DEF[o.type].hole(o);let s=`<path fill
 function holesMask(id,ox,oy,inside){const hs=state.objs.filter(q=>DEF[q.type]?.cut&&inside(q)&&!hiddenFront(q));if(!hs.length)return null;
  return {id:'cm_'+id,svg:`<mask id="cm_${id}" maskUnits="userSpaceOnUse" x="-100000" y="-100000" width="200000" height="200000"><rect x="-100000" y="-100000" width="200000" height="200000" fill="#fff"/>`+hs.map(q=>{let {w,h}=DEF[q.type].hole(q);if(q.rot%180)[w,h]=[h,w];return `<rect x="${q.x-ox-w/2}" y="${q.y-oy-h/2}" width="${w}" height="${h}" fill="#000"/>`;}).join('')+'</mask>'};}
 function bz(){return `<circle r="14.85" fill="#262626" stroke="#0d0d0d" stroke-width=".6"/><circle r="12.6" fill="#3d3d3d"/>`;}
+/* Harmony double-headed pushbutton for a 22 mm hole: green flush "I" on top, a pilot light in the
+   middle (or none) and a red projecting "O" below. XB5 = black plastic bezel, XB4 = chrome metal bezel.
+   Catalogue code XB•AW7373 + light colour (1 white, 3 green, 4 red, 5 orange, 6 blue) + voltage (B 24V,
+   G 120V, M 230V) + 5; without a light: XB•AL73415. */
+const PDL={w:['לבנה','#f5f5f4',1],g:['ירוקה','#22c55e',3],r:['אדומה','#ef4444',4],o:['כתומה','#f59e0b',5],b:['כחולה','#3b82f6',6],none:['בלי נורה','',0]};
+const PDV={B:'24V AC/DC',G:'120V AC',M:'230V AC'};
+function pdDim(o){const x4=o.p.hmat==='xb4',L=o.p.lcol!=='none';return x4?{w:32,h:L?62:52}:{w:30,h:L?56:46};}
+function pdModel(o){const f=o.p.hmat==='xb4'?'XB4B':'XB5A',L=PDL[o.p.lcol]||PDL.w;return L[2]?`${f}W7373${L[2]}${o.p.pv||'M'}5`:`${f}L73415`;}
+function pbdblDraw(o){const {w,h}=pdDim(o),x4=o.p.hmat==='xb4',L=PDL[o.p.lcol]||PDL.w,lamp=!!L[2];let s='';
+ s+=x4?`<defs><linearGradient id="pdc${o.id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1f2f3"/><stop offset=".5" stop-color="#a7adb3"/><stop offset="1" stop-color="#e3e5e7"/></linearGradient></defs><rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="6" fill="url(#pdc${o.id})" stroke="#4b5563" stroke-width=".6"/>`
+  :`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="5" fill="#262626" stroke="#0d0d0d" stroke-width=".6"/>`;
+ s+=`<rect x="${-w/2+2}" y="${-h/2+2}" width="${w-4}" height="${h-4}" rx="4" fill="${x4?'#2b2e31':'#353535'}"/>`;
+ const bw=w-9,bh=lamp?(h-10)*.34:(h-8)*.46,ty=-h/2+4,by=h/2-4-bh;
+ // green "I" — flush with the bezel
+ s+=`<rect x="${-bw/2}" y="${ty}" width="${bw}" height="${bh}" rx="2.6" fill="#1f9d55" stroke="#0b5a2e" stroke-width=".5"/><rect x="${-bw/2+1}" y="${ty+1}" width="${bw-2}" height="${bh*.3}" rx="2" fill="#fff" opacity=".18"/>`+txt(0,ty+bh/2,'I',bh*.55,'#fff',800);
+ // red "O" — projecting: a darker skirt around it
+ s+=`<rect x="${-bw/2-1}" y="${by-1}" width="${bw+2}" height="${bh+2}" rx="3.2" fill="#7f1d1d"/><rect x="${-bw/2}" y="${by}" width="${bw}" height="${bh}" rx="2.6" fill="#d62828"/><rect x="${-bw/2+1}" y="${by+1}" width="${bw-2}" height="${bh*.3}" rx="2" fill="#fff" opacity=".22"/>`+txt(0,by+bh/2,'O',bh*.55,'#fff',800);
+ if(lamp){const r=Math.min(bw,(by-(ty+bh)))*.42,cy=(ty+bh+by)/2;s+=`<circle cy="${cy}" r="${r+1}" fill="#111"/><circle cy="${cy}" r="${r}" fill="${L[1]}" stroke="#0b0b0b" stroke-width=".4"/><circle cy="${cy}" r="${r*.6}" fill="#fff" opacity=".25"/><circle cx="${-r*.35}" cy="${cy-r*.35}" r="${r*.25}" fill="#fff" opacity=".6"/>`;}
+ return s+(o.p.tag?`<rect x="-15" y="${h/2+2}" width="30" height="9" rx="1" fill="#f3f3f0" stroke="#888" stroke-width=".4"/>`+txt(0,h/2+6.5,o.p.tag,4.2,'#222',700):'');}
 function lg(o,y=21.5){return o.p.tag?`<rect x="-15" y="${y-4.5}" width="30" height="9" rx="1" fill="#f3f3f0" stroke="#888" stroke-width=".4"/>`+txt(0,y,o.p.tag,4.2,'#222',700):'';}
 function hasDoor(o){return o.p.door&&o.p.door!=='none';}
 function hingeX(o){return (o.p.hinge==='R'?1:-1);}
@@ -1279,6 +1298,7 @@ const DEF={
    s+=`<rect x="-34" y="40" width="20" height="11" rx="2.5" fill="#16a34a"/>`+txt(-24,45.5,'RUN',4,'#fff',800)+`<rect x="-10" y="40" width="20" height="11" rx="2.5" fill="#374151"/>`+txt(0,45.5,'L/R',3.8,'#e5e7eb',800)+`<rect x="14" y="40" width="20" height="11" rx="2.5" fill="#dc2626"/>`+txt(24,45.5,'STOP',3.6,'#fff',800);
    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>s+=`<circle cx="${a*39}" cy="${b*59}" r="1.8" fill="#9ca3af"/>`);
    return s+(o.p.tag?txt(0,70,o.p.tag,6,'#7dd3fc',700):'');}},
+ pbdbl:{layer:6.7,front:true,edit:['tag','hmat','lcol','pv'],def:{tag:'',hmat:'xb5',lcol:'w',pv:'M'},size:o=>pdDim(o),draw:o=>pbdblDraw(o)},
  hole22:{layer:6.7,front:true,edit:['tag'],def:{tag:''},size:()=>({w:30,h:30}),
   draw:o=>`<circle r="14.85" fill="none" stroke="#777" stroke-width=".5" stroke-dasharray="2 1.5"/><circle r="11.15" fill="#151515" stroke="#555" stroke-width=".5"/><path d="M-4 0H4M0 -4V4" stroke="#888" stroke-width=".5"/>`+lg(o)},
  cutdin:{layer:6.7,front:true,cut:true,edit:['mods','tag'],def:{mods:12,tag:''},size:o=>({w:Math.max(1,+o.p.mods||1)*18+16,h:61}),hole:o=>({w:Math.max(1,+o.p.mods||1)*18,h:45}),
@@ -2284,6 +2304,7 @@ const LIB=[
    {g:'מסרקים ופסי צבירה',items:I('מסרק 1P','מסרק 3P','פס צבירה L1','פס צבירה N','פס הארקה PE')}]},
   {tab:'לחצנים ונוריות',icon:'◉',hint:all['לחצן']?LIB.find(T=>T.groups.some(g=>g.items.includes(all['לחצן']))).hint:'',groups:[
    {g:'קופסאות לחצנים שניידר Harmony (XALD / XALK) — בוחרים במאפיינים מה בכל קדח',items:[{t:'xbox',n:'קופסת לחצנים 1 קדח — XALD01',p:{n:1,h1:'start'}},{t:'xbox',n:'קופסת לחצנים 2 קדחים — XALD02',p:{n:2,h1:'start',h2:'stop'}},{t:'xbox',n:'קופסת לחצנים 3 קדחים — XALD03',p:{n:3,h1:'start',h2:'stop',h3:'lampg'}},{t:'xbox',n:'קופסת חירום צהובה — XALK',p:{n:1,h1:'estop',yel:'1'}}]},
+   {g:'לחצנים כפולים Harmony לחור 22 — I ירוק למעלה, נורה באמצע, O אדום למטה',items:[{t:'pbdbl',n:'לחצן כפול XB5 עם נורה לבנה 230V — XB5AW73731M5',p:{lcol:'w'}},{t:'pbdbl',n:'לחצן כפול XB5 עם נורה ירוקה 230V — XB5AW73733M5',p:{lcol:'g'}},{t:'pbdbl',n:'לחצן כפול XB5 עם נורה אדומה 230V — XB5AW73734M5',p:{lcol:'r'}},{t:'pbdbl',n:'לחצן כפול XB5 עם נורה כתומה 24V — XB5AW73735B5',p:{lcol:'o',pv:'B'}},{t:'pbdbl',n:'לחצן כפול XB5 בלי נורה — XB5AL73415',p:{lcol:'none'}},{t:'pbdbl',n:'לחצן כפול מתכת XB4 עם נורה לבנה 230V — XB4BW73731M5',p:{hmat:'xb4',lcol:'w'}},{t:'pbdbl',n:'לחצן כפול מתכת XB4 עם נורה ירוקה 24V — XB4BW73733B5',p:{hmat:'xb4',lcol:'g',pv:'B'}},{t:'pbdbl',n:'לחצן כפול מתכת XB4 בלי נורה — XB4BL73415',p:{hmat:'xb4',lcol:'none'}}]},
    {g:'אביזרי 22 מ"מ לחזית — בחר צבע ואז אביזר',colors:true,items:I('חור 22 מ"מ','לחצן','לחצן מואר','נורית 22','בורר 2 מצבים','בורר 3 מצבים','בורר מפתח','לחצן חירום','פוטנציומטר','זמזם')}]},
   {tab:'בקרים (PLC)',icon:'▣',hint:'מוסיפים קודם שאסי (Rack), ואז ספק, מעבד וכרטיסים — כל אחד נתפס לחריץ הקרוב בשאסי (הספק לחריץ PS). הדגם נבחר במאפיינים.',groups:[
    {g:'Schneider Modicon M340 — שאסי',items:[{t:'m340rack',n:'שאסי M340 BMXXBP0400 (4 חריצים)',p:{slots:4}},{t:'m340rack',n:'שאסי M340 BMXXBP0600 (6 חריצים)',p:{slots:6}},{t:'m340rack',n:'שאסי M340 BMXXBP0800 (8 חריצים)',p:{slots:8}},{t:'m340rack',n:'שאסי M340 BMXXBP1200 (12 חריצים)',p:{slots:12}}]},
@@ -4286,6 +4307,9 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='tsp')h+=`<div class="fld"><label>אזיקונים לאורך הפרופיל</label><select id="f_tsp">${[['0','בלי'],['50','כל 50 מ"מ'],['75','כל 75 מ"מ'],['100','כל 100 מ"מ'],['150','כל 150 מ"מ']].map(([a,n])=>`<option value="${a}" ${a===String(v||'0')?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='tcol')h+=`<div class="fld"><label>צבע האזיקון</label><select id="f_tcol"><option value="black" ${v!=='white'?'selected':''}>שחור</option><option value="white" ${v==='white'?'selected':''}>לבן</option></select></div>`;
   else if(k==='tlen')h+=`<div class="fld"><label>אורך האזיקון הנראה (מ"מ)</label><select id="f_tlen">${['25','40','60','80','120'].map(a=>`<option ${a===String(v)?'selected':''}>${a}</option>`).join('')}</select></div>`;
+  else if(k==='hmat')h+=`<div class="fld"><label>סדרה</label><select id="f_hmat"><option value="xb5" ${v!=='xb4'?'selected':''}>Harmony XB5 — פלסטיק שחור</option><option value="xb4" ${v==='xb4'?'selected':''}>Harmony XB4 — מתכת (כרום)</option></select></div>`;
+  else if(k==='lcol')h+=`<div class="fld"><label>נורה באמצע</label><select id="f_lcol">${Object.entries(PDL).map(([a,q])=>`<option value="${a}" ${a===String(v)?'selected':''}>${q[0]}</option>`).join('')}</select></div>`;
+  else if(k==='pv')h+=`<div class="fld"><label>מתח הנורה</label><select id="f_pv">${Object.entries(PDV).map(([a,n])=>`<option value="${a}" ${a===String(v)?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='pk')h+=`<div class="fld"><label>סוג הפילר</label><select id="f_pk">${Object.entries(PLK).map(([a,n])=>`<option value="${a}" ${a===String(v)?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='pmat')h+=`<div class="fld"><label>חומר וצבע</label><select id="f_pmat">${Object.entries(PLM).map(([a,q])=>`<option value="${a}" ${a===String(v)?'selected':''}>${q[2]}</option>`).join('')}</select></div>`;
   else if(k==='pdn')h+=`<div class="fld"><label>מספר דלתות</label><select id="f_pdn">${['1','2','3'].map(a=>`<option value="${a}" ${a===String(v)?'selected':''}>${a}</option>`).join('')}</select></div>`;
@@ -4832,7 +4856,7 @@ function bomData(){return withPanel(bomData0);}
 function bomDataSld(){return withDoc('sld',()=>{const rows={},SKIP=['wire','sframe','sfeed','label','mdim','underlay','ink'];state.objs.forEach(o=>{if(SKIP.includes(o.type)||DRAWT.has(o.type)||!DEF[o.type])return;
   const k=(o.p.name||o.type)+(o.p.rating?' '+o.p.rating:'');const r=rows[k]=rows[k]||{n:0,tags:[]};r.n++;if(o.p.tag)r.tags.push(o.p.tag);});
  return Object.keys(rows).map(k=>{const r=rows[k],tg=r.tags.sort((a,b)=>a.localeCompare(b,'he',{numeric:true}));return [k+(tg.length?` (${tg.length>6?tg.slice(0,6).join(', ')+'…':tg.join(', ')})`:''),`${r.n} יח'`];});});}
-function bomData0(){const rows={};state.objs.forEach(o=>{if(o.type==='underlay'||o.type==='nmap')return;if(o.type==='wire'){const k=`חוט ${WCOL[o.p.color]?.n} ${o.p.sec} ממ"ר`;rows[k]=rows[k]||{n:0,len:0,w:1};rows[k].len+=wireLen(o);return;}
+function bomData0(){const rows={};state.objs.forEach(o=>{if(o.type==='pbdbl'){const L=PDL[o.p.lcol]||PDL.w,kl=`לחצן כפול Harmony ${pdModel(o)} — I ירוק / O אדום${L[2]?`, נורה ${L[0]} ${PDV[o.p.pv]||''}`:''}`;rows[kl]=rows[kl]||{n:0};rows[kl].n++;return;}if(o.type==='underlay'||o.type==='nmap')return;if(o.type==='wire'){const k=`חוט ${WCOL[o.p.color]?.n} ${o.p.sec} ממ"ר`;rows[k]=rows[k]||{n:0,len:0,w:1};rows[k].len+=wireLen(o);return;}
   if(o.type==='hmis'){const kl=`מסך Harmony ${o.p.hm}`;rows[kl]=rows[kl]||{n:0};rows[kl].n++;return;}
   if(o.type==='flood'||o.type==='hbay'||o.type==='shead'){const kl=`${o.type==='flood'?'פרוז׳קטור LED':o.type==='hbay'?'גוף היי-ביי LED':'פנס רחוב LED'} ${o.p.fw||o.p.hw}W`;rows[kl]=rows[kl]||{n:0};rows[kl].n++;return;}
   if(o.type==='lpole'){const kl=`עמוד תאורה ${o.p.ph} מ' ${({none:'',single:'· זרוע',double:'· 2 זרועות'})[o.p.parm]||''}`.trim();rows[kl]=rows[kl]||{n:0};rows[kl].n++;const n=o.p.phead==='street'?(o.p.parm==='double'?2:1):(o.p.parm==='none'?+o.p.pfn||1:(o.p.parm==='double'?2:1)),lk=`${o.p.phead==='street'?'פנס רחוב LED':'פרוז׳קטור LED'} ${o.p.fw}W`;rows[lk]=rows[lk]||{n:0};rows[lk].n+=n;return;}
