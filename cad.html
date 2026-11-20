@@ -1267,7 +1267,7 @@ const DEF={
    for(let i=1;i<5;i++)s+=`<path d="M${-a+i*a*.4} ${y0+dm-1}V${y0+rr*.9}" stroke="${col[2]}" stroke-width=".6" opacity=".55"/>`;
    s+=`<path d="M${-t+rr*.6} ${y0+1.2}H${t-rr*.6}" stroke="#fff" stroke-opacity=".35" stroke-width=".8" stroke-linecap="round"/>`;
    s+=`<rect x="${-c/2}" y="${y0+dm}" width="${c}" height="${hx}" fill="${col[1]}" stroke="${col[2]}" stroke-width="1"/><path d="M${-c/4} ${y0+dm}v${hx}M${c/4} ${y0+dm}v${hx}" stroke="${col[2]}" stroke-width=".7"/>`;
-   s+=`<rect x="${-d/2}" y="${y0+dm+hx}" width="${d}" height="${th}" fill="${col[0]}" stroke="${col[2]}" stroke-width="1"/>`;for(let y=y0+dm+hx+1.5;y<H/2-.5;y+=1.6)s+=`<path d="M${-d/2} ${y}h${d}" stroke="${col[2]}" stroke-width=".4"/>`;
+   if(!(GLIN&&GLIN.has(o.id))){s+=`<rect x="${-d/2}" y="${y0+dm+hx}" width="${d}" height="${th}" fill="${col[0]}" stroke="${col[2]}" stroke-width="1"/>`;for(let y=y0+dm+hx+1.5;y<H/2-.5;y+=1.6)s+=`<path d="M${-d/2} ${y}h${d}" stroke="${col[2]}" stroke-width=".4"/>`;}
    const ly=-(y0+dm+hx/2);s=`<g transform="scale(1 -1)">${s}</g>`+txt(c/2+2,ly,o.p.rating,Math.max(3,af*.2),'#e5e7eb',700,'start');
    return s+(o.p.tag?txt(-c/2-2,ly,o.p.tag,4,'#7dd3fc',700,'end'):'');}},
  nrack:{layer:0,edit:['tag','inch','u','kind','w','rcol'],def:{tag:'',inch:'19',u:12,kind:'wall',w:600,rcol:'grey'},size:o=>{const d=nrDim(o);return {w:d.W,h:d.H};},
@@ -2966,12 +2966,18 @@ function shapeDimsToMd(){for(const o of state.objs.slice()){if((o.type!=='shrect
 const ownDims=o=>state.objs.filter(m=>m.type==='mdim'&&m.p.a.of===o.id&&m.p.b.of===o.id);
 /* A side-view gland on the edge of a board turns so its dome faces out of the board (bottom → dome down,
    top → up, sides → out); glands away from any board keep their own rotation. */
-function glandAuto(){const B=state.objs.filter(b=>['cabinet','enclosure','cibox','hbox','pillar','nrack','xbox'].includes(b.type));if(!B.length)return;
- state.objs.forEach(o=>{if(o.type!=='gland'||o.p.gv==='front'||o.locked)return;let best=null;
+var GLIN=new Set();// glands seated in a board wall: their thread is inside the board, not drawn
+function glandAuto(){GLIN.clear();const B=state.objs.filter(b=>['cabinet','enclosure','cibox','hbox','pillar','nrack','xbox'].includes(b.type));if(!B.length)return;
+ state.objs.forEach(o=>{if(o.type!=='gland'||o.p.gv==='front')return;let best=null;
   for(const b of B){let x0,y0,x1,y1;if(b.type==='cabinet'){const g=cabG(b);x0=g.x0;x1=g.x0+g.W;y0=g.y0;y1=g.y0+g.H;}else({x0,y0,x1,y1}=bbW(b));
    const m=60;if(o.x<x0-m||o.x>x1+m||o.y<y0-m||o.y>y1+m)continue;const nx=(o.x-(x0+x1)/2)/((x1-x0)/2),ny=(o.y-(y0+y1)/2)/((y1-y0)/2),k=Math.max(Math.abs(nx),Math.abs(ny));
-   if(k<.6)continue;if(!best||k>best.k)best={k,nx,ny};}
-  if(!best)return;const r=Math.abs(best.ny)>=Math.abs(best.nx)?(best.ny>0?0:180):(best.nx>0?270:90);if(o.rot!==r)o.rot=r;});}
+   if(k<.6)continue;if(!best||k>best.k)best={k,nx,ny,x0,y0,x1,y1};}
+  if(!best)return;const r=Math.abs(best.ny)>=Math.abs(best.nx)?(best.ny>0?0:180):(best.nx>0?270:90);if(!o.locked&&o.rot!==r)o.rot=r;
+  // seat it: the hex face against the wall (thread inside), when it is close to that position
+  const g=GLAND[o.p.rating]||GLAND.M20,[,,th,hx,dm]=g,off=(th+hx+dm)/2-th,R0=o.locked?o.rot:r;
+  const tgt=R0===0?[null,best.y1+off]:R0===180?[null,best.y0-off]:R0===270?[best.x1+off,null]:[best.x0-off,null];
+  if(tgt[1]!=null&&Math.abs(o.y-tgt[1])<=Math.max(30,th*2)){if(!o.locked)o.y=r2(tgt[1]);if(Math.abs(o.y-tgt[1])<.6)GLIN.add(o.id);}
+  if(tgt[0]!=null&&Math.abs(o.x-tgt[0])<=Math.max(30,th*2)){if(!o.locked)o.x=r2(tgt[0]);if(Math.abs(o.x-tgt[0])<.6)GLIN.add(o.id);}});}
 function commit(){glandAuto();shapeDimsToMd();syncDoc();state.objs.forEach(q=>{if(q.type==='nmap'){const g=nmapGeo(q);if(g)q.y=g.cy;}});ensureOrigin();syncLayoutBtn();const j=JSON.stringify(state);if(hist[hi]===j)return;hist=hist.slice(0,hi+1);hist.push(j);if(hist.length>100)hist.shift();hi=hist.length-1;persist();updateBar();scheduleSave();}
 function restore(j){const dn=state.dwgno,rv=state.rev;state=JSON.parse(j);if(dn&&state.name!==undefined){state.dwgno=dn;if(rv!=null)state.rev=rv;}scheduleSave();syncDoc();syncLayoutBtn();multi.clear();if(sel&&!get(sel))sel=null;renderNow();persist();updateBar();}
 function undo(){if(draft){draft.pts.pop();if(!draft.pts.length)draft=null;renderNow();return;}if(hi>0){hi--;restore(hist[hi]);}}
