@@ -20,7 +20,7 @@ Live at https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/ (GitHub Pa
   - Library: `LIB`.
   - Templates: `TEMPLATES`.
   - Autosave: `scheduleSave` / `doAutoSave`.
-  - Drawer menu: `openDrawer`.
+  - Drawer menu: `openDrawer` — collapsible groups (`.dsec`, open state in localStorage `ohadcad.dsec`) of icon tiles (`.dt`, icons from `IC` via `ico`) with short names; the full explanation is the tile's tooltip; toggles get `.on`. Shell items come from the bridge `menu()` as `[label, fn, icon?]` under "חשבון".
   - Dimensions: part type `mdim` (`mdGeom`, `setMeas`); ends may be pinned to a part (`of`, `u`, `v`; `fx`/`fy` = on a box edge, follows resizing). A shape's own dimensions (`p.sd==='1'`) are turned into pinned `mdim`s on `commit` (`shapeDimsToMd`), so there is one kind of dimension; tapping one opens its panel (length edit `mdSetLen`, delete).
   - Layouts (production sheets): `state.lays` = `[{id,d:'panel'|'sld',name,paper,orient,scale,org}]`; the shown one per document mirrors into `state.layout` / `state.layoutS` (with `lid`) and its corner into `state.origin` / `state.originS` (`laySync`, `layShow`, `layWith`). Bottom tabs: `buildLayTabs`. The PDF prints every sheet as a page.
   - Background pictures: part type `underlay` (`p.src` JPEG data URL ≤ ~420 KB, or `p.svg`+`p.vb` from a DXF; size `iw×ih` × `fs`). Drawn on its own layer `#ulay` (`renderUlay`), only placeholders in `#world`; exports include it only with `exp:'1'`. Import `ulImport` (image / PDF via `vendor/pdfjs` / DXF), calibration `calStart`, manager `ulManager`.
