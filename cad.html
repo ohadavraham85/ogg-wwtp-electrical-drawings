@@ -106,6 +106,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
 select,input,textarea{font:inherit;background:var(--ink);color:#fff;border:1px solid var(--line);border-radius:4px;padding:10px;width:100%}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20;display:flex;align-items:center;justify-content:center;padding:16px}
 #modal.hidden,#drawer.hidden{display:none}
+#modal.mfloat{background:transparent;pointer-events:none}#modal.mfloat .mbox{pointer-events:auto;box-shadow:0 10px 34px rgba(0,0,0,.45)}#modal.mfloat #mTitle{cursor:move;touch-action:none;user-select:none}#modal.mfloat #mTitle::after{content:' ⠿';opacity:.5}
 .mbox{background:var(--card);border:1px solid var(--line);border-radius:4px;width:100%;max-width:520px;max-height:86vh;display:flex;flex-direction:column}
 .mbox h3{margin:0;padding:16px 18px 6px;font-size:19px}
 .mbody{padding:8px 18px;overflow:auto;flex:1}
@@ -3761,19 +3762,24 @@ function alignDo(m){const L=alSel();if(L.length<2){toast('בחר לפחות 2 ר
   const k0=ax+'0',k1=ax+'1';B.sort((p,q)=>(p.b[k0]+p.b[k1])-(q.b[k0]+q.b[k1]));const span=B[B.length-1].b[k1]-B[0].b[k0],sum=B.reduce((a,q)=>a+q.b[k1]-q.b[k0],0),g=(span-sum)/(B.length-1);
   let at=B[0].b[k1];for(let i=1;i<B.length;i++){const q=B[i],d=at+g-q.b[k0];alMove(q.o,ax==='x'?d:0,ax==='y'?d:0);at=at+g+(q.b[k1]-q.b[k0]);}toast(`רווח שווה: ${Math.round(g*10)/10} מ"מ`);}
  commit();renderNow();updateBar();}
-function distDialog(L){const B=L.map(o=>({o,b:bbW(o)})),sx=Math.max(...B.map(q=>q.b.x1))-Math.min(...B.map(q=>q.b.x0)),sy=Math.max(...B.map(q=>q.b.y1))-Math.min(...B.map(q=>q.b.y0)),ax0=sx>=sy?'x':'y';
+function distDialog(L){const B=L.map(o=>({o,b:bbW(o)})),O=L.map(o=>[o,o.x,o.y]),sx=Math.max(...B.map(q=>q.b.x1))-Math.min(...B.map(q=>q.b.x0)),sy=Math.max(...B.map(q=>q.b.y1))-Math.min(...B.map(q=>q.b.y0)),ax0=sx>=sy?'x':'y';
  const cur=(ax,mode)=>{const k0=ax+'0',k1=ax+'1',S=[...B].sort((p,q)=>(p.b[k0]+p.b[k1])-(q.b[k0]+q.b[k1]));let t=0;for(let i=1;i<S.length;i++)t+=mode==='cc'?((S[i].b[k0]+S[i].b[k1])-(S[i-1].b[k0]+S[i-1].b[k1]))/2:S[i].b[k0]-S[i-1].b[k1];return Math.round(t/(S.length-1)*10)/10;};
+ const restore=()=>{O.forEach(([o,x,y])=>{o.x=x;o.y=y;});};
+ // lay them out from the positions they had when the dialog opened, so every change is a fresh preview
+ const lay=()=>{restore();const ax=$('dd_ax').value,md=$('dd_md').value,v=+$('dd_v').value;if(!(v>=0))return false;
+  const k0=ax+'0',k1=ax+'1',o0=ax==='x'?'y':'x',S=[...B].sort((p,q)=>(p.b[k0]+p.b[k1])-(q.b[k0]+q.b[k1])),line=(S[0].b[o0+'0']+S[0].b[o0+'1'])/2;
+  let prev=S[0].b;for(let i=1;i<S.length;i++){const q=S[i],b=q.b,w=b[k1]-b[k0],want0=md==='cc'?(prev[k0]+prev[k1])/2+v-w/2:prev[k1]+v,d=want0-b[k0];
+   const dd=$('dd_al').checked?line-(b[o0+'0']+b[o0+'1'])/2:0;alMove(q.o,ax==='x'?d:dd,ax==='y'?d:dd);prev={[k0]:want0,[k1]:want0+w};}
+  renderNow();return true;};
  modal(`מרחק קבוע בין ${L.length} רכיבים`,`<div class="fld"><label>כיוון</label><select id="dd_ax"><option value="x" ${ax0==='x'?'selected':''}>לרוחב (שורה) ↔</option><option value="y" ${ax0==='y'?'selected':''}>לגובה (טור) ↕</option></select></div>
 <div class="fld"><label>מודדים</label><select id="dd_md"><option value="cc">ממרכז למרכז</option><option value="gap">רווח בין הקצוות</option></select></div>
 <div class="fld"><label>המרחק (מ"מ)</label><input id="dd_v" type="number" inputmode="decimal" step="1" min="0" value="${cur(ax0,'cc')}"></div>
 <label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="dd_al" checked> וגם ליישר אותם בקו אחד (לפי הראשון)</label>
-<div class="hint">הרכיב הראשון (השמאלי / העליון) נשאר במקומו, והשאר מסתדרים אחריו לפי הסדר.</div>`,
- [{t:'ביטול'},{t:'החל',cls:'pri',fn:()=>{const ax=$('dd_ax').value,md=$('dd_md').value,v=+$('dd_v').value;if(!(v>=0)){toast('הקלד מרחק');return false;}
-  const k0=ax+'0',k1=ax+'1',o0=ax==='x'?'y':'x',S=[...B].sort((p,q)=>(p.b[k0]+p.b[k1])-(q.b[k0]+q.b[k1])),line=(S[0].b[o0+'0']+S[0].b[o0+'1'])/2;
-  let prev=S[0].b;for(let i=1;i<S.length;i++){const q=S[i],b=q.b,w=b[k1]-b[k0],want0=md==='cc'?(prev[k0]+prev[k1])/2+v-w/2:prev[k1]+v,d=want0-b[k0];
-   const dd=$('dd_al').checked?line-(b[o0+'0']+b[o0+'1'])/2:0;alMove(q.o,ax==='x'?d:dd,ax==='y'?d:dd);prev={[k0]:want0,[k1]:want0+w};}
-  commit();renderNow();updateBar();toast(`סודר: ${v} מ"מ ${md==='cc'?'ממרכז למרכז':'בין הקצוות'}`);}}]);
- const sync=()=>{$('dd_v').value=cur($('dd_ax').value,$('dd_md').value);};$('dd_ax').onchange=sync;$('dd_md').onchange=sync;}
+<div class="hint">כל שינוי נראה מיד בשרטוט. "החל" שומר, "ביטול" מחזיר כמו שהיה. אפשר לגרור את החלון הצידה מהכותרת.</div>`,
+ [{t:'ביטול'},{t:'החל',cls:'pri',fn:()=>{if(lay()===false){toast('הקלד מרחק');return false;}MODAL_CLOSE=null;commit();renderNow();updateBar();toast(`סודר: ${$('dd_v').value} מ"מ ${$('dd_md').value==='cc'?'ממרכז למרכז':'בין הקצוות'}`);}}]);
+ modalFloat();window.MODAL_CLOSE=()=>{restore();renderNow();};
+ $('dd_ax').onchange=$('dd_md').onchange=()=>{restore();$('dd_v').value=cur($('dd_ax').value,$('dd_md').value);lay();};
+ $('dd_v').oninput=()=>lay();$('dd_al').onchange=()=>lay();lay();}
 document.addEventListener('click',e=>{const b=e.target.closest('#mAlign [data-al]');if(b){ddClose();alignDo(b.dataset.al);}});
 function zOrder(mode){const ids=selIds(),S=new Set(ids);if(!ids.length){toast('בחר רכיב קודם');return;}
  const ov=(a,b)=>{const A=bbW(a),B=bbW(b);return A.x0<B.x1&&B.x0<A.x1&&A.y0<B.y1&&B.y0<A.y1;};let moved=0;
@@ -4294,7 +4300,13 @@ $('bMenu').onclick=()=>openDrawer();
 function modal(title,html,btns=[{t:'סגור'}]){$('mBody').onclick=null;$('mBody').onchange=null;$('mTitle').textContent=title;$('mBody').innerHTML=html;$('mBtns').innerHTML='';
  btns.forEach(b=>{const el=document.createElement('button');el.textContent=b.t;if(b.cls)el.className=b.cls;el.onclick=()=>{if(b.fn&&b.fn()===false)return;closeModal();};$('mBtns').appendChild(el);});
  $('modal').classList.remove('hidden');}
-function closeModal(){$('modal').classList.add('hidden');}
+function closeModal(){if(window.MODAL_CLOSE){const f=MODAL_CLOSE;MODAL_CLOSE=null;try{f();}catch(e){}}$('modal').classList.add('hidden');$('modal').classList.remove('mfloat');const bx=$('modal').querySelector('.mbox');if(bx)bx.style.transform='';}
+/* A dialog that floats over the drawing (no dark backdrop) and can be dragged aside by its title,
+   so the drawing behind it stays visible while it is open. */
+function modalFloat(){const m=$('modal'),bx=m.querySelector('.mbox'),t=$('mTitle');m.classList.add('mfloat');bx.style.transform='';let D=null;
+ t.onpointerdown=e=>{const tr=(bx.style.transform.match(/-?[\d.]+/g)||[0,0]).map(Number);D={x:e.clientX,y:e.clientY,tx:tr[0]||0,ty:tr[1]||0};t.setPointerCapture(e.pointerId);e.preventDefault();};
+ t.onpointermove=e=>{if(!D)return;bx.style.transform=`translate(${D.tx+e.clientX-D.x}px,${D.ty+e.clientY-D.y}px)`;};
+ t.onpointerup=t.onpointercancel=()=>{D=null;};}
 $('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();});
 let tt=0;function toast(s){const t=$('toast');t.textContent=s;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),1600);}
 
