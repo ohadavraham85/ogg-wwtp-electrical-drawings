@@ -630,6 +630,32 @@ function pbdblDraw(o){const {w,h}=pdDim(o),x4=o.p.hmat==='xb4',L=PDL[o.p.lcol]||
  s+=`<rect x="${-bw/2-1}" y="${by-1}" width="${bw+2}" height="${bh+2}" rx="3.2" fill="${cBe}"/><rect x="${-bw/2}" y="${by}" width="${bw}" height="${bh}" rx="2.6" fill="${cB}"/><rect x="${-bw/2+1}" y="${by+1}" width="${bw-2}" height="${bh*.3}" rx="2" fill="#fff" opacity=".22"/>`+mark(by+bh/2,false);
  if(lamp){const r=Math.min(bw,(by-(ty+bh)))*.42,cy=(ty+bh+by)/2;s+=`<circle cy="${cy}" r="${r+1}" fill="#111"/><circle cy="${cy}" r="${r}" fill="${L[1]}" stroke="#0b0b0b" stroke-width=".4"/><circle cy="${cy}" r="${r*.6}" fill="#fff" opacity=".25"/><circle cx="${-r*.35}" cy="${cy-r*.35}" r="${r*.25}" fill="#fff" opacity=".6"/>`;}
  return s+(o.p.tag?`<rect x="-15" y="${h/2+2}" width="30" height="9" rx="1" fill="#f3f3f0" stroke="#888" stroke-width=".4"/>`+txt(0,h/2+6.5,o.p.tag,4.2,'#222',700):'');}
+/* Telemecanique (Schneider) OsiSense XC limit switches, front view to scale: body, rotary/plunger head,
+   the actuator, the M20 cable entry at the bottom; contacts 1NC + 1NO snap action (21-22, 13-14). */
+const XCS={xcks:['XCKS — מתכת',31,64,16,'#b9bec4','#5b636b'],xckp:['XCKP — פלסטיק',31,64,16,'#9aa1a8','#4b5563'],xckj:['XCKJ — מתכת, גוף רחב',40,77,22,'#c3c7cb','#5b636b'],xcmd:['XCMD — מיני',30,50,14,'#a9afb5','#4b5563']};
+const XCH={roller:'זרוע עם גלגלת',adj:'זרוע מתכווננת עם גלגלת',rod:'זרוע מוט',plunger:'בוכנה מתכת',rplunger:'בוכנה עם גלגלת',spring:'מוט קפיץ (שפם חתול)'};
+const XCM={xcks:{roller:'XCKS131',adj:'XCKS139',rod:'XCKS141',plunger:'XCKS110',rplunger:'XCKS102',spring:'XCKS106'},xckp:{roller:'XCKP2118G11',adj:'XCKP2145G11',rod:'XCKP2149G11',plunger:'XCKP2110G11',rplunger:'XCKP2102G11',spring:'XCKP2106G11'},
+ xckj:{roller:'XCKJ10511',adj:'XCKJ10541',rod:'XCKJ10559',plunger:'XCKJ161',rplunger:'XCKJ167',spring:'XCKJ106'},xcmd:{roller:'XCMD2115L1',adj:'XCMD2145L1',rod:'XCMD2159L1',plunger:'XCMD2110L1',rplunger:'XCMD2102L1',spring:'XCMD2106L1'}};
+function xckGeo(o){const S=XCS[o.p.xs]||XCS.xcks,[,bw,bh,hh]=S,hd=o.p.xh||'roller',en=8,arm={roller:bw*.95,adj:bw*1.6,rod:bw*4.2}[hd]||0,rr=hd==='rod'?2:9,
+ top={plunger:12,rplunger:15,spring:110}[hd]||(arm?rr+2:0),reach=arm+rr,W=Math.max(bw,2*reach+4),H=en+bh+hh+top;return {S,bw,bh,hh,hd,en,arm,rr,top,W,H};}
+function xckDraw(o){const g=xckGeo(o),{S,bw,bh,hh,hd,en,arm,rr,top,H}=g,[,,,,c,e]=S,yb=H/2,yB=yb-en,yT=yB-bh,yH=yT-hh,cy=yH+hh/2;let s='';
+ // cable entry (M20 gland stub)
+ s+=`<rect x="-7" y="${yB}" width="14" height="${en}" fill="#6b7280" stroke="${e}" stroke-width=".6"/>`+[2,4,6].map(d=>`<path d="M-7 ${yB+d}h14" stroke="${e}" stroke-width=".35"/>`).join('');
+ // body with its cover and screws
+ s+=`<rect x="${-bw/2}" y="${yT}" width="${bw}" height="${bh}" rx="3" fill="${c}" stroke="${e}" stroke-width=".8"/><rect x="${-bw/2+3}" y="${yT+3}" width="${bw-6}" height="${bh-6}" rx="2" fill="none" stroke="${e}" stroke-width=".5" opacity=".7"/>`;
+ [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>s+=screw(a*(bw/2-6),b<0?yT+6:yB-6,1.6));
+ s+=`<rect x="${-bw/2+5}" y="${yT+bh*.38}" width="${bw-10}" height="${bh*.2}" rx="1" fill="#f3f4f6" stroke="#9ca3af" stroke-width=".4"/>`+txt(0,yT+bh*.44,'Telemecanique',Math.min(2.6,bw/12),'#3dcd58',800)+txt(0,yT+bh*.53,(XCM[o.p.xs]||XCM.xcks)[hd]||'',Math.min(2.4,bw/13),'#111',700);
+ // head
+ s+=`<rect x="${-bw*.42}" y="${yH}" width="${bw*.84}" height="${hh}" rx="2.4" fill="${c}" stroke="${e}" stroke-width=".8"/>`;
+ if(arm){s+=`<circle cx="0" cy="${cy}" r="${hh*.32}" fill="#4b5563" stroke="#111" stroke-width=".5"/>`;
+  if(hd==='rod')s+=`<path d="M0 ${cy}H${arm}" stroke="#9ca3af" stroke-width="3" stroke-linecap="round"/><path d="M0 ${cy}H${arm}" stroke="#4b5563" stroke-width=".6"/>`;
+  else{s+=`<rect x="-2" y="${cy-3}" width="${arm+2}" height="6" rx="2" fill="#6b7280" stroke="#111" stroke-width=".5"/>`;if(hd==='adj')s+=`<rect x="${arm*.35}" y="${cy-1}" width="${arm*.45}" height="2" rx="1" fill="#1f2937"/>`;
+   s+=`<circle cx="${arm}" cy="${cy}" r="${rr}" fill="#1f2937" stroke="#000" stroke-width=".6"/><circle cx="${arm}" cy="${cy}" r="${rr*.38}" fill="#9ca3af" stroke="#111" stroke-width=".4"/>`;}
+  s+=`<circle cx="0" cy="${cy}" r="1.6" fill="#d1d5db"/>`;}
+ if(hd==='plunger')s+=`<rect x="-5" y="${yH-top}" width="10" height="${top+1}" rx="1.5" fill="#d1d5db" stroke="#4b5563" stroke-width=".6"/><rect x="-5" y="${yH-top}" width="10" height="2.4" rx="1.2" fill="#e5e7eb"/>`;
+ if(hd==='rplunger')s+=`<rect x="-4" y="${yH-top+6}" width="8" height="${top-5}" fill="#d1d5db" stroke="#4b5563" stroke-width=".6"/><circle cx="0" cy="${yH-top+6.5}" r="6.5" fill="#1f2937" stroke="#000" stroke-width=".5"/><circle cx="0" cy="${yH-top+6.5}" r="2.4" fill="#9ca3af"/>`;
+ if(hd==='spring'){s+=`<rect x="-4" y="${yH-12}" width="8" height="12" fill="#9ca3af" stroke="#4b5563" stroke-width=".5"/>`;for(let y=yH-12;y>yH-34;y-=2.4)s+=`<path d="M-3.5 ${y}l7 -1.2" stroke="#4b5563" stroke-width=".9"/>`;s+=`<path d="M0 ${yH-34}V${yH-top+2}" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round"/><circle cx="0" cy="${yH-top+2}" r="2.2" fill="#ef4444"/>`;}
+ if(o.p.tag)s+=txt(-bw/2-2,yT+bh*.2,o.p.tag,3.6,'#1d4ed8',800,'end');return s;}
 function lg(o,y=21.5){return o.p.tag?`<rect x="-15" y="${y-4.5}" width="30" height="9" rx="1" fill="#f3f3f0" stroke="#888" stroke-width=".4"/>`+txt(0,y,o.p.tag,4.2,'#222',700):'';}
 function hasDoor(o){return o.p.door&&o.p.door!=='none';}
 function hingeX(o){return (o.p.hinge==='R'?1:-1);}
@@ -1235,15 +1261,15 @@ const DEF={
    if(o.p.gv==='front'){let s=`<polygon points="${hex(0,0,c/2)}" fill="${col[1]}" stroke="${col[2]}" stroke-width="1"/><circle cx="0" cy="0" r="${af*.46}" fill="${col[0]}" stroke="${col[2]}" stroke-width=".8"/>`;
     for(let i=0;i<12;i++){const a=i*30*Math.PI/180;s+=`<path d="M${r2(Math.cos(a)*af*.22)} ${r2(Math.sin(a)*af*.22)}L${r2(Math.cos(a)*af*.42)} ${r2(Math.sin(a)*af*.42)}" stroke="${col[2]}" stroke-width=".6" opacity=".7"/>`;}
     s+=`<circle cx="0" cy="0" r="${g[5][1]/2}" fill="#1f2937" stroke="#000" stroke-width=".6"/>`+txt(0,c/2+4,o.p.rating,Math.max(3,af*.18),'#e5e7eb',700);return s+(o.p.tag?txt(c/2+2,-c/2,o.p.tag,4,'#7dd3fc',700,'start'):'');}
-   // side view: cap on top, hex, thread at the bottom (rotate it to point up)
+   // side view as installed in the bottom of a box: thread up (inside), hex against the wall, dome below (outside)
    const H=th+hx+dm,y0=-H/2,a=af*.44,t=a*.96,rr=Math.min(dm*.28,t*.35);// the dome cap: squarish, slightly narrower at the top, rounded corners
    let s=`<path d="M${-a} ${y0+dm}L${-t} ${y0+rr}Q${-t} ${y0} ${-t+rr} ${y0}H${t-rr}Q${t} ${y0} ${t} ${y0+rr}L${a} ${y0+dm}Z" fill="${col[0]}" stroke="${col[2]}" stroke-width="1" stroke-linejoin="round"/>`;
    for(let i=1;i<5;i++)s+=`<path d="M${-a+i*a*.4} ${y0+dm-1}V${y0+rr*.9}" stroke="${col[2]}" stroke-width=".6" opacity=".55"/>`;
    s+=`<path d="M${-t+rr*.6} ${y0+1.2}H${t-rr*.6}" stroke="#fff" stroke-opacity=".35" stroke-width=".8" stroke-linecap="round"/>`;
    s+=`<rect x="${-c/2}" y="${y0+dm}" width="${c}" height="${hx}" fill="${col[1]}" stroke="${col[2]}" stroke-width="1"/><path d="M${-c/4} ${y0+dm}v${hx}M${c/4} ${y0+dm}v${hx}" stroke="${col[2]}" stroke-width=".7"/>`;
    s+=`<rect x="${-d/2}" y="${y0+dm+hx}" width="${d}" height="${th}" fill="${col[0]}" stroke="${col[2]}" stroke-width="1"/>`;for(let y=y0+dm+hx+1.5;y<H/2-.5;y+=1.6)s+=`<path d="M${-d/2} ${y}h${d}" stroke="${col[2]}" stroke-width=".4"/>`;
-   s+=txt(c/2+2,y0+dm+hx/2,o.p.rating,Math.max(3,af*.2),'#e5e7eb',700,'start');
-   return s+(o.p.tag?txt(-c/2-2,y0+dm+hx/2,o.p.tag,4,'#7dd3fc',700,'end'):'');}},
+   const ly=-(y0+dm+hx/2);s=`<g transform="scale(1 -1)">${s}</g>`+txt(c/2+2,ly,o.p.rating,Math.max(3,af*.2),'#e5e7eb',700,'start');
+   return s+(o.p.tag?txt(-c/2-2,ly,o.p.tag,4,'#7dd3fc',700,'end'):'');}},
  nrack:{layer:0,edit:['tag','inch','u','kind','w','rcol'],def:{tag:'',inch:'19',u:12,kind:'wall',w:600,rcol:'grey'},size:o=>{const d=nrDim(o);return {w:d.W,h:d.H};},
   draw:o=>{const d=nrDim(o),{W,H,u,top,rail}=d,yT=-H/2+top,yB=yT+u*RU,gr=o.p.rcol!=='black',C=gr?['#d9dbd6','#8a8d88','#c9cbc6','#b9bbb6','#a7aaa5']:['#2b2f34','#0f1114','#1b1e21','#202428','#0f1114'];let s=`<rect x="${-W/2}" y="${-H/2}" width="${W}" height="${H}" rx="4" fill="${C[0]}" stroke="${C[1]}" stroke-width="2"/><rect x="${-W/2+14}" y="${yT-6}" width="${W-28}" height="${u*RU+12}" fill="${gr?'#c4c7c2':'#15181b'}"/>`;
    if(d.fl)s+=`<rect x="${-W/2}" y="${H/2-100}" width="${W}" height="100" fill="${C[2]}" stroke="${C[1]}" stroke-width="1.5"/>`+[...Array(Math.floor((W-60)/30)).keys()].map(i=>`<rect x="${-W/2+30+i*30}" y="${H/2-80}" width="16" height="60" rx="3" fill="${C[0]}"/>`).join('');
@@ -2172,6 +2198,8 @@ const WDEF={
    s+=`<rect x="-9" y="${-z.h*.05}" width="18" height="${z.h*.18}" rx="2" fill="#1f2937" stroke="#000" stroke-width=".6"/><path d="M-6 ${z.h*.04}h12M-6 ${z.h*.08}l6 4l6 -4" stroke="#9ca3af" stroke-width="1" fill="none"/>`+txt(0,z.h*.155,'LAD9V2',2.4,'#e5e7eb',700);
    [-1,1].forEach(a=>s+=`<rect x="${-dx-z.w*.32}" y="${a*(z.h/2+1.5)-1.5}" width="${2*dx+z.w*.64}" height="3" rx="1" fill="#9ca3af" opacity=".85"/>`);return s;}},
  /* inductive / capacitive proximity sensor: threaded barrel with lock nuts, LED and sensing face, 3-wire cable (BN +, BU −, BK out) */
+ xck:{layer:4,edit:['tag','xs','xh'],def:{tag:'S1',xs:'xcks',xh:'roller'},size:o=>{const g=xckGeo(o);return {w:g.W,h:g.H};},
+  terms:o=>{const g=xckGeo(o);return spread(14,4).map((x,i)=>[r2(x*1.4),r2(g.H/2),['21','22','13','14'][i]]);},draw:o=>xckDraw(o)},
  prox:{layer:4,edit:['tag','rating','px','cl'],def:{tag:'B1',rating:'M18 PNP NO 10-30VDC',px:'ind'},ratings:['M12 PNP NO 10-30VDC','M18 PNP NO 10-30VDC','M30 PNP NO 10-30VDC','M18 NPN NO 10-30VDC','M18 PNP NC 10-30VDC'],
   size:o=>{const m=proxM(o);return {w:m+16,h:m*3.2+70+cabX(o)};},
   terms:o=>{const {h}=(DEF.prox.size0||DEF.prox.size)(o);return [[-8,-h/2,'+'],[0,-h/2,'−'],[8,-h/2,'OUT']];},
@@ -2295,7 +2323,7 @@ const LIB=[
    {g:'קופסאות לחצנים CI-K (גובה×רוחב מ"מ)',items:I('CI-K1 131×80','CI-K2 181×100','CI-K3 222×120','CI-K4 240×160','CI-K5 280×200')},
    {g:'קופסאות Ci מודולריות',items:I('Ci 250×187.5','Ci 375×250','Ci 250×375','Ci 375×375','Ci 250×375 עם חלון')},
    {g:'מחיצות פח',items:I('מחיצה אופקית','מחיצה אנכית')},
-   {g:'כניסות כבל — אנטיגרונים (מבט מהצד; לבראש הלוח — מסובבים 180°)',items:['M12','M16','M20','M25','M32','M40','M50','M63'].map(m=>({t:'gland',n:`אנטיגרון ${m} (כבל ${GLAND[m][5].join('-')} מ"מ)`,p:{rating:m}}))},
+   {g:'כניסות כבל — אנטיגרונים (מבט מהצד; כשמניחים על דופן של לוח הם מסתובבים לבד — הכיפה החוצה)',items:['M12','M16','M20','M25','M32','M40','M50','M63'].map(m=>({t:'gland',n:`אנטיגרון ${m} (כבל ${GLAND[m][5].join('-')} מ"מ)`,p:{rating:m}}))},
    {g:'אנטיגרונים — מבט מלפנים (לפלטת כניסות)',items:['M16','M20','M25','M32','M40','M50'].map(m=>({t:'gland',n:`אנטיגרון ${m} — מלפנים`,p:{rating:m,gv:'front'}}))},
    {g:'פתחים בחזית למפסקים',items:I('פתח למאמ"תים 12 מודולים','פתח למאמ"תים 24 מודולים','פתח למפסק כוח (MCCB)','פתח למפסק כוח גדול')}]},
   {tab:'פסי DIN ותעלות חיווט',icon:'▤',hint:'לשינוי אורך: בוחרים את הפס או התעלה וגוררים את העיגולים הכחולים שבקצוות.',groups:[
@@ -2362,6 +2390,7 @@ const LIB=[
    {g:'מדי לחץ',items:[{t:'ptx',n:'משדר לחץ 0-6 bar'},{t:'ptx',n:'משדר לחץ 0-10 bar',p:{rating:'0-10 bar · 4-20mA'}},{t:'pgauge',n:'מד לחץ (מנומטר) 0-10 bar'},{t:'pgauge',n:'מד לחץ (מנומטר) 0-6 bar',p:{rating:'0-6 bar'}}]}]},
   {tab:'מגופים וגששים',icon:'⛭',hint:'מגוף חשמלי: בוחרים במאפיינים סוג (פרפר / טריז / כדורי), קוטר (DN) ומפעיל (תלת-פאזי, חד-פאזי או מווסת 4-20mA); בראש המפעיל — הזנה, פקודות פתח / סגור (OP, CL), גבולות (LSO, LSC, COM). גשש קרבה: את אורך הכבל משנים במאפיינים או בגרירה מהקצה.',groups:[
    {g:'מגופים חשמליים',items:[{t:'mvalve',n:'מגוף פרפר חשמלי DN100'},{t:'mvalve',n:'מגוף פרפר חשמלי DN200',p:{rating:'DN200'}},{t:'mvalve',n:'מגוף טריז חשמלי DN150',p:{rating:'DN150',vt:'gate'}},{t:'mvalve',n:'מגוף כדורי חשמלי DN50 230V',p:{rating:'DN50',vt:'ball',act:'1ph'}},{t:'mvalve',n:'מגוף מווסת 4-20mA DN100',p:{act:'mod'}},{t:'mvalve',n:'מגוף פרפר + מפעיל AUMA DN150',p:{rating:'DN150',act:'auma'}},{t:'mvalve',n:'מגוף טריז + מפעיל AUMA DN200',p:{rating:'DN200',vt:'gate',act:'auma'}},{t:'mvalve',n:'מגוף מווסת + מפעיל AUMATIC AC DN150',p:{rating:'DN150',act:'aumac'}},{t:'svalve',n:'ברז חשמלי סולנואיד 24VDC'},{t:'svalve',n:'ברז חשמלי סולנואיד 230VAC',p:{rating:'230VAC'}}]},
+   {g:'מפסקי גבול Telemecanique (OsiSense XC) — סדרה וראש בעריכה',items:[{t:'xck',n:'מפסק גבול XCKS131 — זרוע עם גלגלת'},{t:'xck',n:'מפסק גבול XCKS139 — זרוע מתכווננת',p:{xh:'adj'}},{t:'xck',n:'מפסק גבול XCKS110 — בוכנה מתכת',p:{xh:'plunger'}},{t:'xck',n:'מפסק גבול XCKS102 — בוכנה עם גלגלת',p:{xh:'rplunger'}},{t:'xck',n:'מפסק גבול XCKS106 — מוט קפיץ',p:{xh:'spring'}},{t:'xck',n:'מפסק גבול XCKP2118 פלסטיק — זרוע עם גלגלת',p:{xs:'xckp'}},{t:'xck',n:'מפסק גבול XCKJ10511 — זרוע עם גלגלת',p:{xs:'xckj'}},{t:'xck',n:'מפסק גבול XCKJ10559 — זרוע מוט',p:{xs:'xckj',xh:'rod'}},{t:'xck',n:'מפסק גבול מיני XCMD — זרוע עם גלגלת',p:{xs:'xcmd'}}]},
    {g:'גששי קרבה',items:[{t:'prox',n:'גשש אינדוקטיבי M12',p:{rating:'M12 PNP NO 10-30VDC'}},{t:'prox',n:'גשש אינדוקטיבי M18'},{t:'prox',n:'גשש אינדוקטיבי M30',p:{rating:'M30 PNP NO 10-30VDC'}},{t:'prox',n:'גשש קיבולי M18',p:{px:'cap'}},{t:'prox',n:'גשש קיבולי M30',p:{px:'cap',rating:'M30 PNP NO 10-30VDC'}}]}]},
   {tab:'מסכי HMI',icon:'🖥',groups:[
    {g:'שניידר Harmony ST6',items:Object.keys(HMIM).filter(m=>HMIM[m].s==='ST6').map(m=>({t:'hmis',n:'מסך '+m,p:{hm:m}}))},
@@ -2671,7 +2700,7 @@ function patchWorld(items){const seen=new Map();for(const n of [...world.childre
   if(n.__s!==str){n.innerHTML=str;n.__s=str;}
   if(n!==cur)world.insertBefore(n,cur);else cur=cur.nextSibling;}
  while(cur){const nx=cur.nextSibling;cur.remove();cur=nx;}}
-function renderNow(){drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}
+function renderNow(){if(state.tab!=='sld')glandAuto();drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}
  const fast=state.tab!=='both'&&!(state.tab==='sld'&&sldDark);LODMIN=2.2/view.s;let s,P=null;
  try{if(fast){PIECES=[];content({sel:true});P=PIECES;}else s=layoutSVG()+axesSVG()+content({sel:true});}finally{PIECES=null;}
  const pre=fast?layoutSVG()+axesSVG():'';
@@ -2851,7 +2880,7 @@ function inCab(c,x,y){const g=cabG(c);return x>g.x0&&x<g.x0+g.W&&y>g.y0&&y<g.y0+
 /* Designations by IEC 81346 letter, numbered as parts are added: the next free
    number for that letter in this document (H1, H2… lamps; Q1, Q2… breakers…). A
    designation typed by hand stays as it is. */
-const SERIAL={pillar:'P',lc1k:'K',lc2k:'K',pbdbl:'S',hmis:'HMI',flood:'E',hbay:'E',batten:'E',shead:'E',lpole:'LP',sgencat:'G',genset:'G',smem:'Q',am530t:'A',satsc:'A',atsw:'Q',dsec:'A',acb:'Q',sacb:'Q',svfd3:'U',xbox:'S',nrack:'RK',lc2d:'K',srev:'K',prox:'B',sprox:'B',mvalve:'MV',svalve:'SV',smv:'MV',ssv:'SV',subpit:'P',ssubp:'P',kflow:'FE',kconv:'FIT',sfe:'FE',sfit:'FIT',lfloat:'LS',ptx:'PT',pgauge:'PI',spt:'PT',spi:'PI',lvlh:'LT',ultra4:'LIC',udb:'LE',slvlh:'LT',sultra:'LIC',sudb:'LE',smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
+const SERIAL={xck:'S',pillar:'P',lc1k:'K',lc2k:'K',pbdbl:'S',hmis:'HMI',flood:'E',hbay:'E',batten:'E',shead:'E',lpole:'LP',sgencat:'G',genset:'G',smem:'Q',am530t:'A',satsc:'A',atsw:'Q',dsec:'A',acb:'Q',sacb:'Q',svfd3:'U',xbox:'S',nrack:'RK',lc2d:'K',srev:'K',prox:'B',sprox:'B',mvalve:'MV',svalve:'SV',smv:'MV',ssv:'SV',subpit:'P',ssubp:'P',kflow:'FE',kconv:'FIT',sfe:'FE',sfit:'FIT',lfloat:'LS',ptx:'PT',pgauge:'PI',spt:'PT',spi:'PI',lvlh:'LT',ultra4:'LIC',udb:'LE',slvlh:'LT',sultra:'LIC',sudb:'LE',smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
  sbrk:'Q',smpcb:'Q',siso:'Q',slbs:'Q',sfsd:'Q',sats:'Q',srcd:'F',sfuse:'F',sol:'F',sspd:'F',scont:'K',svfd:'U',sss:'U',sups:'U',sgen:'G',sbatt:'G',strafo:'T',sct:'T',svt:'T',skwh:'P',spm:'P',samm:'P',svm:'P',scap:'C',smot:'M',stb:'X',scable:'W'};
 function autoTag(o){const pre=SERIAL[o.type];if(!pre||!o.p||!DEF[o.type].edit?.includes('tag'))return;const re=new RegExp('^'+pre+'(\\d+)$');if(o.p.tag&&!re.test(o.p.tag))return;
  const mine=isSldObj(o),used=new Set();state.objs.forEach(q=>{if(q===o||isSldObj(q)!==mine)return;const m=re.exec(q.p?.tag||'');if(m)used.add(+m[1]);});let n=1;while(used.has(n))n++;o.p.tag=pre+n;}
@@ -2935,7 +2964,15 @@ function shapeDimsToMd(){for(const o of state.objs.slice()){if((o.type!=='shrect
   if(o.p.sdw!=='0')mk(-w/2,sy*h/2,w/2,sy*h/2,0,sy*(h/2+ow));if(o.p.sdh!=='0')mk(sx*w/2,-h/2,sx*w/2,h/2,sx*(w/2+oh),0);
   o.p.sd='0';['sdw','sdh','dw','dh','wpos','hpos'].forEach(k=>delete o.p[k]);}}
 const ownDims=o=>state.objs.filter(m=>m.type==='mdim'&&m.p.a.of===o.id&&m.p.b.of===o.id);
-function commit(){shapeDimsToMd();syncDoc();state.objs.forEach(q=>{if(q.type==='nmap'){const g=nmapGeo(q);if(g)q.y=g.cy;}});ensureOrigin();syncLayoutBtn();const j=JSON.stringify(state);if(hist[hi]===j)return;hist=hist.slice(0,hi+1);hist.push(j);if(hist.length>100)hist.shift();hi=hist.length-1;persist();updateBar();scheduleSave();}
+/* A side-view gland on the edge of a board turns so its dome faces out of the board (bottom → dome down,
+   top → up, sides → out); glands away from any board keep their own rotation. */
+function glandAuto(){const B=state.objs.filter(b=>['cabinet','enclosure','cibox','hbox','pillar','nrack','xbox'].includes(b.type));if(!B.length)return;
+ state.objs.forEach(o=>{if(o.type!=='gland'||o.p.gv==='front'||o.locked)return;let best=null;
+  for(const b of B){let x0,y0,x1,y1;if(b.type==='cabinet'){const g=cabG(b);x0=g.x0;x1=g.x0+g.W;y0=g.y0;y1=g.y0+g.H;}else({x0,y0,x1,y1}=bbW(b));
+   const m=60;if(o.x<x0-m||o.x>x1+m||o.y<y0-m||o.y>y1+m)continue;const nx=(o.x-(x0+x1)/2)/((x1-x0)/2),ny=(o.y-(y0+y1)/2)/((y1-y0)/2),k=Math.max(Math.abs(nx),Math.abs(ny));
+   if(k<.6)continue;if(!best||k>best.k)best={k,nx,ny};}
+  if(!best)return;const r=Math.abs(best.ny)>=Math.abs(best.nx)?(best.ny>0?0:180):(best.nx>0?270:90);if(o.rot!==r)o.rot=r;});}
+function commit(){glandAuto();shapeDimsToMd();syncDoc();state.objs.forEach(q=>{if(q.type==='nmap'){const g=nmapGeo(q);if(g)q.y=g.cy;}});ensureOrigin();syncLayoutBtn();const j=JSON.stringify(state);if(hist[hi]===j)return;hist=hist.slice(0,hi+1);hist.push(j);if(hist.length>100)hist.shift();hi=hist.length-1;persist();updateBar();scheduleSave();}
 function restore(j){const dn=state.dwgno,rv=state.rev;state=JSON.parse(j);if(dn&&state.name!==undefined){state.dwgno=dn;if(rv!=null)state.rev=rv;}scheduleSave();syncDoc();syncLayoutBtn();multi.clear();if(sel&&!get(sel))sel=null;renderNow();persist();updateBar();}
 function undo(){if(draft){draft.pts.pop();if(!draft.pts.length)draft=null;renderNow();return;}if(hi>0){hi--;restore(hist[hi]);}}
 function redo(){if(hi<hist.length-1){hi++;restore(hist[hi]);}}
@@ -4329,6 +4366,8 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='tsp')h+=`<div class="fld"><label>אזיקונים לאורך הפרופיל</label><select id="f_tsp">${[['0','בלי'],['50','כל 50 מ"מ'],['75','כל 75 מ"מ'],['100','כל 100 מ"מ'],['150','כל 150 מ"מ']].map(([a,n])=>`<option value="${a}" ${a===String(v||'0')?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='tcol')h+=`<div class="fld"><label>צבע האזיקון</label><select id="f_tcol"><option value="black" ${v!=='white'?'selected':''}>שחור</option><option value="white" ${v==='white'?'selected':''}>לבן</option></select></div>`;
   else if(k==='tlen')h+=`<div class="fld"><label>אורך האזיקון הנראה (מ"מ)</label><select id="f_tlen">${['25','40','60','80','120'].map(a=>`<option ${a===String(v)?'selected':''}>${a}</option>`).join('')}</select></div>`;
+  else if(k==='xs')h+=`<div class="fld"><label>סדרה</label><select id="f_xs">${Object.entries(XCS).map(([a,q])=>`<option value="${a}" ${a===String(v)?'selected':''}>${q[0]}</option>`).join('')}</select></div>`;
+  else if(k==='xh')h+=`<div class="fld"><label>ראש / מפעיל</label><select id="f_xh">${Object.entries(XCH).map(([a,n])=>`<option value="${a}" ${a===String(v)?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='hmat')h+=`<div class="fld"><label>סדרה</label><select id="f_hmat"><option value="xb5" ${v!=='xb4'?'selected':''}>Harmony XB5 — פלסטיק שחור</option><option value="xb4" ${v==='xb4'?'selected':''}>Harmony XB4 — מתכת (כרום)</option></select></div>`;
   else if(k==='leg')h+=`<div class="fld"><label>סימון הלחצנים</label><select id="f_leg">${[['io','I ירוק למעלה / O אדום למטה (התנע / עצור)'],['ud','חץ ▲ ירוק למעלה / חץ ▼ אדום למטה'],['udk','חץ ▲ / חץ ▼ — שני לחצנים שחורים']].map(([a,n])=>`<option value="${a}" ${a===String(v||'io')?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='lcol')h+=`<div class="fld"><label>נורה באמצע</label><select id="f_lcol">${Object.entries(PDL).map(([a,q])=>`<option value="${a}" ${a===String(v)?'selected':''}>${q[0]}</option>`).join('')}</select></div>`;
@@ -4431,7 +4470,7 @@ const V3SKIP=new Set(['wire','mdim','underlay','sframe']);
 const V3CIV=new Set(['floor','wall','subpit']);
 const V3FLAT=new Set(['label','callout','shline','ink','nplate']);
 /* depth of a part that stands on its own (not inside a board): about its real thickness */
-function v3Free(o){if(+o.p.d3>0)return +o.p.d3;const {w,h}=sizeOf(o),m=Math.min(w,h);if(o.type==='genset')return h*.85;if(o.type==='pillar')return Math.max(150,+o.p.pld||350);if(o.type==='emotor')return h*.8;if(o.type==='person')return 260;if(o.type==='shrect'||o.type==='shellipse')return Math.max(20,m*.15);return Math.max(v3Depth(o),Math.min(3000,m*.8));}
+function v3Free(o){if(+o.p.d3>0)return +o.p.d3;const {w,h}=sizeOf(o),m=Math.min(w,h);if(o.type==='genset')return h*.85;if(o.type==='pillar')return Math.max(150,+o.p.pld||350);if(o.type==='xck')return o.p.xs==='xckj'?44:o.p.xs==='xcmd'?28:32;if(o.type==='emotor')return h*.8;if(o.type==='person')return 260;if(o.type==='shrect'||o.type==='shellipse')return Math.max(20,m*.15);return Math.max(v3Depth(o),Math.min(3000,m*.8));}
 const V3DEP={lc1k:57,lc2k:57,pbdbl:30,mcb:72,rcd:72,spd:72,iso:72,gv2:88,mpcb:88,cont:88,lc1d:88,lc2d:92,relay:62,rxm:48,lrd:72,nsx:98,nsxm:82,acb:330,atv630:230,psu:62,meter:62,m340mod:110,clxmod:120,kconv:62,socket:52,comb:14,gland:30,ctie:5,zprof:40,rail:7.5,duct:62,busbar:12,partition:2,traysh:60,traymesh:60};
 function v3Depth(o){if(+o.p.d3>0)return +o.p.d3;const D=DEF[o.type],L=D.layer;if(V3DEP[o.type]!=null)return V3DEP[o.type];if(D.front)return 22;if(L<1)return 3;if(L<2)return 50;if(L<3)return 8;if(L<3.6)return 120;if(L<4.6){const {w,h}=sizeOf(o);return Math.max(30,Math.min(200,Math.min(w,h)*.7));}return 18;}
 function v3Base(o){return o.type==='busbar'?36:0;}
@@ -4879,7 +4918,7 @@ function bomData(){return withPanel(bomData0);}
 function bomDataSld(){return withDoc('sld',()=>{const rows={},SKIP=['wire','sframe','sfeed','label','mdim','underlay','ink'];state.objs.forEach(o=>{if(SKIP.includes(o.type)||DRAWT.has(o.type)||!DEF[o.type])return;
   const k=(o.p.name||o.type)+(o.p.rating?' '+o.p.rating:'');const r=rows[k]=rows[k]||{n:0,tags:[]};r.n++;if(o.p.tag)r.tags.push(o.p.tag);});
  return Object.keys(rows).map(k=>{const r=rows[k],tg=r.tags.sort((a,b)=>a.localeCompare(b,'he',{numeric:true}));return [k+(tg.length?` (${tg.length>6?tg.slice(0,6).join(', ')+'…':tg.join(', ')})`:''),`${r.n} יח'`];});});}
-function bomData0(){const rows={};state.objs.forEach(o=>{if(o.type==='pbdbl'){const L=PDL[o.p.lcol]||PDL.w,kl=`לחצן כפול Harmony ${pdModel(o)} — ${({io:'I ירוק / O אדום',ud:'חצים ▲ ירוק / ▼ אדום',udk:'חצים ▲▼ שחור'})[o.p.leg||'io']}${L[2]?`, נורה ${L[0]} ${PDV[o.p.pv]||''}`:''}`;rows[kl]=rows[kl]||{n:0};rows[kl].n++;return;}if(o.type==='underlay'||o.type==='nmap')return;if(o.type==='wire'){const k=`חוט ${WCOL[o.p.color]?.n} ${o.p.sec} ממ"ר`;rows[k]=rows[k]||{n:0,len:0,w:1};rows[k].len+=wireLen(o);return;}
+function bomData0(){const rows={};state.objs.forEach(o=>{if(o.type==='xck'){const kl=`מפסק גבול Telemecanique ${(XCM[o.p.xs]||XCM.xcks)[o.p.xh||'roller']} — ${(XCS[o.p.xs]||XCS.xcks)[0]}, ${XCH[o.p.xh||'roller']}, 1NC+1NO`;rows[kl]=rows[kl]||{n:0};rows[kl].n++;return;}if(o.type==='pbdbl'){const L=PDL[o.p.lcol]||PDL.w,kl=`לחצן כפול Harmony ${pdModel(o)} — ${({io:'I ירוק / O אדום',ud:'חצים ▲ ירוק / ▼ אדום',udk:'חצים ▲▼ שחור'})[o.p.leg||'io']}${L[2]?`, נורה ${L[0]} ${PDV[o.p.pv]||''}`:''}`;rows[kl]=rows[kl]||{n:0};rows[kl].n++;return;}if(o.type==='underlay'||o.type==='nmap')return;if(o.type==='wire'){const k=`חוט ${WCOL[o.p.color]?.n} ${o.p.sec} ממ"ר`;rows[k]=rows[k]||{n:0,len:0,w:1};rows[k].len+=wireLen(o);return;}
   if(o.type==='hmis'){const kl=`מסך Harmony ${o.p.hm}`;rows[kl]=rows[kl]||{n:0};rows[kl].n++;return;}
   if(o.type==='flood'||o.type==='hbay'||o.type==='shead'){const kl=`${o.type==='flood'?'פרוז׳קטור LED':o.type==='hbay'?'גוף היי-ביי LED':'פנס רחוב LED'} ${o.p.fw||o.p.hw}W`;rows[kl]=rows[kl]||{n:0};rows[kl].n++;return;}
   if(o.type==='lpole'){const kl=`עמוד תאורה ${o.p.ph} מ' ${({none:'',single:'· זרוע',double:'· 2 זרועות'})[o.p.parm]||''}`.trim();rows[kl]=rows[kl]||{n:0};rows[kl].n++;const n=o.p.phead==='street'?(o.p.parm==='double'?2:1):(o.p.parm==='none'?+o.p.pfn||1:(o.p.parm==='double'?2:1)),lk=`${o.p.phead==='street'?'פנס רחוב LED':'פרוז׳קטור LED'} ${o.p.fw}W`;rows[lk]=rows[lk]||{n:0};rows[lk].n+=n;return;}

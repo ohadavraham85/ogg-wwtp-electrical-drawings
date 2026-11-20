@@ -179,11 +179,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 208;
+const VERSION = 209;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'אנטיגרונים בצורה מרובעת יותר, בלי השפיץ השחור; לחצן כפול עם חצים, מגעני TeSys K ומכסה שקוף ל-CI';
+const WHATS_NEW = 'מפסקי גבול Telemecanique (XCKS, XCKP, XCKJ, XCMD) עם ראשים שונים; אנטיגרונים מסתובבים לבד — הכיפה החוצה מהלוח';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
