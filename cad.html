@@ -4204,9 +4204,15 @@ $('bUndo').onclick=undo;$('bRedo').onclick=redo;
 $('bFit').onclick=fit;$('bGrid').onclick=()=>gridDialog();
 $('bDoor').onclick=()=>{toggleDoors();updateBar();};$('b3d').onclick=()=>open3D();$('bLockAll').onclick=toggleLockAll;
 /* Keyboard: Delete removes what's selected, Esc lets go, Ctrl+Z / Ctrl+Y undo and redo, Ctrl+A takes all. */
+let NUDGE_T=0;
 document.addEventListener('keydown',e=>{const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;if(!$('modal').classList.contains('hidden'))return;
  const k=e.key,mod=e.ctrlKey||e.metaKey;
  if((k==='Delete'||k==='Backspace')&&!globalLock&&!wireMode&&selIds().length){e.preventDefault();deleteSelected();}
+ else if(k.startsWith('Arrow')&&!mod&&!globalLock&&selIds().length){// nudge the selection: 1 mm, with Shift 10 mm
+  const L=selIds().map(get).filter(o=>o&&o.type!=='wire'&&o.type!=='mdim'&&!o.locked);if(!L.length)return;e.preventDefault();
+  const st=e.shiftKey?10:1,dx=k==='ArrowLeft'?-st:k==='ArrowRight'?st:0,dy=k==='ArrowUp'?-st:k==='ArrowDown'?st:0;
+  L.forEach(o=>{o.x=r2(o.x+dx);o.y=r2(o.y+dy);});
+  renderNow();clearTimeout(NUDGE_T);NUDGE_T=setTimeout(()=>{commit();updateBar();},450);}
  else if(mod&&(e.code==='BracketRight'||e.code==='BracketLeft')&&selIds().length&&!globalLock){e.preventDefault();zOrder(e.code==='BracketRight'?(e.shiftKey?'front':'up'):(e.shiftKey?'back':'down'));}
  else if(k==='Escape'){if(PEN){penSet(false);return;}if(BRUSH){brushSet(false);return;}if(MWM){mwSet(false);return;}if(measMode){setMeas(null);toast('יצאת ממצב מדידה');return;}if(wireMode)return;clearSel();}
  else if(mod&&(k==='z'||k==='Z')&&!e.shiftKey){e.preventDefault();undo();}
