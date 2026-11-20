@@ -1782,6 +1782,27 @@ Object.keys(TN).forEach(k=>{const D=SDEF[k];if(!D)return;const d0=D.draw;D.def=O
 /* Multi-pole (3P / 4P) versions: the one-pole symbol repeated every 20 mm — the
    same pitch as terminal blocks, so poles, terminals and wires line up — with a
    dashed mechanical link and terminals 1-3-5(-N) / 2-4-6(-N). */
+(()=>{const V=['24VDC','24VAC','48VDC','110VAC','230VAC'],L={
+ atvhmi:['VW3A1111 + VW3A1112','VW3A1111'],sgrid:['400V','6.3kV','11kV','13.8kV','22kV','33kV'],sups:['1kVA','2kVA','3kVA','6kVA','10kVA','20kVA','30kVA','40kVA','60kVA','80kVA','100kVA','160kVA'],
+ sbatt:['12VDC','24VDC','48VDC','110VDC','220VDC'],sfsd:['gG 32A','gG 63A','gG 100A','gG 125A','gG 160A','gG 250A','gG 400A','gG 630A','aM 63A','aM 100A','aM 160A','aM 250A'],
+ slbs:['40A','63A','100A','125A','160A','250A','400A','630A','800A','1000A','1250A','1600A'],
+ sno:V,snc:V,spbno:V,spbnc:V,sestop:V,skeysw:V,sauxq:V,stno:V,stnc:V,slimit:['XCKS131','XCKP2118','XCKJ10511','XCMD2115'],sfloat:['מצוף 1C/O','מצוף NO','מצוף NC'],spress:['0-1 bar','0-6 bar','0-10 bar','0-16 bar'],sthermo:['0-60°C','30-90°C','0-120°C'],
+ stcoiloff:['0.1s-1s','0.1s-10s','1s-60s','1min-10min','1min-60min'],sclock:['230VAC','24VDC'],sclockc:['24h','7 ימים'],
+ sultra:['Pulsar Ultra 3','Pulsar Ultra 4','Pulsar Ultra 5'],sfit:['KROHNE IFC 300 W','KROHNE IFC 100 W'],slamp:V,shorn:V,
+ splc:['PLC','Modicon M221','Modicon M241','Modicon M251','Modicon M340','Modicon M580','ControlLogix','CompactLogix'],
+ sol:['LRD 0.1-0.16A','LRD 0.25-0.4A','LRD 0.63-1A','LRD 1-1.6A','LRD 1.6-2.5A','LRD 2.5-4A','LRD 4-6A','LRD 5.5-8A','LRD 7-10A','LRD 9-13A','LRD 12-18A','LRD 16-24A','LRD 23-32A','LRD 30-38A','LRD3 37-50A','LRD3 48-65A','LRD3 63-80A','LRD3 80-104A'],
+ smem:['MT100','MT160','MT250','MT400','MT630'],sats:['63A','100A','160A','250A','400A','630A','800A','1000A','1250A','1600A','2000A','2500A'],
+ sss:['ATS22 7.5kW','ATS22 15kW','ATS22 30kW','ATS480 11kW','ATS480 22kW','ATS480 30kW','ATS480 45kW','ATS480 55kW','ATS480 75kW','ATS480 90kW','ATS480 110kW','ATS480 160kW'],
+ sspd:['T1 25kA','T1+T2 12.5kA','T2 20kA','T2 40kA','T2 65kA','T3 10kA'],
+ sct:['50/5A','75/5A','100/5A','150/5A','200/5A','250/5A','300/5A','400/5A','500/5A','600/5A','800/5A','1000/5A','1250/5A','1500/5A','2000/5A','2500/5A','3000/5A','4000/5A','100/1A','400/1A'],
+ svt:['400/100V','6000/100V','11000/100V','22000/100V','33000/100V'],skwh:['3×230/400V 5(80)A','3×230/400V 5(6)A CT','230V 5(40)A'],spm:['PM2100','PM3250','PM5110','PM5560','PM8000','iEM3155'],
+ samm:['0-50A','0-100A','0-200A','0-400A','0-600A','0-1000A','0-1600A','0-2500A'],svm:['0-300V','0-500V'],
+ scap:['10kVAr','25kVAr','50kVAr','75kVAr','100kVAr','150kVAr','200kVAr','300kVAr','400kVAr','600kVAr'],
+ slight:['18W','36W','58W','100W','150W','200W','400W'],ssock:['16A','32A','63A','16A 5P','32A 5P','63A 5P','125A 5P'],sheat:['0.5kW','1kW','2kW','3kW','6kW','9kW','12kW','18kW'],
+ sload:['1kW','2kW','5kW','10kW','20kW','50kW','100kW'],
+ scable:['NYY 3×1.5','NYY 3×2.5','NYY 5×2.5','NYY 4×4','NYY 5×4','NYY 4×6','NYY 5×6','NYY 4×10','NYY 5×10','NYY 4×16','NYY 5×16','NYY 4×25','NYY 4×35','NYY 4×50','NYY 4×70','NYY 4×95','NYY 4×120','NYY 4×150','NYY 4×185','NYY 4×240','N2XY 4×95','N2XY 4×185','N2XY 4×240'],
+ sbusm:['3×400/230V 50Hz','230V 50Hz','24VDC','110VDC'],sbus:['3×400/230V 50Hz','230V 50Hz','24VDC','110VDC']};
+ Object.entries(L).forEach(([k,r])=>{if(SDEF[k]&&!(SDEF[k].ratings&&SDEF[k].ratings.length))SDEF[k].ratings=r;});})();
 const PP=20,MPT=['sbrk','sacb','srcd','smpcb','sfuse','sfsd','siso','sdisc','slbs','scont','sol'],npol=o=>Math.max(1,Math.min(4,Math.round(+o.p.poles||1)));
 const PT=['1','3','5','N'],PB=['2','4','6','N'];
 MPT.forEach(k=>{const D=SDEF[k],d1=D.draw,t1=D.terms,s1=D.size;D.def=Object.assign({poles:1},D.def);if(!D.edit.includes('poles'))D.edit=[...D.edit,'poles'];
@@ -4532,9 +4553,10 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='ang')h+=`<div class="fld"><label>${FL[k]}</label><input id="f_ang" type="number" dir="ltr" style="text-align:right" step="15" value="${o.rot}"></div>`;
   else if(k==='h'&&o.type==='person')h+=`<div class="fld"><label>גובה האדם (מ"מ)</label><input id="f_h" type="number" dir="ltr" style="text-align:right" step="50" value="${esc(v)}"></div>`;
   else if(k==='cl'){h+=`<div class="fld"><label>${FL.cl}</label><input id="f_cl" type="number" inputmode="numeric" min="0" step="100" dir="ltr" style="text-align:right" value="${esc(o.p.cl??(CABLEN[o.type]||0))}"></div><div class="hint">כבל יצוק — אפשר להאריך כמה שרוצים (למשל 5000 = 5 מטר).</div>`;}
-  else{const num=['len','dw','mods','w','h','fs','brk','pw','pd'].includes(k);h+=`<div class="fld"><label>${FL[k]}</label><input id="f_${k}" ${num?'type="number" inputmode="numeric"':''} value="${esc(v)}" ${k==='rating'&&D.ratings?'list="dl_r"':''}></div>`;}});
+  else if(k==='rating'&&D.ratings&&D.ratings.length)// the whole standard list is always one tap away; the value can still be typed freely
+   h+=`<div class="fld"><label>${FL[k]}</label><div style="display:flex;gap:6px;align-items:stretch"><input id="f_rating" value="${esc(v)}" style="flex:1;min-width:0"><select id="f_rating_l" title="בחר מהרשימה" style="flex:0 0 auto;width:auto;max-width:48%" onchange="if(this.value){const i=document.getElementById('f_rating');i.value=this.value;}"><option value="">▼ רשימה</option>${D.ratings.map(r=>`<option value="${esc(r)}" ${r===v?'selected':''}>${esc(r)}</option>`).join('')}</select></div></div>`;
+  else{const num=['len','dw','mods','w','h','fs','brk','pw','pd'].includes(k);h+=`<div class="fld"><label>${FL[k]}</label><input id="f_${k}" ${num?'type="number" inputmode="numeric"':''} value="${esc(v)}"></div>`;}});
  if(o.type==='underlay')h+=`<div class="row" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0"><button class="wbtn pri" type="button" onclick="calStart('${o.id}')">📏 כיול קנה מידה</button><button class="wbtn" type="button" onclick="ulManager()">🖼 ניהול תמונות רקע</button></div><div class="hint">גודל: גוררים את הפינות. אחרי הכיול התמונה ננעלת.</div>`;
- if(D.ratings)h+=`<datalist id="dl_r">${D.ratings.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>`;
  const z3ok=!isSldObj(o)&&!['mdim','underlay','sframe'].includes(o.type)&&!D.sld;
  if(z3ok)h+=`<div class="fld"><label>תלת־ממד: מיקום בעומק Z (מ"מ) — חיובי = קדימה, שלילי = אחורה</label><input id="f_z3" type="number" inputmode="decimal" step="10" value="${+o.p.z3||0}"></div><div class="fld"><label>תלת־ממד: עובי (מ"מ) — ריק = אוטומטי</label><input id="f_d3" type="number" inputmode="decimal" step="10" placeholder="אוטומטי" value="${+o.p.d3||''}"></div>`;
  panelForm(o.p.name,h,()=>{if(z3ok&&$('f_z3')){const z=Math.round(+$('f_z3').value||0),d=Math.round(+$('f_d3').value||0);if(z)o.p.z3=z;else delete o.p.z3;if(d>0)o.p.d3=d;else delete o.p.d3;}const gh0=(o.type==='genset'||o.type==='lpole'||o.type==='pillar')?sizeOf(o).h:0,lp0=o.type==='lpole'?o.p.parm+o.p.phead:'',wk0=o.p.wk,sd0=o.p.sd,fl0=o.p.fill,dl0=o.p.dlv,of0=+o.p.ofd||0,oh0=o.p.ofh,k0=o.p.kind,n0=o.p.n,ck0=o.p.ck,fk0=o.p.fk,vk0=o.p.vk,as0=o.p.acs;if(o.type==='floor')o._top=o.y-sizeOf(o).h/2;o.p.name=$('f_name').value||o.p.name;D.edit.forEach(k=>{const el=$('f_'+k);if(!el)return;let v=el.value;if(k==='orient'){const want=v==='v'?1:0;if((o.rot%180?1:0)!==want)o.rot=want?90:0;return;}if(k==='ang'){o.rot=(((Math.round(+v)||0)%360)+360)%360;return;}if(k==='lw'){o.p.lw=Math.max(.2,+v||2);return;}if(k==='fs'){o.p.fs=Math.max(1,+v||o.p.fs);return;}
