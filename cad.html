@@ -5894,6 +5894,12 @@ function pvClick(e){const ck=e.target.closest('[data-pg]');if(ck&&PV){const i=+c
  if(k==='close')pvClose();else if(k==='zoom'){ov.classList.toggle('big');b.textContent=ov.classList.contains('big')?'🔍 התאם למסך':'🔍 הגדל';}
  else if(k==='edit'){pvClose();pdfDialog();}else if(k==='print'){const P=pvSub();if(P){printVector(P.svgs,P.SZ,P.fname);revDone(PV.t);}}else if(k==='pdf'){const P=pvSub();if(P){pdfDownload(P);revDone(PV.t);}}else if(k==='share'){pvShare();revDone(PV.t);}else if(k==='copy'){pvCopy();revDone(PV.t);}
  else if(k==='all'||k==='none'){PV.sel=new Set(k==='all'?PV.svgs.map((_,i)=>i):[]);document.querySelectorAll('#pvOv [data-pg]').forEach(c=>c.checked=k==='all');pvCount();}}
+/* Ctrl+P (⌘P): the app's own print — opens the print preview of the sheets; pressed
+   again in the preview it prints the chosen pages (the browser's print of the bare
+   page would only print the screen). The shell forwards it too (window.ohadPrint). */
+function ohadPrint(){const ov=$('pvOv');if(ov&&!ov.classList.contains('hidden')){const P=pvSub();if(P){printVector(P.svgs,P.SZ,P.fname);revDone(PV.t);}return;}closeModal();printPreview();}
+window.ohadPrint=ohadPrint;
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&!e.altKey&&(e.key==='p'||e.key==='P'||e.key==='פ'||e.code==='KeyP')){e.preventDefault();e.stopPropagation();if(!e.repeat)ohadPrint();}},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){const ov=$('pvOv');if(ov&&!ov.classList.contains('hidden')){pvClose();e.stopPropagation();}}},true);
 /* Vector PDF: the pages go to the browser's own print (choose "Save as PDF"),
    which keeps every line and letter sharp at any zoom. */
