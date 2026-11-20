@@ -1236,11 +1236,13 @@ const DEF={
     for(let i=0;i<12;i++){const a=i*30*Math.PI/180;s+=`<path d="M${r2(Math.cos(a)*af*.22)} ${r2(Math.sin(a)*af*.22)}L${r2(Math.cos(a)*af*.42)} ${r2(Math.sin(a)*af*.42)}" stroke="${col[2]}" stroke-width=".6" opacity=".7"/>`;}
     s+=`<circle cx="0" cy="0" r="${g[5][1]/2}" fill="#1f2937" stroke="#000" stroke-width=".6"/>`+txt(0,c/2+4,o.p.rating,Math.max(3,af*.18),'#e5e7eb',700);return s+(o.p.tag?txt(c/2+2,-c/2,o.p.tag,4,'#7dd3fc',700,'start'):'');}
    // side view: cap on top, hex, thread at the bottom (rotate it to point up)
-   const H=th+hx+dm,y0=-H/2;let s=`<path d="M${-af*.42} ${y0+dm}C${-af*.42} ${y0+dm*.25} ${-af*.3} ${y0} 0 ${y0}C${af*.3} ${y0} ${af*.42} ${y0+dm*.25} ${af*.42} ${y0+dm}Z" fill="${col[0]}" stroke="${col[2]}" stroke-width="1"/>`;
-   for(let i=1;i<4;i++)s+=`<path d="M${-af*.42+i*af*.21} ${y0+dm}V${y0+dm*.35}" stroke="${col[2]}" stroke-width=".6" opacity=".6"/>`;
+   const H=th+hx+dm,y0=-H/2,a=af*.44,t=a*.96,rr=Math.min(dm*.28,t*.35);// the dome cap: squarish, slightly narrower at the top, rounded corners
+   let s=`<path d="M${-a} ${y0+dm}L${-t} ${y0+rr}Q${-t} ${y0} ${-t+rr} ${y0}H${t-rr}Q${t} ${y0} ${t} ${y0+rr}L${a} ${y0+dm}Z" fill="${col[0]}" stroke="${col[2]}" stroke-width="1" stroke-linejoin="round"/>`;
+   for(let i=1;i<5;i++)s+=`<path d="M${-a+i*a*.4} ${y0+dm-1}V${y0+rr*.9}" stroke="${col[2]}" stroke-width=".6" opacity=".55"/>`;
+   s+=`<path d="M${-t+rr*.6} ${y0+1.2}H${t-rr*.6}" stroke="#fff" stroke-opacity=".35" stroke-width=".8" stroke-linecap="round"/>`;
    s+=`<rect x="${-c/2}" y="${y0+dm}" width="${c}" height="${hx}" fill="${col[1]}" stroke="${col[2]}" stroke-width="1"/><path d="M${-c/4} ${y0+dm}v${hx}M${c/4} ${y0+dm}v${hx}" stroke="${col[2]}" stroke-width=".7"/>`;
    s+=`<rect x="${-d/2}" y="${y0+dm+hx}" width="${d}" height="${th}" fill="${col[0]}" stroke="${col[2]}" stroke-width="1"/>`;for(let y=y0+dm+hx+1.5;y<H/2-.5;y+=1.6)s+=`<path d="M${-d/2} ${y}h${d}" stroke="${col[2]}" stroke-width=".4"/>`;
-   s+=`<rect x="${-g[5][1]/2}" y="${y0-6}" width="${g[5][1]}" height="7" fill="#1f2937" opacity=".85"/>`+txt(c/2+2,y0+dm+hx/2,o.p.rating,Math.max(3,af*.2),'#e5e7eb',700,'start');
+   s+=txt(c/2+2,y0+dm+hx/2,o.p.rating,Math.max(3,af*.2),'#e5e7eb',700,'start');
    return s+(o.p.tag?txt(-c/2-2,y0+dm+hx/2,o.p.tag,4,'#7dd3fc',700,'end'):'');}},
  nrack:{layer:0,edit:['tag','inch','u','kind','w','rcol'],def:{tag:'',inch:'19',u:12,kind:'wall',w:600,rcol:'grey'},size:o=>{const d=nrDim(o);return {w:d.W,h:d.H};},
   draw:o=>{const d=nrDim(o),{W,H,u,top,rail}=d,yT=-H/2+top,yB=yT+u*RU,gr=o.p.rcol!=='black',C=gr?['#d9dbd6','#8a8d88','#c9cbc6','#b9bbb6','#a7aaa5']:['#2b2f34','#0f1114','#1b1e21','#202428','#0f1114'];let s=`<rect x="${-W/2}" y="${-H/2}" width="${W}" height="${H}" rx="4" fill="${C[0]}" stroke="${C[1]}" stroke-width="2"/><rect x="${-W/2+14}" y="${yT-6}" width="${W-28}" height="${u*RU+12}" fill="${gr?'#c4c7c2':'#15181b'}"/>`;
