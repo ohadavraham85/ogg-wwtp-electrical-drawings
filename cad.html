@@ -569,6 +569,7 @@ body.v3on #toast{z-index:400;top:calc(70px + env(safe-area-inset-top))}
 const M=18; // DIN module width (mm)
 // single feed-through terminal blocks: colour, and width × height by wire cross-section (mm²)
 const TBCOL={grey:['אפור','#a7abb1'],blue:['כחול (N)','#3b6fd8'],pe:['צהוב-ירוק (PE)','#f0c419'],red:['אדום','#d33'],white:['לבן','#f4f4f2'],orange:['כתום','#f28c28'],purple:['סגול','#8b5cf6'],black:['שחור','#2b2b2b']};
+const TBDH={'1.5':60,'2.5':62,'4':68,'6':74,'10':82};// heights of the double-level terminals
 const TBSZ={'1.5':[5.2,44],'2.5':[5.2,48],'4':[6.2,48],'6':[8.2,48],'10':[10.2,52],'16':[12.2,56],'35':[16,64]};
 const COLORS={red:'#c62828',green:'#1f9d55',blue:'#1d5fd1',orange:'#c26a12',olive:'#9a961c',yellow:'#e8b800',white:'#f2f2ee',grey:'#6b7280',black:'#222'};
 const CNAME={red:'אדום',green:'ירוק',blue:'כחול',orange:'כתום',olive:'זית',yellow:'צהוב',white:'לבן',grey:'אפור',black:'שחור'};
@@ -1184,6 +1185,19 @@ const DEF={
    const lw=Math.max(3,w-1.4),lh=Math.min(14,h*.26);s+=`<rect x="${-lw/2}" y="${-lh/2}" width="${lw}" height="${lh}" rx=".6" fill="#fff" stroke="#888" stroke-width=".3"/>`;
    if(o.p.tag)s+=`<text x="0" y="0" font-size="${Math.min(3.6,w*.55)}" font-family="Arial" font-weight="700" fill="#222" text-anchor="middle" dominant-baseline="central" transform="rotate(-90)">${esc(o.p.tag)}</text>`;
    return s+screw(0,-yt,sr)+screw(0,yt,sr);}},
+ /* double-level (two-tier) feed-through terminal: two independent levels in one block — the upper level's
+    screws at the ends, the lower level's nearer the middle; colour, size and a marker per level */
+ tbd:{layer:4,rail:true,edit:['tag','tag2','kind','tsz'],def:{kind:'grey',tag:'',tag2:'',tsz:'2.5'},
+  size:o=>{const w=(TBSZ[o.p.tsz]||TBSZ['2.5'])[0];return {w,h:TBDH[o.p.tsz]||62};},
+  terms:o=>{const h=TBDH[o.p.tsz]||62;return [[0,-(h/2-5),''],[0,-(h/2-17),''],[0,h/2-17,''],[0,h/2-5,'']];},
+  draw:o=>{const k=o.p.kind,w=(TBSZ[o.p.tsz]||TBSZ['2.5'])[0],h=TBDH[o.p.tsz]||62,f=(TBCOL[k]||TBCOL.grey)[1],hw=w/2,sr=Math.min(2.2,w*.38),lw=Math.max(3,w-1.4);
+   let s=`<rect x="${-hw}" y="${-h/2}" width="${w}" height="${h}" rx="1" fill="${f}" stroke="#4b4b4b" stroke-width=".45"/>`;
+   // the lower level steps in: a darker band between its two screws
+   s+=`<rect x="${-hw+.4}" y="${-(h/2-11)}" width="${w-.8}" height="${h-22}" fill="#000" opacity=".12"/><path d="M${-hw} ${-(h/2-11)}H${hw}M${-hw} ${h/2-11}H${hw}" stroke="#4b4b4b" stroke-width=".4"/>`;
+   if(k==='pe')for(let y=-h/2+3;y<h/2-3;y+=9)s+=`<path d="M${-hw} ${y}L${hw} ${y-4}V${y-1}L${-hw} ${y+3}Z" fill="#16a34a"/>`;
+   const ie=h/2-17-sr-1.4,lh=Math.min(12,ie-1),lc=1+lh/2;// markers fit between the middle and the inner screws
+   [[-lc,o.p.tag],[lc,o.p.tag2]].forEach(([y,t])=>{s+=`<rect x="${-lw/2}" y="${y-lh/2}" width="${lw}" height="${lh}" rx=".6" fill="#fff" stroke="#888" stroke-width=".3"/>`;if(t)s+=`<text x="0" y="${y}" font-size="${Math.min(3,w*.5)}" font-family="Arial" font-weight="700" fill="#222" text-anchor="middle" dominant-baseline="central" transform="rotate(-90 0 ${y})">${esc(t)}</text>`;});
+   return s+screw(0,-(h/2-5),sr)+screw(0,-(h/2-17),sr)+screw(0,h/2-17,sr)+screw(0,h/2-5,sr);}},
  tbg:{layer:4,rail:true,edit:['tag','set'],def:{set:'5P',tag:'X1'},size:o=>({w:TBSET(o).length*6.2,h:48}),
   terms:o=>{const L=TBSET(o),w=L.length*6.2;return [...L.map((l,i)=>[r2(-w/2+3.1+i*6.2),-17,l]),...L.map((l,i)=>[r2(-w/2+3.1+i*6.2),17,''])];},
   draw:o=>{const L=TBSET(o),w=L.length*6.2;let s='';L.forEach((l,i)=>{const x=-w/2+3.1+i*6.2,k=l==='N'?'blue':l==='PE'?'pe':'grey',f=k==='blue'?'#3b6fd8':k==='pe'?'#f0c419':'#a7abb1';
@@ -2396,6 +2410,7 @@ const LIB=[
   {tab:'מהדקים ופסי צבירה',icon:'⫴',groups:[
    {g:'קבוצות מהדקים',items:I('מהדקים חד-פאזי L N PE','מהדקים תלת-פאזי L1-L3','מהדקים 4 קטבים +N','מהדקים 5 קטבים +N +PE')},
    {g:'מהדק בודד — צבע וגודל (חתך) בעריכה',items:I('מהדק אפור','מהדק כחול N','מהדק הארקה','מהדק אדום','מהדק לבן','מהדק כתום','מהדק סגול')},
+   {g:'מהדק כפול (שתי קומות) — צבע, גודל וסימון לכל קומה בעריכה',items:[{t:'tbd',n:'מהדק כפול אפור'},{t:'tbd',n:'מהדק כפול כחול',p:{kind:'blue'}},{t:'tbd',n:'מהדק כפול הארקה',p:{kind:'pe'}},{t:'tbd',n:'מהדק כפול אדום',p:{kind:'red'}},{t:'tbd',n:'מהדק כפול 4 ממ"ר',p:{tsz:'4'}}]},
    {g:'מסרקים ופסי צבירה',items:I('מסרק 1P','מסרק 3P','פס צבירה L1','פס צבירה N','פס הארקה PE')}]},
   {tab:'לחצנים ונוריות',icon:'◉',hint:all['לחצן']?LIB.find(T=>T.groups.some(g=>g.items.includes(all['לחצן']))).hint:'',groups:[
    {g:'קופסאות לחצנים שניידר Harmony (XALD / XALK) — בוחרים במאפיינים מה בכל קדח',items:[{t:'xbox',n:'קופסת לחצנים 1 קדח — XALD01',p:{n:1,h1:'start'}},{t:'xbox',n:'קופסת לחצנים 2 קדחים — XALD02',p:{n:2,h1:'start',h2:'stop'}},{t:'xbox',n:'קופסת לחצנים 3 קדחים — XALD03',p:{n:3,h1:'start',h2:'stop',h3:'lampg'}},{t:'xbox',n:'קופסת חירום צהובה — XALK',p:{n:1,h1:'estop',yel:'1'}}]},
@@ -4431,7 +4446,7 @@ function editDialog(){const o=sel&&get(sel);
  D.edit.forEach(k=>{const v=o.p[k]??'';
   if(k==='color')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_color">${Object.keys(COLORS).map(c=>`<option value="${c}" ${c===o.p.color?'selected':''}>${CNAME[c]}</option>`).join('')}</select></div>`;
   else if(k==='kind'&&o.type!=='floor'&&o.type!=='nrack')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_kind">${Object.entries(TBCOL).map(([a,q])=>`<option value="${a}" ${a===v?'selected':''}>${q[0]}</option>`).join('')}</select></div>`;
-  else if(k==='tsz')h+=`<div class="fld"><label>גודל — חתך המוליך (רוחב המהדק)</label><select id="f_tsz">${Object.entries(TBSZ).map(([a,z])=>`<option value="${a}" ${a===String(v||'4')?'selected':''}>${a} ממ"ר — ${z[0]} מ"מ</option>`).join('')}</select></div>`;
+  else if(k==='tsz')h+=`<div class="fld"><label>גודל — חתך המוליך (רוחב המהדק)</label><select id="f_tsz">${Object.entries(TBSZ).filter(([a])=>o.type!=='tbd'||TBDH[a]).map(([a,z])=>`<option value="${a}" ${a===String(v||'4')?'selected':''}>${a} ממ"ר — ${z[0]} מ"מ</option>`).join('')}</select></div>`;
   else if(k==='size'){const fam=String(v)[0];h+=`<div class="fld"><label>${FL[k]}</label><select id="f_size">${Object.keys(CISZ).filter(z=>z[0]===fam).map(z=>`<option value="${z}" ${z===v?'selected':''}>${CISZ[z].n}</option>`).join('')}</select></div>`;}
   else if(k==='window')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_window"><option value="0" ${v!=='1'?'selected':''}>ללא</option><option value="1" ${v==='1'?'selected':''}>עם חלון (למפסקים)</option></select></div>`;
   else if(k==='door'){const dv=v||'none';h+=`<div class="fld"><label>${FL[k]}</label><select id="f_door">${[['none','ללא דלת'],['key','דלת עם מנעול מפתח'],['handle','דלת עם ידית ומנעול']].map(([a,b])=>`<option value="${a}" ${a===dv?'selected':''}>${b}</option>`).join('')}</select></div>`;}
@@ -4553,6 +4568,7 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='ang')h+=`<div class="fld"><label>${FL[k]}</label><input id="f_ang" type="number" dir="ltr" style="text-align:right" step="15" value="${o.rot}"></div>`;
   else if(k==='h'&&o.type==='person')h+=`<div class="fld"><label>גובה האדם (מ"מ)</label><input id="f_h" type="number" dir="ltr" style="text-align:right" step="50" value="${esc(v)}"></div>`;
   else if(k==='cl'){h+=`<div class="fld"><label>${FL.cl}</label><input id="f_cl" type="number" inputmode="numeric" min="0" step="100" dir="ltr" style="text-align:right" value="${esc(o.p.cl??(CABLEN[o.type]||0))}"></div><div class="hint">כבל יצוק — אפשר להאריך כמה שרוצים (למשל 5000 = 5 מטר).</div>`;}
+  else if((k==='tag'||k==='tag2')&&o.type==='tbd')h+=`<div class="fld"><label>${k==='tag'?'סימון הקומה העליונה (המספר על המהדק)':'סימון הקומה התחתונה'}</label><input id="f_${k}" value="${esc(v)}"></div>`;
   else if(k==='rating'&&D.ratings&&D.ratings.length)// the whole standard list is always one tap away; the value can still be typed freely
    h+=`<div class="fld"><label>${FL[k]}</label><div style="display:flex;gap:6px;align-items:stretch"><input id="f_rating" value="${esc(v)}" style="flex:1;min-width:0"><select id="f_rating_l" title="בחר מהרשימה" style="flex:0 0 auto;width:auto;max-width:48%" onchange="if(this.value){const i=document.getElementById('f_rating');i.value=this.value;}"><option value="">▼ רשימה</option>${D.ratings.map(r=>`<option value="${esc(r)}" ${r===v?'selected':''}>${esc(r)}</option>`).join('')}</select></div></div>`;
   else{const num=['len','dw','mods','w','h','fs','brk','pw','pd'].includes(k);h+=`<div class="fld"><label>${FL[k]}</label><input id="f_${k}" ${num?'type="number" inputmode="numeric"':''} value="${esc(v)}"></div>`;}});
