@@ -1538,12 +1538,13 @@ const sT=(x,y,s,size=9,w=700,anchor='middle')=>txt(x,y,s,size,SK,w,anchor);
 const IO=()=>[[0,-30,''],[0,30,'']],TOP=()=>[[0,-30,'']];
 function sLbl(o,w){const ls=[[o.p.tag,9,700],[o.p.rating,7.5,400],[o.p.desc,7.5,400]].filter(l=>l[0]);const x=w/2+5;return ls.map((l,i)=>txt(x,-10+i*10.5,l[0],l[1],SK,l[2],'start')).join('');}
 // A switching contact: the fixed contact's mark tells breaker / isolator / contactor / switch.
-function sSwitch(mark){let s=(mark==='arc'?sL(0,-30,0,-17):sL(0,-30,0,-12))+sL(0,12,0,30)+sL(0,12,-11,-13);
+function sSwitch(mark){let s=(mark==='arc'||mark==='bc'?sL(0,-30,0,-17):sL(0,-30,0,-12))+sL(0,12,0,30)+sL(0,12,-11,-13);
  if(mark==='x')s+=sL(-4,-16,4,-8)+sL(-4,-8,4,-16);
  if(mark==='bar')s+=sL(-5,-12,5,-12);
  // IEC 60617 S00284 — contactor main contact: the contactor semicircle sits on the fixed contact, its arc away from the blade
  if(mark==='arc')s+=`<path d="M-5 -12a5 5 0 0 1 10 0" fill="none" stroke="${SK}" stroke-width="2"/>`;
  if(mark==='circ')s+=sC(0,-12,3);
+ if(mark==='bc')s+=sL(-5,-17,5,-17)+sC(0,-12,3);
  return s;}
 // Control circuit pieces (IEC 60617): a contact drawn on the 60-tall line, and the
 // way it is worked, drawn to its left on a dashed link from the blade.
@@ -1589,8 +1590,10 @@ const SDEF={
  sfsd:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Q1',rating:'gG 160A',desc:'מנתק נתיכים'},size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sSwitch('bar')+`<rect x="-3.5" y="-9" width="7" height="18" fill="#fff" stroke="${SK}" stroke-width="1.6" transform="translate(-5.5 -0.5) rotate(-23.7)"/>`+sLbl(o,40)},
  siso:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Q0',rating:'125A',desc:'מפסק ראשי'},ratings:['40A','63A','80A','100A','125A','160A','250A','400A','630A'],size:()=>({w:40,h:60}),terms:IO,
+  draw:o=>sSwitch('bc')+sLbl(o,40)},
+ sdisc:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Q0',rating:'125A',desc:''},ratings:['40A','63A','80A','100A','125A','160A','250A','400A','630A'],size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sSwitch('bar')+sLbl(o,40)},
- slbs:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Q1',rating:'630A',desc:'מנתק עומס'},size:()=>({w:40,h:60}),terms:IO,
+ slbs:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Q1',rating:'630A',desc:''},size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sSwitch('circ')+sLbl(o,40)},
  /* ---- a single supply point: N, L, PE, L1-L3, +24V, 0V ---- */
  sfeed:{layer:4,sld:true,edit:['feed','tag','desc'],def:{feed:'N',tag:'',desc:''},size:()=>({w:40,h:60}),terms:()=>[[0,30,'']],
@@ -1768,7 +1771,7 @@ const SDEF={
 };
 /* Terminal numbers beside the two ends of a symbol (top-bottom), from the
    standard numbering of each kind; editable per part as "tn". */
-const TN={sbrk:'1-2',srcd:'1-2',smpcb:'1-2',sfuse:'1-2',sfsd:'1-2',siso:'1-2',slbs:'1-2',scont:'1-2',sol:'95-96',
+const TN={sbrk:'1-2',srcd:'1-2',smpcb:'1-2',sfuse:'1-2',sfsd:'1-2',siso:'1-2',sdisc:'1-2',slbs:'1-2',scont:'1-2',sol:'95-96',
  sno:'13-14',snc:'21-22',spbno:'13-14',spbnc:'11-12',sestop:'11-12',ssel:'13-14',skeysw:'13-14',slimit:'13-14',sfloat:'13-14',spress:'13-14',sthermo:'11-12',
  scoil:'A1-A2',stcoil:'A1-A2',stcoiloff:'A1-A2',stno:'17-18',stnc:'15-16',sclock:'A1-A2',sclockc:'13-14',sauxq:'13-14',slamp:'X1-X2',shorn:'X1-X2',splc:'I-O'};
 Object.keys(TN).forEach(k=>{const D=SDEF[k];if(!D)return;const d0=D.draw;D.def=Object.assign({tn:TN[k]},D.def);if(!D.edit.includes('tn'))D.edit=[...D.edit,'tn'];
@@ -1778,7 +1781,7 @@ Object.keys(TN).forEach(k=>{const D=SDEF[k];if(!D)return;const d0=D.draw;D.def=O
 /* Multi-pole (3P / 4P) versions: the one-pole symbol repeated every 20 mm — the
    same pitch as terminal blocks, so poles, terminals and wires line up — with a
    dashed mechanical link and terminals 1-3-5(-N) / 2-4-6(-N). */
-const PP=20,MPT=['sbrk','sacb','srcd','smpcb','sfuse','sfsd','siso','slbs','scont','sol'],npol=o=>Math.max(1,Math.min(4,Math.round(+o.p.poles||1)));
+const PP=20,MPT=['sbrk','sacb','srcd','smpcb','sfuse','sfsd','siso','sdisc','slbs','scont','sol'],npol=o=>Math.max(1,Math.min(4,Math.round(+o.p.poles||1)));
 const PT=['1','3','5','N'],PB=['2','4','6','N'];
 MPT.forEach(k=>{const D=SDEF[k],d1=D.draw,t1=D.terms,s1=D.size;D.def=Object.assign({poles:1},D.def);if(!D.edit.includes('poles'))D.edit=[...D.edit,'poles'];
  D.size=o=>npol(o)===1?s1(o):{w:npol(o)*PP+20,h:60};
@@ -2271,9 +2274,9 @@ const LIB=[
   {g:'הזנות בודדות',items:[{t:'sfeed',n:'הזנת N (אפס)'},{t:'sfeed',n:'הזנת L (פאזה)',p:{feed:'L'}},{t:'sfeed',n:'הזנת PE (הארקה)',p:{feed:'PE'}},{t:'sfeed',n:'הזנת L1',p:{feed:'L1'}},{t:'sfeed',n:'הזנת L2',p:{feed:'L2'}},{t:'sfeed',n:'הזנת L3',p:{feed:'L3'}},{t:'sfeed',n:'הזנת +24V',p:{feed:'+24V'}},{t:'sfeed',n:'הזנת 0V',p:{feed:'0V'}}]},
   {g:'גבול לוח',items:[{t:'sframe',n:'גבול לוח (מקווקו)'}]}]},
  {tab:'הגנה ומיתוג',sld:true,groups:[
-  {g:'מפסקים',items:[{t:'sbrk',n:'מפסק זרם (MCCB / ACB)'},{t:'sacb',n:'מפסק אוויר ACB (נשלף)'},{t:'sacb',n:'מפסק אוויר ACB (קבוע)',p:{acv:'f',rating:'MTZ2 1600A'}},{t:'sbrk',n:'מאמ"ת (MCB)',p:{tag:'Q2',rating:'MCB C16'}},{t:'srcd',n:'מפסק פחת / RCBO'},{t:'smpcb',n:'מגן מנוע (MPCB)'},{t:'siso',n:'מנתק / מפסק ראשי'},{t:'slbs',n:'מנתק עומס'}]},
+  {g:'מפסקים',items:[{t:'sbrk',n:'מפסק זרם (MCCB / ACB)'},{t:'sacb',n:'מפסק אוויר ACB (נשלף)'},{t:'sacb',n:'מפסק אוויר ACB (קבוע)',p:{acv:'f',rating:'MTZ2 1600A'}},{t:'sbrk',n:'מאמ"ת (MCB)',p:{tag:'Q2',rating:'MCB C16'}},{t:'srcd',n:'מפסק פחת / RCBO'},{t:'smpcb',n:'מגן מנוע (MPCB)'},{t:'siso',n:'מנתק בעומס — מפסק ראשי'},{t:'sdisc',n:'מנתק (ללא עומס)'},{t:'slbs',n:'מפסק עומס (לא מנתק)'}]},
   {g:'נתיכים',items:[{t:'sfuse',n:'נתיך'},{t:'sfsd',n:'מנתק נתיכים'}]},
-  {g:'תלת-פאזי (3 קטבים, ברוחב המהדקים)',items:[{t:'sbrk',n:'מפסק זרם 3P',p:{poles:3}},{t:'sacb',n:'מפסק אוויר ACB 3P',p:{poles:3}},{t:'sbrk',n:'מאמ"ת 3P',p:{poles:3,tag:'Q2',rating:'MCB C16'}},{t:'siso',n:'מנתק 3P',p:{poles:3}},{t:'srcd',n:'מפסק פחת 4P',p:{poles:4}},{t:'smpcb',n:'מגן מנוע 3P',p:{poles:3}},{t:'scont',n:'מגען 3P',p:{poles:3}},{t:'sol',n:'ממסר טרמי 3P',p:{poles:3}},{t:'sfuse',n:'נתיכים 3P',p:{poles:3}},{t:'smot',n:'מנוע (U V W)',p:{poles:3}}]},
+  {g:'תלת-פאזי (3 קטבים, ברוחב המהדקים)',items:[{t:'sbrk',n:'מפסק זרם 3P',p:{poles:3}},{t:'sacb',n:'מפסק אוויר ACB 3P',p:{poles:3}},{t:'sbrk',n:'מאמ"ת 3P',p:{poles:3,tag:'Q2',rating:'MCB C16'}},{t:'siso',n:'מנתק בעומס 3P — מפסק ראשי',p:{poles:3}},{t:'sdisc',n:'מנתק 3P (ללא עומס)',p:{poles:3}},{t:'srcd',n:'מפסק פחת 4P',p:{poles:4}},{t:'smpcb',n:'מגן מנוע 3P',p:{poles:3}},{t:'scont',n:'מגען 3P',p:{poles:3}},{t:'sol',n:'ממסר טרמי 3P',p:{poles:3}},{t:'sfuse',n:'נתיכים 3P',p:{poles:3}},{t:'smot',n:'מנוע (U V W)',p:{poles:3}}]},
   {g:'מעגל מנוע קומפלט — בלוק מוכן לפי הסדר (נכנס כרכיבים מחוברים, כל אחד ניתן לעריכה)',items:[...Object.entries(MBLK).flatMap(([k,B])=>[{t:'mblk',n:'חד-קווי — '+B.n,p:{kind:k,lines:1}},{t:'mblk',n:'תלת-קווי — '+B.n,p:{kind:k,lines:3}}])]},
   {g:'מיתוג והתנעה',items:[{t:'scont',n:'מגען'},{t:'srev',n:'זוג מגענים מחוגרים (היפוך)'},{t:'sol',n:'ממסר טרמי'},{t:'svfd',n:'ווסת מהירות (VFD)'},{t:'svfd3',n:'ווסת מהירות תלת-פאזי (L1 L2 L3 → U V W)'},{t:'sss',n:'מתנע רך'},{t:'sats',n:'מחליף אוטומטי (ATS)'},{t:'satsc',n:'מחלף הזנות אמדר AM530D — סמל'},{t:'am530t',n:'מחלף הזנות אמדר AM530D — כל ההדקים'}]},
   {g:'הגנות',items:[{t:'sspd',n:'מגן ברקים (SPD)'}]}]},
@@ -2901,7 +2904,7 @@ function inCab(c,x,y){const g=cabG(c);return x>g.x0&&x<g.x0+g.W&&y>g.y0&&y<g.y0+
    number for that letter in this document (H1, H2… lamps; Q1, Q2… breakers…). A
    designation typed by hand stays as it is. */
 const SERIAL={xck:'S',pillar:'P',lc1k:'K',lc2k:'K',pbdbl:'S',hmis:'HMI',flood:'E',hbay:'E',batten:'E',shead:'E',lpole:'LP',sgencat:'G',genset:'G',smem:'Q',am530t:'A',satsc:'A',atsw:'Q',dsec:'A',acb:'Q',sacb:'Q',svfd3:'U',xbox:'S',nrack:'RK',lc2d:'K',srev:'K',prox:'B',sprox:'B',mvalve:'MV',svalve:'SV',smv:'MV',ssv:'SV',subpit:'P',ssubp:'P',kflow:'FE',kconv:'FIT',sfe:'FE',sfit:'FIT',lfloat:'LS',ptx:'PT',pgauge:'PI',spt:'PT',spi:'PI',lvlh:'LT',ultra4:'LIC',udb:'LE',slvlh:'LT',sultra:'LIC',sudb:'LE',smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
- sbrk:'Q',smpcb:'Q',siso:'Q',slbs:'Q',sfsd:'Q',sats:'Q',srcd:'F',sfuse:'F',sol:'F',sspd:'F',scont:'K',svfd:'U',sss:'U',sups:'U',sgen:'G',sbatt:'G',strafo:'T',sct:'T',svt:'T',skwh:'P',spm:'P',samm:'P',svm:'P',scap:'C',smot:'M',stb:'X',scable:'W'};
+ sbrk:'Q',smpcb:'Q',siso:'Q',sdisc:'Q',slbs:'Q',sfsd:'Q',sats:'Q',srcd:'F',sfuse:'F',sol:'F',sspd:'F',scont:'K',svfd:'U',sss:'U',sups:'U',sgen:'G',sbatt:'G',strafo:'T',sct:'T',svt:'T',skwh:'P',spm:'P',samm:'P',svm:'P',scap:'C',smot:'M',stb:'X',scable:'W'};
 function autoTag(o){const pre=SERIAL[o.type];if(!pre||!o.p||!DEF[o.type].edit?.includes('tag'))return;const re=new RegExp('^'+pre+'(\\d+)$');if(o.p.tag&&!re.test(o.p.tag))return;
  const mine=isSldObj(o),used=new Set();state.objs.forEach(q=>{if(q===o||isSldObj(q)!==mine)return;const m=re.exec(q.p?.tag||'');if(m)used.add(+m[1]);});let n=1;while(used.has(n))n++;o.p.tag=pre+n;}
 function placeNew(o){const D=DEF[o.type];if(o.type==='nplate'&&o.p.title==='לוח חשמל'&&state.name)o.p.title=state.name;
