@@ -4652,7 +4652,7 @@ async function open3D(keepV){if(!keepV||!keepV.tg)keepV=null;if(state.tab==='sld
  const keep=[];const setP=(o,k,v)=>{keep.push([o,k,o.p[k]]);o.p[k]=v;};const LOD0=LODMIN;LODMIN=0;
  try{
   // every board shown closed while its pictures are drawn, so door parts and cut-outs are all present
-  objs.forEach(o=>{if(o.type==='cabinet')setP(o,'view','door');if(o.type==='enclosure'&&hasDoor(o))setP(o,'closed','1');if(o.type==='cibox'&&o.p.lid==='0')setP(o,'lid','1');});
+  objs.forEach(o=>{if(o.type==='cabinet')setP(o,'view','door');if(o.type==='enclosure'&&hasDoor(o))setP(o,'closed','1');if(o.type==='cibox'&&o.p.lid==='0')setP(o,'lid',o.p.lidk==='c'?'c':'1');});
   const hosts=[];// {o, inside(x,y), plateZ, D, front groups}
   const partBox=(o,host)=>{const b=bbW(o),pad=1,inner=objSVG(o,false);const f=tex(inner,b.x0-pad,b.y0-pad,b.x1-b.x0+2*pad,b.y1-b.y0+2*pad,1024);const z0=v3Base(o),d=v3Depth(o);return {b,f,z0,d,inner,pad};};
   // boards
@@ -4767,7 +4767,7 @@ function close3D(){const V=V3;if(!V)return;V3=null;removeEventListener('error',V
 function toggleDoors(){const es=state.objs.filter(o=>(o.type==='enclosure'&&hasDoor(o))||o.type==='cabinet'||o.type==='cibox');if(!es.length){toast('אין לוח עם דלת');return;}
  const hasOD=state.objs.some(o=>o.type==='cabinet'&&(o.p.secs||[]).some(z=>z.f==='cover'&&z.od==='1'));const f=es[0];
  const cur=f.type==='cabinet'?(f.p.view||'inside'):f.type==='cibox'?(ciLidOn(f)?'front':'inside'):(f.p.closed==='1'?'front':'inside');const next=cur==='inside'?'front':(cur==='front'&&hasOD?'door':'inside');
- es.forEach(o=>{if(o.type==='cabinet')o.p.view=next;else if(o.type==='cibox')o.p.lid=next==='inside'?'0':'1';else o.p.closed=next==='inside'?'0':'1';});const so=sel&&get(sel);if(so&&hiddenFront(so))sel=null;commit();renderNow();
+ es.forEach(o=>{if(o.type==='cabinet')o.p.view=next;else if(o.type==='cibox'){if(next==='inside'){if(o.p.lid!=='0')o.p.lidk=o.p.lid;o.p.lid='0';}else o.p.lid=o.p.lidk==='c'?'c':'1';}else o.p.closed=next==='inside'?'0':'1';});const so=sel&&get(sel);if(so&&hiddenFront(so))sel=null;commit();renderNow();
  const nh=state.objs.filter(q=>DEF[q.type]?.front&&hiddenFront(q)).length;toast(next==='front'?(hasOD?'תצוגת חזית — פאנלים (דלתות חיצוניות פתוחות)':'תצוגת חזית — דלת סגורה'):next==='door'?'תצוגת חזית — דלתות חיצוניות סגורות':'תצוגת פנים הלוח'+(nh?` · ${nh} רכיבי חזית מוסתרים`:''));}
 /* ================= example projects =================
    Ready boards to start from — each a panel front laid out to scale and its
