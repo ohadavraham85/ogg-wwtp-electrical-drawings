@@ -1665,6 +1665,21 @@ function cAct(kind,mx,my){const d=`<line x1="${mx}" y1="${my}" x2="-18" y2="${my
  if(kind==='delay')return d+P(`M-11 ${my-5}a5 5 0 0 0 0 10`);
  return '';}
 const sCoil=inner=>sL(0,-30,0,-7)+sR(-11,-7,22,14)+sL(0,7,0,30)+(inner||'');
+const VFDC={atv630:{n:'Altivar Process ATV630 / ATV930',G:[['ממסרים',['R1A','R1B','R1C','R2A','R2C','R3A','R3C']],['STO',['STOA','STOB','24V']],['אנלוגי',['COM','AI1','10V','AI2','COM','AI3','COM','AQ1','AQ2']],['כניסות',['P24','0V','DI1','DI2','DI3','DI4','DI5','DI6','24V']]]},
+ atv320:{n:'Altivar Machine ATV320',G:[['ממסרים',['R1A','R1B','R1C','R2A','R2C']],['STO',['STO','P24']],['אנלוגי',['COM','AI1','10V','AI2','AI3','COM','AQ1']],['כניסות',['24V','DI1','DI2','DI3','DI4','DI5','DI6','CLI','0V']]]},
+ atv340:{n:'Altivar Machine ATV340',G:[['ממסרים',['R1A','R1B','R1C','R2A','R2C']],['STO',['STOA','STOB','24V']],['אנלוגי',['COM','AI1','10V','AI2','COM','AI3','AQ1','AQ2']],['כניסות',['P24','0V','DI1','DI2','DI3','DI4','DI5','DI6','24V']]]}};
+const VFDCG={all:'כל המהדקים',rel:'ממסרים בלבד',sto:'STO בלבד',ana:'אנלוגי בלבד',din:'כניסות דיגיטליות בלבד',io:'כניסות + אנלוגי'};
+function vfdcG(o){const M=VFDC[o.p.mdl]||VFDC.atv630,g=o.p.grp||'all',want={all:[0,1,2,3],rel:[0],sto:[1],ana:[2],din:[3],io:[2,3]}[g]||[0,1,2,3];return want.map(i=>M.G[i]);}
+function vfdcT(o){const G=vfdcG(o),n=G.reduce((a,g)=>a+g[1].length,0),W=n*16+(G.length-1)*10+16;let x=-W/2+16,r=[];G.forEach((g,gi)=>{g[1].forEach((l,i)=>{r.push({x:r2(x),l,g:gi});x+=16;});x+=10;});return r;}
+function vfdcDraw(o){const M=VFDC[o.p.mdl]||VFDC.atv630,G=vfdcG(o),T=vfdcT(o),W=T.length*16+(G.length-1)*10+16;let s=sR(-W/2,-35,W,46,'#fff',1.6);
+ s+=txt(-W/2+4,-29,(W<260?M.n.split(' ').filter(z=>/^ATV/.test(z)).join(' '):M.n)+(W<200?'':' — '+(o.p.desc||'')),6,SK,700,'start');
+ let k=0;G.forEach(g=>{const ts=T.slice(k,k+g[1].length);k+=g[1].length;const x0=ts[0].x-7,x1=ts[ts.length-1].x+7;
+  s+=`<rect x="${x0}" y="-21" width="${x1-x0}" height="30" fill="#f3f4f6" stroke="#9ca3af" stroke-width=".6"/>`+txt((x0+x1)/2,-16.5,g[0],5,'#374151',700);
+  if(g[0]==='ממסרים'){// R1: change-over A-B-C ; R2 / R3: normally open A-C
+   const by=l=>ts.find(t=>t.l===l);const co=(a,b,c)=>{if(!a||!c)return '';let r=sL(c.x,11,c.x,2,1.1)+sL(c.x,2,(b?b.x:a.x)-1,-8,1.1)+sL(a.x,11,a.x,-6,1.1);if(b)r+=sL(b.x,11,b.x,-8,1.1)+sL(b.x,-8,b.x-3,-8,1.1);return r;};
+   s+=co(by('R1A'),by('R1B'),by('R1C'))+co(by('R2A'),null,by('R2C'))+co(by('R3A'),null,by('R3C'));}});
+ T.forEach(t=>{s+=sL(t.x,11,t.x,35,1.4)+sC(t.x,11,2.6,'#fff',1.1)+`<text x="${t.x+6.6}" y="33" font-size="5.2" font-family="Arial" font-weight="700" fill="${SK}" transform="rotate(-90 ${t.x+6.6} 33)">${esc(t.l)}</text>`;});
+ return s+txt(W/2+5,-20,o.p.tag||'',9,SK,700,'start');}
 const SDEF={
  sgrid:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'',rating:'22kV',desc:'רשת חח"י'},size:()=>({w:40,h:60}),terms:()=>[[0,30,'']],
   draw:o=>sC(0,-6,16)+`<path d="M-9 -6c3-6 6-6 9 0s6 6 9 0" fill="none" stroke="${SK}" stroke-width="2"/>`+sL(0,10,0,30)+sLbl(o,40)},
@@ -1708,6 +1723,11 @@ const SDEF={
     right with the blade resting on it, the NO fixed contact up on the left; numbers 11 / 12 / 14 (or as typed) */
  /* no-volt relay (NVR, under-voltage U<): three-phase (L1 L2 L3) or single-phase (A1 / A2) supply, and its
     change-over output contact drawn beside it on a dashed link (11 common, 12 NC, 14 NO) */
+ /* Altivar control terminals for the control diagram: the drive's control terminal strip in groups — relay
+    outputs (R1 change-over, R2 / R3 normally open), STO safe torque off, analogue I/O, digital inputs and 24 V —
+    each terminal a wiring point on the bottom edge. */
+ svfdc:{layer:4,sld:true,edit:['tag','mdl','grp','desc'],def:{tag:'U1',mdl:'atv630',grp:'all',desc:'מהדקי פיקוד'},size:o=>{const T=vfdcT(o);return {w:T.length*16+(vfdcG(o).length-1)*10+16,h:70};},
+  terms:o=>vfdcT(o).map(t=>[t.x,35,t.l]),draw:o=>vfdcDraw(o)},
  snvr:{layer:4,sld:true,edit:['tag','nph','rating','desc'],def:{tag:'KA1',nph:'3',rating:'RM22TG20',desc:'ממסר חוסר מתח (NVR)'},ratings:['RM22TG20','RM22TR33','RM22UB34','RM17TG20','RM17UBE15','RM22UA33MR','230VAC','24VDC'],
   size:o=>({w:o.p.nph==='1'?90:110,h:60}),
   terms:o=>{const t=o.p.nph!=='1',x0=t?-25:-30,cx=t?35:15;return [...(t?[[x0-20,-30,'L1'],[x0,-30,'L2'],[x0+20,-30,'L3']]:[[x0,-30,'A1'],[x0,30,'A2']]),[cx-10,-30,'14'],[cx+10,-30,'12'],[cx,30,'11']];},
@@ -2470,6 +2490,7 @@ const LIB=[
   {g:'לחצנים',items:[{t:'spbno',n:'לחצן הפעלה (NO)'},{t:'spbnc',n:'לחצן הפסקה (NC)'},{t:'sestop',n:'לחצן חירום'}]},
   {g:'בוררים',items:[{t:'ssel',n:'בורר 0-1'},{t:'ssel',n:'בורר 1-0-2',p:{tag:'S3',rating:'1-0-2'}},{t:'ssel',n:'בורר ידני-0-אוטו',p:{tag:'S4',rating:'ידני-0-אוטו'}},{t:'skeysw',n:'בורר מפתח'}]},
   {g:'מגעים',items:[{t:'sno',n:'מגע פתוח (NO)'},{t:'snc',n:'מגע סגור (NC)'},{t:'sauxq',n:'מגע עזר מפסק'}]},
+  {g:'מהדקי פיקוד של ווסתי מהירות שניידר (Altivar) — דגם וקבוצת מהדקים בעריכה',items:[{t:'svfdc',n:'ATV630 / ATV930 — כל מהדקי הפיקוד'},{t:'svfdc',n:'ATV630 — ממסרים R1 R2 R3',p:{grp:'rel'}},{t:'svfdc',n:'ATV630 — כניסות דיגיטליות',p:{grp:'din'}},{t:'svfdc',n:'ATV630 — אנלוגי (AI / AQ)',p:{grp:'ana'}},{t:'svfdc',n:'ATV630 — STO',p:{grp:'sto'}},{t:'svfdc',n:'ATV320 — כל מהדקי הפיקוד',p:{mdl:'atv320'}},{t:'svfdc',n:'ATV340 — כל מהדקי הפיקוד',p:{mdl:'atv340'}}]},
   {g:'ממסר חוסר מתח NVR (U<) — עם מגע מחליף',items:[{t:'snvr',n:'ממסר חוסר מתח NVR תלת-פאזי'},{t:'snvr',n:'ממסר חוסר מתח NVR חד-פאזי',p:{nph:'1',rating:'RM17UBE15'}}]},
   {g:'מגעים מחליפים (Change-over · C/O) — מספרים ומפעיל בעריכה',items:[{t:'sco',n:'מגע מחליף של ממסר / מגען'},{t:'sco',n:'מגע מחליף 21-22-24',p:{cn:'21-22-24'}},{t:'sco',n:'לחצן מחליף',p:{tag:'S1',cact:'push',desc:'לחצן מחליף'}},{t:'sco',n:'בורר מחליף',p:{tag:'S2',cact:'turn',desc:'בורר'}},{t:'sco',n:'מפסק גבול מחליף',p:{tag:'B1',cact:'limit',desc:'מפסק גבול'}},{t:'sco',n:'מצוף מחליף',p:{tag:'B2',cact:'float',desc:'מצוף'}},{t:'sco',n:'מפסק לחץ מחליף',p:{tag:'B3',cact:'press',desc:'מפסק לחץ'}},{t:'sco',n:'תרמוסטט מחליף',p:{tag:'B4',cact:'temp',desc:'תרמוסטט'}},{t:'sco',n:'מגע מחליף של טיימר',p:{tag:'KT1',cact:'delay',cn:'15-16-18',desc:'טיימר'}},{t:'sco',n:'מגע מחליף של ממסר תרמי',p:{tag:'F1',cn:'95-96-98',desc:'ממסר תרמי'}}]},
   {g:'סלילים וממסרים',items:[{t:'scoil',n:'סליל מגען / ממסר'},{t:'splc',n:'כניסה / יציאה PLC'}]},
@@ -3095,7 +3116,7 @@ function inCab(c,x,y){const g=cabG(c);return x>g.x0&&x<g.x0+g.W&&y>g.y0&&y<g.y0+
 /* Designations by IEC 81346 letter, numbered as parts are added: the next free
    number for that letter in this document (H1, H2… lamps; Q1, Q2… breakers…). A
    designation typed by hand stays as it is. */
-const SERIAL={snvr:'KA',sco:'K',xck:'S',pillar:'P',lc1k:'K',lc2k:'K',pbdbl:'S',hmis:'HMI',flood:'E',hbay:'E',batten:'E',shead:'E',lpole:'LP',sgencat:'G',genset:'G',smem:'Q',am530t:'A',satsc:'A',atsw:'Q',dsec:'A',acb:'Q',sacb:'Q',svfd3:'U',xbox:'S',nrack:'RK',lc2d:'K',srev:'K',prox:'B',sprox:'B',mvalve:'MV',svalve:'SV',smv:'MV',ssv:'SV',subpit:'P',ssubp:'P',kflow:'FE',kconv:'FIT',sfe:'FE',sfit:'FIT',lfloat:'LS',ptx:'PT',pgauge:'PI',spt:'PT',spi:'PI',lvlh:'LT',ultra4:'LIC',udb:'LE',slvlh:'LT',sultra:'LIC',sudb:'LE',smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
+const SERIAL={svfdc:'U',snvr:'KA',sco:'K',xck:'S',pillar:'P',lc1k:'K',lc2k:'K',pbdbl:'S',hmis:'HMI',flood:'E',hbay:'E',batten:'E',shead:'E',lpole:'LP',sgencat:'G',genset:'G',smem:'Q',am530t:'A',satsc:'A',atsw:'Q',dsec:'A',acb:'Q',sacb:'Q',svfd3:'U',xbox:'S',nrack:'RK',lc2d:'K',srev:'K',prox:'B',sprox:'B',mvalve:'MV',svalve:'SV',smv:'MV',ssv:'SV',subpit:'P',ssubp:'P',kflow:'FE',kconv:'FIT',sfe:'FE',sfit:'FIT',lfloat:'LS',ptx:'PT',pgauge:'PI',spt:'PT',spi:'PI',lvlh:'LT',ultra4:'LIC',udb:'LE',slvlh:'LT',sultra:'LIC',sudb:'LE',smaglock:'Y',scardr:'B',nsx:'Q',nsxm:'Q',spbno:'S',spbnc:'S',sestop:'S',ssel:'S',skeysw:'S',slimit:'B',sfloat:'B',spress:'B',sthermo:'B',scoil:'K',stcoil:'KT',stcoiloff:'KT',sclock:'KT',slamp:'H',shorn:'H',splc:'A',wsock:'XS',wcee:'XS',wsbox:'XS',wsw:'S',wiso:'Q',wjb:'X',wmag:'Y',wcard:'B',mcb:'Q',iso:'Q',mpcb:'Q',gv2:'Q',rcd:'F',spd:'F',lrd:'F',cont:'K',lc1d:'K',relay:'K',rxm:'K',rm22:'K',timer:'KT',lamp:'H',pl22:'H',buzzer:'H',pb:'S',pbl:'S',sel2:'S',sel3:'S',key:'S',estop:'S',pot:'R',psu:'G',meter:'P',atv630:'U',vsd:'U',emotor:'M',cable:'W',tbg:'X',
  sbrk:'Q',smpcb:'Q',siso:'Q',sdisc:'Q',slbs:'Q',sfsd:'Q',sats:'Q',srcd:'F',sfuse:'F',sol:'F',sspd:'F',scont:'K',svfd:'U',sss:'U',sups:'U',sgen:'G',sbatt:'G',strafo:'T',sct:'T',svt:'T',skwh:'P',spm:'P',samm:'P',svm:'P',scap:'C',smot:'M',stb:'X',scable:'W'};
 function autoTag(o){const pre=SERIAL[o.type];if(!pre||!o.p||!DEF[o.type].edit?.includes('tag'))return;const re=new RegExp('^'+pre+'(\\d+)$');if(o.p.tag&&!re.test(o.p.tag))return;
  const mine=isSldObj(o),used=new Set();state.objs.forEach(q=>{if(q===o||isSldObj(q)!==mine)return;const m=re.exec(q.p?.tag||'');if(m)used.add(+m[1]);});let n=1;while(used.has(n))n++;o.p.tag=pre+n;}
@@ -4707,6 +4728,8 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='gdir')h+=`<div class="fld"><label>סידור</label><select id="f_gdir"><option value="h" ${v!=='v'?'selected':''}>זה ליד זה (אופקי)</option><option value="v" ${v==='v'?'selected':''}>זה מעל זה (אנכי)</option></select></div>`;
   else if(k==='gn')h+=`<div class="fld"><label>מספר מקומות (קופסאות 55)</label><select id="f_gn">${[1,2,3,4].map(a=>`<option value="${a}" ${a==v?'selected':''}>${a}</option>`).join('')}</select></div>`;
   else if(/^g[1-4]$/.test(k)&&o.type==='gbx'){const i=+k[1];if(i>gbxN(o)||o.p.gview==='box')return;h+=`<div class="fld"><label>מקום ${i}${o.p.gdir==='v'?(i===1?' (למעלה)':''):(i===1?' (שמאל)':'')}</label><select id="f_${k}">${Object.entries(GDV).map(([a,n])=>`<option value="${a}" ${a===String(v)?'selected':''}>${n}</option>`).join('')}</select></div>`;}
+  else if(k==='mdl'&&o.type==='svfdc')h+=`<div class="fld"><label>דגם</label><select id="f_mdl">${Object.entries(VFDC).map(([a,q])=>`<option value="${a}" ${a===String(v)?'selected':''}>${q.n}</option>`).join('')}</select></div>`;
+  else if(k==='grp'&&o.type==='svfdc')h+=`<div class="fld"><label>אילו מהדקים להציג</label><select id="f_grp">${Object.entries(VFDCG).map(([a,n])=>`<option value="${a}" ${a===String(v||'all')?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='nph')h+=`<div class="fld"><label>הזנה</label><select id="f_nph"><option value="3" ${v!=='1'?'selected':''}>תלת-פאזי — L1 L2 L3</option><option value="1" ${v==='1'?'selected':''}>חד-פאזי — A1 / A2</option></select></div>`;
   else if(k==='cact')h+=`<div class="fld"><label>מופעל על ידי</label><select id="f_cact">${[['none','ממסר / מגען (בלי מפעיל)'],['push','לחצן'],['turn','בורר'],['key','מפתח'],['limit','מפסק גבול'],['float','מצוף'],['press','לחץ'],['temp','טמפרטורה'],['delay','טיימר']].map(([a,n])=>`<option value="${a}" ${a===String(v||'none')?'selected':''}>${n}</option>`).join('')}</select></div>`;
   else if(k==='cn')h+=`<div class="fld"><label>מספרי ההדקים: משותף-NC-NO</label><select id="f_cn">${['11-12-14','21-22-24','31-32-34','41-42-44','15-16-18','25-26-28','95-96-98'].map(a=>`<option ${a===String(v)?'selected':''}>${a}</option>`).join('')}</select></div>`;
