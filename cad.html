@@ -2184,11 +2184,11 @@ const SDEF={
  sauxq:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Q1',rating:'13-14',desc:'מגע עזר מפסק'},size:()=>({w:40,h:60}),terms:IO,draw:o=>cNO()+sL(-4,-16,4,-8,1.6)+sL(-4,-8,4,-16,1.6)+sLbl(o,40)},
  smaglock:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'Y1',rating:'24VDC 280kg',desc:'מנעול אלקטרומגנטי'},ratings:['12VDC 180kg','12VDC 280kg','24VDC 280kg','24VDC 500kg'],size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sL(0,-30,0,-9)+sR(-12,-9,24,18)+sT(0,0,'EM',8)+sL(0,9,0,30)+`<path d="M16 -3v-4a4 4 0 0 1 8 0v4" fill="none" stroke="${SK}" stroke-width="1.5"/>`+sR(14.5,-3,11,9,'#fff',1.5)+sLbl(o,52)},
- scardr:{layer:4,sld:true,edit:['tag','rating','bus','desc'],def:{tag:'B1',rating:'Wiegand 26',bus:'wg',desc:'קורא כרטיסים'},ratings:['Wiegand 26','Wiegand 34','OSDP / RS485'],size:o=>({w:60,h:cardWires(o).length*10+20}),
+ scardr:{layer:4,sld:true,edit:['tag','rating','bus','desc'],def:{tag:'B1',rating:'12VDC עצמאי',bus:'sa',desc:'קורא כרטיסים'},ratings:['12VDC עצמאי','Wiegand 26','Wiegand 34','OSDP / RS485'],size:o=>({w:60,h:cardWires(o).length*10+20}),
   // standing: a tall box, the card mark on top, one leg to the left for every core
   terms:o=>{const L=cardWires(o),H=L.length*10+20;return L.map(([l],i)=>[-30,-H/2+25+i*10,l]);},
   draw:o=>{const L=cardWires(o),H=L.length*10+20,y0=-H/2;let s=sR(-15,y0,30,H)+sR(-9,y0+6,9,7,'#fff',1.3)+`<path d="M3 ${y0+5.5}a4.5 4.5 0 0 1 0 8M6.5 ${y0+3}a8 8 0 0 1 0 13" fill="none" stroke="${SK}" stroke-width="1.3" stroke-linecap="round"/>`+sL(-15,y0+19,15,y0+19,1);
-   L.forEach(([l],i)=>{const y=y0+25+i*10;s+=sL(-30,y,-15,y,1.4)+txt(-12,y,l,4.6,SK,700,'start');});
+   L.forEach(([l,c,cn],i)=>{const y=y0+25+i*10;s+=(cn?`<line x1="-30" y1="${y}" x2="-15" y2="${y}" stroke="${c==='#111827'?SK:c}" stroke-width="1.6"/>`+txt(-22.5,y-2.6,cn,2.6,SK,600):sL(-30,y,-15,y,1.4))+txt(-12,y,l,4.6,SK,700,'start');});
    return s+sLbl(o,30);}},
  slvlh:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'LT1',rating:'0-4 mH₂O 4-20mA',desc:'מד גובה הידרוסטטי'},ratings:['0-1 mH₂O 4-20mA','0-4 mH₂O 4-20mA','0-10 mH₂O 4-20mA'],size:()=>({w:40,h:60}),
   terms:()=>[[-10,-30,'+'],[10,-30,'−']],
@@ -2607,7 +2607,9 @@ function ilFace(cx,cy){// an Israeli (type H) socket: two flat pins and an earth
   `<rect x="${cx-9.5}" y="${cy-8}" width="3" height="8" rx="1" fill="#333" transform="rotate(-30 ${cx-8} ${cy-4})"/><rect x="${cx+6.5}" y="${cy-8}" width="3" height="8" rx="1" fill="#333" transform="rotate(30 ${cx+8} ${cy-4})"/><circle cx="${cx}" cy="${cy+7}" r="2.4" fill="#333"/>`;}
 // card reader: body size, its cores (Wiegand or OSDP / RS485) and the body drawing
 const cardBody=o=>o.p.rdr==='kp'?{w:86,h:126}:{w:50,h:120};
-function cardWires(o){return o.p.bus==='osdp'?[['+12V','#dc2626'],['0V','#111827'],['A','#2563eb'],['B','#9ca3af'],['TMP','#7c3aed']]:
+/* a stand-alone reader (its own relay): the wires by colour, as in the maker's diagram */
+const CARD_SA=[['NO','#f97316','ORANGE'],['+12V','#dc2626','RED'],['GND','#111827','BLACK'],['COM','#7c3aed','PURPLE'],['OPEN','#eab308','YELLOW'],['NC','#16a34a','GREEN']];
+function cardWires(o){if(o.p.bus==='sa')return CARD_SA;return o.p.bus==='osdp'?[['+12V','#dc2626'],['0V','#111827'],['A','#2563eb'],['B','#9ca3af'],['TMP','#7c3aed']]:
  [['+12V','#dc2626'],['0V','#111827'],['D0','#16a34a'],['D1','#f9fafb'],['LED','#f97316'],['BZ','#eab308'],['TMP','#7c3aed']];}
 function cardDraw(o){const kp=o.p.rdr==='kp',{w,h}=cardBody(o),y0=-h/2;
    let s=`<rect x="${-w/2}" y="${y0}" width="${w}" height="${h}" rx="9" fill="#1f2937" stroke="#0b0f17" stroke-width="1.4"/><rect x="${-w/2+4}" y="${y0+4}" width="${w-8}" height="${h-8}" rx="6" fill="#273244" stroke="#3b4659" stroke-width=".8"/>`;
@@ -2707,7 +2709,7 @@ const WDEF={
    s+=`<circle cx="${w/2-28}" cy="${y0+M.h/2}" r="3" fill="#ef4444" stroke="#7f1d1d" stroke-width=".7"/>`+txt(-8,y0+M.h/2-5,`${o.p.hold||280} ק"ג`,Math.min(9,M.h*.2),'#1f2937',700)+txt(-8,y0+M.h/2+6,`${o.p.dcv==='24'?24:12}V DC`,Math.min(6,M.h*.14),'#374151',600);
    s+=`<rect x="${-w/2+15}" y="${yb+4}" width="${w-30}" height="14" rx="2" fill="#e5e7eb" stroke="#4b5563" stroke-width="1.1" stroke-dasharray="4 2"/>`+txt(0,yb+11,'פלטת עוגן (על הדלת)',4.5,'#4b5563',600);
    if(o.p.tag)s+=txt(0,y0-8,o.p.tag,8,'#1d4ed8',700);return s;}},
- wcard:{layer:4,edit:['tag','rdr','bus','dcv','cl'],def:{rdr:'card',bus:'wg',dcv:'12',tag:''},size:o=>{const b=cardBody(o);return {w:Math.max(b.w,cardWires(o).length*10+8),h:b.h+24+cabX(o)};},
+ wcard:{layer:4,edit:['tag','rdr','bus','dcv','cl'],def:{rdr:'card',bus:'sa',dcv:'12',tag:''},size:o=>{const b=cardBody(o);return {w:Math.max(b.w,cardWires(o).length*10+8),h:b.h+24+cabX(o)};},
   terms:o=>{const L=cardWires(o),{h}=DEF.wcard.size(o);return L.map(([l],i)=>[(i-(L.length-1)/2)*10,-h/2,l]);},
   draw:o=>{const L=cardWires(o),S=DEF.wcard.size(o),Y=-S.h/2,sw=L.length*10+4;
    // the reader's pigtail: its cable up to a terminal strip, every core with its colour and name
@@ -5509,7 +5511,7 @@ function editDialog(){const o=sel&&get(sel);
   else if(k==='cn')h+=`<div class="fld"><label>מספרי ההדקים: משותף-NC-NO</label><select id="f_cn">${['11-12-14','21-22-24','31-32-34','41-42-44','15-16-18','25-26-28','95-96-98'].map(a=>`<option ${a===String(v)?'selected':''}>${a}</option>`).join('')}</select></div>`;
   else if(k==='act')h+=`<div class="fld"><label>מפעיל</label><select id="f_act">${[['3ph','תלת-פאזי 400V — פתח / סגור'],['1ph','חד-פאזי 230V — פתח / סגור'],['mod','מווסת 4-20mA'],['auma','AUMA SA + AUMA MATIC AM — פתח / סגור 400V'],['aumac','AUMA SA + AUMATIC AC — מווסת 4-20mA 400V']].map(([a,b])=>`<option value="${a}" ${a===(v||'3ph')?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='nf')h+=`<div class="fld"><label>מצופים</label><select id="f_nf">${[['2','2 — עצירה, הפעלה'],['3','3 — עצירה, הפעלה, גלישה'],['4','4 — יבש, עצירה, הפעלה, גלישה']].map(([a,b])=>`<option value="${a}" ${a===String(v||'3')?'selected':''}>${b}</option>`).join('')}</select></div>`;
-  else if(k==='bus')h+=`<div class="fld"><label>חיווט</label><select id="f_bus"><option value="wg" ${v!=='osdp'?'selected':''}>Wiegand — +12V 0V D0 D1 LED BZ TMP</option><option value="osdp" ${v==='osdp'?'selected':''}>OSDP / RS485 — +12V 0V A B TMP</option></select></div>`;
+  else if(k==='bus')h+=`<div class="fld"><label>חיווט</label><select id="f_bus"><option value="wg" ${v==='wg'||!v?'selected':''}>Wiegand — +12V 0V D0 D1 LED BZ TMP</option><option value="osdp" ${v==='osdp'?'selected':''}>OSDP / RS485 — +12V 0V A B TMP</option><option value="sa" ${v==='sa'?'selected':''}>עצמאי עם ממסר — NO +12V GND COM OPEN NC</option></select></div>`;
   else if(k==='rdr')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_rdr"><option value="card" ${v!=='kp'?'selected':''}>קורא כרטיסים (צר)</option><option value="kp" ${v==='kp'?'selected':''}>קורא כרטיסים + קודן</option></select></div>`;
   else if(k==='sw')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_sw">${[['1','מפסק יחיד'],['2','מפסק כפול'],['tw','מחליף'],['push','לחצן']].map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('')}</select></div>`;
   else if(k==='lid')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_lid"><option value="1" ${v!=='0'&&v!=='c'?'selected':''}>עם מכסה — עבודה על החזית (לחצנים, נוריות)</option><option value="c" ${v==='c'?'selected':''}>מכסה שקוף — רואים את הציוד שבפנים</option><option value="0" ${v==='0'?'selected':''}>בלי מכסה — עבודה על החלק הפנימי</option></select></div>`;
