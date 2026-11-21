@@ -2134,7 +2134,7 @@ const SDEF={
   terms:o=>{const G=sjbGeo(o),T=[];G.cols.forEach(c=>{const e=c.k==='t'?4:20;T.push([c.x,-e,c.t1]);T.push([c.x,e,c.t2]);});return T;},
   draw:o=>{const G=sjbGeo(o);let s=`<rect x="${-G.W/2}" y="-20" width="${G.W}" height="40" rx="3" fill="#fff" stroke="${SK}" stroke-width="1.3" stroke-dasharray="5 3"/>`;
    G.cols.forEach(c=>{const x=c.x;
-    if(c.k==='t'){s+=sC(x,0,4,'#fff',1.4)+sL(x-5.4,5.4,x+5.4,-5.4,1.1)+txt(x,-9,c.lab,4.4,SK,700);return;}
+    if(c.k==='t'){s+=sC(x,0,4,'#fff',1.4)+sL(x-5.4,5.4,x+5.4,-5.4,1.1)+txt(x+2.2,-11,c.lab,4.4,SK,700,'start');return;}
     s+=sL(x,-20,x,-9)+sL(x,9,x,20);
     if(c.k==='no')s+=sL(x,9,x-6,-6,1.3)+sL(x-3,1.5,x-11,1.5,1)+sL(x-11,-2,x-11,5,1.2);
     else if(c.k==='nc')s+=sL(x,9,x+5,-10,1.3)+sL(x,-9,x+6,-9,1.3)+sL(x+2.5,0,x-8,0,1)+sL(x-8,-3.5,x-8,3.5,1.2);
@@ -3204,7 +3204,7 @@ function wireLayout(){WL=new Map();WG=new Map();WB=new Map();
    const n=grp.length;grp.forEach((g,i)=>{const d=((n-1)/2-i)*10*down;g.q[1][ax]=r2(g.q[1][ax]+d);g.q[2][ax]=r2(g.q[2][ax]+d);});});}
  // crossings: the run going across hops over the upright one
  const segs=[];W.forEach(w=>{const q=WL.get(w.id);for(let i=0;i<q.length-1;i++){const a=q[i],b=q[i+1];if(Math.abs(a.x-b.x)<.01)segs.push({w,v:true,c:a.x,lo:Math.min(a.y,b.y),hi:Math.max(a.y,b.y)});else if(Math.abs(a.y-b.y)<.01)segs.push({w,v:false,c:a.y,lo:Math.min(a.x,b.x),hi:Math.max(a.x,b.x)});}});
- for(const v of segs){if(!v.v)continue;for(const h of segs){if(h.v||h.w===v.w)continue;
+ if(state.hops)for(const v of segs){if(!v.v)continue;for(const h of segs){if(h.v||h.w===v.w)continue;
   if(v.c>h.lo+6&&v.c<h.hi-6&&h.c>v.lo+1.5&&h.c<v.hi-1.5){if(!WG.has(h.w.id))WG.set(h.w.id,[]);WG.get(h.w.id).push({x:v.c,y:h.c});}}}
  busGaps(segs);}
 // a wire running across a busbar's other lines on its way to its own line is drawn with a gap at each
@@ -5616,7 +5616,7 @@ function openDrawer(){const T=(ic,n,fn,tip,on)=>({ic,n,fn,tip:tip||n,on:!!on});
    T('info','פרטי פרויקט',()=>{sel=null;multi.clear();renderNow();editDialog();},'שם, מספר שרטוט, גרסה')]},
   {k:'out',t:'הדפסה וייצוא',it:[T('print','הדפסה',printPreview,'תצוגה לפני הדפסה (Ctrl+P)'),T('pdf','PDF',pdfDialog,'ייצוא PDF עם טבלת שרטוט'),T('png','תמונה',exportImage,'ייצוא תמונה (PNG)'),T('dxf','AutoCAD',dxfExport,'ייצוא DXF ל-AutoCAD'),
    T('bom','רשימת ציוד',bom,'רשימת ציוד (BOM)'),T('exp','הורד קובץ',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state)),'הורד קובץ פרויקט (JSON)'),T('imp','ייבוא קובץ',importJSON,'ייבוא קובץ פרויקט'),T('clip','העתק קובץ',copyJSON,'העתק את קובץ הפרויקט')]},
-  {k:'chk',t:'בדיקה וחיווט',it:[T('check','התאמת מסמכים',xcheckDialog,'בדיקת התאמה: חזית ↔ חד קווי'),T('sld','חד קווי מהלוח',sldFromPanel,'צור טיוטת חד קווי מרכיבי חזית הלוח (מחליף את החד קווי הנוכחי — אפשר לבטל)'),T('link','הפניות',toggleXR,'הצג / הסתר הפניות חזית ↔ חד קווי ליד כל רכיב',state.xrShow),
+  {k:'chk',t:'בדיקה וחיווט',it:[T('check','התאמת מסמכים',xcheckDialog,'בדיקת התאמה: חזית ↔ חד קווי'),T('sld','חד קווי מהלוח',sldFromPanel,'צור טיוטת חד קווי מרכיבי חזית הלוח (מחליף את החד קווי הנוכחי — אפשר לבטל)'),T('link','הפניות',toggleXR,'הצג / הסתר הפניות חזית ↔ חד קווי ליד כל רכיב',state.xrShow),T('cross','קשתות בהצטלבות',toggleHops,'חוטים שמצטלבים בלי חיבור: קשת קפיצה מעל החוט השני (כבוי = הצטלבות ישרה, חיבור מסומן בנקודה)',state.hops),
    T('num','מספור חוטים',numberWires,'מספר חוטים לפי נקודות פוטנציאל'),T('tag','מספרי חוטים',toggleWN,'הצג / הסתר את מספרי החוטים',state.wnShow),T('table','טבלאות',()=>wireTables(),'טבלאות חוטים, מהדקים וכבלים'),T('labels','מדבקות',printLabels,'מדבקות מספרי חוטים'),
    T('cloudr','As-Built',abList,state.ab&&state.ab.on?'As-Built פעיל — רשימת שינויים / קבלה':'התחל As-Built: סימון שינויים בענן',state.ab&&state.ab.on)]},
   {k:'bg',t:'רקע לשרטוט',it:[T('png','ייבוא רקע',ulImport,'ייבוא תמונה / PDF / DXF כרקע'),T('layers','ניהול רקעים',ulManager,'תמונות רקע — נעילה, שקיפות, כיול')]},
@@ -5765,6 +5765,7 @@ function abList(){if(!(state.ab&&state.ab.on)){abStart();return;}const I=abIndex
  $('mBody').onclick=e=>{const g=e.target.closest('[data-go]');if(!g)return;const [d,id]=g.dataset.go.split(':');xcGo(state.tab==='both'?'both':d,id);};}
 function abAccept(){const rv=nextRev();state.rev=rv;delete state.ab;commit();renderNow();closeModal();toast('השינויים התקבלו — גרסה Rev '+rv);}
 function abCancel(){delete state.ab;commit();renderNow();closeModal();toast('מצב As-Built בוטל — הסימונים הוסרו');}
+function toggleHops(){state.hops=state.hops?0:1;commit();renderNow();toast(state.hops?'קשתות קפיצה בהצטלבות חוטים מוצגות':'הצטלבות חוטים ישרה, בלי קשתות');}
 function toggleXR(){state.xrShow=state.xrShow?0:1;commit();renderNow();toast(state.xrShow?'הפניות חזית ↔ חד קווי מוצגות (גם בהדפסה)':'ההפניות הוסתרו');}
 function toggleWN(){state.wnShow=state.wnShow?0:1;commit();renderNow();toast(state.wnShow?'מספרי החוטים מוצגים':'מספרי החוטים מוסתרים');}
 function endDesc(p){if(!p||!p.r)return '—';const o=get(p.r);if(!o)return '?';const T=termsOf(o)[p.t],nm=o.p.tag||o.p.name||o.type,tl=T&&T[2]?String(T[2]):String(p.t+1);return `${nm}:${tl}`;}
