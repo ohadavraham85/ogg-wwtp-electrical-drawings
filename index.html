@@ -180,11 +180,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 275;
+const VERSION = 276;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'חיפוש בתיקייה המשותפת (לפי שם / יוצר), ותפריט ← חשבון ← "לוחות שנמחקו" לשחזור לוחות שנמחקו';
+const WHATS_NEW = 'החיפוש בתיקייה המשותפת וב"לוחות שנמחקו" מחפש גם בתוך השרטוטים — מוצא לוח גם אם שמו השתנה';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -361,6 +361,8 @@ const bridge = {
     return [...designs.values()].sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt))).map(info);
   },
   async info(id) { await ready; const d = designs.get(id); return d ? info(d) : null; },
+  // ids of drawings whose name or content holds the text (finds a drawing that was renamed)
+  async find(q) { await ready; q = String(q || '').trim().toLowerCase(); if (!q) return []; return [...designs.values()].filter((d) => (String(d.name || '') + '\n' + String(d.data || '')).toLowerCase().includes(q)).map((d) => d.id); },
   async load(id) { await ready; const d = designs.get(id); return d ? { id: d.id, name: d.name, data: d.data } : null; },
   async save(input) {
     await ready;
@@ -531,14 +533,15 @@ function closeDlg() {
 // bring one back (any approved user may set deleted back to false).
 function trashDialog() {
   const box = openDlg(`<h2><img src="icons/icon.svg" width="28" height="28" alt="">לוחות שנמחקו</h2>
-    <div class="hint">לוחות שנמחקו מהתיקייה המשותפת נשמרים כאן. "שחזר" מחזיר את הלוח לתיקייה המשותפת לכולם.</div><div id="trList"><div class="empty">טוען…</div></div>`);
+    <div class="hint">לוחות שנמחקו מהתיקייה המשותפת נשמרים כאן. "שחזר" מחזיר את הלוח לתיקייה המשותפת לכולם. החיפוש מחפש גם בתוך השרטוט.</div><input id="trQ" placeholder="🔍 חיפוש בשם או בתוך השרטוט…" autocomplete="off" style="width:100%;margin:6px 0 10px;padding:9px;border-radius:8px"><div id="trList"><div class="empty">טוען…</div></div>`);
   DESIGNS.where('deleted', '==', true).get().then((snap) => {
     const L = []; snap.forEach((doc) => L.push({ id: doc.id, ...doc.data() }));
     L.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
     const el = box.querySelector('#trList');
     if (!L.length) { el.innerHTML = '<div class="empty">אין לוחות שנמחקו.</div>'; return; }
     const when = (t) => { try { return new Date(t).toLocaleString('he-IL'); } catch (e) { return ''; } };
-    el.innerHTML = L.map((d) => `<div class="row"><div class="nm"><div>${esc(d.name)} <span class="em">(${d.parts || 0} רכיבים)</span></div><div class="em">נוצר ע״י ${esc(d.createdBy)} · נמחק ${esc(when(d.updatedAt))} ע״י ${esc(d.updatedBy)}</div></div><button class="sb ok" data-rs="${esc(d.id)}">שחזר</button></div>`).join('');
+    el.innerHTML = L.map((d) => `<div class="row" data-tx="${esc((String(d.name || '') + ' ' + String(d.data || '')).toLowerCase())}"><div class="nm"><div>${esc(d.name)} <span class="em">(${d.parts || 0} רכיבים)</span></div><div class="em">נוצר ע״י ${esc(d.createdBy)} · נמחק ${esc(when(d.updatedAt))} ע״י ${esc(d.updatedBy)}</div></div><button class="sb ok" data-rs="${esc(d.id)}">שחזר</button></div>`).join('');
+    const q = box.querySelector('#trQ'); q.oninput = () => { const t = q.value.trim().toLowerCase(); el.querySelectorAll('.row').forEach((r) => { r.style.display = !t || r.dataset.tx.includes(t) ? '' : 'none'; }); };
     el.onclick = (e) => {
       const b = e.target.closest('[data-rs]'); if (!b) return; b.disabled = true;
       DESIGNS.doc(b.dataset.rs).update({ deleted: false }).then(() => { toast('הלוח שוחזר לתיקייה המשותפת'); b.closest('.row').remove(); })
