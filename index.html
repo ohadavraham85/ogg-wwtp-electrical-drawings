@@ -180,11 +180,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 276;
+const VERSION = 277;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'החיפוש בתיקייה המשותפת וב"לוחות שנמחקו" מחפש גם בתוך השרטוטים — מוצא לוח גם אם שמו השתנה';
+const WHATS_NEW = 'שמירה בענן אמינה: אם השרת לא קיבל את הלוח (גדול מדי / אין הרשאה / אין חיבור) רואים זאת מיד, והלוח נשמר גם כגיבוי במכשיר';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -330,12 +330,21 @@ function info(d) {
 }
 
 function writeDesign(d) {
+  const prev = designs.get(d.id);
   designs.set(d.id, d);
   const { id, ...rest } = d;
-  // Not awaited: offline, the write waits on the device until the connection is back.
-  DESIGNS.doc(id).set(rest).catch((e) => toast(e.code === 'permission-denied' ? 'אין הרשאה לשמור בענן' : 'השמירה בענן נכשלה'));
+  // Offline, the write waits on the device until the connection is back; a write the
+  // server refuses rolls back here and the tool is told (the promise rejects).
+  const p = DESIGNS.doc(id).set(rest).catch((e) => {
+    if (prev) designs.set(d.id, prev); else designs.delete(d.id);
+    listeners.forEach((f) => f());
+    throw e;
+  });
   listeners.forEach((f) => f());
+  return p;
 }
+// Firestore keeps at most 1 MiB per document
+const MAX_DESIGN = 1000000;
 
 const bridge = {
   me: () => ({ label: me.label, email: me.email, owner: isOwner }),
@@ -376,8 +385,11 @@ const bridge = {
           createdBy: me.label, createdByEmail: me.email, createdAt: now,
           updatedBy: me.label, updatedByEmail: me.email, updatedAt: now, deleted: false };
     const d = dwgno ? { ...d0, dwgno } : d0;
-    writeDesign(d);
-    return info(d);
+    if (new Blob([input.data]).size > MAX_DESIGN) { const e = new Error('too-big'); e.code = 'too-big'; e.size = new Blob([input.data]).size; throw e; }
+    const w = writeDesign(d);
+    // the server's answer within a few seconds; no answer = offline, saved on the device and sent later
+    const r = await Promise.race([w.then(() => 'ok'), new Promise((res) => setTimeout(() => res('later'), 8000))]);
+    return { ...info(d), pending: r === 'later' };
   },
   async remove(id) {
     await ready;

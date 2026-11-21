@@ -3699,10 +3699,16 @@ function flushSave(){if(saveT){clearTimeout(saveT);saveT=null;return doAutoSave(
 async function doAutoSave(){saveT=null;dwgFix();if(!state.dwgno&&state.objs.length&&!saving){try{await ensureDwgNo();}catch(e){}}const data=JSON.stringify(state);if(data===lastSaved){setSaveSt('saved');return;}if(saving){scheduleSave();return;}saving=true;setSaveSt('saving');
  try{if(cloudId){const d=await SH.info(cloudId),me=SH.me();
    if(d&&cloudStamp&&d.updatedAt!==cloudStamp&&me&&d.updatedBy!==me.label){const nd=await SH.save({name:state.name+' (עותק)',data,parts:partsCount()});setCloud(nd.id);cloudStamp=nd.updatedAt;state.name=nd.name;toast(`${d.updatedBy} ערך את הלוח הזה במקביל — השינויים שלך נשמרו כעותק`);}
-   else{const nd=await SH.save({id:cloudId,name:state.name,data,parts:partsCount()});if(nd.id!==cloudId)setCloud(nd.id);cloudStamp=nd.updatedAt;}}
-  else{const nd=await SH.save({name:state.name,data,parts:partsCount()});setCloud(nd.id);cloudStamp=nd.updatedAt;toast('הלוח נשמר אוטומטית בתיקייה המשותפת');}
-  lastSaved=data;setSaveSt(JSON.stringify(state)===data?'saved':'pending');if(JSON.stringify(state)!==data)scheduleSave();}
- catch(e){setSaveSt('error');}finally{saving=false;}}
+   else{const nd=await SH.save({id:cloudId,name:state.name,data,parts:partsCount()});if(nd.id!==cloudId)setCloud(nd.id);cloudStamp=nd.updatedAt;LAST_SAVE_PENDING=!!nd.pending;}}
+  else{const nd=await SH.save({name:state.name,data,parts:partsCount()});setCloud(nd.id);cloudStamp=nd.updatedAt;LAST_SAVE_PENDING=!!nd.pending;toast(nd.pending?'אין חיבור לשרת — הלוח יישלח לתיקייה המשותפת כשיחזור החיבור':'הלוח נשמר אוטומטית בתיקייה המשותפת');}
+  LAST_SAVE_ERR='';
+  lastSaved=data;setSaveSt(JSON.stringify(state)===data?'saved':'pending');if(JSON.stringify(state)!==data)scheduleSave();if(LAST_SAVE_PENDING)setSaveSt('pending');}
+ catch(e){setSaveSt('error');localBackup(data);
+  const why=e&&e.code==='too-big'?`הלוח גדול מדי לשמירה בענן (${Math.round((e.size||0)/1024)} KB, המקסימום כ־1000 KB) — הקטן או הסר תמונות רקע. עותק נשמר במכשיר.`:e&&e.code==='permission-denied'?'השרת סירב לשמור (אין הרשאה) — עותק נשמר במכשיר.':'השמירה בענן נכשלה — עותק נשמר במכשיר. נסה שוב בעוד רגע.';
+  if(why!==LAST_SAVE_ERR){LAST_SAVE_ERR=why;toast('⚠ '+why);}if(e&&e.code!=='too-big')setTimeout(()=>{if(!saveT)scheduleSave();},20000);}finally{saving=false;}}
+/* A copy of a drawing the cloud didn't take, kept in this device's saved projects so it is never lost. */
+let LAST_SAVE_ERR='',LAST_SAVE_PENDING=false;
+function localBackup(data){try{const P=loadProjects(),k=(state.name||'לוח')+' (גיבוי)';P[k]=JSON.parse(data);localStorage.setItem('epd.projects',JSON.stringify(P));}catch(e){}}
 /* What's on screen now is what the folder already has (just opened, or the app just started). */
 function markSaved(){lastSaved=JSON.stringify(state);if(SH&&cloudId)SH.info(cloudId).then(d=>{cloudStamp=d?d.updatedAt:null;if(!d)setCloud(null);}).catch(()=>{});setSaveSt(cloudId?'saved':'pending');}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)flushSave();});window.addEventListener('pagehide',()=>flushSave());
