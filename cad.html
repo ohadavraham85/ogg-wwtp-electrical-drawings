@@ -3372,7 +3372,7 @@ function patchWorld(items){const seen=new Map();for(const n of [...world.childre
   if(n.__s!==str){n.innerHTML=str;n.__s=str;}
   if(n!==cur)world.insertBefore(n,cur);else cur=cur.nextSibling;}
  while(cur){const nx=cur.nextSibling;cur.remove();cur=nx;}}
-function renderNow(){XRI=state.xrShow?xrIndex():null;ABI=state.ab&&state.ab.on?abIndex():null;if(state.tab!=='sld')glandAuto();drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}
+function renderNow(){ADIC=null;XRI=state.xrShow?xrIndex():null;ABI=state.ab&&state.ab.on?abIndex():null;if(state.tab!=='sld')glandAuto();drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}
  const fast=state.tab!=='both'&&!(state.tab==='sld'&&sldDark);LODMIN=2.2/view.s;let s,P=null;
  try{if(fast){PIECES=[];content({sel:true});P=PIECES;}else s=layoutSVG()+axesSVG()+content({sel:true});}finally{PIECES=null;}
  const pre=fast?layoutSVG()+axesSVG():'';
@@ -4966,9 +4966,15 @@ function wallFit(o,refit){const S=wallSegs();if(!S.length)return;const reach=50/
 let DDIMS=null,WFG=null;
 function dragDims(o,W){const L=[];if(W===undefined)W=WFG;
  if(W){const {g,al,half}=W,c=g.n?g.c+g.n*g.t/2:g.c,ax=g.h?'x':'y',seg=(a,b,sg)=>{if(b-a>1)L.push(g.h?[a,c,b,c,ax,sg]:[c,a,c,b,ax,sg]);};seg(g.a0,al-half,1);seg(al+half,g.a1,-1);return L;}
- if(o.type==='troom'||o.type==='wire'||o.type==='mdim')return null;const B=bbW(o),cx=(B.x0+B.x1)/2,cy=(B.y0+B.y1)/2;
+ if(o.type==='troom'||o.type==='wire'||o.type==='mdim')return null;const B=bodyBox(o),cx=(B.x0+B.x1)/2,cy=(B.y0+B.y1)/2;
  const R=state.objs.find(q=>q.type==='troom'&&q!==o&&(q.rot||0)%90===0&&(()=>{const I=roomInner(q);return cx>I.x0&&cx<I.x1&&cy>I.y0&&cy<I.y1;})());if(!R)return null;const I=roomInner(R);
- if(B.x0-I.x0>1)L.push([I.x0,cy,B.x0,cy,'x',1]);if(I.x1-B.x1>1)L.push([B.x1,cy,I.x1,cy,'x',-1]);if(B.y0-I.y0>1)L.push([cx,I.y0,cx,B.y0,'y',1]);if(I.y1-B.y1>1)L.push([cx,B.y1,cx,I.y1,'y',-1]);return L;}
+ const OB=state.objs.filter(q=>q!==o&&PLAN_OB.has(q.type)).map(q=>({q,b:bodyBox(q)})).filter(z=>{const b=z.b,mx=(b.x0+b.x1)/2,my=(b.y0+b.y1)/2;return mx>I.x0&&mx<I.x1&&my>I.y0&&my<I.y1;}),A=B;
+ const ovY=b=>b.y0<A.y1-1&&b.y1>A.y0+1,ovX=b=>b.x0<A.x1-1&&b.x1>A.x0+1,ya=(Math.max(A.y0,I.y0)+Math.min(A.y1,I.y1))/2,xa=(Math.max(A.x0,I.x0)+Math.min(A.x1,I.x1))/2;
+ let l=I.x0,r=I.x1,t=I.y0,bt=I.y1;OB.forEach(({b})=>{if(ovY(b)){if(b.x1<=A.x0+1)l=Math.max(l,b.x1);if(b.x0>=A.x1-1)r=Math.min(r,b.x0);}if(ovX(b)){if(b.y1<=A.y0+1)t=Math.max(t,b.y1);if(b.y0>=A.y1-1)bt=Math.min(bt,b.y0);}});
+ if(A.x0-l>1)L.push([l,ya,A.x0,ya,'x',1]);if(r-A.x1>1)L.push([A.x1,ya,r,ya,'x',-1]);if(A.y0-t>1)L.push([xa,t,xa,A.y0,'y',1]);if(bt-A.y1>1)L.push([xa,A.y1,xa,bt,'y',-1]);return L;}
+/* the body of a plan part, without a cabinet's door swing */
+const PLAN_OB=new Set(['tcab','tequip','tstair','tcol']);
+function bodyBox(q){if(q.type!=='tcab')return bbW(q);const w=+q.p.w,d=+q.p.h,{h}=sizeOf(q),P=[[-w/2,-h/2],[w/2,-h/2],[w/2,-h/2+d],[-w/2,-h/2+d]].map(([u,v])=>fromLocal(q,u,v));return {x0:Math.min(...P.map(p=>p[0])),x1:Math.max(...P.map(p=>p[0])),y0:Math.min(...P.map(p=>p[1])),y1:Math.max(...P.map(p=>p[1]))};}
 /* where a door / window sits in a wall, without moving it */
 function wallOf(o){const S=wallSegs(),gp=o.type==='tdoor'?fromLocal(o,0,-DEF.tdoor.size(o).h/2+(+o.p.wt||200)/2):[o.x,o.y];let best=null;
  for(const g of S){const al=g.h?gp[0]:gp[1],ac=g.h?gp[1]:gp[0];if(al<g.a0-1||al>g.a1+1||Math.abs(ac-g.c)>g.t/2+1)continue;const d=Math.abs(ac-g.c);if(!best||d<best.d)best={g,d,al};}
@@ -4979,10 +4985,34 @@ let SDIMS=null;
 /* Plan, "מידות" on: every part's distances drawn into the drawing itself (so they
    print and export) — equipment to the room's walls, doors / windows to the wall ends. */
 function toggleTDims(){state.tdAll=state.tdAll?0:1;commit();renderNow();toast(state.tdAll?'כל המידות מוצגות — גם בהדפסה ובייצוא':'המידות הנוספות הוסתרו');}
-function allDims(o){if(['troom','wall','wire','mdim','label','callout','tnorth','ink','underlay'].includes(o.type))return '';let L;
- try{L=(o.type==='tdoor'||o.type==='twin')?(()=>{const W=wallOf(o);return W?dragDims(o,W):null;})():dragDims(o,null);}catch(e){L=null;}if(!L||!L.length)return '';
- const c='#0f766e',fs=80,lw=5,k=40;return '<g pointer-events="none">'+L.map(([x1,y1,x2,y2])=>{const h=Math.abs(y2-y1)<Math.abs(x2-x1),len=Math.hypot(x2-x1,y2-y1),mx=(x1+x2)/2,my=(y1+y2)/2;
-  const tk=(x,y)=>`M${x-k} ${y+k}L${x+k} ${y-k}`;return `<path d="M${x1} ${y1}L${x2} ${y2}${tk(x1,y1)}${tk(x2,y2)}" stroke="${c}" stroke-width="${lw}" fill="none"/>`+(h?txt(mx,my-fs*.7,mdFmt(len),fs,c,700):`<g transform="translate(${mx-fs*.7} ${my}) rotate(-90)">${txt(0,0,mdFmt(len),fs,c,700)}</g>`);}).join('')+'</g>';}
+let ADIC=null;
+function allDims(o){if(!ADIC)ADIC=allDimsLayout();return ADIC.get(o.id)||'';}
+function allDimsLayout(){const M=new Map(),seen=new Set(),boxes=[],c='#0f766e',fs=80,lw=5,k=40;
+ const hit=b=>boxes.some(q=>b.x0<q.x1&&b.x1>q.x0&&b.y0<q.y1&&b.y1>q.y0);
+ const put=(id,x1,y1,x2,y2)=>{const key=[x1,y1,x2,y2].map(v=>Math.round(v)).join(','),key2=[x2,y2,x1,y1].map(v=>Math.round(v)).join(',');if(seen.has(key)||seen.has(key2))return;seen.add(key);
+  const h=Math.abs(y2-y1)<Math.abs(x2-x1),len=Math.hypot(x2-x1,y2-y1),t=mdFmt(len),tw=t.length*fs*.62+fs*.4,th=fs*1.25;let pos=null;
+  const ex=(tw*.75)/Math.max(len,1),FS=len<tw*1.3?[1+ex,-ex,.5,1+ex*2,-ex*2]:[.5,.3,.7,.18,.82,1+ex,-ex];
+  const ovl=b=>boxes.reduce((t,q)=>t+Math.max(0,Math.min(b.x1,q.x1)-Math.max(b.x0,q.x0))*Math.max(0,Math.min(b.y1,q.y1)-Math.max(b.y0,q.y0)),0);let best=null;
+  out:for(const f of FS)for(const sd of [-1,1,-2.2,2.2,0,-3.6,3.6]){const mx=x1+(x2-x1)*f,my=y1+(y2-y1)*f,cx=h?mx:mx+sd*fs*.75,cy=h?my+sd*fs*.75:my;const b=h?{x0:cx-tw/2,x1:cx+tw/2,y0:cy-th/2,y1:cy+th/2}:{x0:cx-th/2,x1:cx+th/2,y0:cy-tw/2,y1:cy+tw/2};if(!hit(b)){pos={cx,cy,b};break out;}const v=ovl(b);if(!best||v<best.v)best={v,cx,cy,b};}
+  if(!pos)pos=best;boxes.push(pos.b);
+  const tk=(x,y)=>`M${x-k} ${y+k}L${x+k} ${y-k}`,lab=h?txt(pos.cx,pos.cy,t,fs,c,700):`<g transform="translate(${pos.cx} ${pos.cy}) rotate(-90)">${txt(0,0,t,fs,c,700)}</g>`;
+  M.set(id,(M.get(id)||'')+`<path d="M${x1} ${y1}L${x2} ${y2}${tk(x1,y1)}${tk(x2,y2)}" stroke="${c}" stroke-width="${lw}" fill="none"/>`+lab);};
+ const L0=[];state.objs.forEach(o=>{if(['troom','wall','wire','mdim','label','callout','tnorth','ink','underlay','tsym','ttray'].includes(o.type))return;
+  if(o.type==='tdoor'||o.type==='twin'){const W=wallOf(o);if(!W)return;const {g,al,half}=W;
+   // the opening's own width, just off the wall on the side away from the swing (a window: outside the room)
+   let side=g.n?-g.n:-1;if(o.type==='tdoor'){const sw=g.n?(o.p.sw==='in'?g.n:-g.n):(+o.p.wn||1);side=-sw;}
+   const oc=g.c+side*(g.t/2+fs*2.2);L0.push([o.id,...(g.h?[al-half,oc,al+half,oc]:[oc,al-half,oc,al+half])]);
+   (dragDims(o,W)||[]).forEach(d=>L0.push([o.id,d[0],d[1],d[2],d[3]]));return;}
+  (dragDims(o,null)||[]).forEach(d=>L0.push([o.id,d[0],d[1],d[2],d[3]]));});
+ // longer ones first, so the short ones move aside
+ L0.sort((a,b)=>Math.hypot(b[3]-b[1],b[4]-b[2])-Math.hypot(a[3]-a[1],a[4]-a[2]));
+ state.objs.forEach(q=>{if(PLAN_OB.has(q.type))boxes.push(bodyBox(q));});
+ // the parts' own (blue) dimension numbers are taken space too
+ const lbl=(q,u,v,t,f,vert)=>{const [x,y]=fromLocal(q,u,v),tw=String(t).length*f*.62+f*.4,th=f*1.25,rv=((q.rot||0)%180!==0)!==!!vert;boxes.push(rv?{x0:x-th/2,x1:x+th/2,y0:y-tw/2,y1:y+tw/2}:{x0:x-tw/2,x1:x+tw/2,y0:y-th/2,y1:y+th/2});};
+ state.objs.forEach(q=>{if(!['tcab','tequip','tstair'].includes(q.type)||q.p.dm==='0')return;const w=+q.p.w,d=+q.p.h,{h}=sizeOf(q),y0=-h/2,y1=q.type==='tcab'?y0+d:h/2,[g,f]=eqDimG(w,y1-y0);
+  lbl(q,0,y0-g-f*.75,Math.round(w),f,0);lbl(q,-w/2-g-f*.75,(y0+y1)/2,Math.round(y1-y0),f,1);});
+ L0.forEach(([id,x1,y1,x2,y2])=>put(id,x1,y1,x2,y2));
+ M.forEach((v,id)=>M.set(id,'<g pointer-events="none">'+v+'</g>'));return M;}
 function ddSVG(){SDIMS=DDIMS?null:selDims();const D=DDIMS||SDIMS;if(!D||!D.length)return '';const k=1/view.s,click=!DDIMS;return '<g pointer-events="none">'+D.map(([x1,y1,x2,y2],i)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#f59e0b" stroke-width="1.4" vector-effect="non-scaling-stroke"/><circle cx="${x1}" cy="${y1}" r="${3*k}" fill="#f59e0b"/><circle cx="${x2}" cy="${y2}" r="${3*k}" fill="#f59e0b"/>`+(click?`<g data-ddim="${i}" pointer-events="all" style="cursor:pointer">${shpTag((x1+x2)/2,(y1+y2)/2,mdFmt(Math.hypot(x2-x1,y2-y1)))}</g>`:shpTag((x1+x2)/2,(y1+y2)/2,mdFmt(Math.hypot(x2-x1,y2-y1))))).join('')+'</g>';}
 /* tap a distance of the selected part: type it, the part moves to match */
 function sdimEdit(i,cx,cy){const o=sel&&get(sel),D=SDIMS&&SDIMS[i];if(!o||!D||o.locked)return;const [x1,y1,x2,y2,ax,sg]=D,cur=Math.hypot(x2-x1,y2-y1);const old=document.getElementById('inEdit');if(old)old.remove();
