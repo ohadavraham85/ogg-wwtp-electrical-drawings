@@ -16,7 +16,7 @@ Live at https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/ (GitHub Pa
   - `menu()`, which returns extra items for the tool's drawer.
 - `cad.html`: the drawing tool, a single file. It finds the bridge as `SH` (via `window.parent.panelDesignsBridge`). Opened directly, it saves to localStorage.
   - Parts live in `DEF[type]`.
-  - Documents: `state.objs` / `state.alt`, and `state.tab` is 'panel' | 'sld' | 'both'.
+  - Documents: `state.objs` / `state.alt`, and `state.tab` is 'panel' | 'sld' | 'both' | 'top'. The top view (plan) is a third document: while shown, `state.objs` = plan, `state.alt` = single-line, `state.pstash` = panel; otherwise the plan waits in `state.top`. Move with `splitAll` / `joinAll` (used by `switchDoc` and `withDoc`); `topObjs()`, `panelObjs()`, `sldObjs()` read any document. Sheets: `LAYDOC` has 'top' (`layoutT` / `originT`); the PDF prints the plan between front and single-line. Library tabs with `top:true` show only in the plan (`inDoc`); plan parts `troom` (box, carries its contents), `tdoor`, `twin`, `tcol`, `tstair`, `tcab`, `tequip`, `ttray`, `tsym`, `tnorth` (+ the existing `wall`, `label`, `callout`). DEF entries may give `sel` (key → [[value,label]]), `lbl` (key → label) and `num` (numeric keys) for the generic edit dialog.
   - Library: `LIB`.
   - Templates: `TEMPLATES`.
   - Autosave: `scheduleSave` / `doAutoSave`.
