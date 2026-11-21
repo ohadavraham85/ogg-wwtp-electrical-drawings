@@ -3368,7 +3368,7 @@ function renderNow(){XRI=state.xrShow?xrIndex():null;ABI=state.ab&&state.ab.on?a
  const fast=state.tab!=='both'&&!(state.tab==='sld'&&sldDark);LODMIN=2.2/view.s;let s,P=null;
  try{if(fast){PIECES=[];content({sel:true});P=PIECES;}else s=layoutSVG()+axesSVG()+content({sel:true});}finally{PIECES=null;}
  const pre=fast?layoutSVG()+axesSVG():'';
- let tail=handlesSVG()+dimsSVG()+guidesSVG()+portHitSVG()+inkDraftSVG()+dropSVG()+measSVG()+rotSVG()+layHandlesSVG()+calSVG()+shpSVG()+cableGuideSVG()+(DRAGNEW?`<g opacity=".8" pointer-events="none">${objSVG(DRAGNEW,true)}</g>`:'')+bandSVG()+qWireSVG();
+ let tail=handlesSVG()+dimsSVG()+guidesSVG()+portHitSVG()+inkDraftSVG()+dropSVG()+measSVG()+rotSVG()+layHandlesSVG()+calSVG()+shpSVG()+ddSVG()+cableGuideSVG()+(DRAGNEW?`<g opacity=".8" pointer-events="none">${objSVG(DRAGNEW,true)}</g>`:'')+bandSVG()+qWireSVG();
  const terms=termsSVG();LODMIN=0;if(!fast)s+=terms+tail,tail='';
  if(s===undefined)s='';if(wireMode){for(const o of state.objs){if(o.type==='wire')continue;termsOf(o).forEach(t=>{const [x,y]=fromLocal(o,t[0],t[1]);s+=`<circle cx="${x}" cy="${y}" r="2.8" fill="rgba(34,211,238,.25)" stroke="#22d3ee" stroke-width=".7" pointer-events="none"/>`;});}
   if(draft&&draft.pts.length){const c=WCOL[wireColor];const d=wirePath(null,draft.pts);if(d)s+=`<path d="${d}" fill="none" stroke="${c.base}" stroke-width="${SEC[wireSec]}" stroke-linecap="round" stroke-linejoin="round" opacity=".85" pointer-events="none"/>`;
@@ -4839,7 +4839,7 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
   if(nb.length===2){const a=R[i-1],b=R[i+1],ax=Math.abs(a.x-lx)<.01||Math.abs(a.y-ly)<.01,bx=Math.abs(b.x-lx)<.01||Math.abs(b.y-ly)<.01;
    if(ax&&bx&&!(Math.abs(a.x-b.x)<.01||Math.abs(a.y-b.y)<.01)){const k=8/view.s,ua=[Math.sign(a.x-lx),Math.sign(a.y-ly)],ub=[Math.sign(b.x-lx),Math.sign(b.y-ly)];const p1=W(lx+ua[0]*k,ly+ua[1]*k),p2=W(lx+(ua[0]+ub[0])*k,ly+(ua[1]+ub[1])*k),p3=W(lx+ub[0]*k,ly+ub[1]*k);CGUIDE.push({corner:`M${p1[0]} ${p1[1]}L${p2[0]} ${p2[1]}L${p3[0]} ${p3[1]}`});}}
   render();}
- else{const [wx,wy]=toWorld(e.clientX,e.clientY);const o=G.o;DROPR=null;DROPFULL=false;const [sx,sy]=snapPos(o,G.ox+wx-G.w0[0],G.oy+wy-G.w0[1]);o.x=sx;o.y=sy;const onR=DEF[o.type].rail&&state.objs.some(r=>r.type==='rail'&&onRail(o,r));alignSnap(o,G.kids,!onR&&!HYD(o));if(state.tab==='top'){if(o.type==='tdoor'||o.type==='twin')wallFit(o);else roomSnap(o,G.kids);}portMagnet(o);if(o.type==='shrect'||o.type==='shellipse'||o.type==='wall')edgeSnap(o,G.kids);if(DEF[o.type]?.sld||isSldObj(o))termMagnet(o,G.kids);const nx=o.x,ny=o.y;
+ else{const [wx,wy]=toWorld(e.clientX,e.clientY);const o=G.o;DROPR=null;DROPFULL=false;const [sx,sy]=snapPos(o,G.ox+wx-G.w0[0],G.oy+wy-G.w0[1]);o.x=sx;o.y=sy;const onR=DEF[o.type].rail&&state.objs.some(r=>r.type==='rail'&&onRail(o,r));alignSnap(o,G.kids,!onR&&!HYD(o));if(state.tab==='top'){WFG=null;if(o.type==='tdoor'||o.type==='twin')wallFit(o);else roomSnap(o,G.kids);DDIMS=dragDims(o);}portMagnet(o);if(o.type==='shrect'||o.type==='shellipse'||o.type==='wall')edgeSnap(o,G.kids);if(DEF[o.type]?.sld||isSldObj(o))termMagnet(o,G.kids);const nx=o.x,ny=o.y;
   const ddx=nx-G.ox,ddy=ny-G.oy;G.kids.forEach(k=>{if(k.q.type==='mdim'){if(!k.e)k.e=[k.q.p.a,k.q.p.b].map(p=>[p,p.x,p.y]);k.e.forEach(([p,x,y])=>{if(!p.of||!get(p.of)){p.x=r2(x+ddx);p.y=r2(y+ddy);}});return;}k.q.x=r2(k.x+ddx);k.q.y=r2(k.y+ddy);});render();}});
 let GUIDES=[];
 /* Walls and shapes: while one is dragged, its edges — the outline and, for a
@@ -4924,7 +4924,17 @@ function wallFit(o,refit){const S=wallSegs();if(!S.length)return;const reach=50/
   else{const cur=Math.sign((g.h?o.y:o.x)-g.c)||1;n=refit?(o.p.swl&&o.p.swl!==(o.p.sw||'in')?-(+o.p.wn||cur):(+o.p.wn||cur)):cur;}
   o.p.wn=n;o.p.swl=o.p.sw||'in';const {h}=DEF.tdoor.size(o);
   if(g.h){o.rot=n>0?0:180;o.x=r2(al);o.y=r2(n>0?g.c-t/2+h/2:g.c+t/2-h/2);}else{o.rot=n>0?270:90;o.y=r2(al);o.x=r2(n>0?g.c-t/2+h/2:g.c+t/2-h/2);}}
- GUIDES=[g.h?{y:g.c,x0:g.a0,x1:g.a1}:{x:g.c,y0:g.a0,y1:g.a1}];}
+ GUIDES=[g.h?{y:g.c,x0:g.a0,x1:g.a1}:{x:g.c,y0:g.a0,y1:g.a1}];WFG={g,al,half};}
+/* Plan, while dragging: a door / window shows its distance to each end of its wall;
+   other parts show their clear distance to the four inner faces of the room they
+   are in. Drawn as orange lines with size pills; gone when the drag ends. */
+let DDIMS=null,WFG=null;
+function dragDims(o){const L=[];
+ if(WFG){const {g,al,half}=WFG,c=g.n?g.c+g.n*g.t/2:g.c,seg=(a,b)=>{if(b-a>1)L.push(g.h?[a,c,b,c]:[c,a,c,b]);};seg(g.a0,al-half);seg(al+half,g.a1);return L;}
+ if(o.type==='troom'||o.type==='wire'||o.type==='mdim')return null;const B=bbW(o),cx=(B.x0+B.x1)/2,cy=(B.y0+B.y1)/2;
+ const R=state.objs.find(q=>q.type==='troom'&&q!==o&&(q.rot||0)%90===0&&(()=>{const I=roomInner(q);return cx>I.x0&&cx<I.x1&&cy>I.y0&&cy<I.y1;})());if(!R)return null;const I=roomInner(R);
+ if(B.x0-I.x0>1)L.push([I.x0,cy,B.x0,cy]);if(I.x1-B.x1>1)L.push([B.x1,cy,I.x1,cy]);if(B.y0-I.y0>1)L.push([cx,I.y0,cx,B.y0]);if(I.y1-B.y1>1)L.push([cx,B.y1,cx,I.y1]);return L;}
+function ddSVG(){if(!DDIMS||!DDIMS.length)return '';const k=1/view.s;return '<g pointer-events="none">'+DDIMS.map(([x1,y1,x2,y2])=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#f59e0b" stroke-width="1.4" vector-effect="non-scaling-stroke"/><circle cx="${x1}" cy="${y1}" r="${3*k}" fill="#f59e0b"/><circle cx="${x2}" cy="${y2}" r="${3*k}" fill="#f59e0b"/>`+shpTag((x1+x2)/2,(y1+y2)/2,mdFmt(Math.hypot(x2-x1,y2-y1)))).join('')+'</g>';}
 function guidesSVG(){if(!GUIDES.length)return '';const k=1/view.s,ext=12*k;return '<g pointer-events="none">'+GUIDES.map(g=>g.x!==undefined?`<line x1="${g.x}" y1="${g.y0-ext}" x2="${g.x}" y2="${g.y1+ext}"`:`<line x1="${g.x0-ext}" y1="${g.y}" x2="${g.x1+ext}" y2="${g.y}"`).map(l=>l+` stroke="#ff2d95" stroke-width="1.3" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"/>`).join('')+'</g>';}
 function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(pinch){if(P.size<2)pinch=null;G=null;return;}
@@ -4941,7 +4951,7 @@ function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(g.mode==='tip'){if(g.moved){commit();renderNow();}return;}
  if(g.mode==='wmid'){if(g.moved){commit();renderNow();updateBar();toast('החוט הוזז — הוא נשאר בגובה הזה');}else select(g.id,g.add);return;}
  if(g.mode==='mdoff'){GUIDES=[];if(g.moved){commit();renderNow();updateBar();}else{const now=Date.now(),dbl=LASTTAP.id===g.id&&now-LASTTAP.t<450&&Math.hypot(e.clientX-LASTTAP.x,e.clientY-LASTTAP.y)<24;LASTTAP={id:g.id,t:dbl?0:now,x:e.clientX,y:e.clientY};select(g.id,g.add);if(dbl&&get(g.id))mdQuick(get(g.id));}return;}
- if(DROPFULL&&g.mode==='drag'&&g.moved)toast('אין מקום פנוי בפס הזה לרכיב — פנה מקום או הארך את הפס');DROPR=null;DROPFULL=false;if(PORTHIT){PORTHIT=null;render();}if(GUIDES.length){GUIDES=[];render();}
+ if(DROPFULL&&g.mode==='drag'&&g.moved)toast('אין מקום פנוי בפס הזה לרכיב — פנה מקום או הארך את הפס');DROPR=null;DROPFULL=false;if(PORTHIT){PORTHIT=null;render();}if(GUIDES.length||DDIMS){GUIDES=[];DDIMS=null;render();}
  if(g.mode==='cutx')return;
  if(g.mode==='cpt'){CGUIDE=[];PORTHIT=null;const o=g.o,R=o.p.route;if(!g.moved){if(g.added){R.splice(g.i,1);}else if(g.i>0&&g.i<R.length-1){R.splice(g.i,1);toast('הכיפוף הוסר');}else{renderNow();return;}}
   if(CABRT[o.type])o.p.cl=Math.round((CABLEN[o.type]||0)+senLen(o));else cabRecentre(o);commit();renderNow();updateBar();return;}
@@ -5200,6 +5210,7 @@ function editDialog(){const o=sel&&get(sel);
  const D=DEF[o.type];let h=`<div class="fld"><label>שם הרכיב</label><input id="f_name" value="${esc(o.p.name)}"></div>`;
  D.edit.forEach(k=>{const v=o.p[k]??'';
   if(D.sel&&D.sel[k])h+=`<div class="fld"><label>${(D.lbl&&D.lbl[k])||FL[k]||k}</label><select id="f_${k}">${D.sel[k].map(([a,b])=>`<option value="${a}" ${String(a)===String(v)?'selected':''}>${b}</option>`).join('')}</select></div>`;
+  else if(D.lbl&&D.lbl[k])h+=`<div class="fld"><label>${D.lbl[k]}</label><input id="f_${k}" ${['len','w','h'].includes(k)||(D.num&&D.num.includes(k))?'type="number" inputmode="numeric"':''} value="${esc(v)}"></div>`;
   else if(k==='color')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_color">${Object.keys(COLORS).map(c=>`<option value="${c}" ${c===o.p.color?'selected':''}>${CNAME[c]}</option>`).join('')}</select></div>`;
   else if(k==='kind'&&o.type!=='floor'&&o.type!=='nrack')h+=`<div class="fld"><label>${FL[k]}</label><select id="f_kind">${Object.entries(TBCOL).map(([a,q])=>`<option value="${a}" ${a===v?'selected':''}>${q[0]}</option>`).join('')}</select></div>`;
   else if(k==='tsz')h+=`<div class="fld"><label>גודל — חתך המוליך (רוחב המהדק)</label><select id="f_tsz">${Object.entries(TBSZ).filter(([a])=>o.type!=='tbd'||TBDH[a]).map(([a,z])=>`<option value="${a}" ${a===String(v||'4')?'selected':''}>${a} ממ"ר — ${z[0]} מ"מ</option>`).join('')}</select></div>`;
