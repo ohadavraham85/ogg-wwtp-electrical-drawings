@@ -26,6 +26,7 @@ Live at https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/ (GitHub Pa
   - Background pictures: part type `underlay` (`p.src` JPEG data URL ≤ ~420 KB, or `p.svg`+`p.vb` from a DXF; size `iw×ih` × `fs`). Drawn on its own layer `#ulay` (`renderUlay`), only placeholders in `#world`; exports include it only with `exp:'1'`. Import `ulImport` (image / PDF via `vendor/pdfjs` / DXF), calibration `calStart`, manager `ulManager`.
   - Communication racks: `nrack` (19"/10", U count, wall/floor; `nrDim`) and rack equipment `nequip` (`ru:true`, `p.k` kind, `p.u` height); equipment snaps to U slots (`rackU`) and is added into the first free U (`rackFree`).
   - Look: `body.pro` (default; `uiPro` / `togglePro`, localStorage `ohadcad.look` = 'classic' turns it off) is a CSS layer over the classic orange/black theme — graphite tokens, 1px neutral lines, flat controls, amber tint for `.on`, toast at the bottom; on wide screens the recent-parts bar `#favBar` sits in the file/export row (`--toph3:0`, width from `dtwSync` → `--dtw`). `body.pro.uil` is its light variant.
+  - Language: localStorage `ohadcad.lang` 'en' loads `i18n/en.js` (`OHAD_EN` Hebrew → English, keys without a leading icon; `OHAD_EN_RX` patterns) and `I18N` swaps text nodes / titles / placeholders / options outside `#stage` (MutationObserver); drawer tile "English" (`toggleLang`, reloads). Add new UI strings to `i18n/en.js`.
   - Ctrl+P / ⌘P: `ohadPrint` (capture-phase keydown; preview open → prints the chosen pages, else `printPreview`); the shell forwards the key to `window.ohadPrint`.
   - Phone portrait (max-width 600, min-height 501; `PHONE_MQ`): one 52 px top row (menu, name, save state, undo / redo), recent parts strip only when not empty, the tool rail `#rail` fixed along the bottom, no rulers, `#docTabs` hidden (its user-placed buttons move into the rail and the save state into the top row via `phoneLayout`, also called from `tbApply`); the shell hides its own top bar there.
   - Toolbar order: `tbApply` / `tbStore`, kept per device in localStorage.
@@ -58,6 +59,7 @@ Live at https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/ (GitHub Pa
 - `vendor/firebase/`: firebase 12.19 compat bundles (app, auth, firestore).
 - `vendor/three/`: three.js r160 (three.min.js), loaded only when the 3D view opens.
 - `vendor/qrcode/`: qrcode-generator 1.4.4 (MIT), loaded with cad.html for the QR part.
+- `i18n/en.js`: the English dictionary for the app's frame.
 - `vendor/pdfjs/`: pdf.js 3.11.174 (pdf.min.js + worker), loaded only when a PDF is imported as a background.
 - `LICENSE` (proprietary), `THIRD_PARTY_NOTICES.md`, `legal/` (Hebrew drafts of terms, privacy, accessibility — not linked until approved; then list them in `LEGAL` in `cad.html`, shown in the drawer's "אודות" dialog `aboutDialog`), `docs/COMMERCIAL.md` (commercialisation plan).
 - The title-block default logo (`DEFAULT_LOGO`, the owner's organisation) is used only for the owner (`defLogo()`, bridge `me().owner`).

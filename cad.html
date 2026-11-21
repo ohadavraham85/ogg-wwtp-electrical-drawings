@@ -4108,6 +4108,27 @@ function dropSVG(){if(!DROPR||!G||G.mode!=='drag')return '';const B=bbW(DROPR),m
    tool follows it (same localStorage key, picked up by its storage event). */
 const UI_KEY='ohadcad.ui';
 function uiLight(){try{return localStorage.getItem(UI_KEY)==='light';}catch(e){return false;}}
+/* ================= language =================
+   English swaps the frame's text (toolbars, menus, tabs, library, field names,
+   dialogs) through a dictionary loaded from i18n/en.js; the drawing itself and
+   what the user typed stay as they are. Text that has no entry stays Hebrew. */
+const LANG_KEY='ohadcad.lang';
+function uiLang(){try{return localStorage.getItem(LANG_KEY)||'he';}catch(e){return 'he';}}
+const I18N={on:false,D:null,RX:[],busy:false,
+ key(t){return t.replace(/^[^\p{L}\p{N}"'(]+/u,'');},
+ tr(t){if(!t||!/[֐-׿]/.test(t))return null;const lead=t.match(/^\s*/)[0],tail=t.match(/\s*$/)[0],core=t.trim(),k=this.key(core),pre=core.slice(0,core.length-k.length);
+  let r=this.D[core]??this.D[k];if(r!=null)return lead+(this.D[core]!=null?r:pre+r)+tail;
+  let x=core,hit=false;for(const [re,rp] of this.RX){const y=x.replace(re,rp);if(y!==x){hit=true;x=y;}}return hit?lead+x+tail:null;},
+ skip(el){return !el||el.closest('#stage,#inEdit,svg text')||el.isContentEditable;},
+ node(n){if(n.nodeType===3){const el=n.parentElement;if(this.skip(el)||/^(SCRIPT|STYLE|TEXTAREA)$/.test(el.tagName))return;const r=this.tr(n.nodeValue);if(r!=null&&r!==n.nodeValue)n.nodeValue=r;return;}
+  if(n.nodeType!==1||this.skip(n))return;for(const a of ['title','placeholder']){const v=n.getAttribute&&n.getAttribute(a);if(v){const r=this.tr(v);if(r!=null&&r!==v)n.setAttribute(a,r);}}
+  if(n.tagName==='OPTION'){const r=this.tr(n.textContent);if(r!=null)n.textContent=r;return;}
+  for(const c of [...n.childNodes])this.node(c);},
+ start(){if(!window.OHAD_EN)return;this.D=window.OHAD_EN;this.RX=window.OHAD_EN_RX||[];this.on=true;document.documentElement.lang='en';
+  this.node(document.body);new MutationObserver(ms=>{if(this.busy)return;this.busy=true;try{for(const m of ms){if(m.type==='characterData')this.node(m.target);else if(m.type==='attributes')this.node(m.target);else m.addedNodes.forEach(x=>this.node(x));}}finally{this.busy=false;}})
+   .observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['title','placeholder']});}};
+if(uiLang()==='en'){const sc=document.createElement('script');sc.src='i18n/en.js';sc.onload=()=>I18N.start();document.head.appendChild(sc);}
+function toggleLang(){const en=uiLang()!=='en';try{localStorage.setItem(LANG_KEY,en?'en':'he');}catch(e){}toast(en?'Switching to English…':'עובר לעברית…');setTimeout(()=>{try{if(SH&&SH.refresh){SH.refresh();return;}}catch(e){}location.reload();},400);}
 const PRO_KEY='ohadcad.look';
 function uiPro(){try{return localStorage.getItem(PRO_KEY)!=='classic';}catch(e){return true;}}
 function applyUI(){document.body.classList.toggle('uil',uiLight());document.body.classList.toggle('pro',uiPro());}
@@ -4170,6 +4191,7 @@ const IC={
  users:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17" cy="9" r="2.4"/><path d="M16.5 14.6c2.6.2 4.5 2 4.5 4.9"/>',
  archive:'<rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/>',
  logout:'<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 8l-4 4 4 4M6 12h10"/>',
+ lang:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.8 5.7 3.8 9s-1.2 6.3-3.8 9c-2.6-2.7-3.8-5.7-3.8-9S9.4 5.7 12 3z"/>',
  sync:'<path d="M20 7a8.5 8.5 0 0 0-15 1M4 4v4h4M4 17a8.5 8.5 0 0 0 15-1M20 20v-4h-4"/>',
  ruler:'<path d="M3 16.5L16.5 3 21 7.5 7.5 21z"/><path d="M7 12.5l2 2M10 9.5l1.5 1.5M13 6.5l2 2"/>'};
 const ico=k=>`<svg viewBox="0 0 24 24" class="lic">${IC[k]}</svg>`;
@@ -5357,7 +5379,7 @@ function openDrawer(){const T=(ic,n,fn,tip,on)=>({ic,n,fn,tip:tip||n,on:!!on});
    T('num','מספור חוטים',numberWires,'מספר חוטים לפי נקודות פוטנציאל'),T('tag','מספרי חוטים',toggleWN,'הצג / הסתר את מספרי החוטים',state.wnShow),T('table','טבלאות',()=>wireTables(),'טבלאות חוטים, מהדקים וכבלים'),T('labels','מדבקות',printLabels,'מדבקות מספרי חוטים'),
    T('cloudr','As-Built',abList,state.ab&&state.ab.on?'As-Built פעיל — רשימת שינויים / קבלה':'התחל As-Built: סימון שינויים בענן',state.ab&&state.ab.on)]},
   {k:'bg',t:'רקע לשרטוט',it:[T('png','ייבוא רקע',ulImport,'ייבוא תמונה / PDF / DXF כרקע'),T('layers','ניהול רקעים',ulManager,'תמונות רקע — נעילה, שקיפות, כיול')]},
-  {k:'view',t:'תצוגה',it:[T('gear','הגדרות',displayDialog,'גופן והגדלה'),T(uiLight()?'moon':'sun',uiLight()?'מצב כהה':'מצב בהיר',toggleUI,'צבע האפליקציה: בהיר / כהה'),T('palette','עיצוב קלאסי',togglePro,'מעבר בין העיצוב החדש לקלאסי (כתום־שחור)',!uiPro()),T('tools','כפתורים',tbEditor,'הסתרת כפתורים / איפוס הסרגלים'),
+  {k:'view',t:'תצוגה',it:[T('gear','הגדרות',displayDialog,'גופן והגדלה'),T(uiLight()?'moon':'sun',uiLight()?'מצב כהה':'מצב בהיר',toggleUI,'צבע האפליקציה: בהיר / כהה'),T('palette','עיצוב קלאסי',togglePro,'מעבר בין העיצוב החדש לקלאסי (כתום־שחור)',!uiPro()),T('lang',uiLang()==='en'?'עברית':'English',toggleLang,uiLang()==='en'?'Switch the app to Hebrew':'החלף את שפת האפליקציה לאנגלית'),T('tools','כפתורים',tbEditor,'הסתרת כפתורים / איפוס הסרגלים'),
    T('dots','נקודות חיבור',toggleTerms,'הדגשת נקודות החיבור',showTerms),T('axes','צירים',toggleAxes,'צירים וסרגלים',showAxes),T('origin','ראשית לרכיב',setOrigin,'קבע ראשית צירים בפינת הרכיב הנבחר'),T('reset','איפוס ראשית',resetOrigin,'ראשית צירים בפינת השרטוט')]},
   ...(sh.length||(SH&&SH.prefs&&SH.prefs.test)?[{k:'acc',t:'חשבון',it:[...sh.map(x=>T(x[2]||shIc(x[0]),shN(x[0]),x[1],String(x[0]).replace(/^[^\p{L}\d(]+/u,''))),...(SH&&SH.prefs&&SH.prefs.test?[T('sync','סנכרון',prefsCheck,'בדיקת סנכרון מועדפים בין מכשירים')]:[])]}]:[])];
  const O=dsecOpen(),fl=[];let h=`<div class="dhead"><img src="icons/wordmark-${uiLight()?'light':'dark'}.svg" alt="OhadCad" height="24"><button class="dx" data-x="1" title="סגור">✕</button></div><div class="dproj"><b>${esc(state.name)}</b><span>${[state.dwgno?'מס׳ '+esc(state.dwgno):'',state.rev!=null&&state.rev!==''?'Rev '+esc(String(state.rev)):''].filter(Boolean).join(' · ')||'&nbsp;'}</span></div>`;
