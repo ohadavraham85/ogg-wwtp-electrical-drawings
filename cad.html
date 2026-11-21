@@ -325,7 +325,7 @@ body.sld #xh,body.sld #yh{background:rgba(194,65,12,.5)}
 body.uil #sbar button{border-bottom-color:#6b7280}body.uil #sbar button.on{color:#000}
 body.noaxes #sbar{bottom:calc(10px + env(safe-area-inset-bottom))}body.noaxes #sbar #coord{display:none}
 body:has(#wireBar:not(.hidden)) #sbar,body:has(#measBar:not(.hidden)) #sbar,body.libdrag #sbar{display:none}
-body:has(#wireBar:not(.hidden)) #lyTabs,body.libdrag #lyTabs{display:none!important}
+body.libdrag #lyTabs{display:none!important}
 #lyTabs{position:fixed;z-index:4;display:flex;align-items:center;gap:3px;padding:3px;background:var(--card);border:1.5px solid var(--acc);border-radius:4px;box-shadow:0 4px 14px rgba(0,0,0,.5);direction:rtl;overflow-x:auto;scrollbar-width:none}#lyTabs::-webkit-scrollbar{display:none}#lyTabs.glued{border-top-left-radius:0;border-bottom-left-radius:0;box-sizing:border-box}body:has(#lyTabs.glued) #sbar{border-top-right-radius:0;border-bottom-right-radius:0}#lyTabs .lysep{flex:none;width:2px;align-self:stretch;margin:2px 3px;background:var(--acc);opacity:.6}#lyTabs button.doc.cur{border-color:var(--acc)}
 #lyTabs button{flex:none;padding:6px 10px;border-radius:4px;font:700 13px Heebo,Arial,sans-serif;background:var(--ctl);border:1px solid var(--ctl-bd);border-bottom:2px solid #6b7280;color:var(--txt);white-space:nowrap}#lyTabs button.on{background:linear-gradient(180deg,var(--acc-light),var(--acc));color:#000;border-color:var(--acc-light);border-bottom-color:#a35a00}#lyTabs button small{font-weight:400;opacity:.75;margin-right:7px;font-size:11px}#lyTabs .add{padding:6px 11px;font-size:15px}
 @media (max-width:600px){#lyTabs button{padding:5px 7px;font-size:12px}#lyTabs .lyl,#lyTabs button small{display:none}}
@@ -767,7 +767,7 @@ const COLORS={red:'#c62828',green:'#1f9d55',blue:'#1d5fd1',orange:'#c26a12',oliv
 const CNAME={red:'אדום',green:'ירוק',blue:'כחול',orange:'כתום',olive:'זית',yellow:'צהוב',white:'לבן',grey:'אפור',black:'שחור'};
 const ACC=['mcb','pb','pbl','pl22'];
 const CISZ={K1:{w:80,h:131,n:'CI-K1 131×80'},K2:{w:100,h:181,n:'CI-K2 181×100'},K3:{w:120,h:222,n:'CI-K3 222×120'},K4:{w:160,h:240,n:'CI-K4 240×160'},K5:{w:200,h:280,n:'CI-K5 280×200'},C1:{w:187.5,h:250,n:'Ci 250×187.5'},C2:{w:250,h:375,n:'Ci 375×250'},C3:{w:375,h:250,n:'Ci 250×375'},C4:{w:375,h:375,n:'Ci 375×375'}};
-const WCOL={brown:{base:'#8b5a2b',n:'חום'},black:{base:'#1d1d1d',n:'שחור'},grey:{base:'#8f8f8f',n:'אפור'},blue:{base:'#2563eb',n:'כחול'},yg:{base:'#f2c94c',dash:'#16a34a',n:'צהוב-ירוק'},red:{base:'#dc2626',n:'אדום'},white:{base:'#f1f1f1',n:'לבן'},orange:{base:'#f97316',n:'כתום'},bo:{base:'#8b5a2b',dash:'#f97316',n:'חום-כתום'},bk:{base:'#8b5a2b',dash:'#1d1d1d',n:'חום-שחור'}};
+const WCOL={brown:{base:'#8b5a2b',n:'חום'},black:{base:'#1d1d1d',n:'שחור'},grey:{base:'#8f8f8f',n:'אפור'},blue:{base:'#2563eb',n:'כחול'},yg:{base:'#f2c94c',dash:'#16a34a',n:'צהוב-ירוק'},red:{base:'#dc2626',n:'אדום'},white:{base:'#f1f1f1',n:'לבן'},orange:{base:'#f97316',n:'כתום'},bo:{base:'#8b5a2b',dash:'#f97316',n:'חום-כתום'},bk:{base:'#8b5a2b',dash:'#1d1d1d',n:'חום-שחור'},purple:{base:'#7c3aed',n:'סגול'},yellow:{base:'#facc15',n:'צהוב'},green:{base:'#16a34a',n:'ירוק'},pink:{base:'#ec4899',n:'ורוד'},turq:{base:'#14b8a6',n:'טורקיז'},lblue:{base:'#7dd3fc',n:'תכלת'},navy:{base:'#1e3a8a',n:'כחול כהה'},violet:{base:'#c4b5fd',n:'סגול בהיר'},beige:{base:'#d6c29b',n:'בז׳'},gold:{base:'#b8860b',n:'זהב'},rw:{base:'#dc2626',dash:'#f1f1f1',n:'אדום-לבן'},bw:{base:'#2563eb',dash:'#f1f1f1',n:'כחול-לבן'},wb:{base:'#f1f1f1',dash:'#1d1d1d',n:'לבן-שחור'},rb:{base:'#dc2626',dash:'#1d1d1d',n:'אדום-שחור'},gy:{base:'#16a34a',dash:'#facc15',n:'ירוק-צהוב'},pw:{base:'#7c3aed',dash:'#f1f1f1',n:'סגול-לבן'}};
 const SEC={'0.75':1.8,'1':2,'1.5':2.3,'2.5':2.7,'4':3.1,'6':3.6,'10':4.4,'16':5.2};
 const SECK=['0.75','1','1.5','2.5','4','6','10','16'];
 let GRID=10;try{const g=localStorage.getItem('epd.grid');if(g!==null)GRID=+g;}catch(e){}
@@ -1010,11 +1010,13 @@ function tagBox(t,cx,cy,maxW,maxH){const cw=.58,pad=.7;let fz=Math.min(110,maxH/
 /* a junction box's columns: its terminals, then the devices fitted in it
    (NO / NC pushbuttons, lamps, a buzzer), each with a top and a bottom connection */
 function sjbGeo(o){const n=Math.max(0,+o.p.n||0),a=+o.p.n0||1,pb=+o.p.pb||0,pbc=+o.p.pbc||0,lp=+o.p.lp||0,bz=+o.p.bz?1:0,C=[];
- for(let i=0;i<n;i++)C.push({k:'t',w:14,lab:String(a+i),t1:String(a+i),t2:String(a+i)});
+ for(let i=0;i<n;i++)C.push({k:'t',w:22,lab:String(a+i),t1:String(a+i),t2:String(a+i)});
  let si=1;for(let i=0;i<pb;i++,si++)C.push({k:'no',w:20,lab:'S'+si,t1:'S'+si+'.13',t2:'S'+si+'.14'});for(let i=0;i<pbc;i++,si++)C.push({k:'nc',w:20,lab:'S'+si,t1:'S'+si+'.11',t2:'S'+si+'.12'});
  for(let i=0;i<lp;i++)C.push({k:'lp',w:20,lab:'H'+(i+1),t1:'H'+(i+1)+'.X1',t2:'H'+(i+1)+'.X2'});if(bz)C.push({k:'bz',w:20,lab:'HA1',t1:'HA1.1',t2:'HA1.2'});
- if(!C.length)C.push({k:'t',w:14,lab:String(a),t1:String(a),t2:String(a)});
- const inner=C.reduce((t,c)=>t+c.w,0)+(n&&C.length>n?6:0),W=inner+12;let x=-W/2+6,split=0;C.forEach((c,i)=>{if(i===n&&n)x+=6,split=x-3;c.x=r2(x+c.w/2);x+=c.w;});return {W,cols:C,split:n&&C.length>n?split:0};}
+ if(!C.length)C.push({k:'t',w:22,lab:String(a),t1:String(a),t2:String(a)});
+ const inner=C.reduce((t,c)=>t+c.w,0)+(n&&C.length>n?6:0),W=inner+8;let x=-W/2+4,split=0;C.forEach((c,i)=>{if(i===n&&n)x+=6,split=x-3;c.x=r2(x+c.w/2);x+=c.w;});return {W,cols:C,split:n&&C.length>n?split:0};}
+/* junction box bridges: p.br like "1-2, 4-6" (terminal numbers) → [[firstCol,lastCol],...] */
+function sjbBr(o,G){const R=[],ix={};G.cols.forEach((c,i)=>{if(c.k==='t')ix[c.lab]=i;});String(o.p.br||'').split(/[,;\s]+/).forEach(t=>{const m=t.match(/^(\d+)[-–](\d+)$/);if(!m)return;let a=ix[m[1]],b=ix[m[2]];if(a==null||b==null||a===b)return;if(a>b)[a,b]=[b,a];R.push([a,b]);});return R;}
 const tcabDbl=o=>o.p.dk?o.p.dk==='2':+o.p.w>=1000;
 function roomDimG(o){const W=+o.p.w,H=+o.p.h;return [Math.max(250,Math.min(600,Math.min(W,H)/8)),Math.max(80,Math.min(170,Math.min(W,H)/22))];}
 function roomDims(o){const t=+o.p.wt||0,W=+o.p.w,H=+o.p.h,ow=W+2*t,oh=H+2*t,[g,f]=roomDimG(o),lw=Math.max(5,f/14),c='#1d4ed8',k=f*.45;
@@ -2125,21 +2127,22 @@ const SDEF={
    s+=sT(42,-6,'ATS480',8)+sT(42,6,'A2 B2 C2 — עקיפה',5,700);
    ['L1','L2','L3'].forEach((l,i)=>s+=txt(-45+i*20+2.5,-31,l,5,SK,700,'start'));['T1','T2','T3'].forEach((l,i)=>s+=txt(-45+i*20+2.5,33,l,5,SK,700,'start'));['A2','B2','C2'].forEach((l,i)=>s+=txt(25+i*20+2.5,33,l,5,SK,700,'start'));
    return s+sLbl(o,170);}},
- sjb:{layer:4,sld:true,edit:['tag','n','n0','pb','pbc','lp','bz','desc'],def:{tag:'JB1',n:'4',n0:'1',pb:'0',pbc:'0',lp:'0',bz:'0',desc:'קופסת חיבורים'},
-  lbl:{n:'מספר מהדקים',n0:'מספור מהדק ראשון',pb:'לחצנים פתוחים (NO)',pbc:'לחצנים סגורים (NC)',lp:'נורות סימון',bz:'זמזם'},
+ sjb:{layer:4,sld:true,edit:['tag','n','n0','br','pb','pbc','lp','bz','desc'],def:{tag:'JB1',n:'4',n0:'1',br:'',pb:'0',pbc:'0',lp:'0',bz:'0',desc:'קופסת חיבורים'},
+  lbl:{br:'גישורים בין מהדקים (למשל 1-2, 4-6)',n:'מספר מהדקים',n0:'מספור מהדק ראשון',pb:'לחצנים פתוחים (NO)',pbc:'לחצנים סגורים (NC)',lp:'נורות סימון',bz:'זמזם'},
   sel:{n:[...Array(25)].map((_,i)=>[String(i),String(i)]),pb:[0,1,2,3,4].map(v=>[String(v),String(v)]),pbc:[0,1,2].map(v=>[String(v),String(v)]),lp:[0,1,2,3].map(v=>[String(v),String(v)]),bz:[['0','בלי'],['1','עם זמזם']]},
-  size:o=>{const G=sjbGeo(o);return {w:G.W,h:50};},
-  terms:o=>{const G=sjbGeo(o),T=[];G.cols.forEach(c=>{T.push([c.x,-25,c.t1]);T.push([c.x,25,c.t2]);});return T;},
-  draw:o=>{const G=sjbGeo(o);let s=`<rect x="${-G.W/2}" y="-17" width="${G.W}" height="34" rx="3" fill="#fff" stroke="${SK}" stroke-width="1.3" stroke-dasharray="5 3"/>`;
+  size:o=>{const G=sjbGeo(o);return {w:G.W,h:40};},
+  terms:o=>{const G=sjbGeo(o),T=[];G.cols.forEach(c=>{T.push([c.x,-20,c.t1]);T.push([c.x,20,c.t2]);});return T;},
+  draw:o=>{const G=sjbGeo(o);let s=`<rect x="${-G.W/2}" y="-20" width="${G.W}" height="40" rx="3" fill="#fff" stroke="${SK}" stroke-width="1.3" stroke-dasharray="5 3"/>`;
    G.cols.forEach(c=>{const x=c.x;
-    if(c.k==='t'){s+=sL(x,-25,x,-6)+sL(x,6,x,25)+`<rect x="${x-5}" y="-6" width="10" height="12" fill="#fff" stroke="${SK}" stroke-width="1"/><circle cx="${x}" cy="0" r="2" fill="${SK}"/><rect x="${x-5.5}" y="-14.6" width="11" height="7" fill="#fff"/>`+txt(x,-11,c.lab,4.6,SK,700);return;}
-    s+=sL(x,-25,x,-9)+sL(x,9,x,25);
+    if(c.k==='t'){s+=sL(x,-20,x,-3.4)+sL(x,3.4,x,20)+sC(x,0,3.4,'#fff')+sL(x-4.6,4.6,x+4.6,-4.6,1)+txt(x+2.2,-13,c.lab,4.4,SK,700,'start');return;}
+    s+=sL(x,-20,x,-9)+sL(x,9,x,20);
     if(c.k==='no')s+=sL(x,9,x-6,-6,1.3)+sL(x-3,1.5,x-11,1.5,1)+sL(x-11,-2,x-11,5,1.2);
     else if(c.k==='nc')s+=sL(x,9,x+5,-10,1.3)+sL(x,-9,x+6,-9,1.3)+sL(x+2.5,0,x-8,0,1)+sL(x-8,-3.5,x-8,3.5,1.2);
     else if(c.k==='lp')s+=sL(x,-9,x,-6)+sL(x,6,x,9)+sC(x,0,6,'#fff')+sL(x-4.2,-4.2,x+4.2,4.2,1)+sL(x-4.2,4.2,x+4.2,-4.2,1);
     else if(c.k==='bz')s+=sL(x,-9,x,-3)+sL(x,3,x,9)+`<path d="M${x-7} 3H${x+7}A7 7 0 0 0 ${x-7} 3Z" fill="#fff" stroke="${SK}" stroke-width="1.2" transform="rotate(180 ${x} 0)"/>`;
-    s+=txt(x+2,-13,c.lab,3.6,SK,700,'start');});
-   if(G.split)s+=`<path d="M${G.split} -17V17" stroke="${SK}" stroke-width=".8" stroke-dasharray="2 2"/>`;
+    s+=txt(x+2,-14,c.lab,3.6,SK,700,'start');});
+   sjbBr(o,G).forEach(([a,b],k)=>{const y=k%2?14.5:10;s+=sL(G.cols[a].x,y,G.cols[b].x,y,1.2);for(let i=a;i<=b;i++)s+=`<circle cx="${G.cols[i].x}" cy="${y}" r="1.3" fill="${SK}"/>`;});
+   if(G.split)s+=`<path d="M${G.split} -20V20" stroke="${SK}" stroke-width=".8" stroke-dasharray="2 2"/>`;
    return s+sLbl(o,G.W);}},
  spsu:{layer:4,sld:true,edit:['tag','pk','rating','desc'],def:{tag:'G1',pk:'acdc',rating:'24VDC 5A',desc:'ספק כוח'},lbl:{pk:'סוג'},sel:{pk:[['acdc','AC/DC — כניסה L N, יציאה + −'],['dcdc','DC/DC — כניסה + −, יציאה + −']]},
   ratings:['24VDC 2.5A','24VDC 5A','24VDC 10A','24VDC 20A','12VDC 5A','48VDC 5A'],size:()=>({w:60,h:70}),
@@ -3818,8 +3821,8 @@ function saveProjects(p){try{localStorage.setItem('epd.projects',JSON.stringify(
 /* ================= UI: top bar ================= */
 /* Selecting a single part opens its properties at the side (on a wide screen); deselecting closes them.
    Closing the panel by hand keeps it closed until another part is selected. */
-let AUTOP=null;
-function autoProps(){const n=selIds().length;if(!sel||n!==1){if(!sel){AUTOP=null;if(pMode==='props')closePanel();}return;}
+let AUTOP=null,PANEL_SEL=null;
+function autoProps(){const n=selIds().length;if(!sel||n!==1){if(!sel){AUTOP=null;if(pMode==='props'&&PANEL_SEL)closePanel();}return;}
  if(sel===AUTOP||innerWidth<760||PEN||measMode||wireMode||(typeof BRUSH!=='undefined'&&BRUSH))return;AUTOP=sel;const id=sel;setTimeout(()=>{if(sel===id&&selIds().length===1&&get(id))editDialog();},0);}
 function updateBar(){const o=sel&&get(sel);if($('bAlign'))$('bAlign').disabled=selIds().length<2;setTimeout(autoProps,0);{const df=doorsFront();$('bDoor').disabled=df===null;$('bDoor').classList.toggle('on',df===true);$('bDoor').title=df?'הצג את פנים הלוח':'הצג את חזית הלוח (דלת סגורה)';}$('bLockAll').classList.toggle('on',globalLock);$('bText').disabled=wireMode||globalLock;{const o2=sel&&get(sel);$('bText').title=o2&&o2.type!=='wire'&&o2.type!=='label'?'הוסף תיבת טקסט ל'+o2.p.name:'הוסף תיבת טקסט';}$('bLockAll').title=globalLock?'פתח עריכה':'נעל עריכה (צפייה בלבד)';['bDel','bLock','bRot','bMir','bDup'].forEach(b=>$(b).disabled=!o||wireMode);if(!o)$('bMir').classList.remove('on');$('bOrder').disabled=!selIds().length||wireMode||globalLock;$('bLock').disabled=!selIds().length||wireMode;$('rWire').classList.toggle('on',wireMode);$('bMeas').classList.toggle('on',!!measMode);if(pMode!=='lib')DRAWOPEN=false;$('rAdd').classList.toggle('on',pMode==='lib'&&!DRAWOPEN);$('bDraw').classList.toggle('on',pMode==='lib'&&DRAWOPEN);$('rProps').classList.toggle('on',pMode==='props');$('libStrip').classList.toggle('on',pMode==='lib');
  {const ids=selIds(),many=ids.length>1||(o&&isBox(o)),lk=ids.length&&ids.every(i=>get(i)?.locked);if(ids.length)$('lockLbl').textContent=lk?(many?'שחרר הכל':'שחרר רכיב'):(many?'נעל הכל':'נעל רכיב');}
@@ -3876,7 +3879,7 @@ function grpTitle(t){t=String(t).split(';')[0];const i=t.indexOf(' — ');if(i>0
 function itemBtn(ti,gi,ii,e){const fv=favList(LIB[ti]?.sld?'sld':'panel').includes(e.n);return `<button class="item" data-t="${ti}" data-g="${gi}" data-ii="${ii}"><span class="favstar${fv?' on':''}" data-fav="${esc(e.n)}" data-fk="${LIB[ti]?.sld?'sld':'panel'}" title="${fv?'הסר מהמועדפים':'הוסף למועדפים'}">${fv?'★':'☆'}</span><div class="th${DEF[e.t]?.sld?' lt':''}">${thumbOf(e)}</div><div class="nm ${/[א-ת]/.test(e.n)?'he':''}">${e.n}</div></button>`;}
 // a library item's picture, made once per item (and colour, for parts drawn in the chosen colour)
 const THC=new WeakMap();function thumbOf(e){const k=ACC.includes(e.t)?curColor:'';let m=THC.get(e);if(!m){m={};THC.set(e,m);}return m[k]??(m[k]=thumbSVG(mkObj(e,true)));}
-function openPanel(m,title){pMode=m;$('panel').classList.remove('hidden');$('panel').classList.toggle('lib',m==='lib');$('panel').classList.toggle('half',m==='props'&&innerWidth<600);$('libWrap').style.display=m==='lib'?'':'none';$('propsBody').style.display=m==='props'?'':'none';$('pTitle').textContent=title||'';if(m==='lib')buildSheet();updateBar();}
+function openPanel(m,title){if(m==='props')PANEL_SEL=sel||null;pMode=m;$('panel').classList.remove('hidden');$('panel').classList.toggle('lib',m==='lib');$('panel').classList.toggle('half',m==='props'&&innerWidth<600);$('libWrap').style.display=m==='lib'?'':'none';$('propsBody').style.display=m==='props'?'':'none';$('pTitle').textContent=title||'';if(m==='lib')buildSheet();updateBar();}
 function closePanel(){pMode=null;$('panel').classList.add('hidden');updateBar();}
 $('pClose').onclick=closePanel;
 $('rAdd').onclick=$('libStrip').onclick=()=>{if(pMode==='lib')closePanel();else{if(wireMode)setWire(false);openPanel('lib','הוספת רכיב');}};
@@ -4083,7 +4086,7 @@ function addItem(e){if((e.t==='shrect'||e.t==='shellipse'||e.t==='shline'||e.t==
 function ensureVisible(o){const r=svg.getBoundingClientRect();const sx=o.x*view.s+view.tx,sy=o.y*view.s+view.ty;if(sx<20||sx>r.width-20||sy<topBottom()+20||sy>sheetTop()-80){const [cx,cy]=viewCenter();view.tx+=(cx-o.x)*view.s;view.ty+=(cy-o.y)*view.s;applyView();}}
 
 /* ================= wiring ================= */
-function setWire(on){if(on&&measMode)setMeas(null);wireMode=on;if(!on&&draft)finishWire();draft=null;if(on&&pMode)closePanel();buildWirePanel();renderNow();updateBar();}
+function setWire(on){if(on&&measMode)setMeas(null);wireMode=on;if(!on&&draft)finishWire();draft=null;if(on&&pMode)closePanel();buildWirePanel();renderNow();updateBar();setTimeout(layPos,0);}
 function nearestTerm(x,y,rad){let best=null,bd=rad;for(const o of state.objs){if(o.type==='wire')continue;termsOf(o).forEach((t,i)=>{const [X,Y]=fromLocal(o,t[0],t[1]);const d=Math.hypot(X-x,Y-y);if(d<bd){bd=d;best={r:o.id,t:i};}});}return best;}
 function wireTap(x,y){const tr=nearestTerm(x,y,Math.max(5,20/view.s));let pt=tr?tr:{x:gs(x),y:gs(y)};
  if(!draft){if(!tr&&!orth){}draft={pts:[pt]};renderNow();updateBar();return;}
@@ -4481,7 +4484,8 @@ let LYSIG='';function buildLayTabs(){const B=$('lyTabs');if(!B)return;laysInit()
  const cd=curDoc();let h=[['panel','🗄','חזית לוח'],['top','📐','היטל על'],['sld','⚡','חד קווי'],['both','◧','משולב']].map(([d,ic,l0])=>`<button data-ly="m:${d}" class="doc${cd===d&&!a?' on':''}${cd===d&&a?' cur':''}" title="${{panel:'חזית לוח',sld:'חד קווי',top:'היטל על — תוכנית החדרים מלמעלה',both:'חזית וחד קווי יחד'}[d]} — השרטוט עצמו, בלי דף">${ic}<span class="lyl"> ${l0}</span></button>`).join('')+'<span class="lysep"></span>';
  state.lays.forEach(e=>{h+=`<button data-ly="${e.id}" class="${a===e.id?'on':''}" title="${esc(e.name)} — ${e.d==='sld'?'חד קווי':e.d==='top'?'היטל על':'חזית לוח'} · ${e.paper} 1:${e.scale}\nלחיצה כפולה: שם, הגדרות, מחיקה">${e.d==='sld'?'⚡':e.d==='top'?'📐':'🗄'} <bdi>${esc(e.name)}</bdi><small dir="ltr">${e.paper} 1:${e.scale}</small></button>`;});
  h+=`<button class="add" data-ly="add" title="דף ייצור חדש">＋</button>`;B.innerHTML=h;layPos();}
-function layPos(){const B=$('lyTabs'),sb=$('sbar');if(!B||!sb)return;const r=sb.getBoundingClientRect(),cs=getComputedStyle(sb);
+function layPos(){const B=$('lyTabs'),sb=$('sbar');if(!B||!sb)return;const r=sb.getBoundingClientRect(),cs=getComputedStyle(sb),wb=$('wireBar');
+ if(wb&&!wb.classList.contains('hidden')&&wb.getBoundingClientRect().height){B.style.left='max(26px,env(safe-area-inset-left))';B.style.bottom=Math.round(innerHeight-wb.getBoundingClientRect().top+8)+'px';B.style.height='';B.classList.remove('glued');B.style.maxWidth='calc(100vw - 120px)';return;}
  if(cs.display==='none'||!r.width){B.style.left='max(26px,env(safe-area-inset-left))';B.style.bottom=cs.bottom;B.style.height='';B.classList.remove('glued');}
  else{B.style.left=(r.right-1.5)+'px';B.style.bottom=cs.bottom;B.style.height=r.height+'px';B.classList.add('glued');}
  B.style.maxWidth=`calc(100vw - ${Math.round((r.width?r.right:26)+6+86)}px)`;}
@@ -5684,6 +5688,7 @@ function wireNets(objs){const par=new Map(),f=k=>{if(!par.has(k))par.set(k,k);le
  const NM=/^(L1|L2|L3|N|PE|L|\+|−|-|0V|24V)$/;
  objs.forEach(o=>{if(o.type==='wire')return;const T=termsOf(o);if(!T.length)return;const k=i=>`r:${o.id}:${i}`,nm=(i,l)=>{if(l&&NM.test(l))names.set(k(i),l);};
   if(o.type==='tb')u(k(0),k(1));
+  else if(o.type==='sjb'){const G=sjbGeo(o);G.cols.forEach((c,i)=>{if(c.k==='t')u(k(2*i),k(2*i+1));});sjbBr(o,G).forEach(([a,b])=>{for(let i=a+1;i<=b;i++)u(k(2*a),k(2*i));});}
   else if(o.type==='tbd'){u(k(0),k(3));u(k(1),k(2));}
   else if(o.type==='tbf'){if(o.p.lv!=='1')u(k(1),k(2));}
   else if(o.type==='tbg'||o.type==='stb'){const n=T.length/2;for(let i=0;i<n;i++){u(k(i),k(n+i));nm(i,T[i][2]);}}
