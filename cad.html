@@ -3996,7 +3996,9 @@ function insertMeterBlock(model){const [cx,cy]=viewCenter(),made=[],X0=r2(cx),Y0
 let SHP=null;
 function shpStart(e){SHP={e,a:null,cur:null};if(typeof closePanel==='function')closePanel();toast('לחץ על נקודת ההתחלה של הצורה (Esc לביטול)');}
 function shpSVG(){if(!SHP||!SHP.a||!SHP.cur)return '';const [x0,y0,w,h]=shpBox();const el=SHP.e.t==='shellipse';
- return `<g pointer-events="none">${el?`<ellipse cx="${x0+w/2}" cy="${y0+h/2}" rx="${w/2}" ry="${h/2}"`:`<rect x="${x0}" y="${y0}" width="${w}" height="${h}"`} fill="rgba(59,130,246,.08)" stroke="#3b82f6" stroke-width="1.6" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/><circle cx="${SHP.a[0]}" cy="${SHP.a[1]}" r="${4/view.s}" fill="#3b82f6"/></g>`;}
+ return `<g pointer-events="none">${el?`<ellipse cx="${x0+w/2}" cy="${y0+h/2}" rx="${w/2}" ry="${h/2}"`:`<rect x="${x0}" y="${y0}" width="${w}" height="${h}"`} fill="rgba(59,130,246,.08)" stroke="#3b82f6" stroke-width="1.6" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/><circle cx="${SHP.a[0]}" cy="${SHP.a[1]}" r="${4/view.s}" fill="#3b82f6"/>${shpTag(x0+w/2,y0-16/view.s,mdFmt(w))}${shpTag(x0-8/view.s,y0+h/2,mdFmt(h),1)}</g>`;}
+/* a live size label: a dark pill with the length in mm, a fixed size on screen */
+function shpTag(x,y,t,right){const k=1/view.s,fs=13*k,tw=(String(t).length*.62+1.2)*fs,cx=right?x-tw/2:x;return `<rect x="${cx-tw/2}" y="${y-fs*.8}" width="${tw}" height="${fs*1.6}" rx="${fs*.8}" fill="#111827" stroke="#f59e0b" stroke-width="${1.2*k}"/><text x="${cx}" y="${y}" font-size="${fs}" fill="#fff" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Arial">${t}</text>`;}
 function shpBox(){const [ax,ay]=SHP.a,[bx,by]=SHP.cur;let w=Math.abs(bx-ax),h=Math.abs(by-ay);if(SHP.e.n==='עיגול'){const m=Math.max(w,h);w=m;h=m;}
  return [bx<ax?ax-w:ax,by<ay?ay-h:ay,w,h];}
 function shpPt(ev){const [x,y]=toWorld(ev.clientX,ev.clientY);return [gs(x),gs(y)];}
