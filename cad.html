@@ -2117,6 +2117,18 @@ const SDEF={
    s+=sT(42,-6,'ATS480',8)+sT(42,6,'A2 B2 C2 — עקיפה',5,700);
    ['L1','L2','L3'].forEach((l,i)=>s+=txt(-45+i*20+2.5,-31,l,5,SK,700,'start'));['T1','T2','T3'].forEach((l,i)=>s+=txt(-45+i*20+2.5,33,l,5,SK,700,'start'));['A2','B2','C2'].forEach((l,i)=>s+=txt(25+i*20+2.5,33,l,5,SK,700,'start'));
    return s+sLbl(o,170);}},
+ sjb:{layer:4,sld:true,edit:['tag','n','n0','desc'],def:{tag:'JB1',n:'4',n0:'1',desc:'קופסת חיבורים'},lbl:{n:'מספר מהדקים',n0:'מספור מהדק ראשון'},sel:{n:[...Array(23)].map((_,i)=>[String(i+2),String(i+2)])},
+  size:o=>{const n=Math.max(2,+o.p.n||4);return {w:n*14+12,h:50};},
+  terms:o=>{const n=Math.max(2,+o.p.n||4),a=+o.p.n0||1,x0=-(n-1)*7,T=[];for(let i=0;i<n;i++){T.push([x0+i*14,-25,String(a+i)]);T.push([x0+i*14,25,String(a+i)]);}return T;},
+  draw:o=>{const n=Math.max(2,+o.p.n||4),a=+o.p.n0||1,W=n*14+12,x0=-(n-1)*7;let s=`<rect x="${-W/2}" y="-17" width="${W}" height="34" rx="3" fill="#fff" stroke="${SK}" stroke-width="1.3" stroke-dasharray="5 3"/>`;
+   for(let i=0;i<n;i++){const x=x0+i*14;s+=sL(x,-25,x,-6)+sL(x,6,x,25)+`<rect x="${x-5}" y="-6" width="10" height="12" fill="#fff" stroke="${SK}" stroke-width="1"/><circle cx="${x}" cy="0" r="2" fill="${SK}"/><rect x="${x-5.5}" y="-14.6" width="11" height="7" fill="#fff"/>`+txt(x,-11,String(a+i),4.6,SK,700);}
+   return s+sLbl(o,W);}},
+ spsu:{layer:4,sld:true,edit:['tag','pk','rating','desc'],def:{tag:'G1',pk:'acdc',rating:'24VDC 5A',desc:'ספק כוח'},lbl:{pk:'סוג'},sel:{pk:[['acdc','AC/DC — כניסה L N, יציאה + −'],['dcdc','DC/DC — כניסה + −, יציאה + −']]},
+  ratings:['24VDC 2.5A','24VDC 5A','24VDC 10A','24VDC 20A','12VDC 5A','48VDC 5A'],size:()=>({w:60,h:70}),
+  terms:o=>{const dc=o.p.pk==='dcdc';return [[-10,-35,dc?'+in':'L'],[10,-35,dc?'-in':'N'],[-10,35,'+'],[10,35,'-']];},
+  draw:o=>{const dc=o.p.pk==='dcdc';let s=sL(-10,-35,-10,-22)+sL(10,-35,10,-22)+sL(-10,22,-10,35)+sL(10,22,10,35)+`<rect x="-22" y="-22" width="44" height="44" fill="#fff" stroke="${SK}" stroke-width="1.4"/>`+sL(-22,22,22,-22,1);
+   s+=dc?sT(-11,-11,'=',10,800):`<path d="M-17 -11q3 -4 6 0t6 0" fill="none" stroke="${SK}" stroke-width="1.3"/>`;s+=sT(11,11,'=',10,800);
+   s+=txt(-14,-29,dc?'+':'L',5,SK,800)+txt(14,-29,dc?'−':'N',5,SK,800)+txt(-14,30,'+',6,'#dc2626',800)+txt(14,30,'−',6,'#2563eb',800);return s+sLbl(o,70);}},
  spl22m:{layer:4,sld:true,edit:['tag','mm','rating','desc','color'],def:{tag:'H1',mm:'va',rating:'230V',desc:'נורית עם מד מתח וזרם',color:'red'},ratings:['230V','400V','24VDC'],size:()=>({w:60,h:60}),
   terms:o=>[[0,-30,'X1'],[0,30,'X2'],...((o.p.mm||'va')!=='v'?[[-22,-8,'k'],[-22,8,'l']]:[])],
   draw:o=>{const m=o.p.mm||'va';let s=sL(0,-30,0,-11)+sL(0,11,0,30)+sC(0,0,11,o.p.color&&o.p.color!=='white'?COLORS[o.p.color]+'55':'#fff')+sL(-7.8,-7.8,7.8,7.8,1.4)+sL(-7.8,7.8,7.8,-7.8,1.4);
@@ -2911,6 +2923,8 @@ const LIB=[
   {g:'מגופים חשמליים',items:[{t:'smv',n:'מגוף חשמלי (סמל)'},{t:'smv',n:'מגוף חשמלי מווסת (סמל)',p:{act:'mod',desc:'מגוף מווסת'}},{t:'smv',n:'מגוף חשמלי AUMA AM (סמל)',p:{act:'auma',desc:'מגוף חשמלי AUMA'}},{t:'smv',n:'מגוף חשמלי AUMA AC מווסת (סמל)',p:{act:'aumac',desc:'מגוף מווסת AUMA'}},{t:'ssv',n:'ברז חשמלי סולנואיד (סמל)'}]},
   {g:'מדי גובה, לחץ וספיקה',items:[{t:'sfe',n:'מד ספיקה KROHNE — חיישן (סמל)'},{t:'sfit',n:'ממיר ספיקה KROHNE עם צג (סמל)'},{t:'sfloat',n:'מצוף (סמל)'},{t:'spt',n:'משדר לחץ (סמל)'},{t:'spi',n:'מד לחץ — מנומטר (סמל)'},{t:'slvlh',n:'מד גובה הידרוסטטי (סמל)'},{t:'sultra',n:'בקר מפלס Pulsar Ultra 4 (סמל)'},{t:'sudb',n:'מתמר אולטרסוני (סמל)'}]},
   {g:'מדידה',items:[{t:'sct',n:'משנה זרם (CT)'},{t:'svt',n:'משנה מתח (VT)'},{t:'skwh',n:'מונה kWh'},{t:'spm',n:'רב-מודד'},{t:'samm',n:'מד זרם'},{t:'svm',n:'מד מתח'}]},
+  {g:'קופסת חיבורים (JB) עם מהדקים',items:[{t:'sjb',n:'קופסת חיבורים JB — 4 מהדקים'},{t:'sjb',n:'קופסת חיבורים JB — 8 מהדקים',p:{n:'8'}},{t:'sjb',n:'קופסת חיבורים JB — 12 מהדקים',p:{n:'12'}}]},
+  {g:'ספקי כוח',items:[{t:'spsu',n:'ספק כוח AC/DC (L N → + −)'},{t:'spsu',n:'ספק כוח 24VDC 10A',p:{rating:'24VDC 10A'}},{t:'spsu',n:'ממיר DC/DC (+ − → + −)',p:{pk:'dcdc',rating:'24VDC 5A',desc:'ממיר DC/DC'}}]},
   {g:'נורית 22 מ"מ עם מד מתח / זרם',items:[{t:'spl22m',n:'נורית עם מד מתח וזרם (עם משנה זרם)'},{t:'spl22m',n:'נורית עם מד מתח',p:{mm:'v',desc:'נורית עם מד מתח'}},{t:'spl22m',n:'נורית עם מד זרם (עם משנה זרם)',p:{mm:'a',desc:'נורית עם מד זרם'}},{t:'sct2',n:'משנה זרם קטן לנורית (k / l)',p:{tag:'CT1',rating:'100A',desc:'משנה זרם של הנורית'}}]},
   {g:'מדי הספק SATEC ומשני זרם — סמלים ובלוק מדידה מחווט',items:[{t:'ssatec',n:'מד הספק SATEC PM175 (מתח, זרם, עזר)'},{t:'ssatec',n:'מד הספק SATEC PM172',p:{rating:'SATEC PM172'}},{t:'ssatec',n:'מד הספק SATEC PM135',p:{rating:'SATEC PM135'}},{t:'sct2',n:'משנה זרם עם S1 / S2'},{t:'mblk',n:'בלוק מדידה: 3 משני זרם + נתיכי מתח + SATEC PM175',p:{meter:'PM175'}},{t:'mblk',n:'בלוק מדידה: 3 משני זרם + נתיכי מתח + SATEC PM135',p:{meter:'PM135'}}]},
   {g:'צרכנים',items:[{t:'ssubp',n:'משאבה טבולה (סמל)'},{t:'smot',n:'מנוע תלת-פאזי (U V W)',p:{poles:3}},{t:'smot',n:'מנוע כוכב-משולש (6 הדקים)',p:{poles:6,rating:'30kW'}},{t:'smot',n:'מנוע (קו אחד)'},{t:'slight',n:'תאורה'},{t:'ssock',n:'שקעים'},{t:'sheat',n:'גוף חימום'},{t:'scap',n:'סוללת קבלים'},{t:'sload',n:'לוח משנה / עומס'}]},
@@ -3751,7 +3765,7 @@ async function openShared(){let ds=[];try{ds=await SH.list();}catch(e){toast('ל
    main switch and any meter over a busbar, then a feeder per protective device —
    drives and motor breakers to a motor, the rest to a load named after the part.
    The panel doesn't say what feeds what, so it's a draft to correct. */
-const SLD_MAP={mcb:'sbrk',rcd:'srcd',mpcb:'smpcb',gv2:'smpcb',vsd:'svfd',atv630:'svfd',cont:'scont',lc1d:'scont',lc1k:'scont',lc2d:'srev',lc2k:'srev',nsx:'sbrk',nsxm:'sbrk',acb:'sacb',ats480:'sats480',spd:'sspd',psu:'sbrk'};
+const SLD_MAP={mcb:'sbrk',rcd:'srcd',mpcb:'smpcb',gv2:'smpcb',vsd:'svfd',atv630:'svfd',cont:'scont',lc1d:'scont',lc1k:'scont',lc2d:'srev',lc2k:'srev',nsx:'sbrk',nsxm:'sbrk',acb:'sacb',ats480:'sats480',spd:'sspd',psu:'spsu'};
 function sldFromPanel(){if(curView()!=='sld')switchDoc('sld');genSld();}
 function genSld(){if(state.tab==='both')switchDoc('sld');delete state.originS;const P=panelObjs().filter(o=>o.type!=='wire'&&o.type!=='label').slice().sort((a,b)=>a.y-b.y||a.x-b.x);
  if(!P.length){toast('אין רכיבים בחזית הלוח');return;}
@@ -5611,6 +5625,7 @@ function xcPanelFor(o){const r=String(o.p.rating||''),n=Math.max(1,+o.p.poles||3
   case 'sestop':return {t:'estop',p:{}};case 'ssel':return {t:'sel2',p:{}};case 'skeysw':return {t:'key',p:{}};
   case 'ssatec':return {t:'satec',p:{sm:/135/.test(r)?'pm135':/172/.test(r)?'pm172':'pm175'}};
   case 'spl22m':return {t:'pl22m',p:{mm:o.p.mm||'va'}};
+  case 'spsu':return {t:'psu',p:{rating:o.p.rating||'24VDC 5A'}};
   case 'snvr':return {t:'rm22',p:{}};
   case 'skwh':return {t:'meter',p:{}};
  }return null;}
