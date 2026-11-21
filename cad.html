@@ -2131,12 +2131,11 @@ const SDEF={
   lbl:{br:'גישורים בין מהדקים (למשל 1-2, 4-6)',n:'מספר מהדקים',n0:'מספור מהדק ראשון',pb:'לחצנים פתוחים (NO)',pbc:'לחצנים סגורים (NC)',lp:'נורות סימון',bz:'זמזם'},
   sel:{n:[...Array(25)].map((_,i)=>[String(i),String(i)]),pb:[0,1,2,3,4].map(v=>[String(v),String(v)]),pbc:[0,1,2].map(v=>[String(v),String(v)]),lp:[0,1,2,3].map(v=>[String(v),String(v)]),bz:[['0','בלי'],['1','עם זמזם']]},
   size:o=>{const G=sjbGeo(o);return {w:G.W,h:40};},
-  terms:o=>{const G=sjbGeo(o),T=[];G.cols.forEach(c=>{const e=c.k==='t'?4:20;T.push([c.x,-e,c.t1]);T.push([c.x,e,c.t2]);});return T;},
+  terms:o=>{const G=sjbGeo(o),T=[];G.cols.forEach(c=>{const e=c.k==='t'?4:9;T.push([c.x,-e,c.t1]);T.push([c.x,e,c.t2]);});return T;},
   draw:o=>{const G=sjbGeo(o);let s=`<rect x="${-G.W/2}" y="-20" width="${G.W}" height="40" rx="3" fill="#fff" stroke="${SK}" stroke-width="1.3" stroke-dasharray="5 3"/>`;
    G.cols.forEach(c=>{const x=c.x;
     if(c.k==='t'){s+=sC(x,0,4,'#fff',1.4)+sL(x-5.4,5.4,x+5.4,-5.4,1.1)+txt(x+2.2,-11,c.lab,4.4,SK,700,'start');return;}
-    s+=sL(x,-20,x,-9)+sL(x,9,x,20);
-    if(c.k==='no')s+=sL(x,9,x-6,-6,1.3)+sL(x-3,1.5,x-11,1.5,1)+sL(x-11,-2,x-11,5,1.2);
+    if(c.k==='no')s+=sL(x,-9,x,-5)+sL(x,9,x-6,-6,1.3)+sL(x-3,1.5,x-11,1.5,1)+sL(x-11,-2,x-11,5,1.2);
     else if(c.k==='nc')s+=sL(x,9,x+5,-10,1.3)+sL(x,-9,x+6,-9,1.3)+sL(x+2.5,0,x-8,0,1)+sL(x-8,-3.5,x-8,3.5,1.2);
     else if(c.k==='lp')s+=sL(x,-9,x,-6)+sL(x,6,x,9)+sC(x,0,6,'#fff')+sL(x-4.2,-4.2,x+4.2,4.2,1)+sL(x-4.2,4.2,x+4.2,-4.2,1);
     else if(c.k==='bz')s+=sL(x,-9,x,-3)+sL(x,3,x,9)+`<path d="M${x-7} 3H${x+7}A7 7 0 0 0 ${x-7} 3Z" fill="#fff" stroke="${SK}" stroke-width="1.2" transform="rotate(180 ${x} 0)"/>`;
