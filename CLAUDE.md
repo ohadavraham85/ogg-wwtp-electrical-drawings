@@ -64,6 +64,7 @@ Live at https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/ (GitHub Pa
 - `vendor/pdfjs/`: pdf.js 3.11.174 (pdf.min.js + worker), loaded only when a PDF is imported as a background.
 - `LICENSE` (proprietary), `THIRD_PARTY_NOTICES.md`, `legal/` (Hebrew drafts of terms, privacy, accessibility — not linked until approved; then list them in `LEGAL` in `cad.html`, shown in the drawer's "אודות" dialog `aboutDialog`), `docs/COMMERCIAL.md` (commercialisation plan).
 - The title-block default logo (`DEFAULT_LOGO`, the owner's organisation) is used only for the owner (`defLogo()`, bridge `me().owner`).
+- Recycle bin: the shell's menu item "לוחות שנמחקו — שחזור" (`trashDialog` in index.html) lists `deleted: true` designs and sets `deleted: false` to restore. A `?d=` link is cleared from the address bar once opened.
 - `firestore.rules`: the source of truth for the rules. There is no CLI access. After changing it, the owner must paste it into Firebase Console → Firestore Database → Rules → Publish.
 - `archive/`: the old "אינדקס תוכניות חשמל G-WWTP" app. It is read-only and still points at its old Firebase project.
 

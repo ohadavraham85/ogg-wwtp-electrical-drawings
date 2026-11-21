@@ -5487,7 +5487,7 @@ const DSEC_KEY='ohadcad.dsec';
 function dsecOpen(){try{return JSON.parse(localStorage.getItem(DSEC_KEY)||'null')||{proj:1,out:1};}catch(e){return {proj:1,out:1};}}
 function openDrawer(){const T=(ic,n,fn,tip,on)=>({ic,n,fn,tip:tip||n,on:!!on});
  const sh=SH&&SH.menu?SH.menu():[],shIc=t=>/משתמש/.test(t)?'users':/ייבוא/.test(t)?'imp':/ארכיון/.test(t)?'archive':/התנתק/.test(t)?'logout':'info',
-  shN=t=>String(t).replace(/^[^\p{L}\d(]+/u,'').replace(/^ייבוא לוחות מהאפליקציה הקודמת$/,'ייבוא מהאפליקציה הישנה').replace(/^ארכיון: .*$/,'ארכיון תוכניות').replace(/^התנתקות \((.*)\)$/,'התנתקות');
+  shN=t=>String(t).replace(/^[^\p{L}\d(]+/u,'').replace(/^לוחות שנמחקו — שחזור$/,'לוחות שנמחקו').replace(/^ייבוא לוחות מהאפליקציה הקודמת$/,'ייבוא מהאפליקציה הישנה').replace(/^ארכיון: .*$/,'ארכיון תוכניות').replace(/^התנתקות \((.*)\)$/,'התנתקות');
  const S=[
   {k:'proj',t:'פרויקט',it:[T('newp','חדש',newProject,'פרויקט חדש'),T('tpl','מתבנית',templatesDialog,'פרויקט חדש מתבנית (דוגמאות)'),
    ...(SH?[T('open','פתח',openShared,'פתח מהתיקייה המשותפת'),T('save','שמור',saveShared,'שמור עכשיו בתיקייה המשותפת (נשמר גם אוטומטית)'),T('saveas','שמור עותק',()=>saveSharedAs(true),'שמור עותק בשם…')]:[T('open','פתח',openProjects,'פתח פרויקט שמור'),T('saveas','שמור בשם',saveAs,'שמור בשם…')]),

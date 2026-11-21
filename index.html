@@ -180,11 +180,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 273;
+const VERSION = 274;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'היטל על: כפתור "מידות" מציג ומסתיר את כל המידות (גם של החדר והציוד), ומרחק בין שני רכיבים מופיע פעם אחת';
+const WHATS_NEW = 'תפריט ← חשבון ← "לוחות שנמחקו": רשימת כל הלוחות שנמחקו מהתיקייה המשותפת עם כפתור שחזור';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -399,6 +399,7 @@ const bridge = {
   menu() {
     return [
       ...(isOwner ? [['👥 משתמשים והרשאות', usersDialog]] : []),
+      ['🗑 לוחות שנמחקו — שחזור', trashDialog, 'archive'],
       ['📥 ייבוא לוחות מהאפליקציה הקודמת', importDesigns, 'imp'],
       ['🗄 ארכיון: אינדקס תוכניות חשמל G-WWTP', () => window.open('archive/', '_blank')],
       ['🚪 התנתקות (' + me.label + ')', signOut],
@@ -504,6 +505,8 @@ function start() {
   f.allow = 'clipboard-read; clipboard-write; fullscreen';
   const deep = new URLSearchParams(location.search).get('d');
   f.src = 'cad.html' + (deep ? '?d=' + encodeURIComponent(deep) : '');
+  // the link opens that drawing once; later reloads stay on whatever is being worked on
+  if (deep) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
   document.body.prepend(f);
   addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && !e.altKey && e.code === 'KeyP') { e.preventDefault(); try { f.contentWindow.ohadPrint(); } catch (_) {} } }, true);
   $('gate').hidden = true;
@@ -524,6 +527,25 @@ function closeDlg() {
   $('dlg').hidden = true; $('dlg').innerHTML = '';
 }
 
+// Deleted drawings stay in Firestore (deleted: true): list them, newest first, and
+// bring one back (any approved user may set deleted back to false).
+function trashDialog() {
+  const box = openDlg(`<h2><img src="icons/icon.svg" width="28" height="28" alt="">לוחות שנמחקו</h2>
+    <div class="hint">לוחות שנמחקו מהתיקייה המשותפת נשמרים כאן. "שחזר" מחזיר את הלוח לתיקייה המשותפת לכולם.</div><div id="trList"><div class="empty">טוען…</div></div>`);
+  DESIGNS.where('deleted', '==', true).get().then((snap) => {
+    const L = []; snap.forEach((doc) => L.push({ id: doc.id, ...doc.data() }));
+    L.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+    const el = box.querySelector('#trList');
+    if (!L.length) { el.innerHTML = '<div class="empty">אין לוחות שנמחקו.</div>'; return; }
+    const when = (t) => { try { return new Date(t).toLocaleString('he-IL'); } catch (e) { return ''; } };
+    el.innerHTML = L.map((d) => `<div class="row"><div class="nm"><div>${esc(d.name)} <span class="em">(${d.parts || 0} רכיבים)</span></div><div class="em">נוצר ע״י ${esc(d.createdBy)} · נמחק ${esc(when(d.updatedAt))} ע״י ${esc(d.updatedBy)}</div></div><button class="sb ok" data-rs="${esc(d.id)}">שחזר</button></div>`).join('');
+    el.onclick = (e) => {
+      const b = e.target.closest('[data-rs]'); if (!b) return; b.disabled = true;
+      DESIGNS.doc(b.dataset.rs).update({ deleted: false }).then(() => { toast('הלוח שוחזר לתיקייה המשותפת'); b.closest('.row').remove(); })
+        .catch(() => { b.disabled = false; toast('השחזור נכשל — אין הרשאה'); });
+    };
+  }).catch(() => { box.querySelector('#trList').innerHTML = '<div class="empty">לא ניתן לקרוא את הלוחות שנמחקו.</div>'; });
+}
 function usersDialog() {
   const box = openDlg(`
     <h2><img src="icons/icon.svg" width="28" height="28" alt="">משתמשים והרשאות</h2>
