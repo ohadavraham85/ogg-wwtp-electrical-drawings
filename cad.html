@@ -522,6 +522,7 @@ body.pro.uil #propsBody .fld input,body.pro.uil #propsBody .fld select{backgroun
 body.pro.uil #drawer .dsec{background:#f4f5f7}body.pro.uil #drawer .dbox button.dt{background:#fff}
 @media (max-width:700px){body.pro #favBar .favhint{display:none}}
 @media (max-width:1000px) and (min-height:501px){body.pro #rail{border-radius:12px;margin:2px 0 4px;height:58px!important}}
+#sbar [data-sb=tdims]{display:none!important}body.topv #sbar [data-sb=tdims]{display:inline-flex!important}
 /* ---- drawer: groups of icon tiles ---- */
 #drawer .dbox{width:340px;max-width:88vw;gap:8px;padding:calc(env(safe-area-inset-top) + 12px) 12px calc(14px + env(safe-area-inset-bottom))}
 #drawer .dhead{display:flex;align-items:center;justify-content:space-between;padding:2px 4px}
@@ -689,7 +690,7 @@ body.pro.uil #panel{border-width:0 0 0 1px}
 
 <div id="rulX"></div><div id="rulY"></div><div id="xh"></div><div id="yh"></div>
 <div id="lyTabs"></div>
-<div id="sbar"><button id="bDark" title="רקע השרטוט: כהה / בהיר"></button><span id="coord"></span><button data-sb="cross" title="סמן צלב X/Y שזז עם העכבר">✛ סמן צלב</button><button data-sb="axes" title="צירים וסרגלים">📏 צירים</button></div>
+<div id="sbar"><button id="bDark" title="רקע השרטוט: כהה / בהיר"></button><span id="coord"></span><button data-sb="cross" title="סמן צלב X/Y שזז עם העכבר">✛ סמן צלב</button><button data-sb="axes" title="צירים וסרגלים">📏 צירים</button><button data-sb="tdims" title="הצג את כל המידות בהיטל — מרחקי הציוד מהקירות והדלתות מקצות הקיר (גם בהדפסה ובייצוא)">📐 מידות</button></div>
 <div id="docTabs"><button class="ddbtn" id="ddFile" data-dd="mFile" title="קובץ — פרויקט חדש, תבנית, פתח, שמור עותק"><i class="ico" data-ic="open"></i><span class="lbl">קובץ</span><span class="caret">▾</span></button><button class="ddbtn" id="ddExport" data-dd="mExport" title="ייצוא ודוחות — PDF, תמונה, DXF, רשימת ציוד"><i class="ico" data-ic="exp"></i><span class="lbl">ייצוא</span><span class="caret">▾</span></button><button class="ddbtn" id="ddView" data-dd="mView" title="תצוגה — חזית לוח / חד קווי / משולב, בהיר-כהה, דף ייצור"><i class="ico" data-ic="panel"></i><span class="lbl" id="ddViewLbl">חזית לוח</span><span class="caret">▾</span></button><span id="saveSt"></span></div>
 <div class="ddmenu hidden" id="mFile"><div class="ddt">קובץ</div><button id="bNewProj" title="פרויקט חדש">📄 פרויקט חדש</button><button id="bTemplates" title="פרויקט חדש מתבנית (דוגמאות)">🗂 תבנית</button><button id="bOpenProj" title="פתח פרויקט">📂 פתח</button><button id="bSaveCopy" title="שמור עותק בשם">📑 שמור עותק</button><div class="ddt">רקע לשרטוט</div><button id="bUlImp" title="ייבוא תמונה, עמוד PDF או קובץ DXF כרקע לשרטוט מעליו">🖼 ייבוא תמונה / PDF / DXF</button><button id="bUlMgr" title="נעילה, שקיפות, כיול ומחיקה של תמונות הרקע">🗂 תמונות רקע…</button></div>
 <div class="ddmenu hidden" id="mExport"><div class="ddt">ייצוא</div><button id="bPreview" title="תצוגה לפני הדפסה — רואים את הדפים לפני שמורידים או מדפיסים">👁 תצוגה לפני הדפסה</button><button id="bPdf" title="ייצוא PDF עם טבלת שרטוט">📄 PDF</button><button id="bPng" title="ייצוא תמונה (PNG)">🖼️ PNG</button><button id="bDxf" title="ייצוא DXF ל-AutoCAD — שם שומרים כ-DWG">📐 DXF</button><div class="ddt">דוחות</div><button id="bBom" title="רשימת ציוד (BOM)">📋 BOM</button></div>
@@ -3196,7 +3197,7 @@ function objSVG(o,isSel){const D=DEF[o.type];if(!D)return '';const {w,h}=sizeOf(
  let s=`<g data-id="${o.id}"${o.type==='mdim'?' data-t="mdim"':''} transform="translate(${o.x} ${o.y}) rotate(${o.rot})${o.mx?' scale(-1 1)':''}">`+(D.sld&&o.type!=='sframe'?`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" fill="transparent"/>`:'')+(o.mx?unmirrorText(D.draw(o)):D.draw(o));
  if(o.locked)s+=`<circle cx="${w/2-2}" cy="${-h/2+2}" r="2.6" fill="#f59e0b" stroke="#000" stroke-width=".4"/>`;
  if(isSel)s+=`<rect x="${-w/2-2.5}" y="${-h/2-2.5}" width="${w+5}" height="${h+5}" rx="2" fill="rgba(59,130,246,.08)" stroke="#3b82f6" stroke-width="1.6" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"/>`;
- return s+'</g>'+(XRI?xrLabel(o):'')+(ABI?abMark(o):'');}
+ return s+'</g>'+(XRI?xrLabel(o):'')+(ABI?abMark(o):'')+(state.tdAll&&state.tab==='top'?allDims(o):'');}
 /* Parts mounted on a door (buttons, lights, e-stop…) ride along with it when it
    swings open — see doorRideOffset — instead of vanishing, except on a bolted
    cover (nothing to swing) or a CI box, whose lid just lifts off entirely. */
@@ -3453,7 +3454,7 @@ svg.addEventListener('pointermove',e=>{if(!showAxes)return;curW=toWorld(e.client
    the bottom holds the coordinate readout and on/off switches for it, the
    axes & rulers and the connection-point marks. */
 let showCross=true;try{showCross=localStorage.getItem('ohadcad.cross')!=='0';}catch(e){}
-function sbSync(){const S={cross:showCross,axes:showAxes,terms:showTerms};document.querySelectorAll('#sbar [data-sb]').forEach(b=>b.classList.toggle('on',!!S[b.dataset.sb]));const bt=$('bTerms');if(bt)bt.classList.toggle('on',showTerms);svg.style.cursor=showCross?'crosshair':'';if(!showCross)xhHide();requestAnimationFrame(()=>{try{layPos();}catch(e){}});}
+function sbSync(){const S={cross:showCross,axes:showAxes,terms:showTerms,tdims:!!state.tdAll};document.querySelectorAll('#sbar [data-sb]').forEach(b=>b.classList.toggle('on',!!S[b.dataset.sb]));const bt=$('bTerms');if(bt)bt.classList.toggle('on',showTerms);svg.style.cursor=showCross?'crosshair':'';if(!showCross)xhHide();requestAnimationFrame(()=>{try{layPos();}catch(e){}});}
 function xhHide(){$('xh').style.display=$('yh').style.display='none';}
 function toggleCross(){showCross=!showCross;try{localStorage.setItem('ohadcad.cross',showCross?'1':'0');}catch(e){}sbSync();toast(showCross?'סמן צלב פעיל':'סמן צלב כבוי');}
 // over a part that can be moved, the crosshair turns into a hand (grabbing while it is dragged)
@@ -3464,7 +3465,7 @@ svg.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'){xhHide();retu
 svg.addEventListener('pointerleave',xhHide);
 $('bPaper').onclick=togglePaper;
 $('bTerms').onclick=()=>{toggleTerms();sbSync();};
-$('sbar').addEventListener('click',e=>{const b=e.target.closest('[data-sb]');if(!b)return;({cross:toggleCross,axes:toggleAxes,terms:toggleTerms})[b.dataset.sb]();sbSync();});
+$('sbar').addEventListener('click',e=>{const b=e.target.closest('[data-sb]');if(!b)return;({cross:toggleCross,axes:toggleAxes,terms:toggleTerms,tdims:toggleTDims})[b.dataset.sb]();sbSync();});
 sbSync();
 
 svg.addEventListener('pointerleave',()=>{curW=null;if(showAxes)drawRulers();});
@@ -3598,7 +3599,7 @@ function isSldObj(o){if(!o)return false;if(state.tab==='sld')return true;if(stat
  if(o.type==='mdim'){const a=o.p.a&&o.p.a.of&&get(o.p.a.of);if(a)return isSldObj(a);return o.x>=(state.sldBx??1e9);}
  if(o.type==='wire')return o.pts.some(p=>p.r&&isSldObj(get(p.r)))||(!o.pts.some(p=>p.r)&&o.pts[0].x>=(state.sldBx??1e9));return false;}
 function syncDoc(){const d=state.tab==='sld'?'sld':state.tab==='top'?'top':state.tab==='both'?'both':'panel';sldDark=!isLight();const key=d+(sldDark?'D':'L');if(key===shownDoc)return;const docChanged=!shownDoc||shownDoc[0]!==key[0]||shownDoc.slice(0,-1)!==d;shownDoc=key;
- document.body.classList.toggle('sld',isLight());
+ document.body.classList.toggle('sld',isLight());document.body.classList.toggle('topv',state.tab==='top');
  document.querySelectorAll('button[data-doc]').forEach(b=>b.classList.toggle('on',b.dataset.doc===d));$('bDark').innerHTML=`<i class="ico">${ico(isLight()?'sun':'moon')}</i><span class="lbl">${isLight()?'רקע בהיר':'רקע כהה'}</span>`;{const v=state.tab==='sld'?'sld':state.tab==='top'?'top':state.tab==='both'?'both':'panel';const L=$('ddViewLbl');if(L)L.textContent={panel:'חזית לוח',sld:'חד קווי',top:'היטל על',both:'משולב'}[v];const I=document.querySelector('#ddView [data-ic]');if(I&&typeof ico==='function'){I.dataset.ic=v;I.innerHTML=ico(v);}}$('bDark').title=isLight()?'תצוגה בהירה — לחץ לכהה':'תצוגה כהה — לחץ לבהירה';$('bDark').classList.toggle('on',!isLight());
  if(d==='sld'){if(wireColor!=='black'){window._panelWire=wireColor;wireColor='black';}}else if(window._panelWire){wireColor=window._panelWire;window._panelWire=null;}
  if(docChanged){if(curTab!==-1)curTab=LIB.findIndex(inDoc);try{buildFav();}catch(e){}if(pMode==='lib')buildSheet();}applyView();}
@@ -4225,7 +4226,7 @@ function setIcons(){const M={bNewProj:'newp',bTemplates:'tpl',bOpenProj:'open',b
  document.querySelectorAll('.ddbtn [data-ic]').forEach(i=>{i.innerHTML=ico(i.dataset.ic);});
  Object.entries(M).forEach(([id,k])=>{const b=$(id);if(!b||b.dataset.ic)return;const L=SL[id]??lab(b);b.innerHTML=`<i class="ico">${ico(k)}</i>`+(L?`<span class="lbl">${esc(L)}</span>`:'');b.dataset.ic=1;if(L&&!b.title)b.title=L;});
  document.querySelectorAll('button[data-doc]').forEach(b=>{if(b.dataset.ic)return;const L={panel:'חזית לוח',sld:'חד קווי',top:'היטל על',both:'משולב'}[b.dataset.doc];b.innerHTML=`<i class="ico">${ico(b.dataset.doc)}</i><span class="lbl">${L}</span>`;b.title=L;b.dataset.ic=1;});
- const S={cross:['cross','סמן צלב'],axes:['axes','צירים'],terms:['dots','נקודות']};document.querySelectorAll('#sbar [data-sb]').forEach(b=>{if(b.dataset.ic)return;const [k,L]=S[b.dataset.sb];b.innerHTML=`<i class="ico">${ico(k)}</i><span class="lbl">${L}</span>`;b.dataset.ic=1;});
+ const S={cross:['cross','סמן צלב'],axes:['axes','צירים'],terms:['dots','נקודות'],tdims:['ruler','מידות']};document.querySelectorAll('#sbar [data-sb]').forEach(b=>{if(b.dataset.ic)return;const [k,L]=S[b.dataset.sb];b.innerHTML=`<i class="ico">${ico(k)}</i><span class="lbl">${L}</span>`;b.dataset.ic=1;});
  const m=$('bMeas');if(m&&!m.dataset.ic){m.querySelector('svg').outerHTML=`<svg viewBox="0 0 24 24">${IC.ruler}</svg>`;m.dataset.ic=1;}
  const d=$('bDark');if(d)d.innerHTML=`<i class="ico">${ico(isLight()?'sun':'moon')}</i><span class="lbl">${isLight()?'רקע בהיר':'רקע כהה'}</span>`;}
 const UIFONTS=[['Heebo','Heebo (ברירת מחדל)'],['Rubik','Rubik — עגול ומודגש'],['Assistant','Assistant — דק ונקי'],['Alef','Alef — קלאסי'],['Varela Round','Varela Round — רך'],['Arial','Arial — מערכת']];
@@ -4975,6 +4976,13 @@ function wallOf(o){const S=wallSegs(),gp=o.type==='tdoor'?fromLocal(o,0,-DEF.tdo
 function selDims(){if(state.tab!=='top'||DDIMS||SHP||multi.size>1)return null;const o=sel&&get(sel);if(!o||o.type==='troom'||o.type==='wire'||o.type==='mdim')return null;
  if(o.type==='tdoor'||o.type==='twin'){const W=wallOf(o);return W?dragDims(o,W):null;}return dragDims(o,null);}
 let SDIMS=null;
+/* Plan, "מידות" on: every part's distances drawn into the drawing itself (so they
+   print and export) — equipment to the room's walls, doors / windows to the wall ends. */
+function toggleTDims(){state.tdAll=state.tdAll?0:1;commit();renderNow();toast(state.tdAll?'כל המידות מוצגות — גם בהדפסה ובייצוא':'המידות הנוספות הוסתרו');}
+function allDims(o){if(['troom','wall','wire','mdim','label','callout','tnorth','ink','underlay'].includes(o.type))return '';let L;
+ try{L=(o.type==='tdoor'||o.type==='twin')?(()=>{const W=wallOf(o);return W?dragDims(o,W):null;})():dragDims(o,null);}catch(e){L=null;}if(!L||!L.length)return '';
+ const c='#0f766e',fs=80,lw=5,k=40;return '<g pointer-events="none">'+L.map(([x1,y1,x2,y2])=>{const h=Math.abs(y2-y1)<Math.abs(x2-x1),len=Math.hypot(x2-x1,y2-y1),mx=(x1+x2)/2,my=(y1+y2)/2;
+  const tk=(x,y)=>`M${x-k} ${y+k}L${x+k} ${y-k}`;return `<path d="M${x1} ${y1}L${x2} ${y2}${tk(x1,y1)}${tk(x2,y2)}" stroke="${c}" stroke-width="${lw}" fill="none"/>`+(h?txt(mx,my-fs*.7,mdFmt(len),fs,c,700):`<g transform="translate(${mx-fs*.7} ${my}) rotate(-90)">${txt(0,0,mdFmt(len),fs,c,700)}</g>`);}).join('')+'</g>';}
 function ddSVG(){SDIMS=DDIMS?null:selDims();const D=DDIMS||SDIMS;if(!D||!D.length)return '';const k=1/view.s,click=!DDIMS;return '<g pointer-events="none">'+D.map(([x1,y1,x2,y2],i)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#f59e0b" stroke-width="1.4" vector-effect="non-scaling-stroke"/><circle cx="${x1}" cy="${y1}" r="${3*k}" fill="#f59e0b"/><circle cx="${x2}" cy="${y2}" r="${3*k}" fill="#f59e0b"/>`+(click?`<g data-ddim="${i}" pointer-events="all" style="cursor:pointer">${shpTag((x1+x2)/2,(y1+y2)/2,mdFmt(Math.hypot(x2-x1,y2-y1)))}</g>`:shpTag((x1+x2)/2,(y1+y2)/2,mdFmt(Math.hypot(x2-x1,y2-y1))))).join('')+'</g>';}
 /* tap a distance of the selected part: type it, the part moves to match */
 function sdimEdit(i,cx,cy){const o=sel&&get(sel),D=SDIMS&&SDIMS[i];if(!o||!D||o.locked)return;const [x1,y1,x2,y2,ax,sg]=D,cur=Math.hypot(x2-x1,y2-y1);const old=document.getElementById('inEdit');if(old)old.remove();
