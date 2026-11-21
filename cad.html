@@ -993,6 +993,13 @@ function qrDialog(o){const k=o.p.qk||'doc';
  ()=>{const k0=o.p.qk;o.p.qk=$('f_qk').value;if($('f_qt'))o.p.qt=$('f_qt').value.trim();o.p.qs=Math.max(15,Math.min(300,Math.round(+$('f_qs').value)||60));o.p.ql=$('f_ql').value;commit();renderNow();updateBar();if(k0!==o.p.qk)setTimeout(()=>qrDialog(o),0);});}
 /* A room's own inner dimensions, drawn with it (so they follow every change of
    size): width above, depth on the left, outside the walls. */
+/* Width above and depth on the left of a box (local coords), with extension lines. */
+function bxDims(x0,y0,x1,y1,g,f){const c='#1d4ed8',lw=Math.max(3,f/14),k=f*.4,W=x1-x0,H=y1-y0,y=y0-g,x=x0-g;
+ return `<g stroke="${c}" stroke-width="${lw}" fill="none" pointer-events="none"><path d="M${x0} ${y0}V${y-k}M${x1} ${y0}V${y-k}M${x0} ${y}H${x1}M${x0-k} ${y+k}l${2*k} ${-2*k}M${x1-k} ${y+k}l${2*k} ${-2*k}M${x0} ${y0}H${x-k}M${x0} ${y1}H${x-k}M${x} ${y0}V${y1}M${x-k} ${y0+k}l${2*k} ${-2*k}M${x-k} ${y1+k}l${2*k} ${-2*k}"/></g>`
+  +txt((x0+x1)/2,y-f*.75,String(Math.round(W)),f,c,700)+`<g transform="translate(${x-f*.75} ${(y0+y1)/2}) rotate(-90)">${txt(0,0,String(Math.round(H)),f,c,700)}</g>`;}
+const eqDimG=(w,h)=>{const f=Math.max(45,Math.min(110,Math.min(w,h)/6));return [f*1.8,f];};
+const eqExt=o=>{if(o.p.dm==='0')return null;const {w,h}=sizeOf(o),[g,f]=eqDimG(+o.p.w||w,+o.p.h||h);return {l:g+f*1.6,t:g+f*1.6,r:0,b:0};};
+const DMSEL=[['1','הצג מידות'],['0','בלי מידות']];
 function roomDimG(o){const W=+o.p.w,H=+o.p.h;return [Math.max(250,Math.min(600,Math.min(W,H)/8)),Math.max(80,Math.min(170,Math.min(W,H)/22))];}
 function roomDims(o){const t=+o.p.wt||0,W=+o.p.w,H=+o.p.h,ow=W+2*t,oh=H+2*t,[g,f]=roomDimG(o),lw=Math.max(5,f/14),c='#1d4ed8',k=f*.45;
  const y=-oh/2-g,x=-ow/2-g;let s=`<g stroke="${c}" stroke-width="${lw}" fill="none">`;
@@ -1922,7 +1929,7 @@ const DEF={
  tdoor:{layer:1,edit:['dk','dw','hinge','wt'],def:{dk:'single',dw:900,hinge:'L',wt:200},lbl:{dk:'סוג',dw:'רוחב פתח (מ"מ)',hinge:'צירים',wt:'עובי הקיר (מ"מ)'},
   sel:{dk:[['single','כנף אחת'],['double','שתי כנפיים'],['slide','הזזה']],hinge:[['L','צירים משמאל'],['R','צירים מימין']]},num:['dw','wt'],
   size:o=>{const d=+o.p.dw||900,t=+o.p.wt||200;return {w:d,h:t+(o.p.dk==='double'?d/2:o.p.dk==='slide'?80:d)};},
-  draw:o=>{const d=+o.p.dw||900,t=+o.p.wt||200,{h}=DEF.tdoor.size(o),y0=-h/2,yw=y0+t,k=o.p.dk;let s=`<rect x="${-d/2}" y="${y0}" width="${d}" height="${t}" fill="#f7f6f1"/><path d="M${-d/2} ${y0}V${yw}M${d/2} ${y0}V${yw}" stroke="#111827" stroke-width="8"/>`;
+  draw:o=>{const d=+o.p.dw||900,t=+o.p.wt||200,{h}=DEF.tdoor.size(o),y0=-h/2,yw=y0+t,k=o.p.dk;let s=`<rect x="${-d/2}" y="${y0}" width="${d}" height="${h}" fill="transparent"/><rect x="${-d/2}" y="${y0}" width="${d}" height="${t}" fill="#f7f6f1"/><path d="M${-d/2} ${y0}V${yw}M${d/2} ${y0}V${yw}" stroke="#111827" stroke-width="8"/>`;
    const leaf=(hx,dir,r)=>{const ex=hx+dir*r;return `<path d="M${hx} ${yw}V${yw+r}" stroke="#111827" stroke-width="10"/><path d="M${hx} ${yw+r}A${r} ${r} 0 0 ${dir>0?0:1} ${ex} ${yw}" fill="none" stroke="#6b7280" stroke-width="5" stroke-dasharray="30 20"/>`;};
    if(k==='double')s+=leaf(-d/2,1,d/2)+leaf(d/2,-1,d/2);else if(k==='slide')s+=`<rect x="${-d/2}" y="${yw+10}" width="${d}" height="40" fill="#d1d5db" stroke="#111827" stroke-width="5"/><path d="M${-d/4} ${yw+70}h${d/2}m-60 -25l60 25-60 25" fill="none" stroke="#6b7280" stroke-width="5"/>`;
    else s+=o.p.hinge==='R'?leaf(d/2,-1,d):leaf(-d/2,1,d);return s;}},
@@ -1930,25 +1937,25 @@ const DEF={
   draw:o=>{const w=+o.p.len,t=+o.p.wt||200;return `<rect x="${-w/2}" y="${-t/2}" width="${w}" height="${t}" fill="#ffffff" stroke="#111827" stroke-width="8"/><path d="M${-w/2} ${-t/8}H${w/2}M${-w/2} ${t/8}H${w/2}" stroke="#2563eb" stroke-width="6"/>`;}},
  tcol:{layer:.5,edit:['w','ck'],def:{w:400,ck:'sq'},lbl:{w:'מידה (מ"מ)',ck:'צורה'},sel:{ck:[['sq','מרובע'],['rd','עגול']]},size:o=>({w:+o.p.w,h:+o.p.w}),
   draw:o=>{const w=+o.p.w;return o.p.ck==='rd'?`<circle r="${w/2}" fill="#3f4652" stroke="#111827" stroke-width="6"/>`:`<rect x="${-w/2}" y="${-w/2}" width="${w}" height="${w}" fill="#3f4652" stroke="#111827" stroke-width="6"/><path d="M${-w/2} ${-w/2}L${w/2} ${w/2}M${w/2} ${-w/2}L${-w/2} ${w/2}" stroke="#9ca3af" stroke-width="5"/>`;}},
- tstair:{layer:.5,resize:'box',minBox:500,edit:['w','h'],def:{w:1100,h:3000},lbl:{w:'רוחב (מ"מ)',h:'אורך (מ"מ)'},size:o=>({w:+o.p.w,h:+o.p.h}),
+ tstair:{layer:.5,resize:'box',minBox:500,edit:['w','h','dm'],def:{w:1100,h:3000,dm:'1'},lbl:{w:'רוחב (מ"מ)',h:'אורך (מ"מ)',dm:'מידות'},sel:{dm:DMSEL},ext:o=>eqExt(o),size:o=>({w:+o.p.w,h:+o.p.h}),
   draw:o=>{const w=+o.p.w,h=+o.p.h;let s=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" fill="#f3f4f6" stroke="#111827" stroke-width="8"/>`;for(let y=-h/2+280;y<h/2;y+=280)s+=`<path d="M${-w/2} ${y}H${w/2}" stroke="#6b7280" stroke-width="5"/>`;
-   s+=`<path d="M0 ${h/2-150}V${-h/2+200}m-90 120l90 -120 90 120" fill="none" stroke="#111827" stroke-width="10"/>`;return s;}},
- tcab:{layer:2,resize:'box',minBox:200,edit:['tag','w','h','dsw'],def:{tag:'',w:800,h:600,dsw:'1'},lbl:{w:'רוחב (מ"מ)',h:'עומק (מ"מ)',dsw:'סימון פתיחת דלת'},sel:{dsw:[['1','כן'],['0','לא']]},
+   s+=`<path d="M0 ${h/2-150}V${-h/2+200}m-90 120l90 -120 90 120" fill="none" stroke="#111827" stroke-width="10"/>`;if(o.p.dm!=='0'){const [g,f]=eqDimG(w,h);s+=bxDims(-w/2,-h/2,w/2,h/2,g,f);}return s;}},
+ tcab:{layer:2,resize:'box',minBox:200,edit:['tag','w','h','dsw','dm'],def:{tag:'',w:800,h:600,dsw:'1',dm:'1'},lbl:{w:'רוחב (מ"מ)',h:'עומק (מ"מ)',dsw:'סימון פתיחת דלת',dm:'מידות'},sel:{dsw:[['1','כן'],['0','לא']],dm:DMSEL},ext:o=>eqExt(o),
   size:o=>{const w=+o.p.w,lf=w>=1000?w/2:w;return {w,h:+o.p.h+(o.p.dsw==='1'?lf:0)};},
   fromBox:(o,nw,nh)=>{o.p.w=nw;const lf=nw>=1000?nw/2:nw;o.p.h=Math.max(150,r2(nh-(o.p.dsw==='1'?lf:0)));},
-  draw:o=>{const w=+o.p.w,d=+o.p.h,{h}=DEF.tcab.size(o),y0=-h/2,yf=y0+d,lf=w>=1000?w/2:w;let s=`<rect x="${-w/2}" y="${y0}" width="${w}" height="${d}" fill="#e5e7eb" stroke="#111827" stroke-width="8"/><path d="M${-w/2} ${yf-30}H${w/2}" stroke="#f59e0b" stroke-width="40"/>`;
+  draw:o=>{const w=+o.p.w,d=+o.p.h,{h}=DEF.tcab.size(o),y0=-h/2,yf=y0+d,lf=w>=1000?w/2:w;let s=`<rect x="${-w/2}" y="${y0}" width="${w}" height="${h}" fill="transparent"/><rect x="${-w/2}" y="${y0}" width="${w}" height="${d}" fill="#e5e7eb" stroke="#111827" stroke-width="8"/><path d="M${-w/2} ${yf-30}H${w/2}" stroke="#f59e0b" stroke-width="40"/>`;
    s+=`<path d="M${-w/2} ${y0}L${w/2} ${yf-50}M${w/2} ${y0}L${-w/2} ${yf-50}" stroke="#9ca3af" stroke-width="4"/>`;
    if(o.p.dsw==='1'){const arc=(hx,dir)=>`<path d="M${hx} ${yf}V${yf+lf}A${lf} ${lf} 0 0 ${dir>0?0:1} ${hx+dir*lf} ${yf}" fill="none" stroke="#6b7280" stroke-width="5" stroke-dasharray="30 20"/>`;s+=w>=1000?arc(-w/2,1)+arc(w/2,-1):arc(-w/2,1);}
-   if(o.p.tag)s+=`<rect x="${-Math.min(w*.4,300)}" y="${y0+d/2-75}" width="${Math.min(w*.8,600)}" height="150" rx="20" fill="#fff" stroke="#111827" stroke-width="5"/>`+txt(0,y0+d/2,o.p.tag,Math.min(110,w/7),'#111827',800);return s;}},
- tequip:{layer:2,resize:'box',minBox:200,edit:['ek','tag','w','h'],def:{ek:'trafo',tag:'',w:1800,h:1200},lbl:{ek:'סוג',w:'רוחב (מ"מ)',h:'עומק (מ"מ)'},
-  sel:{ek:Object.entries({trafo:'שנאי',gen:'גנרטור',pump:'משאבה',motor:'מנוע',ups:'UPS',tank:'מיכל',hvac:'מזגן / מפוח',box:'ציוד'})},
+   if(o.p.tag)s+=`<rect x="${-Math.min(w*.4,300)}" y="${y0+d/2-75}" width="${Math.min(w*.8,600)}" height="150" rx="20" fill="#fff" stroke="#111827" stroke-width="5"/>`+txt(0,y0+d/2,o.p.tag,Math.min(110,w/7),'#111827',800);if(o.p.dm!=='0'){const [g,f]=eqDimG(w,d);s+=bxDims(-w/2,y0,w/2,yf,g,f);}return s;}},
+ tequip:{layer:2,resize:'box',minBox:200,edit:['ek','tag','w','h','dm'],def:{ek:'trafo',tag:'',w:1800,h:1200,dm:'1'},lbl:{ek:'סוג',w:'רוחב (מ"מ)',h:'עומק (מ"מ)',dm:'מידות'},ext:o=>eqExt(o),
+  sel:{ek:Object.entries({trafo:'שנאי',gen:'גנרטור',pump:'משאבה',motor:'מנוע',ups:'UPS',tank:'מיכל',hvac:'מזגן / מפוח',box:'ציוד'}),dm:DMSEL},
   size:o=>({w:+o.p.w,h:+o.p.h}),
   draw:o=>{const w=+o.p.w,h=+o.p.h,k=o.p.ek,N={trafo:'שנאי',gen:'גנרטור',pump:'משאבה',motor:'מנוע',ups:'UPS',tank:'מיכל',hvac:'מזגן / מפוח',box:'ציוד'},fs=Math.max(70,Math.min(180,Math.min(w,h)/6));let s;
    if(k==='tank'||k==='pump')s=`<ellipse rx="${w/2}" ry="${h/2}" fill="#dbeafe" stroke="#111827" stroke-width="8"/>`;else s=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${k==='gen'?40:8}" fill="${{trafo:'#fde68a',gen:'#bbf7d0',ups:'#e9d5ff',hvac:'#cffafe',motor:'#dbeafe'}[k]||'#e5e7eb'}" stroke="#111827" stroke-width="8"/>`;
    if(k==='trafo'){const r=Math.min(w,h)/7;s+=`<circle cx="${-r*.55}" cy="${-fs*.9}" r="${r}" fill="none" stroke="#111827" stroke-width="6"/><circle cx="${r*.55}" cy="${-fs*.9}" r="${r}" fill="none" stroke="#111827" stroke-width="6"/>`;}
    if(k==='motor'||k==='pump'){const r=Math.min(w,h)/6;s+=`<circle cy="${-fs*.9}" r="${r}" fill="#fff" stroke="#111827" stroke-width="6"/>`+txt(0,-fs*.9,'M',r*1.1,'#111827',800);}
    if(k==='hvac'){const r=Math.min(w,h)/5;s+=`<circle cy="${-fs*.9}" r="${r}" fill="none" stroke="#111827" stroke-width="6"/><path d="M0 ${-fs*.9}l${r*.8} ${-r*.4}M0 ${-fs*.9}l${-r*.8} ${-r*.4}M0 ${-fs*.9}v${r*.85}" stroke="#111827" stroke-width="8"/>`;}
-   s+=txt(0,fs*.35,N[k]||'',fs,'#111827',700);if(o.p.tag)s+=txt(0,fs*1.45,o.p.tag,fs*.8,'#374151',700);return s;}},
+   s+=txt(0,fs*.35,N[k]||'',fs,'#111827',700);if(o.p.tag)s+=txt(0,fs*1.45,o.p.tag,fs*.8,'#374151',700);if(o.p.dm!=='0'){const [g,f]=eqDimG(w,h);s+=bxDims(-w/2,-h/2,w/2,h/2,g,f);}return s;}},
  ttray:{layer:1.5,resize:'len',minLen:200,edit:['tk','len','tw','tag'],def:{tk:'tray',len:3000,tw:300,tag:''},lbl:{tk:'סוג',len:'אורך (מ"מ)',tw:'רוחב (מ"מ)'},num:['tw'],
   sel:{tk:[['tray','תעלת כבלים (סולם)'],['trench','תעלה ברצפה עם מכסה'],['conduit','צינור / קו כבל']]},size:o=>({w:+o.p.len,h:o.p.tk==='conduit'?Math.max(60,+o.p.tw/3):+o.p.tw||300}),
   draw:o=>{const L=+o.p.len,{h}=DEF.ttray.size(o);let s;if(o.p.tk==='conduit')s=`<path d="M${-L/2} 0H${L/2}" stroke="#ea580c" stroke-width="${h*.5}" stroke-dasharray="120 60"/>`;
@@ -4793,7 +4800,7 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
   if(nb.length===2){const a=R[i-1],b=R[i+1],ax=Math.abs(a.x-lx)<.01||Math.abs(a.y-ly)<.01,bx=Math.abs(b.x-lx)<.01||Math.abs(b.y-ly)<.01;
    if(ax&&bx&&!(Math.abs(a.x-b.x)<.01||Math.abs(a.y-b.y)<.01)){const k=8/view.s,ua=[Math.sign(a.x-lx),Math.sign(a.y-ly)],ub=[Math.sign(b.x-lx),Math.sign(b.y-ly)];const p1=W(lx+ua[0]*k,ly+ua[1]*k),p2=W(lx+(ua[0]+ub[0])*k,ly+(ua[1]+ub[1])*k),p3=W(lx+ub[0]*k,ly+ub[1]*k);CGUIDE.push({corner:`M${p1[0]} ${p1[1]}L${p2[0]} ${p2[1]}L${p3[0]} ${p3[1]}`});}}
   render();}
- else{const [wx,wy]=toWorld(e.clientX,e.clientY);const o=G.o;DROPR=null;DROPFULL=false;const [sx,sy]=snapPos(o,G.ox+wx-G.w0[0],G.oy+wy-G.w0[1]);o.x=sx;o.y=sy;const onR=DEF[o.type].rail&&state.objs.some(r=>r.type==='rail'&&onRail(o,r));alignSnap(o,G.kids,!onR&&!HYD(o));portMagnet(o);if(o.type==='shrect'||o.type==='shellipse'||o.type==='wall')edgeSnap(o,G.kids);if(DEF[o.type]?.sld||isSldObj(o))termMagnet(o,G.kids);const nx=o.x,ny=o.y;
+ else{const [wx,wy]=toWorld(e.clientX,e.clientY);const o=G.o;DROPR=null;DROPFULL=false;const [sx,sy]=snapPos(o,G.ox+wx-G.w0[0],G.oy+wy-G.w0[1]);o.x=sx;o.y=sy;const onR=DEF[o.type].rail&&state.objs.some(r=>r.type==='rail'&&onRail(o,r));alignSnap(o,G.kids,!onR&&!HYD(o));if(state.tab==='top')roomSnap(o,G.kids);portMagnet(o);if(o.type==='shrect'||o.type==='shellipse'||o.type==='wall')edgeSnap(o,G.kids);if(DEF[o.type]?.sld||isSldObj(o))termMagnet(o,G.kids);const nx=o.x,ny=o.y;
   const ddx=nx-G.ox,ddy=ny-G.oy;G.kids.forEach(k=>{if(k.q.type==='mdim'){if(!k.e)k.e=[k.q.p.a,k.q.p.b].map(p=>[p,p.x,p.y]);k.e.forEach(([p,x,y])=>{if(!p.of||!get(p.of)){p.x=r2(x+ddx);p.y=r2(y+ddy);}});return;}k.q.x=r2(k.x+ddx);k.q.y=r2(k.y+ddy);});render();}});
 let GUIDES=[];
 /* Walls and shapes: while one is dragged, its edges — the outline and, for a
@@ -4849,6 +4856,17 @@ function alignSnap(o,kids,snap){GUIDES=[];if(o.type==='wire')return;const kset=n
  for(const Q of cands){const qx=keyX(Q),qy=keyY(Q);
   for(const a of ox)for(const b of qx)if(Math.abs(a-b)<e)GUIDES.push({x:a,y0:Math.min(B.y0,Q.y0),y1:Math.max(B.y1,Q.y1)});
   for(const a of oy)for(const b of qy)if(Math.abs(a-b)<e)GUIDES.push({y:a,x0:Math.min(B.x0,Q.x0),x1:Math.max(B.x1,Q.x1)});}}
+/* Plan: a part dragged near a room's inner wall face lands on it (both faces →
+   into the corner), with guides along the faces; also against walls' faces. */
+function roomInner(q){const t=+q.p.wt||0,sw=(q.rot||0)%180!==0,W=sw?+q.p.h:+q.p.w,H=sw?+q.p.w:+q.p.h;return {x0:q.x-W/2,x1:q.x+W/2,y0:q.y-H/2,y1:q.y+H/2};}
+function roomSnap(o,kids){if(o.type==='troom'||o.type==='wire'||o.type==='mdim')return;const ks=new Set((kids||[]).map(k=>k.q)),th=24/view.s,B=bbW(o);let bx=null,by=null;
+ const faces=[];state.objs.forEach(q=>{if(q===o||ks.has(q))return;if(q.type==='troom'&&(q.rot||0)%90===0)faces.push({I:roomInner(q),inner:1});else if(q.type==='wall'&&(q.rot||0)%90===0){const b=bbW(q);faces.push({I:b,inner:0});}});
+ for(const {I,inner} of faces){if(B.x1<I.x0-th*3||B.x0>I.x1+th*3||B.y1<I.y0-th*3||B.y0>I.y1+th*3)continue;
+  const XS=inner?[[B.x0,I.x0],[B.x1,I.x1]]:[[B.x0,I.x1],[B.x1,I.x0]],YS=inner?[[B.y0,I.y0],[B.y1,I.y1]]:[[B.y0,I.y1],[B.y1,I.y0]];
+  for(const [a,c] of XS){const d=c-a;if(Math.abs(d)<th&&(!bx||Math.abs(d)<Math.abs(bx.d)))bx={d,c,y0:I.y0,y1:I.y1};}
+  for(const [a,c] of YS){const d=c-a;if(Math.abs(d)<th&&(!by||Math.abs(d)<Math.abs(by.d)))by={d,c,x0:I.x0,x1:I.x1};}}
+ if(bx){o.x=r2(o.x+bx.d);GUIDES=GUIDES.filter(g=>g.x===undefined);GUIDES.push({x:bx.c,y0:bx.y0,y1:bx.y1});}
+ if(by){o.y=r2(o.y+by.d);GUIDES=GUIDES.filter(g=>g.y===undefined);GUIDES.push({y:by.c,x0:by.x0,x1:by.x1});}}
 function guidesSVG(){if(!GUIDES.length)return '';const k=1/view.s,ext=12*k;return '<g pointer-events="none">'+GUIDES.map(g=>g.x!==undefined?`<line x1="${g.x}" y1="${g.y0-ext}" x2="${g.x}" y2="${g.y1+ext}"`:`<line x1="${g.x0-ext}" y1="${g.y}" x2="${g.x1+ext}" y2="${g.y}"`).map(l=>l+` stroke="#ff2d95" stroke-width="1.3" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"/>`).join('')+'</g>';}
 function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(pinch){if(P.size<2)pinch=null;G=null;return;}
