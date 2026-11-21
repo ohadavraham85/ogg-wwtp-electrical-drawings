@@ -3719,6 +3719,18 @@ async function saveShared(){if(!cloudId){saveSharedAs(false);return;}
 function saveSharedAs(copy){modal(copy?'שמירת עותק בתיקייה המשותפת':'שמירה בתיקייה המשותפת',`<div class="fld"><label>שם הלוח</label><input id="f_sn" value="${esc(copy?state.name+' (עותק)':state.name)}"></div><div class="hint">הלוח יישמר בתיקייה המשותפת של מחלקת החשמל. כולם יוכלו לפתוח אותו, ויראו מי יצר אותו ומי ערך אותו לאחרונה.</div>`,
  [{t:'שמור',cls:'pri',fn:async()=>{const n=($('f_sn').value||'').trim()||'לוח';state.name=n;commit();
    try{clearTimeout(saveT);saveT=null;delete state.dwgno;delete state.rev;await ensureDwgNo();const data=JSON.stringify(state),d=await SH.save({name:n,data,parts:partsCount()});setCloud(d.id);cloudStamp=d.updatedAt;lastSaved=data;setSaveSt('saved');updateBar();toast('נשמר בתיקייה המשותפת: '+n);}catch(e){toast('השמירה נכשלה');}}},{t:'ביטול'}]);}
+/* The drawing's earlier versions (kept by the shell on the server): restore one in
+   place (the current content is kept as a version first) or open it as a new copy. */
+async function versionsDialog(){if(!SH||!SH.versions){toast('היסטוריית גרסאות זמינה רק בתיקייה המשותפת');return;}
+ if(!cloudId){toast('הלוח עוד לא שמור בתיקייה המשותפת — אין לו גרסאות');return;}await flushSave();
+ let L=[];try{L=await SH.versions(cloudId);}catch(e){modal('גרסאות',`<div class="hint">לא ניתן לקרוא את היסטוריית הגרסאות${e&&e.code==='permission-denied'?' — צריך לעדכן את הכללים ב-Firebase (firestore.rules)':''}.</div>`);return;}
+ const when=t=>{try{return new Date(t).toLocaleString('he-IL');}catch(e){return t;}};
+ const h=L.length?`<div class="hint">גרסה נשמרת אוטומטית לפני שינוי, לכל היותר פעם ב-10 דקות (ותמיד כשמישהו אחר עורך). נשמרות ${L.length} אחרונות.</div><div class="plist">`+L.map(v=>`<div style="display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:6px"><div style="flex:1;min-width:0"><b>${esc(when(v.savedAt))}</b><div style="font-size:12.5px;color:var(--mut)">${esc(v.savedBy||'')} · ${esc(v.name||'')} · ${v.parts} רכיבים</div></div><button class="wbtn" data-vr="${esc(v.vid)}">↺ שחזר</button><button class="wbtn" data-vc="${esc(v.vid)}">עותק</button></div>`).join('')+'</div>':'<div class="hint">עוד אין גרסאות קודמות ללוח הזה. מעכשיו, כל שינוי ישמור את הגרסה הקודמת.</div>';
+ modal('גרסאות — '+state.name,h);
+ $('mBody').onclick=async e=>{const r=e.target.closest('[data-vr]'),cp=e.target.closest('[data-vc]');if(!r&&!cp)return;const vid=(r||cp).dataset.vr||(r||cp).dataset.vc;
+  let v=null;try{v=await SH.version(cloudId,vid);}catch(_){}if(!v){toast('הגרסה לא נמצאה');return;}
+  if(cp){await flushSave();state=JSON.parse(v.data);state.name=(v.name||state.name)+' (גרסה קודמת)';delete state.tpl;setCloud(null);lastSaved=null;cloudStamp=null;sel=null;multi.clear();hist=[];hi=-1;commit();renderNow();fit();closeModal();toast('נפתח עותק של הגרסה — יישמר כלוח חדש');return;}
+  modal('שחזור גרסה','<div class="hint">הלוח יחזור לגרסה שבחרת. המצב הנוכחי יישמר קודם כגרסה, כך שאפשר לחזור אליו.</div>',[{t:'↺ שחזר',cls:'pri',fn:async()=>{try{await SH.snapshot(cloudId);}catch(_){}const nm=state.name;state=JSON.parse(v.data);state.name=nm;sel=null;multi.clear();hist=[];hi=-1;commit();renderNow();fit();toast('הגרסה שוחזרה');}},{t:'ביטול'}]);};}
 async function openShared(){let ds=[];try{ds=await SH.list();}catch(e){toast('לא ניתן לקרוא את התיקייה המשותפת');return;}
  const loc=loadProjects(),lk=Object.keys(loc);
  const mine=d=>SH.me()&&d.createdBy===SH.me().label;ds.sort((a,b)=>(mine(b)?1:0)-(mine(a)?1:0));
@@ -5552,6 +5564,7 @@ function openDrawer(){const T=(ic,n,fn,tip,on)=>({ic,n,fn,tip:tip||n,on:!!on});
  const S=[
   {k:'proj',t:'פרויקט',it:[T('newp','חדש',newProject,'פרויקט חדש'),
    ...(SH?[T('open','פתח',openShared,'פתח מהתיקייה המשותפת'),T('save','שמור',saveShared,'שמור עכשיו בתיקייה המשותפת (נשמר גם אוטומטית)'),T('saveas','שמור עותק',()=>saveSharedAs(true),'שמור עותק בשם…')]:[T('open','פתח',openProjects,'פתח פרויקט שמור'),T('saveas','שמור בשם',saveAs,'שמור בשם…')]),T('tpl','מתבנית',templatesDialog,'פרויקט חדש מתבנית (דוגמאות)'),
+   T('reset','גרסאות',versionsDialog,'היסטוריית הגרסאות של הלוח — שחזור או פתיחה כעותק'),
    T('info','פרטי פרויקט',()=>{sel=null;multi.clear();renderNow();editDialog();},'שם, מספר שרטוט, גרסה')]},
   {k:'out',t:'הדפסה וייצוא',it:[T('print','הדפסה',printPreview,'תצוגה לפני הדפסה (Ctrl+P)'),T('pdf','PDF',pdfDialog,'ייצוא PDF עם טבלת שרטוט'),T('png','תמונה',exportImage,'ייצוא תמונה (PNG)'),T('dxf','AutoCAD',dxfExport,'ייצוא DXF ל-AutoCAD'),
    T('bom','רשימת ציוד',bom,'רשימת ציוד (BOM)'),T('exp','הורד קובץ',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state)),'הורד קובץ פרויקט (JSON)'),T('imp','ייבוא קובץ',importJSON,'ייבוא קובץ פרויקט'),T('clip','העתק קובץ',copyJSON,'העתק את קובץ הפרויקט')]},

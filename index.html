@@ -180,11 +180,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 279;
+const VERSION = 280;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'ייבוא PDF כקווים (וקטורי, חד בכל זום) — ופירוק של רקע PDF / DXF לקווים וכיתובים לעריכה (ניהול רקעים ← פרק)';
+const WHATS_NEW = 'היסטוריית גרסאות לכל לוח: נשמרות אוטומטית גרסאות קודמות, ותפריט ← פרויקט ← "גרסאות" מחזיר או פותח כל אחת';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -345,6 +345,15 @@ function writeDesign(d) {
 }
 // Firestore keeps at most 1 MiB per document
 const MAX_DESIGN = 1000000;
+// ---------- version history: ohadcad_designs/{id}/versions/{auto} ----------
+const VER_GAP = 10 * 60 * 1000, VER_MAX = 40;
+let verWarned = false;
+function keepVersion(ex) {
+  const V = DESIGNS.doc(ex.id).collection('versions');
+  return V.add({ name: ex.name || '', data: ex.data, parts: ex.parts || 0, savedBy: ex.updatedBy || ex.createdBy || '', savedByEmail: me.email, savedAt: ex.updatedAt || new Date().toISOString(), keptAt: new Date().toISOString() })
+    .then(() => V.orderBy('savedAt', 'desc').get()).then((snap) => { snap.docs.slice(VER_MAX).forEach((doc) => doc.ref.delete().catch(() => {})); })
+    .catch((e) => { if (!verWarned) { verWarned = true; console.warn('versions', e); if (e && e.code === 'permission-denied') toast('היסטוריית הגרסאות עוד לא פעילה — צריך לעדכן את הכללים ב-Firebase'); } });
+}
 
 const bridge = {
   me: () => ({ label: me.label, email: me.email, owner: isOwner }),
@@ -384,13 +393,23 @@ const bridge = {
       : { id: DESIGNS.doc().id, name: input.name, data: input.data, parts: input.parts,
           createdBy: me.label, createdByEmail: me.email, createdAt: now,
           updatedBy: me.label, updatedByEmail: me.email, updatedAt: now, deleted: false };
-    const d = dwgno ? { ...d0, dwgno } : d0;
+    let d = dwgno ? { ...d0, dwgno } : d0;
+    // version history: before overwriting, keep the previous content when the last kept
+    // version is 10+ minutes old or someone else saved it
+    if (ex && ex.data && ex.data !== input.data && (!ex.verAt || Date.now() - Date.parse(ex.verAt) > VER_GAP || (ex.updatedByEmail && ex.updatedByEmail !== me.email))) {
+      keepVersion(ex); d = { ...d, verAt: now };
+    }
     if (new Blob([input.data]).size > MAX_DESIGN) { const e = new Error('too-big'); e.code = 'too-big'; e.size = new Blob([input.data]).size; throw e; }
     const w = writeDesign(d);
     // the server's answer within a few seconds; no answer = offline, saved on the device and sent later
     const r = await Promise.race([w.then(() => 'ok'), new Promise((res) => setTimeout(() => res('later'), 8000))]);
     return { ...info(d), pending: r === 'later' };
   },
+  // version history of a drawing, newest first (without the data)
+  async versions(id) { const snap = await DESIGNS.doc(id).collection('versions').orderBy('savedAt', 'desc').limit(VER_MAX).get(); return snap.docs.map((doc) => { const v = doc.data(); return { vid: doc.id, name: v.name, parts: v.parts || 0, savedBy: v.savedBy, savedAt: v.savedAt }; }); },
+  async version(id, vid) { const doc = await DESIGNS.doc(id).collection('versions').doc(vid).get(); return doc.exists ? { name: doc.data().name, data: doc.data().data } : null; },
+  // keep the drawing as it is now as a version (before a restore)
+  async snapshot(id) { await ready; const d = designs.get(id); if (d && d.data) await keepVersion(d); },
   async remove(id) {
     await ready;
     const d = designs.get(id);

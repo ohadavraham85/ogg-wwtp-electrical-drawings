@@ -46,5 +46,14 @@ service cloud.firestore {
         && (request.resource.data.deleted == false || resource.data.deleted == true
             || isOwner() || resource.data.createdByEmail == myEmail());
     }
+
+    // Earlier versions of a drawing, kept automatically before it is overwritten.
+    // Read and add by approved users; trimmed (deleted) only by the owner or the drawing's creator.
+    match /ohadcad_designs/{id}/versions/{vid} {
+      allow read: if isApproved();
+      allow create: if isApproved() && request.resource.data.savedByEmail == myEmail();
+      allow delete: if isOwner()
+        || (isApproved() && get(/databases/$(database)/documents/ohadcad_designs/$(id)).data.createdByEmail == myEmail());
+    }
   }
 }
