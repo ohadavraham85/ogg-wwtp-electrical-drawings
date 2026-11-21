@@ -1000,6 +1000,7 @@ function bxDims(x0,y0,x1,y1,g,f){const c='#1d4ed8',lw=Math.max(3,f/14),k=f*.4,W=
 const eqDimG=(w,h)=>{const f=Math.max(45,Math.min(110,Math.min(w,h)/6));return [f*1.8,f];};
 const eqExt=o=>{if(o.p.dm==='0')return null;const {w,h}=sizeOf(o),[g,f]=eqDimG(+o.p.w||w,+o.p.h||h);return {l:g+f*1.6,t:g+f*1.6,r:0,b:0};};
 const DMSEL=[['1','הצג מידות'],['0','בלי מידות']];
+const tcabDbl=o=>o.p.dk?o.p.dk==='2':+o.p.w>=1000;
 function roomDimG(o){const W=+o.p.w,H=+o.p.h;return [Math.max(250,Math.min(600,Math.min(W,H)/8)),Math.max(80,Math.min(170,Math.min(W,H)/22))];}
 function roomDims(o){const t=+o.p.wt||0,W=+o.p.w,H=+o.p.h,ow=W+2*t,oh=H+2*t,[g,f]=roomDimG(o),lw=Math.max(5,f/14),c='#1d4ed8',k=f*.45;
  const y=-oh/2-g,x=-ow/2-g;let s=`<g stroke="${c}" stroke-width="${lw}" fill="none">`;
@@ -1940,13 +1941,13 @@ const DEF={
  tstair:{layer:.5,resize:'box',minBox:500,edit:['w','h','dm'],def:{w:1100,h:3000,dm:'1'},lbl:{w:'רוחב (מ"מ)',h:'אורך (מ"מ)',dm:'מידות'},sel:{dm:DMSEL},ext:o=>eqExt(o),size:o=>({w:+o.p.w,h:+o.p.h}),
   draw:o=>{const w=+o.p.w,h=+o.p.h;let s=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" fill="#f3f4f6" stroke="#111827" stroke-width="8"/>`;for(let y=-h/2+280;y<h/2;y+=280)s+=`<path d="M${-w/2} ${y}H${w/2}" stroke="#6b7280" stroke-width="5"/>`;
    s+=`<path d="M0 ${h/2-150}V${-h/2+200}m-90 120l90 -120 90 120" fill="none" stroke="#111827" stroke-width="10"/>`;if(o.p.dm!=='0'){const [g,f]=eqDimG(w,h);s+=bxDims(-w/2,-h/2,w/2,h/2,g,f);}return s;}},
- tcab:{layer:2,resize:'box',minBox:200,edit:['tag','w','h','dsw','dm'],def:{tag:'',w:800,h:600,dsw:'1',dm:'1'},lbl:{w:'רוחב (מ"מ)',h:'עומק (מ"מ)',dsw:'דלת',dm:'מידות'},sel:{dsw:[['1','עם דלת (וסימון הפתיחה שלה)'],['0','ללא דלת']],dm:DMSEL},ext:o=>eqExt(o),
-  size:o=>{const w=+o.p.w,lf=w>=1000?w/2:w;return {w,h:+o.p.h+(o.p.dsw==='1'?lf:0)};},
-  fromBox:(o,nw,nh)=>{o.p.w=nw;const lf=nw>=1000?nw/2:nw;o.p.h=Math.max(150,r2(nh-(o.p.dsw==='1'?lf:0)));},
-  draw:o=>{const w=+o.p.w,d=+o.p.h,{h}=DEF.tcab.size(o),y0=-h/2,yf=y0+d,lf=w>=1000?w/2:w;let s=`<rect x="${-w/2}" y="${y0}" width="${w}" height="${h}" fill="transparent"/><rect x="${-w/2}" y="${y0}" width="${w}" height="${d}" fill="#e5e7eb" stroke="#111827" stroke-width="8"/><path d="M${-w/2} ${yf-30}H${w/2}" stroke="#f59e0b" stroke-width="40"/>`;
+ tcab:{layer:2,resize:'box',minBox:200,edit:['tag','w','h','dsw','dk','dm'],def:{tag:'לוח',w:800,h:600,dsw:'1',dk:'1',dm:'1'},lbl:{tag:'כיתוב על הלוח',w:'רוחב (מ"מ)',h:'עומק (מ"מ)',dsw:'דלת',dk:'כנפיים',dm:'מידות'},sel:{dsw:[['1','עם דלת (וסימון הפתיחה שלה)'],['0','ללא דלת']],dk:[['1','דלת אחת'],['2','דלת כפולה']],dm:DMSEL},ext:o=>eqExt(o),
+  size:o=>{const w=+o.p.w,lf=tcabDbl(o)?w/2:w;return {w,h:+o.p.h+(o.p.dsw==='1'?lf:0)};},
+  fromBox:(o,nw,nh)=>{o.p.w=nw;const lf=tcabDbl(o)?nw/2:nw;o.p.h=Math.max(150,r2(nh-(o.p.dsw==='1'?lf:0)));},
+  draw:o=>{const w=+o.p.w,d=+o.p.h,{h}=DEF.tcab.size(o),y0=-h/2,yf=y0+d,lf=tcabDbl(o)?w/2:w;let s=`<rect x="${-w/2}" y="${y0}" width="${w}" height="${h}" fill="transparent"/><rect x="${-w/2}" y="${y0}" width="${w}" height="${d}" fill="#e5e7eb" stroke="#111827" stroke-width="8"/><path d="M${-w/2} ${yf-30}H${w/2}" stroke="#f59e0b" stroke-width="40"/>`;
    s+=`<path d="M${-w/2} ${y0}L${w/2} ${yf-50}M${w/2} ${y0}L${-w/2} ${yf-50}" stroke="#9ca3af" stroke-width="4"/>`;
-   if(o.p.dsw==='1'){const arc=(hx,dir)=>`<path d="M${hx} ${yf}V${yf+lf}A${lf} ${lf} 0 0 ${dir>0?0:1} ${hx+dir*lf} ${yf}" fill="none" stroke="#6b7280" stroke-width="5" stroke-dasharray="30 20"/>`;s+=w>=1000?arc(-w/2,1)+arc(w/2,-1):arc(-w/2,1);}
-   if(o.p.tag)s+=`<rect x="${-Math.min(w*.4,300)}" y="${y0+d/2-75}" width="${Math.min(w*.8,600)}" height="150" rx="20" fill="#fff" stroke="#111827" stroke-width="5"/>`+txt(0,y0+d/2,o.p.tag,Math.min(110,w/7),'#111827',800);if(o.p.dm!=='0'){const [g,f]=eqDimG(w,d);s+=bxDims(-w/2,y0,w/2,yf,g,f);}return s;}},
+   if(o.p.dsw==='1'){const arc=(hx,dir)=>`<path d="M${hx} ${yf}V${yf+lf}A${lf} ${lf} 0 0 ${dir>0?0:1} ${hx+dir*lf} ${yf}" fill="none" stroke="#6b7280" stroke-width="5" stroke-dasharray="30 20"/>`;s+=tcabDbl(o)?arc(-w/2,1)+arc(w/2,-1):arc(-w/2,1);}
+   {const fz=Math.max(50,Math.min(110,w/8,d/4)),tw=Math.min(w*.86,Math.max(fz*3,String(o.p.tag||'').length*fz*.62+fz)),th=fz*1.5;s+=`<g data-ctag="1"><rect x="${-tw/2}" y="${y0+d/2-th/2}" width="${tw}" height="${th}" rx="${fz*.25}" fill="#fff" stroke="#111827" stroke-width="5"/>`+txt(0,y0+d/2,o.p.tag||'',fz,'#111827',800)+'</g>';}if(o.p.dm!=='0'){const [g,f]=eqDimG(w,d);s+=bxDims(-w/2,y0,w/2,yf,g,f);}return s;}},
  tequip:{layer:2,resize:'box',minBox:200,edit:['ek','tag','w','h','dm'],def:{ek:'trafo',tag:'',w:1800,h:1200,dm:'1'},lbl:{ek:'סוג',w:'רוחב (מ"מ)',h:'עומק (מ"מ)',dm:'מידות'},ext:o=>eqExt(o),
   sel:{ek:Object.entries({trafo:'שנאי',gen:'גנרטור',pump:'משאבה',motor:'מנוע',ups:'UPS',tank:'מיכל',hvac:'מזגן / מפוח',box:'ציוד'}),dm:DMSEL},
   size:o=>({w:+o.p.w,h:+o.p.h}),
@@ -3088,7 +3089,7 @@ const LIB=[
     {g:'חדרים',items:[{t:'troom',n:'חדר',p:{rn:'חדר',w:4000,h:3000}}]},
     {g:'קירות, פתחים ומדרגות',items:[{t:'wall',n:'קיר',p:{w:3000,h:200}},{t:'tdoor',n:'דלת',p:{}},{t:'tdoor',n:'דלת כפולה',p:{dk:'double',dw:1600}},{t:'tdoor',n:'דלת הזזה',p:{dk:'slide',dw:1200}},{t:'twin',n:'חלון',p:{}},{t:'tcol',n:'עמוד',p:{}},{t:'tcol',n:'עמוד עגול',p:{ck:'rd'}},{t:'tstair',n:'מדרגות',p:{}}]}]},
    {tab:'ציוד בהיטל',icon:'🗄',top:true,hint:'טביעות רגל של הציוד במבט מלמעלה. ללוח יש פס כתום בצד החזית וסימון פתיחת דלת — סובב כך שהחזית פונה למעבר.',groups:[
-    {g:'לוחות וארונות',items:[{t:'tcab',n:'ארון לוח 600×400',p:{w:600,h:400}},{t:'tcab',n:'ארון לוח 800×600',p:{w:800,h:600}},{t:'tcab',n:'ארון לוח 1200×600',p:{w:1200,h:600}},{t:'tcab',n:'שורת ארונות 2400×600',p:{w:2400,h:600}},{t:'tcab',n:'לוח קיר 600×250',p:{w:600,h:250,dsw:'1'}}]},
+    {g:'לוחות וארונות',items:[{t:'tcab',n:'לוח — דלת אחת',p:{w:800,h:600,dk:'1'}},{t:'tcab',n:'לוח — דלת כפולה',p:{w:1200,h:600,dk:'2'}}]},
     {g:'ציוד',items:[{t:'tequip',n:'שנאי',p:{ek:'trafo',w:1800,h:1200}},{t:'tequip',n:'גנרטור',p:{ek:'gen',w:3000,h:1200}},{t:'tequip',n:'משאבה',p:{ek:'pump',w:900,h:900}},{t:'tequip',n:'מנוע',p:{ek:'motor',w:800,h:500}},{t:'tequip',n:'UPS',p:{ek:'ups',w:800,h:800}},{t:'tequip',n:'מיכל',p:{ek:'tank',w:2000,h:2000}},{t:'tequip',n:'מזגן / מפוח',p:{ek:'hvac',w:1000,h:600}},{t:'tequip',n:'ציוד כללי',p:{ek:'box',w:1000,h:800}}]},
     {g:'תעלות וקווי כבלים',items:[{t:'ttray',n:'תעלת כבלים 300',p:{}},{t:'ttray',n:'תעלת כבלים 600',p:{tw:600}},{t:'ttray',n:'תעלה ברצפה',p:{tk:'trench',tw:400}},{t:'ttray',n:'קו כבל / צינור',p:{tk:'conduit',tw:150}}]}]},
    {tab:'סמלי חשמל בתוכנית',icon:'⏚',top:true,hint:'סמלים לתוכנית חשמל בהיטל: שקעים, מפסקים, תאורה, לחצנים. גודל הסמל במ"מ בעריכה.',groups:[
@@ -4304,17 +4305,18 @@ function ownDimEdit(o,rd){const k=rd.k==='h'?'h':'w',old=document.getElementById
  const fin=keep=>{if(done)return;done=true;const v=Math.round(+inp.value);inp.remove();if(keep&&v>0&&v!==Math.round(+o.p[k])){o.p[k]=Math.max(k==='w'||o.type!=='troom'?50:50,v);commit();renderNow();updateBar();toast((k==='w'?'רוחב':'עומק')+': '+v+' מ"מ');}};
  inp.addEventListener('keydown',ev=>{ev.stopPropagation();if(ev.key==='Enter'){ev.preventDefault();fin(true);}else if(ev.key==='Escape'){ev.preventDefault();fin(false);}});inp.addEventListener('blur',()=>fin(true));
  toast((k==='w'?'רוחב':'עומק')+' במ"מ — Enter לשמירה, Esc לביטול');}
-function roomNameEdit(o){const old=document.getElementById('inEdit');if(old)old.remove();const r=svg.getBoundingClientRect(),inp=document.createElement('input');inp.id='inEdit';inp.value=o.p.rn||'';inp.dir='rtl';
- const fs=Math.max(15,Math.min(34,Math.max(90,Math.min(260,Math.min(+o.p.w,+o.p.h)/12))*view.s)),w=Math.max(200,fs*10);
- Object.assign(inp.style,{left:(o.x*view.s+view.tx+r.left-w/2)+'px',top:(o.y*view.s+view.ty+r.top-fs*1.1)+'px',width:w+'px',height:(fs*2.2)+'px',fontSize:fs+'px'});
+function roomNameEdit(o,key){key=key||'rn';const old=document.getElementById('inEdit');if(old)old.remove();const r=svg.getBoundingClientRect(),inp=document.createElement('input');inp.id='inEdit';inp.value=o.p[key]||'';inp.dir='rtl';
+ const fs=Math.max(15,Math.min(34,Math.max(90,Math.min(260,Math.min(+o.p.w,+o.p.h)/12))*view.s)),w=Math.max(200,fs*10),cy=key==='tag'?fromLocal(o,0,-sizeOf(o).h/2+(+o.p.h)/2):[o.x,o.y];
+ Object.assign(inp.style,{left:(cy[0]*view.s+view.tx+r.left-w/2)+'px',top:(cy[1]*view.s+view.ty+r.top-fs*1.1)+'px',width:w+'px',height:(fs*2.2)+'px',fontSize:fs+'px'});
  document.body.appendChild(inp);inp.focus();inp.select();let done=false;
- const fin=keep=>{if(done)return;done=true;const v=inp.value.trim();inp.remove();if(keep&&v!==(o.p.rn||'')){o.p.rn=v;commit();renderNow();updateBar();}};
+ const fin=keep=>{if(done)return;done=true;const v=inp.value.trim();inp.remove();if(keep&&v!==(o.p[key]||'')){o.p[key]=v;commit();renderNow();updateBar();}};
  inp.addEventListener('keydown',ev=>{ev.stopPropagation();if(ev.key==='Enter'){ev.preventDefault();fin(true);}else if(ev.key==='Escape'){ev.preventDefault();fin(false);}});inp.addEventListener('blur',()=>fin(true));
- toast('שם החדר — Enter לשמירה, Esc לביטול');}
+ toast((key==='tag'?'הכיתוב על הלוח':'שם החדר')+' — Enter לשמירה, Esc לביטול');}
 function dblEdit(o,e){if(!o||o.locked||globalLock)return;
  if(o.type==='nmap'&&e){nmapEdit(o,e.clientX,e.clientY);return;}
  if(RDIM&&DEF[o.type]&&(o.type==='troom'||DEF[o.type].ext)){ownDimEdit(o,RDIM);return;}
  if(o.type==='troom'){roomNameEdit(o);return;}
+ if(o.type==='tcab'){roomNameEdit(o,'tag');return;}
  if(o.type!=='label'&&o.type!=='callout'){editDialog();return;}
  const old=document.getElementById('inEdit');if(old)old.remove();
  const B=bbW(o),r=svg.getBoundingClientRect(),x0=B.x0*view.s+view.tx+r.left,y0=B.y0*view.s+view.ty+r.top,w=(B.x1-B.x0)*view.s,h=(B.y1-B.y0)*view.s;
@@ -5555,7 +5557,7 @@ function xrIndex(){const m={panel:new Map(),sld:new Map()},{panel,sld}={panel:pa
 function xrLabel(o){if(!xrOk(o)||(o.type==='label')||state.tab==='top')return '';const d=xrDocOf(o),od=d==='sld'?'panel':'sld',M=XRI[od],t=String(o.p.tag).trim();if(!M.has(t))return '';
  const b=bbW(o),sh=M.get(t),fs=d==='sld'?5:Math.max(6,Math.min(14,(b.x1-b.x0)*.1));
  return `<text x="${r2((b.x0+b.x1)/2)}" y="${r2(b.y1+fs*1.1)}" font-size="${fs}" fill="#7c3aed" font-weight="700" text-anchor="middle" font-family="Heebo,Arial" pointer-events="none">⇄ ${od==='sld'?'חד קווי':'חזית'}${sh?' · '+esc(sh):''}</text>`;}
-function xrBlock(o){if(!xrOk(o))return '';const L=xrOther(o),d=xrDocOf(o),od=d==='sld'?'panel':'sld',on=od==='sld'?'בחד קווי':'בחזית הלוח';
+function xrBlock(o){if(!xrOk(o)||state.tab==='top')return '';const L=xrOther(o),d=xrDocOf(o),od=d==='sld'?'panel':'sld',on=od==='sld'?'בחד קווי':'בחזית הלוח';
  if(!L.length)return `<div class="hint" style="margin:6px 0">⇄ אין רכיב עם התג ${esc(o.p.tag)} ${on}. ${d==='sld'?'אפשר להוסיף אותו מ"בדיקת התאמה" בתפריט.':''}</div>`;
  return `<div style="margin:8px 0;padding:8px;border:1px solid #7c3aed;border-radius:10px"><div style="font-size:13px;color:#a78bfa;margin-bottom:6px">⇄ מקושר ${on} (לפי התג — שינוי התג כאן משנה גם שם)</div>${L.map(q=>`<div style="display:flex;gap:8px;align-items:center"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${esc(q.p.tag)}</b> · ${esc(q.p.name||q.type)}${q.p.rating?' · '+esc(q.p.rating):''}${xrSheet(q,od)?' · '+esc(xrSheet(q,od)):''}</span><button class="wbtn" type="button" data-xr="${q.id}">עבור ←</button></div>`).join('')}</div>`;}
 function xrBind(o){const B=$('propsBody');if(!B||!xrOk(o))return;const od=xrDocOf(o)==='sld'?'panel':'sld',ids=xrOther(o).map(q=>q.id);
