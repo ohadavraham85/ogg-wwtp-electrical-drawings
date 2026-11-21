@@ -996,7 +996,7 @@ function qrDialog(o){const k=o.p.qk||'doc';
 /* Width above and depth on the left of a box (local coords), with extension lines. */
 function bxDims(x0,y0,x1,y1,g,f){const c='#1d4ed8',lw=Math.max(3,f/14),k=f*.4,W=x1-x0,H=y1-y0,y=y0-g,x=x0-g;
  return `<g stroke="${c}" stroke-width="${lw}" fill="none" pointer-events="none"><path d="M${x0} ${y0}V${y-k}M${x1} ${y0}V${y-k}M${x0} ${y}H${x1}M${x0-k} ${y+k}l${2*k} ${-2*k}M${x1-k} ${y+k}l${2*k} ${-2*k}M${x0} ${y0}H${x-k}M${x0} ${y1}H${x-k}M${x} ${y0}V${y1}M${x-k} ${y0+k}l${2*k} ${-2*k}M${x-k} ${y1+k}l${2*k} ${-2*k}"/></g>`
-  +txt((x0+x1)/2,y-f*.75,String(Math.round(W)),f,c,700)+`<g transform="translate(${x-f*.75} ${(y0+y1)/2}) rotate(-90)">${txt(0,0,String(Math.round(H)),f,c,700)}</g>`;}
+  +`<g data-rdim="w">${txt((x0+x1)/2,y-f*.75,String(Math.round(W)),f,c,700)}</g><g data-rdim="h" transform="translate(${x-f*.75} ${(y0+y1)/2}) rotate(-90)">${txt(0,0,String(Math.round(H)),f,c,700)}</g>`;}
 const eqDimG=(w,h)=>{const f=Math.max(45,Math.min(110,Math.min(w,h)/6));return [f*1.8,f];};
 const eqExt=o=>{if(o.p.dm==='0')return null;const {w,h}=sizeOf(o),[g,f]=eqDimG(+o.p.w||w,+o.p.h||h);return {l:g+f*1.6,t:g+f*1.6,r:0,b:0};};
 const DMSEL=[['1','הצג מידות'],['0','בלי מידות']];
@@ -1005,7 +1005,7 @@ function roomDims(o){const t=+o.p.wt||0,W=+o.p.w,H=+o.p.h,ow=W+2*t,oh=H+2*t,[g,f
  const y=-oh/2-g,x=-ow/2-g;let s=`<g stroke="${c}" stroke-width="${lw}" fill="none">`;
  s+=`<path d="M${-W/2} ${-H/2}V${y-k}M${W/2} ${-H/2}V${y-k}M${-W/2} ${y}H${W/2}M${-W/2-k} ${y+k}l${2*k} ${-2*k}M${W/2-k} ${y+k}l${2*k} ${-2*k}"/>`;
  s+=`<path d="M${-W/2} ${-H/2}H${x-k}M${-W/2} ${H/2}H${x-k}M${x} ${-H/2}V${H/2}M${x-k} ${-H/2+k}l${2*k} ${-2*k}M${x-k} ${H/2+k}l${2*k} ${-2*k}"/></g>`;
- s+=txt(0,y-f*.75,String(Math.round(W)),f,c,700)+`<g transform="translate(${x-f*.75} 0) rotate(-90)">${txt(0,0,String(Math.round(H)),f,c,700)}</g>`;return s;}
+ s+=`<g data-rdim="w">${txt(0,y-f*.75,String(Math.round(W)),f,c,700)}</g><g data-rdim="h" transform="translate(${x-f*.75} 0) rotate(-90)">${txt(0,0,String(Math.round(H)),f,c,700)}</g>`;return s;}
 /* Enclosure brands: door colour and the maker's badge. Rittal VX25 / AE are RAL 7035
    light grey; Schneider PrismaSeT P / G are RAL 9003 white. '' = generic. */
 const BRANDS={'':'כללי',rittal:'Rittal (VX25 / AE)',prisma:'Schneider PrismaSeT (P / G)'};
@@ -4296,6 +4296,14 @@ function nmapEdit(o,cx,cy){const [wx,wy]=toWorld(cx,cy),c=nmapCell(o,wx,wy);if(!
  inp.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter'){e.preventDefault();fin(true);}else if(e.key==='Escape'){e.preventDefault();fin(false);}});inp.addEventListener('blur',()=>fin(true));
  toast(c.title?'כותרת הטבלה — מה הארון; Enter לשמירה':c.q?(c.col==='name'?'שם הציוד':'ייעוד')+' — Enter לשמירה, Esc לביטול':'הערה לשלב ריק — Enter לשמירה');}
 /* a room's name, typed in place over the room's middle */
+/* a part's own drawn dimension (room inner width / depth, equipment width / depth),
+   typed in place where it was double-clicked */
+let RDIM=null;
+function ownDimEdit(o,rd){const k=rd.k==='h'?'h':'w',old=document.getElementById('inEdit');if(old)old.remove();const inp=document.createElement('input');inp.id='inEdit';inp.type='number';inp.inputMode='numeric';inp.value=Math.round(+o.p[k]);inp.dir='ltr';
+ Object.assign(inp.style,{left:(rd.x-60)+'px',top:(rd.y-20)+'px',width:'120px',height:'40px',fontSize:'18px'});document.body.appendChild(inp);inp.focus();inp.select();let done=false;
+ const fin=keep=>{if(done)return;done=true;const v=Math.round(+inp.value);inp.remove();if(keep&&v>0&&v!==Math.round(+o.p[k])){o.p[k]=Math.max(k==='w'||o.type!=='troom'?50:50,v);commit();renderNow();updateBar();toast((k==='w'?'רוחב':'עומק')+': '+v+' מ"מ');}};
+ inp.addEventListener('keydown',ev=>{ev.stopPropagation();if(ev.key==='Enter'){ev.preventDefault();fin(true);}else if(ev.key==='Escape'){ev.preventDefault();fin(false);}});inp.addEventListener('blur',()=>fin(true));
+ toast((k==='w'?'רוחב':'עומק')+' במ"מ — Enter לשמירה, Esc לביטול');}
 function roomNameEdit(o){const old=document.getElementById('inEdit');if(old)old.remove();const r=svg.getBoundingClientRect(),inp=document.createElement('input');inp.id='inEdit';inp.value=o.p.rn||'';inp.dir='rtl';
  const fs=Math.max(15,Math.min(34,Math.max(90,Math.min(260,Math.min(+o.p.w,+o.p.h)/12))*view.s)),w=Math.max(200,fs*10);
  Object.assign(inp.style,{left:(o.x*view.s+view.tx+r.left-w/2)+'px',top:(o.y*view.s+view.ty+r.top-fs*1.1)+'px',width:w+'px',height:(fs*2.2)+'px',fontSize:fs+'px'});
@@ -4305,6 +4313,7 @@ function roomNameEdit(o){const old=document.getElementById('inEdit');if(old)old.
  toast('שם החדר — Enter לשמירה, Esc לביטול');}
 function dblEdit(o,e){if(!o||o.locked||globalLock)return;
  if(o.type==='nmap'&&e){nmapEdit(o,e.clientX,e.clientY);return;}
+ if(RDIM&&DEF[o.type]&&(o.type==='troom'||DEF[o.type].ext)){ownDimEdit(o,RDIM);return;}
  if(o.type==='troom'){roomNameEdit(o);return;}
  if(o.type!=='label'&&o.type!=='callout'){editDialog();return;}
  const old=document.getElementById('inEdit');if(old)old.remove();
@@ -4779,7 +4788,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  if(P.size>2)return;
  if(measMode){if(e.pointerType==='mouse'&&e.button!==0){G={sx:e.clientX,sy:e.clientY,t0:Date.now(),id:null,moved:false,mode:'pan',tx0:view.tx,ty0:view.ty};return;}
   const [mx,my]=toWorld(e.clientX,e.clientY),ti=e.target.closest('[data-id]');G={sx:e.clientX,sy:e.clientY,t0:Date.now(),moved:false,mode:'meas',p0:measMode==='tape'?(MS.a&&!MS.frozen?tapeAt(MS.a,mx,my):tapeAt(null,mx,my)):measMode==='obj'?mdSnap(mx,my):mdPick(mx,my),id:ti?ti.dataset.id:null};return;}
- const t=e.target.closest('[data-id]'),id=t?t.dataset.id:null;
+ const t=e.target.closest('[data-id]'),id=t?t.dataset.id:null;{const rd=e.target.closest&&e.target.closest('[data-rdim]');RDIM=rd?{k:rd.dataset.rdim,x:e.clientX,y:e.clientY}:null;}
  G={sx:e.clientX,sy:e.clientY,t0:Date.now(),id,moved:false,mode:'pan',tx0:view.tx,ty0:view.ty,add:e.shiftKey||e.ctrlKey||e.metaKey};
  if(e.pointerType==='mouse'&&e.button!==0)return;
  if(PEN){const [wx,wy]=toWorld(e.clientX,e.clientY),penBtn=e.pointerType==='pen'&&((e.buttons&2)||(e.buttons&32)||e.button===2||e.button===5);if(PEN.erase||penBtn){G.mode='erase';G.n=inkErase(wx,wy);}else{G.mode='ink';INKDRAFT=[[r2(wx),r2(wy)]];}return;}
