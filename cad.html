@@ -991,6 +991,14 @@ function qrDialog(o){const k=o.p.qk||'doc';
  ${k==='doc'&&!cloudId?'<div class="hint" style="color:#f59e0b">השרטוט עוד לא שמור בתיקייה המשותפת — הקוד מוביל כרגע רק לאפליקציה. אחרי "שמור בתיקייה המשותפת" הוא יוביל לשרטוט הזה (המסגרת הכתומה תיעלם).</div>':''}
  <div class="hint">מי שסורק צריך להיות מחובר ומאושר באפליקציה כדי לראות את השרטוט.</div>`,
  ()=>{const k0=o.p.qk;o.p.qk=$('f_qk').value;if($('f_qt'))o.p.qt=$('f_qt').value.trim();o.p.qs=Math.max(15,Math.min(300,Math.round(+$('f_qs').value)||60));o.p.ql=$('f_ql').value;commit();renderNow();updateBar();if(k0!==o.p.qk)setTimeout(()=>qrDialog(o),0);});}
+/* A room's own inner dimensions, drawn with it (so they follow every change of
+   size): width above, depth on the left, outside the walls. */
+function roomDimG(o){const W=+o.p.w,H=+o.p.h;return [Math.max(250,Math.min(600,Math.min(W,H)/8)),Math.max(80,Math.min(170,Math.min(W,H)/22))];}
+function roomDims(o){const t=+o.p.wt||0,W=+o.p.w,H=+o.p.h,ow=W+2*t,oh=H+2*t,[g,f]=roomDimG(o),lw=Math.max(5,f/14),c='#1d4ed8',k=f*.45;
+ const y=-oh/2-g,x=-ow/2-g;let s=`<g stroke="${c}" stroke-width="${lw}" fill="none">`;
+ s+=`<path d="M${-W/2} ${-H/2}V${y-k}M${W/2} ${-H/2}V${y-k}M${-W/2} ${y}H${W/2}M${-W/2-k} ${y+k}l${2*k} ${-2*k}M${W/2-k} ${y+k}l${2*k} ${-2*k}"/>`;
+ s+=`<path d="M${-W/2} ${-H/2}H${x-k}M${-W/2} ${H/2}H${x-k}M${x} ${-H/2}V${H/2}M${x-k} ${-H/2+k}l${2*k} ${-2*k}M${x-k} ${H/2+k}l${2*k} ${-2*k}"/></g>`;
+ s+=txt(0,y-f*.75,String(Math.round(W)),f,c,700)+`<g transform="translate(${x-f*.75} 0) rotate(-90)">${txt(0,0,String(Math.round(H)),f,c,700)}</g>`;return s;}
 /* Enclosure brands: door colour and the maker's badge. Rittal VX25 / AE are RAL 7035
    light grey; Schneider PrismaSeT P / G are RAL 9003 white. '' = generic. */
 const BRANDS={'':'כללי',rittal:'Rittal (VX25 / AE)',prisma:'Schneider PrismaSeT (P / G)'};
@@ -1902,13 +1910,15 @@ const DEF={
   draw:o=>{const {w,h}=sizeOf(o);if(EXPMIN>0)return o.p.exp==='1'&&o.p.hide!=='1'?`<g opacity="${+o.p.op||.6}">${ulayInner(o)}</g>`:'';
    return `<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" fill="${o.locked||o.p.hide==='1'?'none':'transparent'}" stroke="${o.locked?'none':'#94a3b8'}" stroke-width="1" stroke-dasharray="6 4" vector-effect="non-scaling-stroke" ${o.locked||o.p.hide==='1'?'pointer-events="none"':''}/>`;}},
  /* ---- top view (plan) parts, sizes in mm ---- */
- troom:{layer:-.3,resize:'box',minBox:600,edit:['rn','w','h','wt','ar'],def:{rn:'חדר',w:4000,h:3000,wt:200,ar:'1'},
-  lbl:{rn:'שם החדר',w:'רוחב פנימי (מ"מ)',h:'עומק פנימי (מ"מ)',wt:'עובי קיר (מ"מ)',ar:'שטח'},sel:{ar:[['1','הצג שטח'],['0','בלי שטח']]},num:['wt'],
+ troom:{layer:-.3,resize:'box',minBox:600,edit:['rn','w','h','wt','ar','dm'],def:{rn:'חדר',w:4000,h:3000,wt:200,ar:'1',dm:'1'},
+  lbl:{rn:'שם החדר',w:'רוחב פנימי (מ"מ)',h:'עומק פנימי (מ"מ)',wt:'עובי קיר (מ"מ)',ar:'שטח',dm:'קווי מידה'},sel:{ar:[['1','הצג שטח'],['0','בלי שטח']],dm:[['1','הצג מידות פנימיות'],['0','בלי מידות']]},num:['wt'],
+  fromBox:(o,nw,nh)=>{const t=+o.p.wt||0;o.p.w=Math.max(300,r2(nw-2*t));o.p.h=Math.max(300,r2(nh-2*t));},
+  ext:o=>{if(o.p.dm==='0')return null;const g=roomDimG(o);return {l:g[0]+g[1]*1.6,t:g[0]+g[1]*1.6,r:0,b:0};},
   size:o=>{const t=+o.p.wt||0;return {w:+o.p.w+2*t,h:+o.p.h+2*t};},
   draw:o=>{const t=+o.p.wt||0,W=+o.p.w,H=+o.p.h,ow=W+2*t,oh=H+2*t,fs=Math.max(90,Math.min(260,Math.min(W,H)/12));
    let s=`<rect x="${-ow/2}" y="${-oh/2}" width="${ow}" height="${oh}" fill="#3f4652"/><rect x="${-W/2}" y="${-H/2}" width="${W}" height="${H}" fill="#f7f6f1" stroke="#1f2937" stroke-width="6"/>`;
    if(t)s+=`<rect x="${-ow/2}" y="${-oh/2}" width="${ow}" height="${oh}" fill="none" stroke="#111827" stroke-width="8"/>`;
-   s+=txt(0,o.p.ar==='1'?-fs*.45:0,o.p.rn||'',fs,'#111827',700);if(o.p.ar==='1')s+=txt(0,fs*.75,(W*H/1e6).toFixed(1)+' מ"ר',fs*.6,'#4b5563',500);return s;}},
+   s+=txt(0,o.p.ar==='1'?-fs*.45:0,o.p.rn||'',fs,'#111827',700);if(o.p.ar==='1')s+=txt(0,fs*.75,(W*H/1e6).toFixed(1)+' מ"ר',fs*.6,'#4b5563',500);if(o.p.dm!=='0')s+=roomDims(o);return s;}},
  tdoor:{layer:1,edit:['dk','dw','hinge','wt'],def:{dk:'single',dw:900,hinge:'L',wt:200},lbl:{dk:'סוג',dw:'רוחב פתח (מ"מ)',hinge:'צירים',wt:'עובי הקיר (מ"מ)'},
   sel:{dk:[['single','כנף אחת'],['double','שתי כנפיים'],['slide','הזזה']],hinge:[['L','צירים משמאל'],['R','צירים מימין']]},num:['dw','wt'],
   size:o=>{const d=+o.p.dw||900,t=+o.p.wt||200;return {w:d,h:t+(o.p.dk==='double'?d/2:o.p.dk==='slide'?80:d)};},
@@ -1925,6 +1935,7 @@ const DEF={
    s+=`<path d="M0 ${h/2-150}V${-h/2+200}m-90 120l90 -120 90 120" fill="none" stroke="#111827" stroke-width="10"/>`;return s;}},
  tcab:{layer:2,resize:'box',minBox:200,edit:['tag','w','h','dsw'],def:{tag:'',w:800,h:600,dsw:'1'},lbl:{w:'רוחב (מ"מ)',h:'עומק (מ"מ)',dsw:'סימון פתיחת דלת'},sel:{dsw:[['1','כן'],['0','לא']]},
   size:o=>{const w=+o.p.w,lf=w>=1000?w/2:w;return {w,h:+o.p.h+(o.p.dsw==='1'?lf:0)};},
+  fromBox:(o,nw,nh)=>{o.p.w=nw;const lf=nw>=1000?nw/2:nw;o.p.h=Math.max(150,r2(nh-(o.p.dsw==='1'?lf:0)));},
   draw:o=>{const w=+o.p.w,d=+o.p.h,{h}=DEF.tcab.size(o),y0=-h/2,yf=y0+d,lf=w>=1000?w/2:w;let s=`<rect x="${-w/2}" y="${y0}" width="${w}" height="${d}" fill="#e5e7eb" stroke="#111827" stroke-width="8"/><path d="M${-w/2} ${yf-30}H${w/2}" stroke="#f59e0b" stroke-width="40"/>`;
    s+=`<path d="M${-w/2} ${y0}L${w/2} ${yf-50}M${w/2} ${y0}L${-w/2} ${yf-50}" stroke="#9ca3af" stroke-width="4"/>`;
    if(o.p.dsw==='1'){const arc=(hx,dir)=>`<path d="M${hx} ${yf}V${yf+lf}A${lf} ${lf} 0 0 ${dir>0?0:1} ${hx+dir*lf} ${yf}" fill="none" stroke="#6b7280" stroke-width="5" stroke-dasharray="30 20"/>`;s+=w>=1000?arc(-w/2,1)+arc(w/2,-1):arc(-w/2,1);}
@@ -3364,7 +3375,7 @@ let showAxes=true;try{showAxes=localStorage.getItem('epd.axes')!=='0';}catch(e){
    don't shift as it grows), or set by hand or by the production sheet. The view
    itself is free — the origin only measures, it doesn't hold the page. */
 const OKEY=()=>state.tab==='sld'?'originS':state.tab==='top'?'originT':'origin';
-function drawExt(withUl){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;state.objs.forEach(o=>{if(o.type==='wire'||(o.type==='underlay'&&!(withUl&&o.p.hide!=='1')))return;const b=bbW(o);x0=Math.min(x0,b.x0);y0=Math.min(y0,b.y0);x1=Math.max(x1,b.x1);y1=Math.max(y1,b.y1);});return x0>x1?null:{x0,y0,x1,y1};}
+function drawExt(withUl){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;state.objs.forEach(o=>{if(o.type==='wire'||(o.type==='underlay'&&!(withUl&&o.p.hide!=='1')))return;boundsX(o).forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);});});return x0>x1?null:{x0,y0,x1,y1};}
 function cornerOf(e){return {x:r2(Math.floor((e.x0-20)/10)*10),y:r2(Math.ceil((e.y1+20)/10)*10)};}
 function ensureOrigin(){const k=OKEY();if(state[k])return;const e=drawExt();if(e)state[k]=cornerOf(e);}
 const ORG=()=>state[OKEY()]||(()=>{const e=drawExt();return e?cornerOf(e):{x:0,y:0};})();
@@ -4884,7 +4895,7 @@ function doResize(g,wx,wy){const o=g.o,D=DEF[o.type],[u,v]=toLocal(g.o0,wx,wy);
    for(const ey of [0,od])for(const t of T.y){const Y=W(0,fv+sy*(nh+ey))[1],d=t.c-Y;if(Math.abs(d)<th&&Math.abs(W(0,1)[1]-W(0,0)[1])>.5&&(!by||Math.abs(d)<Math.abs(by.d)))by={d,c:t.c,b:t.b,k:Math.sign(W(0,1)[1]-W(0,0)[1])};}
    if(bx){nw=Math.max(mb,r2(nw+sx*bx.k*bx.d));GUIDES.push({x:bx.c,y0:Math.min(bx.b.y0,o.y-g.s0.h),y1:Math.max(bx.b.y1,o.y+g.s0.h)});}
    if(by){nh=Math.max(mb,r2(nh+sy*by.k*by.d));GUIDES.push({y:by.c,x0:Math.min(by.b.x0,o.x-g.s0.w),x1:Math.max(by.b.x1,o.x+g.s0.w)});}}
-  o.p.w=nw;o.p.h=nh;[o.x,o.y]=fromLocal(g.o0,fu+sx*nw/2,fv+sy*nh/2);}}
+  if(D.fromBox)D.fromBox(o,nw,nh);else{o.p.w=nw;o.p.h=nh;}[o.x,o.y]=fromLocal(g.o0,fu+sx*nw/2,fv+sy*nh/2);}}
 svg.addEventListener('contextmenu',e=>e.preventDefault());
 svg.addEventListener('pointerleave',()=>{if(HOV){HOV=null;svg.style.cursor='';render();}});
 svg.addEventListener('pointerup',endPtr);svg.addEventListener('pointercancel',e=>{P.delete(e.pointerId);pinch=null;G=null;DROPR=null;});
@@ -4895,7 +4906,8 @@ function zoomCenter(f){const r=svg.getBoundingClientRect();zoomAt(r.left+(16+r.w
 /* ================= bounds / fit ================= */
 function boundsOf(o){if(o.type==='wire'){const ps=o.pts.map(resolve).filter(Boolean);return ps.map(p=>[p.x,p.y]);}
  const {w,h}=sizeOf(o);return [[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]].map(([u,v])=>fromLocal(o,u,v));}
-function boundsAll(noUl){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;state.objs.forEach(o=>(noUl&&o.type==='underlay'&&(o.p.exp!=='1'||o.p.hide==='1'))?0:boundsOf(o).forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}));if(x0>x1)return {x:-100,y:-100,w:200,h:200};return {x:x0,y:y0,w:x1-x0,h:y1-y0};}
+function boundsX(o){const e=DEF[o.type]&&DEF[o.type].ext&&DEF[o.type].ext(o);if(!e)return boundsOf(o);const {w,h}=sizeOf(o);return [[-w/2-e.l,-h/2-e.t],[w/2+e.r,-h/2-e.t],[w/2+e.r,h/2+e.b],[-w/2-e.l,h/2+e.b]].map(([u,v])=>fromLocal(o,u,v));}
+function boundsAll(noUl){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;state.objs.forEach(o=>(noUl&&o.type==='underlay'&&(o.p.exp!=='1'||o.p.hide==='1'))?0:boundsX(o).forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}));if(x0>x1)return {x:-100,y:-100,w:200,h:200};return {x:x0,y:y0,w:x1-x0,h:y1-y0};}
 function fit(){const r=svg.getBoundingClientRect(),e0=viewExt();let e=e0;if(e0&&showAxes){const o=ORG();e={x0:Math.min(e0.x0,o.x-30),y0:Math.min(e0.y0,o.y-30),x1:Math.max(e0.x1,o.x+30),y1:Math.max(e0.y1,o.y+30)};}if(!e){view.s=1;view.tx=r.width/2;view.ty=r.height/2;applyView();return;}
  const top=topBottom()+64,bot=sheetTop()-36,left=44,right=r.width-24,aw=right-left,ah=bot-top,b={x:e.x0,y:e.y0,w:e.x1-e.x0,h:e.y1-e.y0};
  view.s=Math.min(30,Math.max(.04,Math.min(aw/(b.w+20),ah/(b.h+20))));view.tx=left+aw/2-(b.x+b.w/2)*view.s;view.ty=top+ah/2-(b.y+b.h/2)*view.s;applyView();}
