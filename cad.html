@@ -3151,6 +3151,9 @@ let WL=new Map(),WG=new Map(),WB=new Map(),EXPMIN=0;
 function jointClosed(w){if(!w.p.joint)return false;const a=resolve(w.pts[0]),b=resolve(w.pts[1]);return !!a&&!!b&&Math.hypot(a.x-b.x,a.y-b.y)<.6;}
 // which way a terminal points (-1 up, +1 down), following the part's turn
 function tDir(p){const o=get(p.r),t=o&&termsOf(o)[p.t];if(!t)return 1;const [,y0]=fromLocal(o,t[0],t[1]),[,y1]=fromLocal(o,t[0],t[1]+(o.type==='sbusm'?1:t[1]<0?-1:1));return y1<y0?-1:1;}
+// a terminal on a part's left / right edge points sideways (-1 left, +1 right), following the part's turn; else 0
+function tSide(p){const o=get(p.r),t=o&&termsOf(o)[p.t];if(!t||o.type==='sbusm')return 0;const {w,h}=sizeOf(o);if(Math.abs(t[0])<w/2-.6||Math.abs(t[1])>=h/2-.6)return 0;
+ const [x0,y0]=fromLocal(o,t[0],t[1]),[x1,y1]=fromLocal(o,t[0]+Math.sign(t[0]),t[1]);if(Math.abs(y1-y0)>Math.abs(x1-x0))return 0;return x1<x0?-1:1;}
 function wireLayout(){WL=new Map();WG=new Map();WB=new Map();
  const W=state.objs.filter(w=>w.type==='wire'&&!jointClosed(w)&&(state.tab==='sld'||isSldObj(w)));if(!W.length)return;
  // symbols' terminals point up or down: an auto wire leaves each end that way, runs across at one
@@ -3158,7 +3161,11 @@ function wireLayout(){WL=new Map();WG=new Map();WB=new Map();
  // ends point up, under when both point down, half way otherwise
  W.forEach(w=>{let q=wirePs(w).map(p=>({x:p.x,y:p.y}));
   if(w.p.auto&&w.pts.length===2&&w.pts[0].r&&w.pts[1].r){const a=resolve(w.pts[0]),b=resolve(w.pts[1]);
-   if(a&&b){const da=tDir(w.pts[0]),db=tDir(w.pts[1]);let ym=w.p.ym;
+   if(a&&b){const sa=tSide(w.pts[0]),sb=tSide(w.pts[1]);
+    // a side terminal: leave sideways, run up / down at one x (its own "xm" once dragged), go in sideways
+    if(sa||sb){let xm=w.p.xm;if(xm==null)xm=sa&&sb&&sa===sb?(sa<0?Math.min(a.x,b.x)-20:Math.max(a.x,b.x)+20):sa&&!sb?b.x:!sa&&sb?a.x:gs((a.x+b.x)/2);
+     q=sa&&sb?(Math.abs(a.y-b.y)<.5&&xm>=Math.min(a.x,b.x)&&xm<=Math.max(a.x,b.x)?[a,b]:[a,{x:r2(xm),y:a.y},{x:r2(xm),y:b.y},b]):sa?(w.p.xm==null?[a,{x:b.x,y:a.y},b]:(()=>{const yb=r2(b.y+tDir(w.pts[1])*12);return [a,{x:r2(xm),y:a.y},{x:r2(xm),y:yb},{x:b.x,y:yb},b];})()):(w.p.xm==null?[a,{x:a.x,y:b.y},b]:(()=>{const ya=r2(a.y+tDir(w.pts[0])*12);return [a,{x:a.x,y:ya},{x:r2(xm),y:ya},{x:r2(xm),y:b.y},b];})());WL.set(w.id,q);return;}
+    const da=tDir(w.pts[0]),db=tDir(w.pts[1]);let ym=w.p.ym;
     if(ym==null)ym=da<0&&db<0?Math.min(a.y,b.y)-20:da>0&&db>0?Math.max(a.y,b.y)+20:gs((a.y+b.y)/2);
     q=Math.abs(a.x-b.x)<.5&&ym>=Math.min(a.y,b.y)&&ym<=Math.max(a.y,b.y)?[a,b]:[a,{x:a.x,y:r2(ym)},{x:b.x,y:r2(ym)},b];}}
   WL.set(w.id,q);});
@@ -4909,7 +4916,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  if(hEl&&so&&!so.locked&&!wireMode&&!globalLock){G.mode='resize';G.o=so;G.h=hEl.dataset.h.split(',').map(Number);G.o0={x:so.x,y:so.y,rot:so.rot};G.s0=sizeOf(so);G.fs0=+so.p.fs||0;return;}
  if(QW()){const [wx,wy]=toWorld(e.clientX,e.clientY),tr=termAt(wx,wy,qRad('press',e.pointerType!=='mouse'));if(tr){G.mode='qwire';G.from=tr;G.to=null;G.cur=[wx,wy];HOV=null;return;}}
  const o=id&&get(id);
- if(o&&o.type==='wire'&&o.p.auto&&o.pts.length===2&&!jointClosed(o)&&(state.tab==='sld'||isSldObj(o))&&!wireMode&&!globalLock&&!o.locked){G.mode='wmid';G.o=o;return;}
+ if(o&&o.type==='wire'&&o.p.auto&&o.pts.length===2&&!jointClosed(o)&&(state.tab==='sld'||isSldObj(o))&&!wireMode&&!globalLock&&!o.locked){G.mode='wmid';G.o=o;G.ax=(tSide(o.pts[0])||tSide(o.pts[1]))?'x':'y';return;}
  if(o&&!wireMode&&!globalLock&&!o.locked&&o.type!=='wire'&&((o.type!=='enclosure'&&o.type!=='cibox'&&o.type!=='cabinet'&&o.type!=='troom')||sel===o.id)){
   if(o.type==='mdim'){G.mode='mdoff';G.o=o;G.off0=+o.p.off||0;G.w0=toWorld(e.clientX,e.clientY);return;}
   G.mode='drag';G.o=o;G.ox=o.x;G.oy=o.y;G.w0=toWorld(e.clientX,e.clientY);G.kids=[];
@@ -4938,7 +4945,7 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
  if(G.mode==='mw'||G.mode==='brush'){G.mode='pan';G.tx0=view.tx;G.ty0=view.ty;G.sx=e.clientX;G.sy=e.clientY;return;}
  if(G.mode==='pan'){view.tx=G.tx0+dx;view.ty=G.ty0+dy;applyView();}
  else if(G.mode==='band'){G.w1=toWorld(e.clientX,e.clientY);render();}
- else if(G.mode==='wmid'){const o=G.o,[,wy]=toWorld(e.clientX,e.clientY);o.p.ym=gs(wy);if(sel!==o.id){sel=o.id;updateBar();}render();}
+ else if(G.mode==='wmid'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY);if(G.ax==='x')o.p.xm=gs(wx);else o.p.ym=gs(wy);if(sel!==o.id){sel=o.id;updateBar();}render();}
  else if(G.mode==='cl'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY),[ux,uy]=rotp(0,-1,o.rot||0),d=(wx-G.b0[0])*ux+(wy-G.b0[1])*uy;
   const E=Math.max(0,Math.round((d-G.base)/10)*10);o.p.cl=CABLEN[o.type]+E;const h=G.base+E;o.x=r2(G.b0[0]+ux*h/2);o.y=r2(G.b0[1]+uy*h/2);render();}
  else if(G.mode==='lymv'){const [wx,wy]=toWorld(e.clientX,e.clientY);state[OKEY()]={x:r2(gs(G.o0.x+wx-G.w0[0])),y:r2(gs(G.o0.y+wy-G.w0[1]))};render();}
@@ -5125,7 +5132,7 @@ function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(g.mode==='lyr'){if(g.moved){commit();renderNow();const L=state[LKEY()];toast(`דף ${L.paper} · קנה מידה 1:${+(+L.scale).toFixed(2)}`);}else renderNow();return;}
  if(g.mode==='rot'){if(g.moved){commit();renderNow();updateBar();toast(`סובב ל-${Math.round(g.o.rot)}°`);}else renderNow();return;}
  if(g.mode==='tip'){if(g.moved){commit();renderNow();}return;}
- if(g.mode==='wmid'){if(g.moved){commit();renderNow();updateBar();toast('החוט הוזז — הוא נשאר בגובה הזה');}else select(g.id,g.add);return;}
+ if(g.mode==='wmid'){if(g.moved){commit();renderNow();updateBar();toast(g.ax==='x'?'החוט הוזז — הוא נשאר במיקום הזה לרוחב':'החוט הוזז — הוא נשאר בגובה הזה');}else select(g.id,g.add);return;}
  if(g.mode==='mdoff'){GUIDES=[];if(g.moved){commit();renderNow();updateBar();}else{const now=Date.now(),dbl=LASTTAP.id===g.id&&now-LASTTAP.t<450&&Math.hypot(e.clientX-LASTTAP.x,e.clientY-LASTTAP.y)<24;LASTTAP={id:g.id,t:dbl?0:now,x:e.clientX,y:e.clientY};select(g.id,g.add);if(dbl&&get(g.id))mdQuick(get(g.id));}return;}
  if(DROPFULL&&g.mode==='drag'&&g.moved)toast('אין מקום פנוי בפס הזה לרכיב — פנה מקום או הארך את הפס');DROPR=null;DROPFULL=false;if(PORTHIT){PORTHIT=null;render();}if(GUIDES.length||DDIMS){GUIDES=[];DDIMS=null;render();}
  if(g.mode==='cutx')return;
