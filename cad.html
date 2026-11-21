@@ -1007,6 +1007,14 @@ function tagBox(t,cx,cy,maxW,maxH){const cw=.58,pad=.7;let fz=Math.min(110,maxH/
  const fit=L=>Math.max(...L.map(x=>x.length))*cw+pad*2;if(fit(lines)*fz>maxW){const sp=[...t.matchAll(/ /g)].map(m=>m.index);if(sp.length){const mid=sp.reduce((a,b)=>Math.abs(b-t.length/2)<Math.abs(a-t.length/2)?b:a);lines=[t.slice(0,mid),t.slice(mid+1)];}}
  fz=Math.max(20,Math.min(fz,maxW/fit(lines),maxH/(lines.length*1.3+.6)));const bw=Math.min(maxW,fit(lines)*fz),bh=(lines.length*1.3+.5)*fz;
  return `<rect x="${cx-bw/2}" y="${cy-bh/2}" width="${bw}" height="${bh}" rx="${fz*.25}" fill="#fff" stroke="#111827" stroke-width="${Math.max(2,fz/20)}"/>`+lines.map((x,i)=>txt(cx,cy+(i-(lines.length-1)/2)*fz*1.3,x,fz,'#111827',800)).join('');}
+/* a junction box's columns: its terminals, then the devices fitted in it
+   (NO / NC pushbuttons, lamps, a buzzer), each with a top and a bottom connection */
+function sjbGeo(o){const n=Math.max(0,+o.p.n||0),a=+o.p.n0||1,pb=+o.p.pb||0,pbc=+o.p.pbc||0,lp=+o.p.lp||0,bz=+o.p.bz?1:0,C=[];
+ for(let i=0;i<n;i++)C.push({k:'t',w:14,lab:String(a+i),t1:String(a+i),t2:String(a+i)});
+ let si=1;for(let i=0;i<pb;i++,si++)C.push({k:'no',w:20,lab:'S'+si,t1:'S'+si+'.13',t2:'S'+si+'.14'});for(let i=0;i<pbc;i++,si++)C.push({k:'nc',w:20,lab:'S'+si,t1:'S'+si+'.11',t2:'S'+si+'.12'});
+ for(let i=0;i<lp;i++)C.push({k:'lp',w:20,lab:'H'+(i+1),t1:'H'+(i+1)+'.X1',t2:'H'+(i+1)+'.X2'});if(bz)C.push({k:'bz',w:20,lab:'HA1',t1:'HA1.1',t2:'HA1.2'});
+ if(!C.length)C.push({k:'t',w:14,lab:String(a),t1:String(a),t2:String(a)});
+ const inner=C.reduce((t,c)=>t+c.w,0)+(n&&C.length>n?6:0),W=inner+12;let x=-W/2+6,split=0;C.forEach((c,i)=>{if(i===n&&n)x+=6,split=x-3;c.x=r2(x+c.w/2);x+=c.w;});return {W,cols:C,split:n&&C.length>n?split:0};}
 const tcabDbl=o=>o.p.dk?o.p.dk==='2':+o.p.w>=1000;
 function roomDimG(o){const W=+o.p.w,H=+o.p.h;return [Math.max(250,Math.min(600,Math.min(W,H)/8)),Math.max(80,Math.min(170,Math.min(W,H)/22))];}
 function roomDims(o){const t=+o.p.wt||0,W=+o.p.w,H=+o.p.h,ow=W+2*t,oh=H+2*t,[g,f]=roomDimG(o),lw=Math.max(5,f/14),c='#1d4ed8',k=f*.45;
@@ -2117,12 +2125,22 @@ const SDEF={
    s+=sT(42,-6,'ATS480',8)+sT(42,6,'A2 B2 C2 — עקיפה',5,700);
    ['L1','L2','L3'].forEach((l,i)=>s+=txt(-45+i*20+2.5,-31,l,5,SK,700,'start'));['T1','T2','T3'].forEach((l,i)=>s+=txt(-45+i*20+2.5,33,l,5,SK,700,'start'));['A2','B2','C2'].forEach((l,i)=>s+=txt(25+i*20+2.5,33,l,5,SK,700,'start'));
    return s+sLbl(o,170);}},
- sjb:{layer:4,sld:true,edit:['tag','n','n0','desc'],def:{tag:'JB1',n:'4',n0:'1',desc:'קופסת חיבורים'},lbl:{n:'מספר מהדקים',n0:'מספור מהדק ראשון'},sel:{n:[...Array(23)].map((_,i)=>[String(i+2),String(i+2)])},
-  size:o=>{const n=Math.max(2,+o.p.n||4);return {w:n*14+12,h:50};},
-  terms:o=>{const n=Math.max(2,+o.p.n||4),a=+o.p.n0||1,x0=-(n-1)*7,T=[];for(let i=0;i<n;i++){T.push([x0+i*14,-25,String(a+i)]);T.push([x0+i*14,25,String(a+i)]);}return T;},
-  draw:o=>{const n=Math.max(2,+o.p.n||4),a=+o.p.n0||1,W=n*14+12,x0=-(n-1)*7;let s=`<rect x="${-W/2}" y="-17" width="${W}" height="34" rx="3" fill="#fff" stroke="${SK}" stroke-width="1.3" stroke-dasharray="5 3"/>`;
-   for(let i=0;i<n;i++){const x=x0+i*14;s+=sL(x,-25,x,-6)+sL(x,6,x,25)+`<rect x="${x-5}" y="-6" width="10" height="12" fill="#fff" stroke="${SK}" stroke-width="1"/><circle cx="${x}" cy="0" r="2" fill="${SK}"/><rect x="${x-5.5}" y="-14.6" width="11" height="7" fill="#fff"/>`+txt(x,-11,String(a+i),4.6,SK,700);}
-   return s+sLbl(o,W);}},
+ sjb:{layer:4,sld:true,edit:['tag','n','n0','pb','pbc','lp','bz','desc'],def:{tag:'JB1',n:'4',n0:'1',pb:'0',pbc:'0',lp:'0',bz:'0',desc:'קופסת חיבורים'},
+  lbl:{n:'מספר מהדקים',n0:'מספור מהדק ראשון',pb:'לחצנים פתוחים (NO)',pbc:'לחצנים סגורים (NC)',lp:'נורות סימון',bz:'זמזם'},
+  sel:{n:[...Array(25)].map((_,i)=>[String(i),String(i)]),pb:[0,1,2,3,4].map(v=>[String(v),String(v)]),pbc:[0,1,2].map(v=>[String(v),String(v)]),lp:[0,1,2,3].map(v=>[String(v),String(v)]),bz:[['0','בלי'],['1','עם זמזם']]},
+  size:o=>{const G=sjbGeo(o);return {w:G.W,h:50};},
+  terms:o=>{const G=sjbGeo(o),T=[];G.cols.forEach(c=>{T.push([c.x,-25,c.t1]);T.push([c.x,25,c.t2]);});return T;},
+  draw:o=>{const G=sjbGeo(o);let s=`<rect x="${-G.W/2}" y="-17" width="${G.W}" height="34" rx="3" fill="#fff" stroke="${SK}" stroke-width="1.3" stroke-dasharray="5 3"/>`;
+   G.cols.forEach(c=>{const x=c.x;
+    if(c.k==='t'){s+=sL(x,-25,x,-6)+sL(x,6,x,25)+`<rect x="${x-5}" y="-6" width="10" height="12" fill="#fff" stroke="${SK}" stroke-width="1"/><circle cx="${x}" cy="0" r="2" fill="${SK}"/><rect x="${x-5.5}" y="-14.6" width="11" height="7" fill="#fff"/>`+txt(x,-11,c.lab,4.6,SK,700);return;}
+    s+=sL(x,-25,x,-9)+sL(x,9,x,25);
+    if(c.k==='no')s+=sL(x,9,x-6,-6,1.3)+sL(x-3,1.5,x-11,1.5,1)+sL(x-11,-2,x-11,5,1.2);
+    else if(c.k==='nc')s+=sL(x,9,x+5,-10,1.3)+sL(x,-9,x+6,-9,1.3)+sL(x+2.5,0,x-8,0,1)+sL(x-8,-3.5,x-8,3.5,1.2);
+    else if(c.k==='lp')s+=sL(x,-9,x,-6)+sL(x,6,x,9)+sC(x,0,6,'#fff')+sL(x-4.2,-4.2,x+4.2,4.2,1)+sL(x-4.2,4.2,x+4.2,-4.2,1);
+    else if(c.k==='bz')s+=sL(x,-9,x,-3)+sL(x,3,x,9)+`<path d="M${x-7} 3H${x+7}A7 7 0 0 0 ${x-7} 3Z" fill="#fff" stroke="${SK}" stroke-width="1.2" transform="rotate(180 ${x} 0)"/>`;
+    s+=txt(x+2,-13,c.lab,3.6,SK,700,'start');});
+   if(G.split)s+=`<path d="M${G.split} -17V17" stroke="${SK}" stroke-width=".8" stroke-dasharray="2 2"/>`;
+   return s+sLbl(o,G.W);}},
  spsu:{layer:4,sld:true,edit:['tag','pk','rating','desc'],def:{tag:'G1',pk:'acdc',rating:'24VDC 5A',desc:'ספק כוח'},lbl:{pk:'סוג'},sel:{pk:[['acdc','AC/DC — כניסה L N, יציאה + −'],['dcdc','DC/DC — כניסה + −, יציאה + −']]},
   ratings:['24VDC 2.5A','24VDC 5A','24VDC 10A','24VDC 20A','12VDC 5A','48VDC 5A'],size:()=>({w:60,h:70}),
   terms:o=>{const dc=o.p.pk==='dcdc';return [[-10,-35,dc?'+in':'L'],[10,-35,dc?'-in':'N'],[-10,35,'+'],[10,35,'-']];},
@@ -2925,7 +2943,7 @@ const LIB=[
   {g:'מגופים חשמליים',items:[{t:'smv',n:'מגוף חשמלי (סמל)'},{t:'smv',n:'מגוף חשמלי מווסת (סמל)',p:{act:'mod',desc:'מגוף מווסת'}},{t:'smv',n:'מגוף חשמלי AUMA AM (סמל)',p:{act:'auma',desc:'מגוף חשמלי AUMA'}},{t:'smv',n:'מגוף חשמלי AUMA AC מווסת (סמל)',p:{act:'aumac',desc:'מגוף מווסת AUMA'}},{t:'ssv',n:'ברז חשמלי סולנואיד (סמל)'}]},
   {g:'מדי גובה, לחץ וספיקה',items:[{t:'sfe',n:'מד ספיקה KROHNE — חיישן (סמל)'},{t:'sfit',n:'ממיר ספיקה KROHNE עם צג (סמל)'},{t:'sfloat',n:'מצוף (סמל)'},{t:'spt',n:'משדר לחץ (סמל)'},{t:'spi',n:'מד לחץ — מנומטר (סמל)'},{t:'slvlh',n:'מד גובה הידרוסטטי (סמל)'},{t:'sultra',n:'בקר מפלס Pulsar Ultra 4 (סמל)'},{t:'sudb',n:'מתמר אולטרסוני (סמל)'}]},
   {g:'מדידה',items:[{t:'sct',n:'משנה זרם (CT)'},{t:'svt',n:'משנה מתח (VT)'},{t:'skwh',n:'מונה kWh'},{t:'spm',n:'רב-מודד'},{t:'samm',n:'מד זרם'},{t:'svm',n:'מד מתח'}]},
-  {g:'קופסת חיבורים (JB) עם מהדקים',items:[{t:'sjb',n:'קופסת חיבורים JB — 4 מהדקים'},{t:'sjb',n:'קופסת חיבורים JB — 8 מהדקים',p:{n:'8'}},{t:'sjb',n:'קופסת חיבורים JB — 12 מהדקים',p:{n:'12'}}]},
+  {g:'קופסת חיבורים (JB) עם מהדקים',items:[{t:'sjb',n:'קופסת חיבורים משולבת — מהדקים, לחצנים, נורה וזמזם',p:{n:'4',pb:'1',pbc:'1',lp:'1',bz:'1',desc:'קופסת חיבורים משולבת'}},{t:'sjb',n:'קופסת חיבורים JB — 4 מהדקים'},{t:'sjb',n:'קופסת חיבורים JB — 8 מהדקים',p:{n:'8'}},{t:'sjb',n:'קופסת חיבורים JB — 12 מהדקים',p:{n:'12'}}]},
   {g:'ספקי כוח',items:[{t:'spsu',n:'ספק כוח AC/DC (L N → + −)'},{t:'spsu',n:'ספק כוח 24VDC 10A',p:{rating:'24VDC 10A'}},{t:'spsu',n:'ממיר DC/DC (+ − → + −)',p:{pk:'dcdc',rating:'24VDC 5A',desc:'ממיר DC/DC'}}]},
   {g:'נורית 22 מ"מ עם מד מתח / זרם',items:[{t:'spl22m',n:'נורית עם מד מתח וזרם (עם משנה זרם)'},{t:'spl22m',n:'נורית עם מד מתח',p:{mm:'v',desc:'נורית עם מד מתח'}},{t:'spl22m',n:'נורית עם מד זרם (עם משנה זרם)',p:{mm:'a',desc:'נורית עם מד זרם'}},{t:'sct2',n:'משנה זרם קטן לנורית (k / l)',p:{tag:'CT1',rating:'100A',desc:'משנה זרם של הנורית'}}]},
   {g:'מדי הספק SATEC ומשני זרם — סמלים ובלוק מדידה מחווט',items:[{t:'ssatec',n:'מד הספק SATEC PM175 (מתח, זרם, עזר)'},{t:'ssatec',n:'מד הספק SATEC PM172',p:{rating:'SATEC PM172'}},{t:'ssatec',n:'מד הספק SATEC PM135',p:{rating:'SATEC PM135'}},{t:'sct2',n:'משנה זרם עם S1 / S2'},{t:'mblk',n:'בלוק מדידה: 3 משני זרם + נתיכי מתח + SATEC PM175',p:{meter:'PM175'}},{t:'mblk',n:'בלוק מדידה: 3 משני זרם + נתיכי מתח + SATEC PM135',p:{meter:'PM135'}}]},
