@@ -1071,27 +1071,29 @@ const SM6T={IM:['IM — מפסק עומס (כניסה / יציאה)',750,375,['s
  PM:['PM — מפסק עומס עם נתיכים',750,375,['sw','fu','es']],QM:['QM — מפסק עומס משולב נתיכים (הגנת שנאי)',750,375,['sw','fu','es']],QMC:['QMC — QM עם משני זרם',1000,625,['sw','fu','ct','es']],QMB:['QMB — QM עם יציאה לפס',750,375,['sw','fu','es']],
  SM:['SM — מנתק',750,375,['ds','es']],DM1A:['DM1-A — מפסק SF1 (הגנה)',1000,750,['ds','cb','ct','es']],DM1D:['DM1-D — מפסק SF1 נשלף',1000,750,['ds','cb','ct','es']],DM2:['DM2 — מפסק SF1 עם 2 מנתקים',1500,750,['ds','cb','ct','ds','es']],
  CM:['CM — מדידת מתח (משני מתח)',750,375,['ds','fu','vt']],CM2:['CM2 — מדידת מתח (2 משני מתח)',750,500,['ds','fu','vt']],TM:['TM — שנאי שירות עצמי',750,375,['ds','fu','vt']],GBC:['GBC-A / B — מניה (זרם ומתח)',750,750,['ct','vt']],
- GAM:['GAM — כניסת כבלים לפס (עם הארקה)',750,500,['es']],GAM2:['GAM2 — כניסת כבלים לפס',750,375,[]],GBM:['GBM — חיבור פסים',750,375,[]],GIM:['GIM — תא ביניים',250,125,null]};
+ GAM:['GAM — כניסת כבלים לפס (עם הארקה)',750,500,['es']],GAM2:['GAM2 — כניסת כבלים לפס',750,375,[]],GBM:['GBM — חיבור פסים',750,375,[]],GIM:['GIM — תא ביניים',250,125,null],LVC:['LVC — תא פיקוד (מתח נמוך)',750,500,null]};
 /* other Schneider 36 kV families drawn by the same code (part types f400 / flus): F400 (Fluair) air-insulated metal-clad with
    withdrawable breakers — width 1100, height 2335 (catalogue AMTED399053EN), depth ~2600 (estimate); Flusarc 36 gas-insulated
    ring-main units — widths C / R 504, CB 554, T1 584, height 1720, depth 1072 */
-const F4T={AD:['AD — כניסה / יציאה עם מפסק נשלף',1100,0,['ds','cb','ct','es']],CL:['CL — מצמד פסים',1100,0,['cb','ct']],GL:['GL — הגבהת פסים',1100,0,[]],TT:['TT — מדידת מתח',1100,0,['fu','vt']],DI:['DI — מנתק עומס עם נתיכים',1100,0,['sw','fu','es']]};
-const FLT={C:['C — יחידת כבל (מנתק עומס)',504,0,['sw','es']],R:['R — כבל ישיר / הגבהה',504,0,['es']],CB:['CB — מפסק זרם',554,0,['ds','cb','ct','es']],T1:['T1 — הגנת שנאי (נתיכים)',584,0,['sw','fu','es']]};
+const F4T={AD:['AD — כניסה / יציאה עם מפסק נשלף',1100,0,['ds','cb','ct','es']],CL:['CL — מצמד פסים',1100,0,['cb','ct']],GL:['GL — הגבהת פסים',1100,0,[]],TT:['TT — מדידת מתח',1100,0,['fu','vt']],DI:['DI — מנתק עומס עם נתיכים',1100,0,['sw','fu','es']],LVC:['LVC — תא פיקוד (מתח נמוך)',800,0,null]};
+const FLT={C:['C — יחידת כבל (מנתק עומס)',504,0,['sw','es']],R:['R — כבל ישיר / הגבהה',504,0,['es']],CB:['CB — מפסק זרם',554,0,['ds','cb','ct','es']],T1:['T1 — הגנת שנאי (נתיכים)',584,0,['sw','fu','es']],LVC:['LVC — תא פיקוד (מתח נמוך)',600,0,null]};
 const MVFAM={sm6:{T:SM6T,lab:'SM6-36'},f400:{T:F4T,lab:'F400',H:2335,D:2600,fr:[.22,.36,.33]},flus:{T:FLT,lab:'Flusarc 36',H:1720,D:1072,fr:[.1,.4,.41]}};
-function sm6Dim(o){const F=MVFAM[o.type]||MVFAM.sm6,T=F.T[o.p.ty]||Object.values(F.T)[0],s24=o.type==='sm6'&&o.p.ser==='24';if(o.type!=='sm6'){const W=+o.p.w||T[1];return {W,H:F.H,D:F.D,T,s24:false,F};}
+/* a raised control (LV) box on top of the cubicle, any family */
+const lvbH=o=>o.p.lvb==='1'?(o.type==='sm6'&&o.p.ser==='24'?450:o.type==='sm6'?300:450):0;
+function sm6Dim(o){const F=MVFAM[o.type]||MVFAM.sm6,T=F.T[o.p.ty]||Object.values(F.T)[0],s24=o.type==='sm6'&&o.p.ser==='24';if(o.type!=='sm6'){const W=+o.p.w||T[1];return {W,H:F.H+lvbH(o),D:F.D,T,s24:false,F};}
  const W=+o.p.w||(s24?T[2]:T[1]),H=(s24?1600:2250)+(o.p.lvb==='1'?(s24?450:300):0);return {W,H,D:s24?840:1400,T,s24,F};}
 function sm6Draw(o){const {W,H,T,s24,F}=sm6Dim(o),x0=-W/2,y0=-H/2,K='#1f2937',BG='#e9eae6',PL='#d6d8d2',lw=4,k=s24?.72:1,
  R=(x,y,w,h,f,sw=lw,rx=0,da='')=>`<rect x="${r2(x)}" y="${r2(y)}" width="${r2(w)}" height="${r2(h)}" rx="${rx}" fill="${f}" stroke="${K}" stroke-width="${sw}"${da?` stroke-dasharray="${da}"`:''}/>`,L=(a,b,c,d,sw=lw)=>`<path d="M${r2(a)} ${r2(b)}L${r2(c)} ${r2(d)}" stroke="${K}" stroke-width="${sw}" fill="none" stroke-linecap="round"/>`;
- const xb=o.type==='sm6'&&o.p.lvb==='1'?(s24?450:300):0,hp=H-xb,yt=y0+xb,FR=F.fr||[.17,.31,.43],hl=hp*FR[0],ho=hp*FR[1],hc=hp*FR[2],yo=yt+hl,yc=yo+ho,yp=yc+hc,hpl=hp-hl-ho-hc;
+ const xb=lvbH(o),hp=H-xb,yt=y0+xb,FR=F.fr||[.17,.31,.43],hl=hp*FR[0],ho=hp*FR[1],hc=hp*FR[2],yo=yt+hl,yc=yo+ho,yp=yc+hc,hpl=hp-hl-ho-hc;
  let s=R(x0,y0,W,H,BG,6);
  if(xb)s+=R(x0+10,y0+10,W-20,xb-20,'#e2e3de',3)+`<circle cx="${r2(-W/2+60*k)}" cy="${r2(y0+xb/2)}" r="${r2(14*k)}" fill="#9ca3af" stroke="${K}" stroke-width="2"/>`;
  // LV compartment (top): door with two screws, label plate
  s+=R(x0+12,yt+12,W-24,hl-18,'#ecede9',3)+[0.18,0.42].map(f=>`<circle cx="${r2(x0+W*f)}" cy="${r2(yt+hl*.3)}" r="${r2(9*k)}" fill="#fff" stroke="${K}" stroke-width="2.5"/>`).join('');
  if(W>=300){const pw=Math.min(W*.5,300*k),ph=hl*.3;s+=R(-W/2+W*.12,yt+hl*.5,pw,ph,'#fff',2)+txt(-W/2+W*.12+pw/2,yt+hl*.5+ph*.36,(o.type==='sm6'?'SM6-'+(s24?'24':'36'):F.lab)+' · '+(T[0].split(' — ')[0]),Math.min(ph*.36,46*k),K,800)+(o.p.tag?txt(-W/2+W*.12+pw/2,yt+hl*.5+ph*.76,o.p.tag,Math.min(ph*.3,38*k),'#b45309',800):'');}
  // Schneider badge on the LV door
- if(W>=360){const bx=x0+W-W*.2,by=yt+hl*.32;s+=`<g transform="translate(${r2(bx)} ${r2(by)}) scale(${r2(Math.min(2.2,W/360)*k)})"><rect x="-40" y="-10" width="80" height="20" rx="2" fill="#fff" stroke="#c8c8c2" stroke-width=".6"/><circle cx="-30" cy="0" r="6" fill="#3dcd58"/><path d="M-33 2.5Q-30 -5 -27 -2.5" stroke="#fff" stroke-width="1.4" fill="none"/>${txt(6,0,'Schneider',9,'#3dcd58',800)}</g>`;}
- // F400: protection relay (Sepam) with its screen on the LV door
- if(o.type==='f400'){const rw=Math.min(W*.24,240),rh=hl*.42,rx=-x0-30-rw-W*.06,ry=yt+hl*.42;s+=R(rx,ry,rw,rh,'#e5e7eb',3,6)+R(rx+rw*.1,ry+rh*.12,rw*.8,rh*.42,'#0f766e',2,3)+txt(rx+rw/2,ry+rh*.33,'SEPAM',rh*.16,'#ccfbf1',800)+[0,1,2,3].map(i=>`<circle cx="${r2(rx+rw*(.2+i*.2))}" cy="${r2(ry+rh*.78)}" r="${r2(rh*.07)}" fill="#6b7280"/>`).join('');}
+ if(W>=360&&!(RELAYS[relOf(o)]&&!xb&&o.p.ty!=='LVC')){const bx=x0+W-W*.2,by=yt+hl*.32;s+=`<g transform="translate(${r2(bx)} ${r2(by)}) scale(${r2(Math.min(2.2,W/360)*k)})"><rect x="-40" y="-10" width="80" height="20" rx="2" fill="#fff" stroke="#c8c8c2" stroke-width=".6"/><circle cx="-30" cy="0" r="6" fill="#3dcd58"/><path d="M-33 2.5Q-30 -5 -27 -2.5" stroke="#fff" stroke-width="1.4" fill="none"/>${txt(6,0,'Schneider',9,'#3dcd58',800)}</g>`;}
+ // protection relay (Sepam / P3U30) at real size: in the raised control box, else on the LV door
+ {const rk=relOf(o),RR=RELAYS[rk];if(RR&&o.p.ty!=='LVC'){if(xb){const sc=Math.min(1,(xb-50)/RR[2]);s+=relayDraw(rk,x0+W*.62,y0+xb/2,sc);}else{const sc=Math.min(1,(hl-40)/RR[2],(W*.4)/RR[1]);s+=relayDraw(rk,-x0-30-RR[1]*sc/2,yt+hl/2+6,sc);}}}
  // operating mechanism front plate with the mimic diagram
  s+=R(x0+12,yo,W-24,ho,PL,3);
  if(T[3]){const it=T[3],cx=x0+W*(W>=600?.36:.42),top=yo+ho*.08,bot=yo+ho*.94,es=it.includes('es'),main=it.filter(q=>q!=='es'),n=Math.max(1,main.length),step=(bot-top)/(n+.6),M=Math.min(W*.13,90*k);
@@ -1113,8 +1115,12 @@ function sm6Draw(o){const {W,H,T,s24,F}=sm6Dim(o),x0=-W/2,y0=-H/2,K='#1f2937',BG
   s+=R(-x0-24-W*.07,yc+hc*.45,W*.05,hc*.2,'#9ca3af',2,6);}
  // plinth
  s+=`<rect x="${r2(x0)}" y="${r2(yp)}" width="${r2(W)}" height="${r2(hpl)}" fill="#6b7280" stroke="${K}" stroke-width="${lw}"/>`;
- {const cy=yp+hpl/2,cr=Math.min(hpl*.32,32*k);s+=`<circle cx="0" cy="${r2(cy)}" r="${r2(cr)}" fill="#111827" stroke="#e5e7eb" stroke-width="${r2(4*k)}"/><circle cx="0" cy="${r2(cy)}" r="${r2(cr*.4)}" fill="#e5e7eb"/>`;}
- if(T[3]===null)s+=txt(0,yo+ho/2,'GIM',Math.min(W*.3,70*k),K,800);
+ if(o.p.ty!=='LVC'){const cy=yp+hpl/2,cr=Math.min(hpl*.32,32*k);s+=`<circle cx="0" cy="${r2(cy)}" r="${r2(cr)}" fill="#111827" stroke="#e5e7eb" stroke-width="${r2(4*k)}"/><circle cx="0" cy="${r2(cy)}" r="${r2(cr*.4)}" fill="#e5e7eb"/>`;}
+ if(T[3]===null&&o.p.ty!=='LVC')s+=txt(0,yo+ho/2,'GIM',Math.min(W*.3,70*k),K,800);
+ if(o.p.ty==='LVC'){const dy=yo,dh=yp-yo;s+=R(x0+12,dy,W-24,dh,'#ecede9',4)+R(-x0-50,dy+dh*.42,22,dh*.16,'#9ca3af',2,6);
+  const rk=relOf(o)||'s40',RR=RELAYS[rk],n=Math.max(1,Math.min(3,Math.floor((W-80)/(RR[1]+40)))),gap=(W-n*RR[1])/(n+1);for(let i=0;i<n;i++)s+=relayDraw(rk,x0+gap+RR[1]/2+i*(RR[1]+gap),dy+dh*.2,1);
+  const ly=dy+dh*.46,nl=Math.max(3,Math.floor((W-100)/90));for(let i=0;i<nl;i++){const lx=x0+60+i*((W-120)/(nl-1));s+=`<circle cx="${r2(lx)}" cy="${r2(ly)}" r="22" fill="${['#16a34a','#dc2626','#f59e0b','#f8fafc'][i%4]}" stroke="${K}" stroke-width="4"/><circle cx="${r2(lx)}" cy="${r2(ly+90)}" r="24" fill="#d1d5db" stroke="${K}" stroke-width="4"/>`+L(lx-14,ly+90,lx+14,ly+90,6);}
+  const my=dy+dh*.72,mw=96;s+=R(-mw-20,my,mw,mw,'#fff',3)+R(20,my,mw,mw,'#fff',3)+txt(-mw/2-20,my+mw/2,'V',30,K,800)+txt(mw/2+20,my+mw/2,'A',30,K,800);}
  return s+mvLabel(o,W,H);}
 /* MV/LV distribution transformer (Arden style), front view of its long side at 1:1 (mm). Rating p.kva in MVTX =
    [length, depth, height] for oil hermetic 33/0.4 kV (typical sizes, not a maker's drawing), dry (cast resin) in a
@@ -1156,6 +1162,15 @@ function mvLabel(o,W,H,inY){if(!mvLbOn(o))return '';const tg=String(o.p.tag||'')
  s=s.replace(/<text /g,'<text direction="rtl" unicode-bidi="plaintext" ');if(inY!=null)return s;
  return s+`<path d="M0 ${r2(y+h)}V${r2(-H/2)}" stroke="#1f2937" stroke-width="4" stroke-dasharray="14 10"/>`;}
 const mvLbExt=o=>mvLbOn(o)?{l:0,r:0,t:MVLB.g+MVLB.h,b:0}:null;
+/* protection relays at their real front size (mm): Schneider Sepam series 20 / 40 / 80 and Easergy P3U30 */
+const RELAYS={s20:['Sepam סדרה 20',176,222,'SEPAM S20'],s40:['Sepam סדרה 40',176,222,'SEPAM S40'],s80:['Sepam סדרה 80',264,222,'SEPAM S80'],p3u30:['Easergy P3U30',171,183,'Easergy P3U30']};
+const relOf=o=>o.p.rel!=null?o.p.rel:(o.type==='f400'?'s40':'');
+function relayDraw(k,cx,cy,sc){const R0=RELAYS[k];if(!R0)return '';const w=R0[1]*sc,h=R0[2]*sc,x=cx-w/2,y=cy-h/2,K='#1f2937',p3=k==='p3u30';
+ let s=`<rect x="${r2(x)}" y="${r2(y)}" width="${r2(w)}" height="${r2(h)}" rx="${r2(6*sc)}" fill="${p3?'#d1d5db':'#e5e7eb'}" stroke="${K}" stroke-width="${r2(3*sc)}"/>`;
+ const sx=x+w*.1,sy=y+h*.1,sw=w*.8,sh=h*.34;s+=`<rect x="${r2(sx)}" y="${r2(sy)}" width="${r2(sw)}" height="${r2(sh)}" rx="${r2(3*sc)}" fill="${p3?'#1e3a8a':'#0f766e'}" stroke="${K}" stroke-width="${r2(2*sc)}"/>`+txt(cx,sy+sh*.5,R0[3],Math.min(sh*.26,w*.09),p3?'#dbeafe':'#ccfbf1',800);
+ for(let i=0;i<(p3?6:8);i++)s+=`<circle cx="${r2(x+w*(.12+i*(p3?.15:.108)))}" cy="${r2(y+h*.53)}" r="${r2(5*sc)}" fill="${i<2?'#16a34a':i<3?'#dc2626':'#f59e0b'}"/>`;
+ const kr=p3?2:3;for(let r=0;r<kr;r++)for(let c=0;c<4;c++)s+=`<rect x="${r2(x+w*(.16+c*.18))}" y="${r2(y+h*(.62+r*.11))}" width="${r2(w*.13)}" height="${r2(h*.07)}" rx="${r2(2*sc)}" fill="#9ca3af" stroke="${K}" stroke-width="${r2(1*sc)}"/>`;
+ return s+`<text x="${r2(cx)}" y="${r2(y+h*.96)}" font-size="${r2(10*sc)}" text-anchor="middle" font-family="Arial" font-weight="700" fill="#3dcd58">Schneider</text>`;}
 const eqExt=o=>{if(o.p.dm==='0')return null;const {w,h}=sizeOf(o),[g,f]=eqDimG(+o.p.w||w,+o.p.h||h);return {l:g+f*1.6,t:g+f*1.6,r:0,b:0};};
 const DMSEL=[['1','הצג מידות'],['0','בלי מידות']];
 /* a white text box that keeps its text inside: the letters shrink to fit, and a long
@@ -2714,18 +2729,18 @@ const FDEF={
   sel:{kva:Object.keys(MVTX).map(k=>[k,k+' kVA']),kv:[['33','33 ק"ו'],['22','22 ק"ו'],['12.6','12.6 ק"ו']],tk:[['oil','שמן, הרמטי (ONAN)'],['dry','יבש (יציקת שרף)']],lbx:[['1','הצג תג ושם על השנאי'],['0','בלי']]},
   size:o=>{const d=mvtxDim(o);return {w:d.W,h:d.H};},
   terms:o=>{const d=mvtxDim(o),y=r2(d.H/2-130+35);return [mvtxHV(o),[r2(d.W/2-d.W*.25),y,'מ"נ']];},draw:o=>mvtxDraw(o)},
- sm6:{layer:4,edit:['tag','nm','lbx','ty','w','lvb'],def:{tag:'',nm:'',lbx:'1',ser:'36',ty:'IM',w:'',lvb:'0'},ext:o=>mvLbExt(o),lbl:{tag:'תג / מספר תא',nm:'שם (למשל כניסה מחח"י)',lbx:'תיבת טקסט מעל',ser:'סדרה',ty:'סוג התא',w:'רוחב (מ"מ, ריק = לפי הקטלוג)',lvb:'תא מתח נמוך מוגבה'},num:['w'],
-  sel:{ser:[['36','SM6-36 — 36 ק"ו (גובה 2250)'],['24','SM6-24 — 24 ק"ו (גובה 1600)']],ty:Object.entries(SM6T).map(([a,b])=>[a,b[0]]),lvb:[['0','בלי'],['1','עם תא מתח נמוך מוגבה']],lbx:[['1','הצג תג ושם מעל'],['0','בלי']]},
+ sm6:{layer:4,edit:['tag','nm','lbx','ty','rel','lvb','w'],def:{tag:'',nm:'',lbx:'1',ser:'36',ty:'IM',w:'',lvb:'0',rel:''},ext:o=>mvLbExt(o),lbl:{tag:'תג / מספר תא',nm:'שם (למשל כניסה מחח"י)',lbx:'תיבת טקסט מעל',ser:'סדרה',ty:'סוג התא',w:'רוחב (מ"מ, ריק = לפי הקטלוג)',lvb:'תא פיקוד מוגבה',rel:'יחידת הגנה (ממסר)'},num:['w'],
+  sel:{ser:[['36','SM6-36 — 36 ק"ו (גובה 2250)'],['24','SM6-24 — 24 ק"ו (גובה 1600)']],ty:Object.entries(SM6T).map(([a,b])=>[a,b[0]]),lvb:[['0','בלי'],['1','עם תא פיקוד מוגבה מעל התא']],rel:[['','בלי'],...Object.entries(RELAYS).map(([a,b])=>[a,b[0]])],lbx:[['1','הצג תג ושם מעל'],['0','בלי']]},
   size:o=>{const d=sm6Dim(o);return {w:d.W,h:d.H};},
-  terms:o=>{const d=sm6Dim(o),hp=d.H-(o.p.lvb==='1'?(d.s24?450:300):0);return [[0,r2(d.H/2-hp*.045),'כבל מ"ג']];},draw:o=>sm6Draw(o)},
- f400:{layer:4,edit:['tag','nm','lbx','ty','w'],def:{tag:'',nm:'',lbx:'1',ty:'AD',w:''},ext:o=>mvLbExt(o),lbl:{tag:'תג / מספר תא',nm:'שם (למשל כניסה מחח"י)',lbx:'תיבת טקסט מעל',ser:'סדרה',ty:'סוג התא',w:'רוחב (מ"מ, ריק = לפי הקטלוג)',lvb:'תא מתח נמוך מוגבה'},num:['w'],
-  sel:{ser:[['36','SM6-36 — 36 ק"ו (גובה 2250)'],['24','SM6-24 — 24 ק"ו (גובה 1600)']],ty:Object.entries(F4T).map(([a,b])=>[a,b[0]]),lvb:[['0','בלי'],['1','עם תא מתח נמוך מוגבה']],lbx:[['1','הצג תג ושם מעל'],['0','בלי']]},
+  terms:o=>{if(o.p.ty==='LVC')return [];const d=sm6Dim(o),hp=d.H-lvbH(o);return [[0,r2(d.H/2-hp*.045),'כבל מ"ג']];},draw:o=>sm6Draw(o)},
+ f400:{layer:4,edit:['tag','nm','lbx','ty','rel','lvb','w'],def:{tag:'',nm:'',lbx:'1',ty:'AD',w:'',lvb:'0',rel:'s40'},ext:o=>mvLbExt(o),lbl:{tag:'תג / מספר תא',nm:'שם (למשל כניסה מחח"י)',lbx:'תיבת טקסט מעל',ser:'סדרה',ty:'סוג התא',w:'רוחב (מ"מ, ריק = לפי הקטלוג)',lvb:'תא פיקוד מוגבה',rel:'יחידת הגנה (ממסר)'},num:['w'],
+  sel:{ser:[['36','SM6-36 — 36 ק"ו (גובה 2250)'],['24','SM6-24 — 24 ק"ו (גובה 1600)']],ty:Object.entries(F4T).map(([a,b])=>[a,b[0]]),lvb:[['0','בלי'],['1','עם תא פיקוד מוגבה מעל התא']],rel:[['','בלי'],...Object.entries(RELAYS).map(([a,b])=>[a,b[0]])],lbx:[['1','הצג תג ושם מעל'],['0','בלי']]},
   size:o=>{const d=sm6Dim(o);return {w:d.W,h:d.H};},
-  terms:o=>{const d=sm6Dim(o),hp=d.H-(o.p.lvb==='1'?(d.s24?450:300):0);return [[0,r2(d.H/2-hp*.045),'כבל מ"ג']];},draw:o=>sm6Draw(o)},
- flus:{layer:4,edit:['tag','nm','lbx','ty','w'],def:{tag:'',nm:'',lbx:'1',ty:'C',w:''},ext:o=>mvLbExt(o),lbl:{tag:'תג / מספר תא',nm:'שם (למשל כניסה מחח"י)',lbx:'תיבת טקסט מעל',ser:'סדרה',ty:'סוג התא',w:'רוחב (מ"מ, ריק = לפי הקטלוג)',lvb:'תא מתח נמוך מוגבה'},num:['w'],
-  sel:{ser:[['36','SM6-36 — 36 ק"ו (גובה 2250)'],['24','SM6-24 — 24 ק"ו (גובה 1600)']],ty:Object.entries(FLT).map(([a,b])=>[a,b[0]]),lvb:[['0','בלי'],['1','עם תא מתח נמוך מוגבה']],lbx:[['1','הצג תג ושם מעל'],['0','בלי']]},
+  terms:o=>{if(o.p.ty==='LVC')return [];const d=sm6Dim(o),hp=d.H-lvbH(o);return [[0,r2(d.H/2-hp*.045),'כבל מ"ג']];},draw:o=>sm6Draw(o)},
+ flus:{layer:4,edit:['tag','nm','lbx','ty','rel','lvb','w'],def:{tag:'',nm:'',lbx:'1',ty:'C',w:'',lvb:'0',rel:''},ext:o=>mvLbExt(o),lbl:{tag:'תג / מספר תא',nm:'שם (למשל כניסה מחח"י)',lbx:'תיבת טקסט מעל',ser:'סדרה',ty:'סוג התא',w:'רוחב (מ"מ, ריק = לפי הקטלוג)',lvb:'תא פיקוד מוגבה',rel:'יחידת הגנה (ממסר)'},num:['w'],
+  sel:{ser:[['36','SM6-36 — 36 ק"ו (גובה 2250)'],['24','SM6-24 — 24 ק"ו (גובה 1600)']],ty:Object.entries(FLT).map(([a,b])=>[a,b[0]]),lvb:[['0','בלי'],['1','עם תא פיקוד מוגבה מעל התא']],rel:[['','בלי'],...Object.entries(RELAYS).map(([a,b])=>[a,b[0]])],lbx:[['1','הצג תג ושם מעל'],['0','בלי']]},
   size:o=>{const d=sm6Dim(o);return {w:d.W,h:d.H};},
-  terms:o=>{const d=sm6Dim(o),hp=d.H-(o.p.lvb==='1'?(d.s24?450:300):0);return [[0,r2(d.H/2-hp*.045),'כבל מ"ג']];},draw:o=>sm6Draw(o)},
+  terms:o=>{if(o.p.ty==='LVC')return [];const d=sm6Dim(o),hp=d.H-lvbH(o);return [[0,r2(d.H/2-hp*.045),'כבל מ"ג']];},draw:o=>sm6Draw(o)},
  pillar:{layer:4,edit:['tag','pk','pmat','plw','plh','pld','pdn','plb'],def:{tag:'P1',pk:'dist',pmat:'grp',plw:'800',plh:'1300',pld:'350',pdn:'1',plb:'250'},size:o=>{const d=plDim(o);return {w:d.W,h:d.H};},draw:o=>pillarDraw(o)},
  genset:{layer:4,edit:['tag','gk','kva'],def:{tag:'G1',gk:'canopy',kva:'250'},size:o=>genDim(o),draw:o=>genDraw(o)},
  ink:{layer:9,edit:['icol','iw'],def:{icol:'red',iw:'3',pts:[]},size:o=>{const P=o.p.pts||[];if(!P.length)return {w:1,h:1};let a=1e9,b=-1e9,c=1e9,d=-1e9;P.forEach(([x,y])=>{a=Math.min(a,x);b=Math.max(b,x);c=Math.min(c,y);d=Math.max(d,y);});const w=+o.p.iw||3;return {w:Math.max(2,b-a+w),h:Math.max(2,d-c+w)};},
