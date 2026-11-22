@@ -693,7 +693,7 @@ body.pro.uil #panel{border-width:0 0 0 1px}
 <div id="sbar"><button id="bDark" title="רקע השרטוט: כהה / בהיר"></button><span id="coord"></span><button data-sb="cross" title="סמן צלב X/Y שזז עם העכבר">✛ סמן צלב</button><button data-sb="axes" title="צירים וסרגלים">📏 צירים</button><button data-sb="tdims" title="הצג את כל המידות בהיטל — מרחקי הציוד מהקירות והדלתות מקצות הקיר (גם בהדפסה ובייצוא)">📐 מידות</button></div>
 <div id="docTabs"><button class="ddbtn" id="ddFile" data-dd="mFile" title="קובץ — פרויקט חדש, תבנית, פתח, שמור עותק"><i class="ico" data-ic="open"></i><span class="lbl">קובץ</span><span class="caret">▾</span></button><button class="ddbtn" id="ddExport" data-dd="mExport" title="ייצוא ודוחות — PDF, תמונה, DXF, רשימת ציוד"><i class="ico" data-ic="exp"></i><span class="lbl">ייצוא</span><span class="caret">▾</span></button><button class="ddbtn" id="ddView" data-dd="mView" title="תצוגה — חזית לוח / חד קווי / משולב, בהיר-כהה, דף ייצור"><i class="ico" data-ic="panel"></i><span class="lbl" id="ddViewLbl">חזית לוח</span><span class="caret">▾</span></button><span id="saveSt"></span></div>
 <div class="ddmenu hidden" id="mFile"><div class="ddt">קובץ</div><button id="bNewProj" title="פרויקט חדש">📄 פרויקט חדש</button><button id="bOpenProj" title="פתח פרויקט">📂 פתח</button><button id="bTemplates" title="פרויקט חדש מתבנית (דוגמאות)">🗂 תבנית</button><button id="bSaveCopy" title="שמור עותק בשם">📑 שמור עותק</button><div class="ddt">רקע לשרטוט</div><button id="bUlImp" title="ייבוא תמונה, עמוד PDF או קובץ DXF כרקע לשרטוט מעליו">🖼 ייבוא תמונה / PDF / DXF</button><button id="bUlMgr" title="נעילה, שקיפות, כיול ומחיקה של תמונות הרקע">🗂 תמונות רקע…</button></div>
-<div class="ddmenu hidden" id="mExport"><div class="ddt">ייצוא</div><button id="bPreview" title="תצוגה לפני הדפסה — רואים את הדפים לפני שמורידים או מדפיסים">👁 תצוגה לפני הדפסה</button><button id="bPdf" title="ייצוא PDF עם טבלת שרטוט">📄 PDF</button><button id="bPng" title="ייצוא תמונה (PNG)">🖼️ PNG</button><button id="bDxf" title="ייצוא DXF ל-AutoCAD — שם שומרים כ-DWG">📐 DXF</button><div class="ddt">דוחות</div><button id="bBom" title="רשימת ציוד (BOM)">📋 BOM</button><button id="bLegend" title="מקרא לשרטוט: סמל, תיאור וכמות של כל רכיב — נבנה ומתעדכן לבד">▦ מקרא</button></div>
+<div class="ddmenu hidden" id="mExport"><div class="ddt">ייצוא</div><button id="bPreview" title="תצוגה לפני הדפסה — רואים את הדפים לפני שמורידים או מדפיסים">👁 תצוגה לפני הדפסה</button><button id="bPdf" title="ייצוא PDF עם טבלת שרטוט">📄 PDF</button><button id="bPng" title="ייצוא תמונה (PNG)">🖼️ PNG</button><button id="bDxf" title="ייצוא DXF ל-AutoCAD — שם שומרים כ-DWG">📐 DXF</button><div class="ddt">דוחות</div><button id="bBom" title="רשימת ציוד (BOM)">📋 BOM</button><button id="bLegend" title="עמודת מקרא בצד ימין של דף הייצור — הצג / הסתר">▦ מקרא</button></div>
 
 <div class="ddmenu hidden" id="mDraw"></div>
 <div class="ddmenu hidden" id="mMeas"></div>
@@ -1043,6 +1043,22 @@ function legendDraw(o){const G=legendGeo(o),{H,f,sw,cw,W,th}=G,x0=-W/2,y0=-G.h/2
    s+=`<g transform="translate(${r2(xr-P/2-sw/2)} ${r2(cy)}) scale(${+k.toPrecision(4)})">${String(DEF[c.type].draw(c)).replace(/\sdata-[a-z0-9-]+="[^"]*"/g,'')}</g>`;}catch(e){}
   s+=txt(hx-H*.2,cy,r.nm,f,K,400,'end');if(cw)s+=txt(x0+P+cw/2,cy,String(r.n),f,K,700);});
  return s;}
+/* the sheet's legend column (paper mm): a narrow column at the right of the drawing frame, above the title block,
+   listing the shown document's parts (legendRows); on unless state.legOff; legColW gives its width (0 = none) */
+const legOn=()=>!state.legOff&&!state.objs.some(o=>o.type==='legend');
+function legColW(W){if(!legOn()||!legendRows().length)return 0;return W-40<230?42:56;}
+function legendCol(x0,y0,w,h){const R=legendRows(),K='#000',hd=8,ch=5,sw=w*.3,cw=w*.16,dw=w-sw-cw,xr=x0+w;let rh=Math.min(8,Math.max(3.6,(h-hd-ch)/Math.max(1,R.length)));const fit=Math.floor((h-hd-ch)/rh),show=R.length>fit?R.slice(0,Math.max(0,fit-1)):R;
+ const fs=Math.min(2.6,rh*.42),T=(x,y,t,sz,wt,anc)=>`<text x="${r2(x)}" y="${r2(y)}" font-size="${r2(sz)}" font-family="Arial,Helvetica,sans-serif" font-weight="${wt}" fill="${K}" dominant-baseline="central" ${anc==='end'?'text-anchor="start" direction="rtl"':`text-anchor="${anc}"`}>${esc(t)}</text>`,Ln=(a,b,c,d,lw=.25)=>`<line x1="${r2(a)}" y1="${r2(b)}" x2="${r2(c)}" y2="${r2(d)}" stroke="${K}" stroke-width="${lw}"/>`;
+ let s=`<rect x="${r2(x0)}" y="${r2(y0)}" width="${r2(w)}" height="${r2(h)}" fill="#fff" stroke="${K}" stroke-width=".5"/>`+T(x0+w/2,y0+hd/2,'מקרא',4.2,800,'middle')+Ln(x0,y0+hd,xr,y0+hd,.4);
+ const yh=y0+hd;s+=T(xr-sw/2,yh+ch/2,'סמל',2.2,700,'middle')+T(xr-sw-1,yh+ch/2,'תיאור',2.2,700,'end')+T(x0+cw/2,yh+ch/2,'כמות',2.2,700,'middle')+Ln(x0,yh+ch,xr,yh+ch,.3)+Ln(xr-sw,yh,xr-sw,y0+h)+Ln(x0+cw,yh,x0+cw,y0+h);
+ const yb=yh+ch,mx=Math.max(4,Math.floor((dw-2)/(fs*.56)));
+ show.forEach((r,i)=>{const cy=yb+i*rh+rh/2;s+=Ln(x0,yb+(i+1)*rh,xr,yb+(i+1)*rh,.15);
+  try{const c=JSON.parse(JSON.stringify(r.o));delete c._r;c.x=0;c.y=0;c.rot=0;c.p.dm='0';const z=DEF[c.type].size(c),k=Math.min((sw-2)/Math.max(1e-6,z.w),(rh-1)/Math.max(1e-6,z.h));
+   s+=`<g transform="translate(${r2(xr-sw/2)} ${r2(cy)}) scale(${+k.toPrecision(4)})">${String(DEF[c.type].draw(c)).replace(/\sdata-[a-z0-9-]+="[^"]*"/g,'')}</g>`;}catch(e){}
+  const nm=r.nm.length>mx?r.nm.slice(0,mx-1)+'…':r.nm;s+=T(xr-sw-1,cy,nm,fs,400,'end')+T(x0+cw/2,cy,String(r.n),fs,700,'middle');});
+ if(show.length<R.length)s+=T(x0+w/2,yb+show.length*rh+rh/2,`…ועוד ${R.length-show.length}`,fs,400,'middle');
+ return s;}
+function toggleLegCol(){state.legOff=state.legOff?0:1;commit();renderNow();toast(state.legOff?'עמודת המקרא הוסתרה מדפי הייצור':'עמודת מקרא בצד ימין של דף הייצור (מתעדכנת לבד)');}
 const eqExt=o=>{if(o.p.dm==='0')return null;const {w,h}=sizeOf(o),[g,f]=eqDimG(+o.p.w||w,+o.p.h||h);return {l:g+f*1.6,t:g+f*1.6,r:0,b:0};};
 const DMSEL=[['1','הצג מידות'],['0','בלי מידות']];
 /* a white text box that keeps its text inside: the letters shrink to fit, and a long
@@ -3513,10 +3529,11 @@ function layoutSVG(){const R=layoutRect();if(!R)return '';const {W,H,n,x0,y0}=R,
  s+=`<rect x="${X(25)}" y="${Y(15)}" width="${(W-40)*n}" height="${(H-30)*n}" fill="none" stroke="${ln}" stroke-width="1.2" stroke-dasharray="8 5" vector-effect="non-scaling-stroke"/>`;
  s+=`<rect x="${X(25)}" y="${Y(B-th)}" width="${(W-40)*n}" height="${th*n}" fill="${lt?'rgba(100,116,139,.18)':'rgba(148,163,184,.14)'}" stroke="${ln}" stroke-width="1.2" vector-effect="non-scaling-stroke"/>`;
  s+=txt(X(W/2),Y(B-th/2),'טבלת שרטוט',Math.min(th*n*.3,9*n),ln,700);
+ {const lw=legColW(W);if(lw)s+=`<g transform="translate(${x0} ${y0}) scale(${n})" opacity=".92">${legendCol(W-15-lw,15,lw,B-th-15)}</g>`;}
  s+=`<text x="${X(26)}" y="${Y(10)}" font-size="${4.2*n}" font-family="Arial" font-weight="700" fill="${ln}">${R.L.paper} ${R.L.orient==='P'?'לאורך':'לרוחב'} · 1:${n}</text></g>`;return s;}
 /* The sheet moved (its corner is the origin) so the drawing sits in the middle of
    the drawing frame, above the title block. */
-function placeOnSheet(){const R=layoutRect(),e=drawExt();if(!R||!e)return;const {W,H,n}=R,th=W<230?34:30,aL=25,aR=W-15,aT=15,aB=H-15-th-6,AW=(aR-aL)*n,AH=(aB-aT)*n,dw=e.x1-e.x0,dh=e.y1-e.y0;
+function placeOnSheet(){const R=layoutRect(),e=drawExt();if(!R||!e)return;const {W,H,n}=R,th=W<230?34:30,aL=25,aR=W-15-(legColW(W)?legColW(W)+3:0),aT=15,aB=H-15-th-6,AW=(aR-aL)*n,AH=(aB-aT)*n,dw=e.x1-e.x0,dh=e.y1-e.y0;
  const px=e.x0-(aL*n+(AW-dw)/2),py=e.y0-(aT*n+(AH-dh)/2);state[OKEY()]={x:r2(px),y:r2(py+H*n)};if(dw>AW||dh>AH)toast('השרטוט גדול מהמסגרת בקנה מידה 1:'+n+' — בחר קנה מידה קטן יותר או דף גדול יותר');}
 /* The sheet shown or hidden from the bar; the first time, its settings open. */
 function toggleLayout(){const k=LKEY(),L=state[k];if(!L){layoutDialog();return;}L.on=L.on?0:1;commit();renderNow();if(L.on)fit();syncLayoutBtn();toast(L.on?`דף ייצור מוצג — ${L.paper} 1:${L.scale}`:'דף ייצור מוסתר');}
@@ -3742,7 +3759,7 @@ document.addEventListener('click',e=>{if(!e.target.closest('#docTabs,#rail,.ddme
  if(e.target.closest('#bOpenProj')){(SH?openShared:openProjects)();return;}
  if(e.target.closest('#bSaveCopy')){(SH?()=>saveSharedAs(true):saveAs)();return;}
  if(e.target.closest('#bBom')){bom();return;}
- if(e.target.closest('#bLegend')){addLegend();return;}
+ if(e.target.closest('#bLegend')){toggleLegCol();return;}
  if(e.target.closest('#bPdf')){pdfDialog();return;}if(e.target.closest('#bUlImp')){ulImport();return;}if(e.target.closest('#bUlMgr')){ulManager();return;}if(e.target.closest('#bPreview')){printPreview();return;}
  if(e.target.closest('#bPng')){exportImage();return;}
  if(e.target.closest('#bDxf')){dxfExport();return;}
@@ -4349,7 +4366,7 @@ const IC={
 const ico=k=>`<svg viewBox="0 0 24 24" class="lic">${IC[k]}</svg>`;
 function setIcons(){const M={bNewProj:'newp',bTemplates:'tpl',bOpenProj:'open',bSaveCopy:'save',bBom:'bom',bLegend:'table',bPreview:'view',bPdf:'pdf',bPng:'png',bDxf:'dxf',bLayout:'page'};
  const lab=b=>(b.querySelector('.lbl')?.textContent||b.title||b.textContent).trim().replace(/^\S+\s+(?=\S)/u,m=>/[\p{L}\d]/u.test(m)?m:'');
- const SL={bNewProj:'פרויקט חדש',bTemplates:'פרויקט חדש מתבנית',bOpenProj:'פתח פרויקט',bSaveCopy:'שמור עותק בשם',bBom:'רשימת ציוד (BOM)',bLegend:'מקרא לשרטוט',bPreview:'תצוגה לפני הדפסה',bPdf:'PDF עם טבלת שרטוט',bPng:'תמונה (PNG)',bDxf:'DXF ל-AutoCAD (DWG)',bLayout:'דף ייצור (Layout)'};
+ const SL={bNewProj:'פרויקט חדש',bTemplates:'פרויקט חדש מתבנית',bOpenProj:'פתח פרויקט',bSaveCopy:'שמור עותק בשם',bBom:'רשימת ציוד (BOM)',bLegend:'מקרא בדף הייצור (הצג / הסתר)',bPreview:'תצוגה לפני הדפסה',bPdf:'PDF עם טבלת שרטוט',bPng:'תמונה (PNG)',bDxf:'DXF ל-AutoCAD (DWG)',bLayout:'דף ייצור (Layout)'};
  document.querySelectorAll('.ddbtn [data-ic]').forEach(i=>{i.innerHTML=ico(i.dataset.ic);});
  Object.entries(M).forEach(([id,k])=>{const b=$(id);if(!b||b.dataset.ic)return;const L=SL[id]??lab(b);b.innerHTML=`<i class="ico">${ico(k)}</i>`+(L?`<span class="lbl">${esc(L)}</span>`:'');b.dataset.ic=1;if(L&&!b.title)b.title=L;});
  document.querySelectorAll('button[data-doc]').forEach(b=>{if(b.dataset.ic)return;const L={panel:'חזית לוח',sld:'חד קווי',top:'היטל על',both:'משולב'}[b.dataset.doc];b.innerHTML=`<i class="ico">${ico(b.dataset.doc)}</i><span class="lbl">${L}</span>`;b.title=L;b.dataset.ic=1;});
@@ -5672,7 +5689,7 @@ function openDrawer(){const T=(ic,n,fn,tip,on)=>({ic,n,fn,tip:tip||n,on:!!on});
    ...(SH?[T('open','פתח',openShared,'פתח מהתיקייה המשותפת'),T('save','שמור',saveShared,'שמור עכשיו בתיקייה המשותפת (נשמר גם אוטומטית)'),T('saveas','שמור עותק',()=>saveSharedAs(true),'שמור עותק בשם…')]:[T('open','פתח',openProjects,'פתח פרויקט שמור'),T('saveas','שמור בשם',saveAs,'שמור בשם…')]),T('tpl','מתבנית',templatesDialog,'פרויקט חדש מתבנית (דוגמאות)'),
    T('reset','גרסאות',versionsDialog,'היסטוריית הגרסאות של הלוח — שחזור או פתיחה כעותק'),
    T('info','פרטי פרויקט',()=>{sel=null;multi.clear();renderNow();editDialog();},'שם, מספר שרטוט, גרסה')]},
-  {k:'out',t:'הדפסה וייצוא',it:[T('table','מקרא',addLegend,'מקרא לשרטוט: סמל, תיאור וכמות של כל רכיב — נבנה ומתעדכן לבד (אם כבר יש מקרא, עובר אליו)'),T('print','הדפסה',printPreview,'תצוגה לפני הדפסה (Ctrl+P)'),T('pdf','PDF',pdfDialog,'ייצוא PDF עם טבלת שרטוט'),T('png','תמונה',exportImage,'ייצוא תמונה (PNG)'),T('dxf','AutoCAD',dxfExport,'ייצוא DXF ל-AutoCAD'),
+  {k:'out',t:'הדפסה וייצוא',it:[T('table','מקרא בדף',toggleLegCol,'עמודת מקרא צרה בצד ימין של דף הייצור (סמל, תיאור וכמות — מתעדכנת לבד, גם ב-PDF). מקרא חופשי שמזיזים: בספרייה, שרטוט וסימון',!state.legOff),T('print','הדפסה',printPreview,'תצוגה לפני הדפסה (Ctrl+P)'),T('pdf','PDF',pdfDialog,'ייצוא PDF עם טבלת שרטוט'),T('png','תמונה',exportImage,'ייצוא תמונה (PNG)'),T('dxf','AutoCAD',dxfExport,'ייצוא DXF ל-AutoCAD'),
    T('bom','רשימת ציוד',bom,'רשימת ציוד (BOM)'),T('exp','הורד קובץ',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state)),'הורד קובץ פרויקט (JSON)'),T('imp','ייבוא קובץ',importJSON,'ייבוא קובץ פרויקט'),T('clip','העתק קובץ',copyJSON,'העתק את קובץ הפרויקט')]},
   {k:'chk',t:'בדיקה וחיווט',it:[T('check','התאמת מסמכים',xcheckDialog,'בדיקת התאמה: חזית ↔ חד קווי'),T('sld','חד קווי מהלוח',sldFromPanel,'צור טיוטת חד קווי מרכיבי חזית הלוח (מחליף את החד קווי הנוכחי — אפשר לבטל)'),T('link','הפניות',toggleXR,'הצג / הסתר הפניות חזית ↔ חד קווי ליד כל רכיב',state.xrShow),T('cross','קשתות בהצטלבות',toggleHops,'חוטים שמצטלבים בלי חיבור: קשת קפיצה מעל החוט השני (כבוי = רווח קטן בחוט החוצה)',state.hops),
    T('num','מספור חוטים',numberWires,'מספר חוטים לפי נקודות פוטנציאל'),T('tag','מספרי חוטים',toggleWN,'הצג / הסתר את מספרי החוטים',state.wnShow),T('table','טבלאות',()=>wireTables(),'טבלאות חוטים, מהדקים וכבלים'),T('labels','מדבקות',printLabels,'מדבקות מספרי חוטים'),
@@ -6435,6 +6452,8 @@ async function ensureDwgNo(){if(dwgFix())commit();if(state.dwgno)return state.dw
  state.dwgno=pre+'-'+(mx+1);try{localStorage.setItem('ohadcad.lastdwg',state.dwgno);}catch(e){}commit();return state.dwgno;}
 const nextRev=()=>state.rev==null||state.rev===''?0:(+state.rev||0)+1;
 function revDone(t){const r=t&&t.rev!=null&&t.rev!==''&&!isNaN(+t.rev)?+t.rev:nextRev();state.rev=r;commit();}
+/* the drawn picture's real extent (an open door, a label sticking out), measured in a hidden svg; falls back to the parts' boxes */
+function drawnBox(b0){try{const ns='http://www.w3.org/2000/svg',sv=document.createElementNS(ns,'svg');sv.setAttribute('style','position:absolute;left:-99999px;top:0;width:10px;height:10px;visibility:hidden');const g=document.createElementNS(ns,'g');sv.appendChild(g);document.body.appendChild(sv);g.innerHTML=content({sel:false});const r=g.getBBox();sv.remove();if(!r.width||!r.height)return b0;const x0=Math.min(b0.x,r.x),y0=Math.min(b0.y,r.y),x1=Math.max(b0.x+b0.w,r.x+r.width),y1=Math.max(b0.y+b0.h,r.y+r.height);return {x:x0,y:y0,w:x1-x0,h:y1-y0};}catch(e){return b0;}}
 async function makePdf(t){toast('מכין תצוגה…');
  // one drawing page for the panel front and one for the single-line diagram (each that has something on it)
  const docs=[];withDoc('panel',()=>{if(state.objs.length)docs.push('panel');});if(topObjs().length)docs.push('top');withDoc('sld',()=>{if(state.objs.length)docs.push('sld');});if(!docs.length)docs.push('panel');
@@ -6442,12 +6461,12 @@ async function makePdf(t){toast('מכין תצוגה…');
  const LY0=withDoc(PG[0][0],()=>layWith(PG[0][1],layoutRect));if(LY0){t.paper=LY0.L.paper;t.orient=LY0.L.orient;}let [W,H]=PAPER[t.paper]||PAPER.A3;if(t.orient==='P')[W,H]=[H,W];
  const BP=t.bomPage==='1'?[['רשימת ציוד — חזית לוח',bomData()],['רשימת ציוד — חד קווי',bomDataSld()]].filter(x=>x[1].length):[];const pages=PG.length+BP.length;const svgs=[],SZ=[];const DOCN={panel:'חזית לוח',sld:'חד קווי',top:'היטל על'};
  PG.forEach(([d,lay,nl],di)=>withDoc(d,()=>layWith(lay,()=>{const LY=layoutRect(),PW=LY?LY.W:W,PH=LY?LY.H:H,tt=Object.assign({},t,{title:(t.title||state.name)+(docs.length>1?' — '+DOCN[d]:'')+(nl>1?' — '+lay.name:'')});
-  const tb=tbSVG(tt,PW,PH,di+1,pages,'');const ax0=30,ay0=20,ax1=PW-20,ay1=tb.y0-6,aw=ax1-ax0-28,ah=ay1-ay0-28;const b=boundsAll(true),pad=4,bw=b.w+2*pad,bh=b.h+2*pad;
+  const LCW=legColW(PW);const tb=tbSVG(tt,PW,PH,di+1,pages,'');const ax0=30,ay0=20,ax1=PW-20-(LCW?LCW+3:0),ay1=tb.y0-6,aw=ax1-ax0-28,ah=ay1-ay0-28;const b=LY?boundsAll(true):drawnBox(boundsAll(true)),pad=4,bw=b.w+2*pad,bh=b.h+2*pad;
   const need=Math.max(bw/aw,bh/ah);const STD=[1,2,2.5,5,10,15,20,25,50,75,100,200];let n=LY?LY.n:(STD.find(v=>v>=need)||Math.ceil(need));const k=1/n;
   const scaleLbl=n===1?'1:1':`1:${n}`;const tb2=tbSVG(tt,PW,PH,di+1,pages,scaleLbl);
   const ox=ax0+(aw-bw*k)/2,oy=ay0+20+(ah-bh*k)/2;
   try{wireLayout();}catch(e){}EXPMIN=.3/k;const body=content({sel:false});EXPMIN=0;
-  svgs.push(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${PW} ${PH}" width="${PW}mm" height="${PH}mm">${pageFrame(PW,PH,true)}<g transform="${LY?`translate(${-LY.x0*k} ${-LY.y0*k}) scale(${k})`:`translate(${ox} ${oy}) scale(${k}) translate(${-(b.x-pad)} ${-(b.y-pad)})`}">${body}${d==='panel'?pdfDims(k):''}</g>${scaleBar(32,tb2.y0-9,k,n)}${tb2.s}<text x="22" y="${PH-5}" font-size="2.2" font-family="Arial" fill="#777">OhadCad</text></svg>`);
+  svgs.push(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${PW} ${PH}" width="${PW}mm" height="${PH}mm">${pageFrame(PW,PH,true)}<g transform="${LY?`translate(${-LY.x0*k} ${-LY.y0*k}) scale(${k})`:`translate(${ox} ${oy}) scale(${k}) translate(${-(b.x-pad)} ${-(b.y-pad)})`}">${body}${d==='panel'?pdfDims(k):''}</g>${scaleBar(32,tb2.y0-9,k,n)}${LCW?legendCol(PW-15-LCW,15,LCW,tb2.y0-15):''}${tb2.s}<text x="22" y="${PH-5}" font-size="2.2" font-family="Arial" fill="#777">OhadCad</text></svg>`);
   SZ.push([PW,PH]);if(!di)t.__scale=scaleLbl;})));
  renderNow();
  BP.forEach(([bt,bd],bi)=>{const tb=tbSVG(Object.assign({},t,{title:(t.title||state.name)+' — '+bt}),W,H,PG.length+bi+1,pages,'-');let s='';const R=W-20,x0=30,rh=7;let y=26;
