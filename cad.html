@@ -3390,6 +3390,7 @@ function wireLayout(){WL=new Map();WG=new Map();WB=new Map();
  // symbols' terminals point up or down: an auto wire leaves each end that way, runs across at one
  // height (its own "ym" once dragged there) and goes into the other end — over the top when both
  // ends point up, under when both point down, half way otherwise
+ let MVLANE=0;
  W.forEach(w=>{let q=wirePs(w).map(p=>({x:p.x,y:p.y}));
   if(w.p.auto&&w.pts.length===2&&w.pts[0].r&&w.pts[1].r){const a=resolve(w.pts[0]),b=resolve(w.pts[1]);
    if(a&&b){const sa=tSide(w.pts[0]),sb=tSide(w.pts[1]);
@@ -3398,7 +3399,7 @@ function wireLayout(){WL=new Map();WG=new Map();WB=new Map();
      q=sa&&sb?(Math.abs(a.y-b.y)<.5&&xm>=Math.min(a.x,b.x)&&xm<=Math.max(a.x,b.x)?[a,b]:[a,{x:r2(xm),y:a.y},{x:r2(xm),y:b.y},b]):sa?(w.p.xm==null?[a,{x:b.x,y:a.y},b]:(()=>{const yb=r2(b.y+tDir(w.pts[1])*12);return [a,{x:r2(xm),y:a.y},{x:r2(xm),y:yb},{x:b.x,y:yb},b];})()):(w.p.xm==null?[a,{x:a.x,y:b.y},b]:(()=>{const ya=r2(a.y+tDir(w.pts[0])*12);return [a,{x:a.x,y:ya},{x:r2(xm),y:ya},{x:r2(xm),y:b.y},b];})());WL.set(w.id,q);return;}
     const da=tDir(w.pts[0]),db=tDir(w.pts[1]);let ym=w.p.ym;
     if(da!==db&&mvEnds(w.pts)){const up=da<0?0:1,U=up?b:a,D=up?a:b,uo=get(w.pts[up].r),bb=uo&&bbW(uo);if(bb&&D.y<U.y-60){const ty=r2(w.p.ym!=null?w.p.ym:U.y-200);let q2=[D,{x:D.x,y:ty},{x:U.x,y:ty},U];if(Math.abs(D.x-U.x)<.5)q2=[D,U];if(up===0)q2=q2.reverse();WL.set(w.id,q2);return;}
-     if(bb){const fy=r2(w.p.ym!=null?w.p.ym:Math.max(D.y,bb.y1)+320),sx=r2(D.x<(bb.x0+bb.x1)/2?bb.x0-200:bb.x1+200),ty=r2(U.y-200);
+     if(bb){const fy=r2(w.p.ym!=null?w.p.ym:Math.max(D.y,bb.y1)+455+90*(MVLANE++)),sx=r2(D.x<(bb.x0+bb.x1)/2?bb.x0-200:bb.x1+200),ty=r2(U.y-200);
      let q2=[D,{x:D.x,y:fy},{x:sx,y:fy},{x:sx,y:ty},{x:U.x,y:ty},U];if(up===0)q2=q2.reverse();WL.set(w.id,q2);return;}}
     const off=w.pts[0].r===w.pts[1].r&&SELF_WIRE.has(get(w.pts[0].r)?.type)?7:mvEnds(w.pts)?320:20; // inside the box for a bridge between its own terminals
     if(ym==null)ym=da<0&&db<0?Math.min(a.y,b.y)-off:da>0&&db>0?Math.max(a.y,b.y)+off:gs((a.y+b.y)/2);
@@ -3419,7 +3420,7 @@ function wireLayout(){WL=new Map();WG=new Map();WB=new Map();
  const segs=[];W.forEach(w=>{const q=WL.get(w.id);for(let i=0;i<q.length-1;i++){const a=q[i],b=q[i+1];if(Math.abs(a.x-b.x)<.01)segs.push({w,v:true,c:a.x,lo:Math.min(a.y,b.y),hi:Math.max(a.y,b.y)});else if(Math.abs(a.y-b.y)<.01)segs.push({w,v:false,c:a.y,lo:Math.min(a.x,b.x),hi:Math.max(a.x,b.x)});}});
  // default: the run going across is broken with a short gap; state.hops = an arc over the upright one
  for(const v of segs){if(!v.v)continue;for(const h of segs){if(h.v||h.w===v.w)continue;
-  if(v.c>h.lo+6&&v.c<h.hi-6&&h.c>v.lo+1.5&&h.c<v.hi-1.5){const M=state.hops?WG:WB;if(!M.has(h.w.id))M.set(h.w.id,[]);M.get(h.w.id).push({x:v.c,y:h.c});}}}
+  if(v.c>h.lo+6&&v.c<h.hi-6&&h.c>v.lo+1.5&&h.c<v.hi-1.5&&!(h.w.pts.some(p=>v.w.pts.some(q=>p.r&&q.r&&p.r===q.r&&p.t===q.t)))){const M=state.hops?WG:WB;if(!M.has(h.w.id))M.set(h.w.id,[]);M.get(h.w.id).push({x:v.c,y:h.c});}}}
  busGaps(segs);}
 // a wire running across a busbar's other lines on its way to its own line is drawn with a gap at each
 function busGaps(segs){const BL=[];state.objs.forEach(o=>{if(o.type!=='sbusm'||!(state.tab==='sld'||isSldObj(o)))return;const L=o.p.len,N=busN(o);
@@ -3432,7 +3433,7 @@ function wirePs(w){let ps=w.pts.map(resolve).filter(Boolean);if(ps.length>=2&&w.
 function offPoly(ps,d){const n=[];for(let i=0;i<ps.length-1;i++){const dx=ps[i+1].x-ps[i].x,dy=ps[i+1].y-ps[i].y,L=Math.hypot(dx,dy)||1;n.push([-dy/L,dx/L]);}
  return ps.map((p,i)=>{const a=n[Math.max(0,i-1)],b=n[Math.min(n.length-1,i)];let mx=a[0]+b[0],my=a[1]+b[1];const m=Math.hypot(mx,my)||1;mx/=m;my/=m;const k=d/Math.max(.35,mx*b[0]+my*b[1]);return {x:p.x+mx*k,y:p.y+my*k};});}
 const PH3=['brown','bo','bk'];
-function hopPath(ps,hops,gaps){const R=5,GP=3.4;let d='M'+r2(ps[0].x)+' '+r2(ps[0].y);
+function hopPath(ps,hops,gaps,sw){const R=Math.max(5,(sw||0)*1.6),GP=Math.max(3.4,(sw||0)*1.5);let d='M'+r2(ps[0].x)+' '+r2(ps[0].y);
  for(let i=1;i<ps.length;i++){const a=ps[i-1],b=ps[i];
   if(gaps){const vv=Math.abs(a.x-b.x)<.01,hh=Math.abs(a.y-b.y)<.01;if(vv||hh){const k=vv?'y':'x',dir=Math.sign(b[k]-a[k])||1,on=g=>vv?Math.abs(g.x-a.x)<.01:Math.abs(g.y-a.y)<.01;
    const Gs=gaps.filter(g=>on(g)&&(g[k]-a[k])*dir>GP&&(b[k]-g[k])*dir>GP).sort((p,q)=>(p[k]-q[k])*dir);
@@ -3443,9 +3444,16 @@ function hopPath(ps,hops,gaps){const R=5,GP=3.4;let d='M'+r2(ps[0].x)+' '+r2(ps[
  return d;}
 function drawWire(w,isSel){const s=drawWire0(w,isSel),l=s?wnLabel(w)+(ABI?abMark(w):''):'';return (DMS&&!isSel&&s&&!(state.tab==='sld'||isSldObj(w))?s.replace('<g data-id=','<g mask="url(#dM)" data-id='):s)+l;}
 /* direction arrows on a medium-voltage cable: one in the middle of each long enough run, pointing from its first end to its second */
+/* the text box on a cable: its tag and its specification (p.cspec), on the middle of its longest horizontal run
+   (or longest run); sized to the cable; shown when either is filled and p.cbx isn't '0' */
+function cableBox(w,ps,sw){const tg=String(w.p.tag||'').trim(),sp=String(w.p.cspec||'').trim();if((!tg&&!sp)||w.p.cbx==='0'||!ps||ps.length<2)return '';
+ let best=null,bl=-1;for(let i=0;i<ps.length-1;i++){const a=ps[i],b=ps[i+1],L=Math.hypot(b.x-a.x,b.y-a.y)*(Math.abs(a.y-b.y)<.5?2:1);if(L>bl){bl=L;best=[a,b];}}
+ const f=Math.max(9,sw*2.4),t=tg&&sp?tg+' · '+sp:(tg||sp),bw=t.length*f*.56+f*1.2,bh=f*1.7,[a,b]=best,mx=a.x+(b.x-a.x)*.3,my=a.y+(b.y-a.y)*.3,hz=Math.abs(a.y-b.y)<.5,
+  cx=hz?mx:mx+bw/2+sw,cy=hz?my-bh/2-sw*.8:my;
+ return `<g pointer-events="none"><rect x="${r2(cx-bw/2)}" y="${r2(cy-bh/2)}" width="${r2(bw)}" height="${r2(bh)}" rx="${r2(f*.3)}" fill="#fff" stroke="#111827" stroke-width="${r2(f*.09)}"/><text x="${r2(cx)}" y="${r2(cy)}" font-size="${r2(f)}" text-anchor="middle" dominant-baseline="central" font-family="Arial" font-weight="700" fill="#111827" direction="rtl" unicode-bidi="plaintext">${esc(t)}</text></g>`;}
 function cableArrows(ps,sw,col){let s='';const A=Math.max(sw*5,80);for(let i=0;i<ps.length-1;i++){const a=ps[i],b=ps[i+1],L=Math.hypot(b.x-a.x,b.y-a.y);if(L<A*3)continue;const ux=(b.x-a.x)/L,uy=(b.y-a.y)/L,mx=(a.x+b.x)/2,my=(a.y+b.y)/2,tx=mx+ux*A/2,ty=my+uy*A/2,bx=mx-ux*A/2,by=my-uy*A/2,nx=-uy*A*.45,ny=ux*A*.45;
  s+=`<path d="M${r2(tx)} ${r2(ty)}L${r2(bx+nx)} ${r2(by+ny)}L${r2(bx-nx)} ${r2(by-ny)}Z" fill="${col}" stroke="${isLight()?'rgba(0,0,0,.6)':'rgba(255,255,255,.8)'}" stroke-width="${isLight()?1:3}" pointer-events="none"/>`;}return s;}
-function drawWire0(w,isSel){const LP=WL.get(w.id);const d=LP&&LP.length>1?hopPath(LP,WG.get(w.id),WB.get(w.id)):wirePath(w);if(!d)return '';if(w.p.joint){const a=resolve(w.pts[0]),b=resolve(w.pts[1]);if(a&&b&&Math.hypot(a.x-b.x,a.y-b.y)<.6)return `<g data-id="${w.id}"><circle cx="${a.x}" cy="${a.y}" r="6" fill="transparent"/><circle cx="${a.x}" cy="${a.y}" r="${isSel?3.2:2.2}" fill="${isSel?'#60a5fa':'#8b5a2b'}"/></g>`;}const sld=state.tab==='sld'||isSldObj(w);let sw=SEC[w.p.sec]||2.3;if(sld)sw=1.3;if(EXPMIN)sw=Math.max(sw,EXPMIN);const c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+function drawWire0(w,isSel){const LP=WL.get(w.id);const d=LP&&LP.length>1?hopPath(LP,WG.get(w.id),WB.get(w.id),mvEnds(w.pts)?(SEC[w.p.sec]||14):0):wirePath(w);if(!d)return '';if(w.p.joint){const a=resolve(w.pts[0]),b=resolve(w.pts[1]);if(a&&b&&Math.hypot(a.x-b.x,a.y-b.y)<.6)return `<g data-id="${w.id}"><circle cx="${a.x}" cy="${a.y}" r="6" fill="transparent"/><circle cx="${a.x}" cy="${a.y}" r="${isSel?3.2:2.2}" fill="${isSel?'#60a5fa':'#8b5a2b'}"/></g>`;}const sld=state.tab==='sld'||isSldObj(w);let sw=SEC[w.p.sec]||2.3;if(sld)sw=1.3;if(EXPMIN)sw=Math.max(sw,EXPMIN);const c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
  if(w.p.ph==='3'){const ps=LP&&LP.length>1?LP:wirePs(w),gap=sld?2.4:sw*1.25;let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${gap*2+sw+8}"/>`;if(isSel)s+=`<path ${P} stroke="#60a5fa" stroke-width="${gap*2+sw+3}"/>`;
   PH3.forEach((k,i)=>{const q=offPoly(ps,(i-1)*gap),dd='M'+q.map(p=>r2(p.x)+' '+r2(p.y)).join('L');s+=`<path d="${dd}" fill="none" stroke-linejoin="round" stroke="${WCOL[k].base}" stroke-width="${sw}"/>`;if(WCOL[k].dash)s+=`<path d="${dd}" fill="none" stroke="${WCOL[k].dash}" stroke-width="${sw}" stroke-dasharray="5 5"/>`;});return s+'</g>';}
  let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${sw+8}"/>`;
@@ -3453,6 +3461,7 @@ function drawWire0(w,isSel){const LP=WL.get(w.id);const d=LP&&LP.length>1?hopPat
  s+=(sld?'':`<path ${P} stroke="${c.base==='#1d1d1d'&&!isLight()?'rgba(255,255,255,.7)':'rgba(0,0,0,.6)'}" stroke-width="${sw+(c.base==='#1d1d1d'&&!isLight()?2.4:.9)}"/>`)+`<path ${P} stroke="${c.base}" stroke-width="${sw}"/>`;
  if(c.dash)s+=`<path ${P} stroke="${c.dash}" stroke-width="${sw}" stroke-dasharray="5 5" stroke-linecap="butt"/>`;
  if(!sld&&mvEnds(w.pts))s+=cableArrows(LP&&LP.length>1?LP:wirePs(w),sw,c.base);
+ if(w.p.tag||w.p.cspec)s+=cableBox(w,LP&&LP.length>1?LP:wirePs(w),sld?2.5:sw);
  if(sld)[w.pts[0],w.pts[w.pts.length-1]].forEach(q=>{const b=q&&q.r&&get(q.r);if(b&&b.type==='sbusm'){const r=resolve(q);if(r)s+=`<circle cx="${r2(r.x)}" cy="${r2(r.y)}" r="2.3" fill="${SK}"/>`;}});
  return s+'</g>';}
 // text in a mirrored part is flipped back about its own x so it still reads left to right
@@ -5682,8 +5691,8 @@ function editDialog(){const o=sel&&get(sel);
 <div class="hint">${pin?'המידה מחוברת לרכיב שנמדד וזזה איתו. ':''}כדי להרחיק או לקרב את קו המידה — גרור אותו.</div>`,
   ()=>{o.p.mode=$('f_mm').value;o.p.txt=$('f_mt').value;o.p.fs=+$('f_mfs').value||o.p.fs;o.p.off=+$('f_moff').value||0;o.p.color=$('f_color').value;const nl=parseFloat($('f_mlen').value);if(nl>0&&Math.abs(nl-mdGeom(o).len)>.05)mdSetLen(o,nl);commit();renderNow();updateBar();});
   $('f_mdel').onclick=()=>{state.objs=state.objs.filter(q=>q!==o);sel=null;closePanel();commit();renderNow();updateBar();toast('המידה נמחקה');};return;}
- if(o.type==='wire'){panelForm('חוט',`<div class="fld"><label>צבע</label><select id="f_wc">${Object.keys(WCOL).map(c=>`<option value="${c}" ${c===o.p.color?'selected':''}>${WCOL[c].n}</option>`).join('')}</select></div><div class="fld"><label>חתך (ממ"ר)</label><select id="f_sec">${SECK.map(s=>`<option ${s===o.p.sec?'selected':''}>${s}</option>`).join('')}</select></div><div class="fld"><label>פאזות</label><select id="f_wph"><option value="1" ${o.p.ph!=='3'?'selected':''}>קו אחד (בצבע שנבחר)</option><option value="3" ${o.p.ph==='3'?'selected':''}>תלת-פאזי — 3 קווים: חום, כתום, שחור</option></select></div><div class="fld"><label>סימון חוט</label><input id="f_wtag" value="${esc(o.p.tag||'')}"></div><div class="fld"><label>מספר חוט (מתמלא ב"מספר חוטים", אפשר לשנות)</label><input id="f_wn" value="${esc(o.p.wn||'')}"></div><div class="hint">אורך משוער: ${(wireLen(o)/1000).toFixed(2)} מ'</div>`,
-  ()=>{o.p.color=$('f_wc').value;o.p.sec=$('f_sec').value;o.p.ph=$('f_wph').value;o.p.tag=$('f_wtag').value;if($('f_wn')){const v=$('f_wn').value.trim();if(v)o.p.wn=v;else delete o.p.wn;}commit();renderNow();updateBar();});return;}
+ if(o.type==='wire'){panelForm('חוט',`<div class="fld"><label>צבע</label><select id="f_wc">${Object.keys(WCOL).map(c=>`<option value="${c}" ${c===o.p.color?'selected':''}>${WCOL[c].n}</option>`).join('')}</select></div><div class="fld"><label>חתך (ממ"ר)</label><select id="f_sec">${SECK.map(s=>`<option ${s===o.p.sec?'selected':''}>${s}</option>`).join('')}</select></div><div class="fld"><label>פאזות</label><select id="f_wph"><option value="1" ${o.p.ph!=='3'?'selected':''}>קו אחד (בצבע שנבחר)</option><option value="3" ${o.p.ph==='3'?'selected':''}>תלת-פאזי — 3 קווים: חום, כתום, שחור</option></select></div><div class="fld"><label>סימון / תג (למשל W1)</label><input id="f_wtag" value="${esc(o.p.tag||'')}"></div><div class="fld"><label>מאפייני כבל (סוג, חתך, מתח — למשל 3×1×240 N2XSY 18/30kV)</label><input id="f_cspec" value="${esc(o.p.cspec||'')}"></div><div class="fld"><label>תיבת טקסט על הכבל</label><select id="f_cbx"><option value="1" ${o.p.cbx!=='0'?'selected':''}>הצג תג ומאפיינים</option><option value="0" ${o.p.cbx==='0'?'selected':''}>בלי</option></select></div><div class="fld"><label>מספר חוט (מתמלא ב"מספר חוטים", אפשר לשנות)</label><input id="f_wn" value="${esc(o.p.wn||'')}"></div><div class="hint">אורך משוער: ${(wireLen(o)/1000).toFixed(2)} מ'</div>`,
+  ()=>{o.p.color=$('f_wc').value;o.p.sec=$('f_sec').value;o.p.ph=$('f_wph').value;o.p.tag=$('f_wtag').value;o.p.cspec=$('f_cspec').value.trim();if(!o.p.cspec)delete o.p.cspec;o.p.cbx=$('f_cbx').value;if(o.p.cbx==='1')delete o.p.cbx;if($('f_wn')){const v=$('f_wn').value.trim();if(v)o.p.wn=v;else delete o.p.wn;}commit();renderNow();updateBar();});return;}
  const D=DEF[o.type];let h=`<div class="fld"><label>שם הרכיב</label><input id="f_name" value="${esc(o.p.name)}"></div>`;
  D.edit.forEach(k=>{const v=o.p[k]??'';
   if(D.sel&&D.sel[k])h+=`<div class="fld"><label>${(D.lbl&&D.lbl[k])||FL[k]||k}</label><select id="f_${k}">${D.sel[k].map(([a,b])=>`<option value="${a}" ${String(a)===String(v)?'selected':''}>${b}</option>`).join('')}</select></div>`;
