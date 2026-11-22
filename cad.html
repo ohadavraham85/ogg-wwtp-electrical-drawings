@@ -3350,7 +3350,8 @@ function wireLayout(){WL=new Map();WG=new Map();WB=new Map();
     if(sa||sb){let xm=w.p.xm;if(xm==null)xm=sa&&sb&&sa===sb?(sa<0?Math.min(a.x,b.x)-20:Math.max(a.x,b.x)+20):sa&&!sb?b.x:!sa&&sb?a.x:gs((a.x+b.x)/2);
      q=sa&&sb?(Math.abs(a.y-b.y)<.5&&xm>=Math.min(a.x,b.x)&&xm<=Math.max(a.x,b.x)?[a,b]:[a,{x:r2(xm),y:a.y},{x:r2(xm),y:b.y},b]):sa?(w.p.xm==null?[a,{x:b.x,y:a.y},b]:(()=>{const yb=r2(b.y+tDir(w.pts[1])*12);return [a,{x:r2(xm),y:a.y},{x:r2(xm),y:yb},{x:b.x,y:yb},b];})()):(w.p.xm==null?[a,{x:a.x,y:b.y},b]:(()=>{const ya=r2(a.y+tDir(w.pts[0])*12);return [a,{x:a.x,y:ya},{x:r2(xm),y:ya},{x:r2(xm),y:b.y},b];})());WL.set(w.id,q);return;}
     const da=tDir(w.pts[0]),db=tDir(w.pts[1]);let ym=w.p.ym;
-    if(da!==db&&mvEnds(w.pts)){const up=da<0?0:1,U=up?b:a,D=up?a:b,uo=get(w.pts[up].r),bb=uo&&bbW(uo);if(bb){const fy=r2(w.p.ym!=null?w.p.ym:Math.max(D.y,bb.y1)+320),sx=r2(D.x<(bb.x0+bb.x1)/2?bb.x0-200:bb.x1+200),ty=r2(U.y-200);
+    if(da!==db&&mvEnds(w.pts)){const up=da<0?0:1,U=up?b:a,D=up?a:b,uo=get(w.pts[up].r),bb=uo&&bbW(uo);if(bb&&D.y<U.y-60){const ty=r2(w.p.ym!=null?w.p.ym:U.y-200);let q2=[D,{x:D.x,y:ty},{x:U.x,y:ty},U];if(Math.abs(D.x-U.x)<.5)q2=[D,U];if(up===0)q2=q2.reverse();WL.set(w.id,q2);return;}
+     if(bb){const fy=r2(w.p.ym!=null?w.p.ym:Math.max(D.y,bb.y1)+320),sx=r2(D.x<(bb.x0+bb.x1)/2?bb.x0-200:bb.x1+200),ty=r2(U.y-200);
      let q2=[D,{x:D.x,y:fy},{x:sx,y:fy},{x:sx,y:ty},{x:U.x,y:ty},U];if(up===0)q2=q2.reverse();WL.set(w.id,q2);return;}}
     const off=w.pts[0].r===w.pts[1].r&&SELF_WIRE.has(get(w.pts[0].r)?.type)?7:mvEnds(w.pts)?320:20; // inside the box for a bridge between its own terminals
     if(ym==null)ym=da<0&&db<0?Math.min(a.y,b.y)-off:da>0&&db>0?Math.max(a.y,b.y)+off:gs((a.y+b.y)/2);
