@@ -693,7 +693,7 @@ body.pro.uil #panel{border-width:0 0 0 1px}
 <div id="sbar"><button id="bDark" title="רקע השרטוט: כהה / בהיר"></button><span id="coord"></span><button data-sb="cross" title="סמן צלב X/Y שזז עם העכבר">✛ סמן צלב</button><button data-sb="axes" title="צירים וסרגלים">📏 צירים</button><button data-sb="tdims" title="הצג את כל המידות בהיטל — מרחקי הציוד מהקירות והדלתות מקצות הקיר (גם בהדפסה ובייצוא)">📐 מידות</button></div>
 <div id="docTabs"><button class="ddbtn" id="ddFile" data-dd="mFile" title="קובץ — פרויקט חדש, תבנית, פתח, שמור עותק"><i class="ico" data-ic="open"></i><span class="lbl">קובץ</span><span class="caret">▾</span></button><button class="ddbtn" id="ddExport" data-dd="mExport" title="ייצוא ודוחות — PDF, תמונה, DXF, רשימת ציוד"><i class="ico" data-ic="exp"></i><span class="lbl">ייצוא</span><span class="caret">▾</span></button><button class="ddbtn" id="ddView" data-dd="mView" title="תצוגה — חזית לוח / חד קווי / משולב, בהיר-כהה, דף ייצור"><i class="ico" data-ic="panel"></i><span class="lbl" id="ddViewLbl">חזית לוח</span><span class="caret">▾</span></button><span id="saveSt"></span></div>
 <div class="ddmenu hidden" id="mFile"><div class="ddt">קובץ</div><button id="bNewProj" title="פרויקט חדש">📄 פרויקט חדש</button><button id="bOpenProj" title="פתח פרויקט">📂 פתח</button><button id="bTemplates" title="פרויקט חדש מתבנית (דוגמאות)">🗂 תבנית</button><button id="bSaveCopy" title="שמור עותק בשם">📑 שמור עותק</button><div class="ddt">רקע לשרטוט</div><button id="bUlImp" title="ייבוא תמונה, עמוד PDF או קובץ DXF כרקע לשרטוט מעליו">🖼 ייבוא תמונה / PDF / DXF</button><button id="bUlMgr" title="נעילה, שקיפות, כיול ומחיקה של תמונות הרקע">🗂 תמונות רקע…</button></div>
-<div class="ddmenu hidden" id="mExport"><div class="ddt">ייצוא</div><button id="bPreview" title="תצוגה לפני הדפסה — רואים את הדפים לפני שמורידים או מדפיסים">👁 תצוגה לפני הדפסה</button><button id="bPdf" title="ייצוא PDF עם טבלת שרטוט">📄 PDF</button><button id="bPng" title="ייצוא תמונה (PNG)">🖼️ PNG</button><button id="bDxf" title="ייצוא DXF ל-AutoCAD — שם שומרים כ-DWG">📐 DXF</button><div class="ddt">דוחות</div><button id="bBom" title="רשימת ציוד (BOM)">📋 BOM</button></div>
+<div class="ddmenu hidden" id="mExport"><div class="ddt">ייצוא</div><button id="bPreview" title="תצוגה לפני הדפסה — רואים את הדפים לפני שמורידים או מדפיסים">👁 תצוגה לפני הדפסה</button><button id="bPdf" title="ייצוא PDF עם טבלת שרטוט">📄 PDF</button><button id="bPng" title="ייצוא תמונה (PNG)">🖼️ PNG</button><button id="bDxf" title="ייצוא DXF ל-AutoCAD — שם שומרים כ-DWG">📐 DXF</button><div class="ddt">דוחות</div><button id="bBom" title="רשימת ציוד (BOM)">📋 BOM</button><button id="bLegend" title="מקרא לשרטוט: סמל, תיאור וכמות של כל רכיב — נבנה ומתעדכן לבד">▦ מקרא</button></div>
 
 <div class="ddmenu hidden" id="mDraw"></div>
 <div class="ddmenu hidden" id="mMeas"></div>
@@ -3742,6 +3742,7 @@ document.addEventListener('click',e=>{if(!e.target.closest('#docTabs,#rail,.ddme
  if(e.target.closest('#bOpenProj')){(SH?openShared:openProjects)();return;}
  if(e.target.closest('#bSaveCopy')){(SH?()=>saveSharedAs(true):saveAs)();return;}
  if(e.target.closest('#bBom')){bom();return;}
+ if(e.target.closest('#bLegend')){addLegend();return;}
  if(e.target.closest('#bPdf')){pdfDialog();return;}if(e.target.closest('#bUlImp')){ulImport();return;}if(e.target.closest('#bUlMgr')){ulManager();return;}if(e.target.closest('#bPreview')){printPreview();return;}
  if(e.target.closest('#bPng')){exportImage();return;}
  if(e.target.closest('#bDxf')){dxfExport();return;}
@@ -4346,9 +4347,9 @@ const IC={
  sync:'<path d="M20 7a8.5 8.5 0 0 0-15 1M4 4v4h4M4 17a8.5 8.5 0 0 0 15-1M20 20v-4h-4"/>',
  ruler:'<path d="M3 16.5L16.5 3 21 7.5 7.5 21z"/><path d="M7 12.5l2 2M10 9.5l1.5 1.5M13 6.5l2 2"/>'};
 const ico=k=>`<svg viewBox="0 0 24 24" class="lic">${IC[k]}</svg>`;
-function setIcons(){const M={bNewProj:'newp',bTemplates:'tpl',bOpenProj:'open',bSaveCopy:'save',bBom:'bom',bPreview:'view',bPdf:'pdf',bPng:'png',bDxf:'dxf',bLayout:'page'};
+function setIcons(){const M={bNewProj:'newp',bTemplates:'tpl',bOpenProj:'open',bSaveCopy:'save',bBom:'bom',bLegend:'table',bPreview:'view',bPdf:'pdf',bPng:'png',bDxf:'dxf',bLayout:'page'};
  const lab=b=>(b.querySelector('.lbl')?.textContent||b.title||b.textContent).trim().replace(/^\S+\s+(?=\S)/u,m=>/[\p{L}\d]/u.test(m)?m:'');
- const SL={bNewProj:'פרויקט חדש',bTemplates:'פרויקט חדש מתבנית',bOpenProj:'פתח פרויקט',bSaveCopy:'שמור עותק בשם',bBom:'רשימת ציוד (BOM)',bPreview:'תצוגה לפני הדפסה',bPdf:'PDF עם טבלת שרטוט',bPng:'תמונה (PNG)',bDxf:'DXF ל-AutoCAD (DWG)',bLayout:'דף ייצור (Layout)'};
+ const SL={bNewProj:'פרויקט חדש',bTemplates:'פרויקט חדש מתבנית',bOpenProj:'פתח פרויקט',bSaveCopy:'שמור עותק בשם',bBom:'רשימת ציוד (BOM)',bLegend:'מקרא לשרטוט',bPreview:'תצוגה לפני הדפסה',bPdf:'PDF עם טבלת שרטוט',bPng:'תמונה (PNG)',bDxf:'DXF ל-AutoCAD (DWG)',bLayout:'דף ייצור (Layout)'};
  document.querySelectorAll('.ddbtn [data-ic]').forEach(i=>{i.innerHTML=ico(i.dataset.ic);});
  Object.entries(M).forEach(([id,k])=>{const b=$(id);if(!b||b.dataset.ic)return;const L=SL[id]??lab(b);b.innerHTML=`<i class="ico">${ico(k)}</i>`+(L?`<span class="lbl">${esc(L)}</span>`:'');b.dataset.ic=1;if(L&&!b.title)b.title=L;});
  document.querySelectorAll('button[data-doc]').forEach(b=>{if(b.dataset.ic)return;const L={panel:'חזית לוח',sld:'חד קווי',top:'היטל על',both:'משולב'}[b.dataset.doc];b.innerHTML=`<i class="ico">${ico(b.dataset.doc)}</i><span class="lbl">${L}</span>`;b.title=L;b.dataset.ic=1;});
