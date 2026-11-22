@@ -773,7 +773,7 @@ const WCOL={brown:{base:'#8b5a2b',n:'חום'},black:{base:'#1d1d1d',n:'שחור'
 const SEC={'0.75':1.8,'1':2,'1.5':2.3,'2.5':2.7,'4':3.1,'6':3.6,'10':4.4,'16':5.2,'25':7,'35':8.5,'50':10,'70':12,'95':14,'120':16,'150':18,'185':20,'240':23};
 const SECK=['0.75','1','1.5','2.5','4','6','10','16','25','35','50','70','95','120','150','185','240'];
 /* a wire to a medium-voltage cubicle is an MV cable: at least 95 mm² (drawn thick enough to read at its size) */
-const MVT=new Set(['sm6','mvtx']),mvEnds=ends=>ends.some(p=>p&&p.r&&MVT.has(get(p.r)?.type)),wSecFor=(ends,sec)=>mvEnds(ends)&&+sec<95?'95':sec;
+const MVT=new Set(['sm6','f400','flus','mvtx']),mvEnds=ends=>ends.some(p=>p&&p.r&&MVT.has(get(p.r)?.type)),wSecFor=(ends,sec)=>mvEnds(ends)&&+sec<95?'95':sec;
 let GRID=10;try{const g=localStorage.getItem('epd.grid');if(g!==null)GRID=+g;}catch(e){}
 const GS=()=>GRID>0?GRID:1;const gs=v=>Math.round(v/GS())*GS();
 function snapBox(o,x,y){let {w,h}=DEF[o.type].size(o);if(o.rot%180)[w,h]=[h,w];return [r2(gs(x-w/2)+w/2),r2(gs(y-h/2)+h/2)];}
@@ -1072,17 +1072,26 @@ const SM6T={IM:['IM — מפסק עומס (כניסה / יציאה)',750,375,['s
  SM:['SM — מנתק',750,375,['ds','es']],DM1A:['DM1-A — מפסק SF1 (הגנה)',1000,750,['ds','cb','ct','es']],DM1D:['DM1-D — מפסק SF1 נשלף',1000,750,['ds','cb','ct','es']],DM2:['DM2 — מפסק SF1 עם 2 מנתקים',1500,750,['ds','cb','ct','ds','es']],
  CM:['CM — מדידת מתח (משני מתח)',750,375,['ds','fu','vt']],CM2:['CM2 — מדידת מתח (2 משני מתח)',750,500,['ds','fu','vt']],TM:['TM — שנאי שירות עצמי',750,375,['ds','fu','vt']],GBC:['GBC-A / B — מניה (זרם ומתח)',750,750,['ct','vt']],
  GAM:['GAM — כניסת כבלים לפס (עם הארקה)',750,500,['es']],GAM2:['GAM2 — כניסת כבלים לפס',750,375,[]],GBM:['GBM — חיבור פסים',750,375,[]],GIM:['GIM — תא ביניים',250,125,null]};
-function sm6Dim(o){const T=SM6T[o.p.ty]||SM6T.IM,s24=o.p.ser==='24',W=+o.p.w||(s24?T[2]:T[1]),H=(s24?1600:2250)+(o.p.lvb==='1'?(s24?450:300):0);return {W,H,D:s24?840:1400,T,s24};}
-function sm6Draw(o){const {W,H,T,s24}=sm6Dim(o),x0=-W/2,y0=-H/2,K='#1f2937',BG='#e9eae6',PL='#d6d8d2',lw=4,k=s24?.72:1,
+/* other Schneider 36 kV families drawn by the same code (part types f400 / flus): F400 (Fluair) air-insulated metal-clad with
+   withdrawable breakers — width 1100, height 2335 (catalogue AMTED399053EN), depth ~2600 (estimate); Flusarc 36 gas-insulated
+   ring-main units — widths C / R 504, CB 554, T1 584, height 1720, depth 1072 */
+const F4T={AD:['AD — כניסה / יציאה עם מפסק נשלף',1100,0,['ds','cb','ct','es']],CL:['CL — מצמד פסים',1100,0,['cb','ct']],GL:['GL — הגבהת פסים',1100,0,[]],TT:['TT — מדידת מתח',1100,0,['fu','vt']],DI:['DI — מנתק עומס עם נתיכים',1100,0,['sw','fu','es']]};
+const FLT={C:['C — יחידת כבל (מנתק עומס)',504,0,['sw','es']],R:['R — כבל ישיר / הגבהה',504,0,['es']],CB:['CB — מפסק זרם',554,0,['ds','cb','ct','es']],T1:['T1 — הגנת שנאי (נתיכים)',584,0,['sw','fu','es']]};
+const MVFAM={sm6:{T:SM6T,lab:'SM6-36'},f400:{T:F4T,lab:'F400',H:2335,D:2600,fr:[.22,.36,.33]},flus:{T:FLT,lab:'Flusarc 36',H:1720,D:1072,fr:[.1,.4,.41]}};
+function sm6Dim(o){const F=MVFAM[o.type]||MVFAM.sm6,T=F.T[o.p.ty]||Object.values(F.T)[0],s24=o.type==='sm6'&&o.p.ser==='24';if(o.type!=='sm6'){const W=+o.p.w||T[1];return {W,H:F.H,D:F.D,T,s24:false,F};}
+ const W=+o.p.w||(s24?T[2]:T[1]),H=(s24?1600:2250)+(o.p.lvb==='1'?(s24?450:300):0);return {W,H,D:s24?840:1400,T,s24,F};}
+function sm6Draw(o){const {W,H,T,s24,F}=sm6Dim(o),x0=-W/2,y0=-H/2,K='#1f2937',BG='#e9eae6',PL='#d6d8d2',lw=4,k=s24?.72:1,
  R=(x,y,w,h,f,sw=lw,rx=0,da='')=>`<rect x="${r2(x)}" y="${r2(y)}" width="${r2(w)}" height="${r2(h)}" rx="${rx}" fill="${f}" stroke="${K}" stroke-width="${sw}"${da?` stroke-dasharray="${da}"`:''}/>`,L=(a,b,c,d,sw=lw)=>`<path d="M${r2(a)} ${r2(b)}L${r2(c)} ${r2(d)}" stroke="${K}" stroke-width="${sw}" fill="none" stroke-linecap="round"/>`;
- const xb=o.p.lvb==='1'?(s24?450:300):0,hp=H-xb,yt=y0+xb,hl=hp*.17,ho=hp*.31,hc=hp*.43,yo=yt+hl,yc=yo+ho,yp=yc+hc,hpl=hp-hl-ho-hc;
+ const xb=o.type==='sm6'&&o.p.lvb==='1'?(s24?450:300):0,hp=H-xb,yt=y0+xb,FR=F.fr||[.17,.31,.43],hl=hp*FR[0],ho=hp*FR[1],hc=hp*FR[2],yo=yt+hl,yc=yo+ho,yp=yc+hc,hpl=hp-hl-ho-hc;
  let s=R(x0,y0,W,H,BG,6);
  if(xb)s+=R(x0+10,y0+10,W-20,xb-20,'#e2e3de',3)+`<circle cx="${r2(-W/2+60*k)}" cy="${r2(y0+xb/2)}" r="${r2(14*k)}" fill="#9ca3af" stroke="${K}" stroke-width="2"/>`;
  // LV compartment (top): door with two screws, label plate
  s+=R(x0+12,yt+12,W-24,hl-18,'#ecede9',3)+[0.18,0.42].map(f=>`<circle cx="${r2(x0+W*f)}" cy="${r2(yt+hl*.3)}" r="${r2(9*k)}" fill="#fff" stroke="${K}" stroke-width="2.5"/>`).join('');
- if(W>=300){const pw=Math.min(W*.5,300*k),ph=hl*.3;s+=R(-W/2+W*.12,yt+hl*.5,pw,ph,'#fff',2)+txt(-W/2+W*.12+pw/2,yt+hl*.5+ph*.36,'SM6-'+(s24?'24':'36')+' · '+(T[0].split(' — ')[0]),Math.min(ph*.36,46*k),K,800)+(o.p.tag?txt(-W/2+W*.12+pw/2,yt+hl*.5+ph*.76,o.p.tag,Math.min(ph*.3,38*k),'#b45309',800):'');}
+ if(W>=300){const pw=Math.min(W*.5,300*k),ph=hl*.3;s+=R(-W/2+W*.12,yt+hl*.5,pw,ph,'#fff',2)+txt(-W/2+W*.12+pw/2,yt+hl*.5+ph*.36,(o.type==='sm6'?'SM6-'+(s24?'24':'36'):F.lab)+' · '+(T[0].split(' — ')[0]),Math.min(ph*.36,46*k),K,800)+(o.p.tag?txt(-W/2+W*.12+pw/2,yt+hl*.5+ph*.76,o.p.tag,Math.min(ph*.3,38*k),'#b45309',800):'');}
  // Schneider badge on the LV door
  if(W>=360){const bx=x0+W-W*.2,by=yt+hl*.32;s+=`<g transform="translate(${r2(bx)} ${r2(by)}) scale(${r2(Math.min(2.2,W/360)*k)})"><rect x="-40" y="-10" width="80" height="20" rx="2" fill="#fff" stroke="#c8c8c2" stroke-width=".6"/><circle cx="-30" cy="0" r="6" fill="#3dcd58"/><path d="M-33 2.5Q-30 -5 -27 -2.5" stroke="#fff" stroke-width="1.4" fill="none"/>${txt(6,0,'Schneider',9,'#3dcd58',800)}</g>`;}
+ // F400: protection relay (Sepam) with its screen on the LV door
+ if(o.type==='f400'){const rw=Math.min(W*.24,240),rh=hl*.42,rx=-x0-30-rw-W*.06,ry=yt+hl*.42;s+=R(rx,ry,rw,rh,'#e5e7eb',3,6)+R(rx+rw*.1,ry+rh*.12,rw*.8,rh*.42,'#0f766e',2,3)+txt(rx+rw/2,ry+rh*.33,'SEPAM',rh*.16,'#ccfbf1',800)+[0,1,2,3].map(i=>`<circle cx="${r2(rx+rw*(.2+i*.2))}" cy="${r2(ry+rh*.78)}" r="${r2(rh*.07)}" fill="#6b7280"/>`).join('');}
  // operating mechanism front plate with the mimic diagram
  s+=R(x0+12,yo,W-24,ho,PL,3);
  if(T[3]){const it=T[3],cx=x0+W*(W>=600?.36:.42),top=yo+ho*.08,bot=yo+ho*.94,es=it.includes('es'),main=it.filter(q=>q!=='es'),n=Math.max(1,main.length),step=(bot-top)/(n+.6),M=Math.min(W*.13,90*k);
@@ -2709,6 +2718,14 @@ const FDEF={
   sel:{ser:[['36','SM6-36 — 36 ק"ו (גובה 2250)'],['24','SM6-24 — 24 ק"ו (גובה 1600)']],ty:Object.entries(SM6T).map(([a,b])=>[a,b[0]]),lvb:[['0','בלי'],['1','עם תא מתח נמוך מוגבה']],lbx:[['1','הצג תג ושם מעל'],['0','בלי']]},
   size:o=>{const d=sm6Dim(o);return {w:d.W,h:d.H};},
   terms:o=>{const d=sm6Dim(o),hp=d.H-(o.p.lvb==='1'?(d.s24?450:300):0);return [[0,r2(d.H/2-hp*.045),'כבל מ"ג']];},draw:o=>sm6Draw(o)},
+ f400:{layer:4,edit:['tag','nm','lbx','ty','w'],def:{tag:'',nm:'',lbx:'1',ty:'AD',w:''},ext:o=>mvLbExt(o),lbl:{tag:'תג / מספר תא',nm:'שם (למשל כניסה מחח"י)',lbx:'תיבת טקסט מעל',ser:'סדרה',ty:'סוג התא',w:'רוחב (מ"מ, ריק = לפי הקטלוג)',lvb:'תא מתח נמוך מוגבה'},num:['w'],
+  sel:{ser:[['36','SM6-36 — 36 ק"ו (גובה 2250)'],['24','SM6-24 — 24 ק"ו (גובה 1600)']],ty:Object.entries(F4T).map(([a,b])=>[a,b[0]]),lvb:[['0','בלי'],['1','עם תא מתח נמוך מוגבה']],lbx:[['1','הצג תג ושם מעל'],['0','בלי']]},
+  size:o=>{const d=sm6Dim(o);return {w:d.W,h:d.H};},
+  terms:o=>{const d=sm6Dim(o),hp=d.H-(o.p.lvb==='1'?(d.s24?450:300):0);return [[0,r2(d.H/2-hp*.045),'כבל מ"ג']];},draw:o=>sm6Draw(o)},
+ flus:{layer:4,edit:['tag','nm','lbx','ty','w'],def:{tag:'',nm:'',lbx:'1',ty:'C',w:''},ext:o=>mvLbExt(o),lbl:{tag:'תג / מספר תא',nm:'שם (למשל כניסה מחח"י)',lbx:'תיבת טקסט מעל',ser:'סדרה',ty:'סוג התא',w:'רוחב (מ"מ, ריק = לפי הקטלוג)',lvb:'תא מתח נמוך מוגבה'},num:['w'],
+  sel:{ser:[['36','SM6-36 — 36 ק"ו (גובה 2250)'],['24','SM6-24 — 24 ק"ו (גובה 1600)']],ty:Object.entries(FLT).map(([a,b])=>[a,b[0]]),lvb:[['0','בלי'],['1','עם תא מתח נמוך מוגבה']],lbx:[['1','הצג תג ושם מעל'],['0','בלי']]},
+  size:o=>{const d=sm6Dim(o);return {w:d.W,h:d.H};},
+  terms:o=>{const d=sm6Dim(o),hp=d.H-(o.p.lvb==='1'?(d.s24?450:300):0);return [[0,r2(d.H/2-hp*.045),'כבל מ"ג']];},draw:o=>sm6Draw(o)},
  pillar:{layer:4,edit:['tag','pk','pmat','plw','plh','pld','pdn','plb'],def:{tag:'P1',pk:'dist',pmat:'grp',plw:'800',plh:'1300',pld:'350',pdn:'1',plb:'250'},size:o=>{const d=plDim(o);return {w:d.W,h:d.H};},draw:o=>pillarDraw(o)},
  genset:{layer:4,edit:['tag','gk','kva'],def:{tag:'G1',gk:'canopy',kva:'250'},size:o=>genDim(o),draw:o=>genDraw(o)},
  ink:{layer:9,edit:['icol','iw'],def:{icol:'red',iw:'3',pts:[]},size:o=>{const P=o.p.pts||[];if(!P.length)return {w:1,h:1};let a=1e9,b=-1e9,c=1e9,d=-1e9;P.forEach(([x,y])=>{a=Math.min(a,x);b=Math.max(b,x);c=Math.min(c,y);d=Math.max(d,y);});const w=+o.p.iw||3;return {w:Math.max(2,b-a+w),h:Math.max(2,d-c+w)};},
@@ -3295,6 +3312,8 @@ const LIB=[
   const R=(n,w,h,rn)=>({t:'troom',n,p:{rn:rn||n,w,h}});
   LIB.push({tab:'מתח גבוה',icon:'⚡',hint:'תאי מתח גבוה (מסדרים) של שניידר אלקטריק בחזית, בקנה מידה 1:1 לפי הקטלוג. מניחים תאים זה ליד זה כדי לבנות מערך; את סוג התא והכיתוב בוחרים במאפיינים.',groups:[
     {g:'שניידר SM6-36 — 36 ק"ו, גובה 2250 מ"מ',items:Object.keys(SM6T).map(k=>({t:'sm6',n:'SM6-36 '+SM6T[k][0],p:{ser:'36',ty:k}}))},
+    {g:'שניידר F400 — 36 ק"ו, מבודד אוויר עם מפסקים נשלפים, רוחב 1100, גובה 2335',items:Object.keys(F4T).map(k=>({t:'f400',n:'F400 '+F4T[k][0],p:{ty:k}}))},
+    {g:'שניידר Flusarc 36 — 36 ק"ו, יחידות טבעת SF6, גובה 1720',items:Object.keys(FLT).map(k=>({t:'flus',n:'Flusarc 36 '+FLT[k][0],p:{ty:k}}))},
     {g:'שנאים ארדן 33/0.4 ק"ו — הספק וסוג במאפיינים',items:[{t:'mvtx',n:'שנאי ארדן 800 kVA 33 ק"ו',p:{kva:'800',tag:'T1'}},{t:'mvtx',n:'שנאי ארדן 2000 kVA 33 ק"ו',p:{kva:'2000',tag:'T2'}},{t:'mvtx',n:'שנאי יבש ארדן 800 kVA 33 ק"ו',p:{kva:'800',tk:'dry',tag:'T1'}},{t:'mvtx',n:'שנאי יבש ארדן 2000 kVA 33 ק"ו',p:{kva:'2000',tk:'dry',tag:'T2'}}]}]});
   LIB.push({tab:'חדרים ומבנה',icon:'🏠',top:true,hint:'היטל על (מבט מלמעלה), במ"מ. חדר = קירות + רצפה עם שם ושטח; גוררים את הפינות לשינוי גודל. דלת וחלון מניחים על קו הקיר ומסובבים לפי הצורך.',groups:[
     {g:'חדרים',items:[{t:'troom',n:'חדר',p:{rn:'חדר',w:4000,h:3000}}]},
@@ -6031,7 +6050,7 @@ const V3FLAT=new Set(['label','callout','shline','ink','nplate']);
 /* depth of a part that stands on its own (not inside a board): about its real thickness */
 function v3Free(o){if(+o.p.d3>0)return +o.p.d3;const {w,h}=sizeOf(o),m=Math.min(w,h);if(o.type==='genset')return h*.85;if(o.type==='pillar')return Math.max(150,+o.p.pld||350);if(o.type==='xck')return o.p.xs==='xckj'?44:o.p.xs==='xcmd'?28:32;if(o.type==='emotor')return h*.8;if(o.type==='person')return 260;if(o.type==='shrect'||o.type==='shellipse')return Math.max(20,m*.15);return Math.max(v3Depth(o),Math.min(3000,m*.8));}
 const V3DEP={lc1k:57,lc2k:57,pbdbl:30,mcb:72,rcd:72,spd:72,iso:72,gv2:88,mpcb:88,cont:88,lc1d:88,lc2d:92,relay:62,rxm:48,lrd:72,nsx:98,nsxm:82,acb:330,atv630:230,psu:62,meter:62,m340mod:110,clxmod:120,kconv:62,socket:52,comb:14,gland:30,ctie:5,zprof:40,rail:7.5,duct:62,busbar:12,partition:2,traysh:60,traymesh:60};
-function v3Depth(o){if(+o.p.d3>0)return +o.p.d3;if(o.type==='mvtx')return mvtxDim(o).D;if(o.type==='sm6')return sm6Dim(o).D;const D=DEF[o.type],L=D.layer;if(V3DEP[o.type]!=null)return V3DEP[o.type];if(D.front)return 22;if(L<1)return 3;if(L<2)return 50;if(L<3)return 8;if(L<3.6)return 120;if(L<4.6){const {w,h}=sizeOf(o);return Math.max(30,Math.min(200,Math.min(w,h)*.7));}return 18;}
+function v3Depth(o){if(+o.p.d3>0)return +o.p.d3;if(o.type==='mvtx')return mvtxDim(o).D;if(o.type==='sm6'||o.type==='f400'||o.type==='flus')return sm6Dim(o).D;const D=DEF[o.type],L=D.layer;if(V3DEP[o.type]!=null)return V3DEP[o.type];if(D.front)return 22;if(L<1)return 3;if(L<2)return 50;if(L<3)return 8;if(L<3.6)return 120;if(L<4.6){const {w,h}=sizeOf(o);return Math.max(30,Math.min(200,Math.min(w,h)*.7));}return 18;}
 function v3Base(o){return o.type==='busbar'?36:0;}
 let V3=null;
 async function open3D(keepV){if(!keepV||!keepV.tg)keepV=null;if(state.tab==='sld'||state.tab==='top'){toast('התלת־ממד מוצג לחזית הלוח — עבור ללשונית "לוח"');return;}
