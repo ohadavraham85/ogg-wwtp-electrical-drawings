@@ -180,11 +180,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 319;
+const VERSION = 320;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'מסך בית חדש: השרטוט הפתוח, שרטוטים שפתחת לאחרונה עם תצוגה מקדימה, עדכונים בתיקייה, חיפוש ופעולות מהירות — גם בטלפון';
+const WHATS_NEW = 'כל שמירה רושמת מאיזה מכשיר נעשתה (מחשב / טלפון, דפדפן / אפליקציה) — מוצג במסך הבית, ב"פתח" ובגרסאות';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -324,7 +324,7 @@ function info(d) {
   return {
     id: d.id, name: d.name, parts: d.parts || 0, dwgno: d.dwgno || '',
     createdBy: d.createdBy, createdAt: d.createdAt,
-    updatedBy: d.updatedBy, updatedAt: d.updatedAt,
+    updatedBy: d.updatedBy, updatedAt: d.updatedAt, updatedDevice: d.updatedDevice || '',
     canDelete: isOwner || d.createdByEmail === me.email,
   };
 }
@@ -348,9 +348,17 @@ const MAX_DESIGN = 1000000;
 // ---------- version history: ohadcad_designs/{id}/versions/{auto} ----------
 const VER_GAP = 10 * 60 * 1000, VER_MAX = 40;
 let verWarned = false;
+// which device a save came from, in plain words (kept on the drawing as updatedDevice)
+function deviceName() {
+  const ua = navigator.userAgent || '', touchMac = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+  const os = /iPhone/.test(ua) ? 'iPhone' : (/iPad/.test(ua) || touchMac) ? 'iPad' : /Android/.test(ua) ? (/Mobile/.test(ua) ? 'טלפון Android' : 'טאבלט Android')
+    : /Windows/.test(ua) ? 'מחשב Windows' : /Macintosh|Mac OS/.test(ua) ? 'מחשב Mac' : /CrOS/.test(ua) ? 'Chromebook' : /Linux/.test(ua) ? 'מחשב Linux' : 'מכשיר';
+  let app = false; try { app = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) {}
+  return os + (app ? ' · אפליקציה' : ' · דפדפן');
+}
 function keepVersion(ex) {
   const V = DESIGNS.doc(ex.id).collection('versions');
-  return V.add({ name: ex.name || '', data: ex.data, parts: ex.parts || 0, savedBy: ex.updatedBy || ex.createdBy || '', savedByEmail: me.email, savedAt: ex.updatedAt || new Date().toISOString(), keptAt: new Date().toISOString() })
+  return V.add({ name: ex.name || '', data: ex.data, parts: ex.parts || 0, savedBy: ex.updatedBy || ex.createdBy || '', savedDevice: ex.updatedDevice || '', savedByEmail: me.email, savedAt: ex.updatedAt || new Date().toISOString(), keptAt: new Date().toISOString() })
     .then(() => V.orderBy('savedAt', 'desc').get()).then((snap) => { snap.docs.slice(VER_MAX).forEach((doc) => doc.ref.delete().catch(() => {})); })
     .catch((e) => { if (!verWarned) { verWarned = true; console.warn('versions', e); if (e && e.code === 'permission-denied') toast('היסטוריית הגרסאות עוד לא פעילה — צריך לעדכן את הכללים ב-Firebase'); } });
 }
@@ -389,10 +397,10 @@ const bridge = {
     // the drawing number travels with the design, so new numbers can follow on from the last one
     let dwgno = '';try { dwgno = String(JSON.parse(input.data).dwgno || ''); } catch (e) {}
     const d0 = ex
-      ? { ...ex, name: input.name, data: input.data, parts: input.parts, updatedBy: me.label, updatedByEmail: me.email, updatedAt: now }
+      ? { ...ex, name: input.name, data: input.data, parts: input.parts, updatedBy: me.label, updatedByEmail: me.email, updatedAt: now, updatedDevice: deviceName() }
       : { id: DESIGNS.doc().id, name: input.name, data: input.data, parts: input.parts,
           createdBy: me.label, createdByEmail: me.email, createdAt: now,
-          updatedBy: me.label, updatedByEmail: me.email, updatedAt: now, deleted: false };
+          updatedBy: me.label, updatedByEmail: me.email, updatedAt: now, updatedDevice: deviceName(), deleted: false };
     let d = dwgno ? { ...d0, dwgno } : d0;
     // version history: before overwriting, keep the previous content when the last kept
     // version is 10+ minutes old or someone else saved it
@@ -406,7 +414,7 @@ const bridge = {
     return { ...info(d), pending: r === 'later' };
   },
   // version history of a drawing, newest first (without the data)
-  async versions(id) { const snap = await DESIGNS.doc(id).collection('versions').orderBy('savedAt', 'desc').limit(VER_MAX).get(); return snap.docs.map((doc) => { const v = doc.data(); return { vid: doc.id, name: v.name, parts: v.parts || 0, savedBy: v.savedBy, savedAt: v.savedAt }; }); },
+  async versions(id) { const snap = await DESIGNS.doc(id).collection('versions').orderBy('savedAt', 'desc').limit(VER_MAX).get(); return snap.docs.map((doc) => { const v = doc.data(); return { vid: doc.id, name: v.name, parts: v.parts || 0, savedBy: v.savedBy, savedDevice: v.savedDevice || '', savedAt: v.savedAt }; }); },
   async version(id, vid) { const doc = await DESIGNS.doc(id).collection('versions').doc(vid).get(); return doc.exists ? { name: doc.data().name, data: doc.data().data } : null; },
   // keep the drawing as it is now as a version (before a restore)
   async snapshot(id) { await ready; const d = designs.get(id); if (d && d.data) await keepVersion(d); },

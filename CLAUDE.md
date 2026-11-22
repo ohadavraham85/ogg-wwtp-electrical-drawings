@@ -85,7 +85,7 @@ Firestore collections:
 - `ohadcad_meta/owner`: `{uid, email, label}`. Claimed once by the first sign-in.
 - `ohadcad_users/{email}`: `{approved, label}`. Managed by the owner.
 - `ohadcad_requests/{email}`: access requests.
-- `ohadcad_designs/{id}`: `{name, data (JSON string of the tool state), parts, createdBy, createdByEmail, createdAt, updatedBy, updatedByEmail, updatedAt, deleted}`.
+- `ohadcad_designs/{id}`: `{name, data (JSON string of the tool state), parts, createdBy, createdByEmail, createdAt, updatedBy, updatedByEmail, updatedAt, updatedDevice, deleted}` — `updatedDevice` is set on every save from `deviceName()` in index.html (e.g. "טלפון Android · אפליקציה", "מחשב Windows · דפדפן"), returned by `info`, shown on the home screen, in the open dialog and the project properties; versions keep it as `savedDevice`.
   - Deletion is soft (`deleted: true`), and only the creator or the owner may do it.
 
 ## Releasing
