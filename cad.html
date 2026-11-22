@@ -1099,14 +1099,14 @@ function sm6Draw(o){const {W,H,T,s24,F}=sm6Dim(o),x0=-W/2,y0=-H/2,K='#1f2937',BG
  if(T[3]){const it=T[3],cx=x0+W*(W>=600?.36:.42),top=yo+ho*.08,bot=yo+ho*.94,es=it.includes('es'),main=it.filter(q=>q!=='es'),n=Math.max(1,main.length),step=(bot-top)/(n+.6),M=Math.min(W*.13,90*k);
   s+=`<path d="M${r2(x0+16)} ${r2(top)}H${r2(-x0-16)}" stroke="${K}" stroke-width="${r2(9*k)}"/>`+L(cx,top,cx,bot,6*k);
   let swN=0;const TF=Math.min(46,Math.max(24,W*.05));
-  main.forEach((q,i)=>{const y=top+step*(i+.8);if(q==='sw'||q==='ds'||q==='cb'){swN++;const tg=o.p['t'+swN];if(tg)s+=tagPill(tg,cx-M*.65,y,TF,'end');}
+  main.forEach((q,i)=>{const y=top+step*(i+.8);if(q==='sw'||q==='ds'||q==='cb'){swN++;const tg=o.p['t'+swN];if(tg)s+=tagPill(tg,cx-M*.65,y,TF,'end');s+=`<rect data-mvsw="t${swN}" x="${r2(cx-M*2.2)}" y="${r2(y-M*.55)}" width="${r2(M*2.8)}" height="${r2(M*1.1)}" fill="transparent"/>`;}
    if(q==='sw'||q==='ds'){s+=`<rect x="${r2(cx-M*.5)}" y="${r2(y-M*.55)}" width="${r2(M)}" height="${r2(M*1.1)}" fill="${PL}"/>`+L(cx,y+M*.5,cx-M*.45,y-M*.45,6*k)+(q==='sw'?`<circle cx="${r2(cx)}" cy="${r2(y-M*.5)}" r="${r2(M*.12)}" fill="${PL}" stroke="${K}" stroke-width="${r2(3*k)}"/>`:L(cx-M*.18,y-M*.5,cx+M*.18,y-M*.5,5*k));
     const hx=cx+W*.2;s+=`<circle cx="${r2(hx)}" cy="${r2(y)}" r="${r2(M*.42)}" fill="#fff" stroke="${K}" stroke-width="${r2(4*k)}"/><rect x="${r2(hx-M*.08)}" y="${r2(y-M*.32)}" width="${r2(M*.16)}" height="${r2(M*.64)}" fill="${K}" transform="rotate(45 ${r2(hx)} ${r2(y)})"/>`+R(hx+M*.55,y-M*.3,M*.32,M*.6,'#16a34a',2);}
    else if(q==='cb')s+=`<rect x="${r2(cx-M*.45)}" y="${r2(y-M*.45)}" width="${r2(M*.9)}" height="${r2(M*.9)}" fill="#fff" stroke="${K}" stroke-width="${r2(5*k)}"/>`+L(cx-M*.3,y-M*.3,cx+M*.3,y+M*.3,4*k)+L(cx+M*.3,y-M*.3,cx-M*.3,y+M*.3,4*k)+`<circle cx="${r2(cx+W*.2)}" cy="${r2(y)}" r="${r2(M*.3)}" fill="#dc2626" stroke="${K}" stroke-width="3"/><circle cx="${r2(cx+W*.2+M*.75)}" cy="${r2(y)}" r="${r2(M*.3)}" fill="#16a34a" stroke="${K}" stroke-width="3"/>`;
    else if(q==='fu')s+=`<rect x="${r2(cx-M*.2)}" y="${r2(y-M*.5)}" width="${r2(M*.4)}" height="${r2(M)}" fill="#fff" stroke="${K}" stroke-width="${r2(4*k)}"/>`+L(cx,y-M*.5,cx,y+M*.5,3*k);
    else if(q==='ct')s+=`<circle cx="${r2(cx)}" cy="${r2(y)}" r="${r2(M*.28)}" fill="none" stroke="${K}" stroke-width="${r2(4*k)}"/>`;
    else if(q==='vt')s+=`<circle cx="${r2(cx)}" cy="${r2(y-M*.18)}" r="${r2(M*.28)}" fill="${PL}" stroke="${K}" stroke-width="${r2(4*k)}"/><circle cx="${r2(cx)}" cy="${r2(y+M*.18)}" r="${r2(M*.28)}" fill="${PL}" stroke="${K}" stroke-width="${r2(4*k)}"/>`;});
-  if(es){const y=bot-step*.35,ex=cx-M*1.1;if(o.p.tes)s+=tagPill(o.p.tes,ex-M*.45,y+M*.3,TF,'end');s+=L(cx,y,ex+M*.35,y,5*k)+L(ex+M*.35,y,ex,y-M*.35,5*k)+L(ex,y,ex,y+M*.35,5*k)+L(ex-M*.25,y+M*.35,ex+M*.25,y+M*.35,5*k)+L(ex-M*.16,y+M*.45,ex+M*.16,y+M*.45,4*k)+L(ex-M*.07,y+M*.55,ex+M*.07,y+M*.55,3*k);
+  if(es){const y=bot-step*.35,ex=cx-M*1.1;if(o.p.tes)s+=tagPill(o.p.tes,ex-M*.45,y+M*.3,TF,'end');s+=`<rect data-mvsw="tes" x="${r2(ex-M*2)}" y="${r2(y-M*.5)}" width="${r2(M*2.6)}" height="${r2(M*1.2)}" fill="transparent"/>`;s+=L(cx,y,ex+M*.35,y,5*k)+L(ex+M*.35,y,ex,y-M*.35,5*k)+L(ex,y,ex,y+M*.35,5*k)+L(ex-M*.25,y+M*.35,ex+M*.25,y+M*.35,5*k)+L(ex-M*.16,y+M*.45,ex+M*.16,y+M*.45,4*k)+L(ex-M*.07,y+M*.55,ex+M*.07,y+M*.55,3*k);
    const hx=cx+W*.2;s+=`<circle cx="${r2(hx)}" cy="${r2(y)}" r="${r2(M*.42)}" fill="#fff" stroke="${K}" stroke-width="${r2(4*k)}"/><rect x="${r2(hx-M*.08)}" y="${r2(y-M*.32)}" width="${r2(M*.16)}" height="${r2(M*.64)}" fill="${K}" transform="rotate(-45 ${r2(hx)} ${r2(y)})"/>`;}
   // VPIS: three voltage presence lamps L1 L2 L3
   if(W>=300&&(it.includes('sw')||it.includes('ds')||it.includes('es'))){const hx0=cx+W*.2+M*.7,vw=Math.max(60*k,Math.min(W*.42,260*k,-x0-30-hx0)),vh=Math.min(vw*.38,ho*.2),vx=-x0-30-vw,vy=yo+ho-vh-ho*.05;s+=R(vx,vy,vw,vh,'#f3f4f6',2.5,4);[0,1,2].forEach(i=>{const lx=vx+vw*(.25+i*.25);s+=`<circle cx="${r2(lx)}" cy="${r2(vy+vh*.42)}" r="${r2(vh*.2)}" fill="#fde68a" stroke="${K}" stroke-width="2"/>`+txt(lx,vy+vh*.8,'L'+(i+1),vh*.17,K,700);});}}
@@ -1116,7 +1116,7 @@ function sm6Draw(o){const {W,H,T,s24,F}=sm6Dim(o),x0=-W/2,y0=-H/2,K='#1f2937',BG
   s+=R(-x0-24-W*.07,yc+hc*.45,W*.05,hc*.2,'#9ca3af',2,6);}
  // plinth
  s+=`<rect x="${r2(x0)}" y="${r2(yp)}" width="${r2(W)}" height="${r2(hpl)}" fill="#6b7280" stroke="${K}" stroke-width="${lw}"/>`;
- if(o.p.ty!=='LVC'){const cy=yp+hpl/2,cr=Math.min(hpl*.32,32*k);s+=`<circle cx="0" cy="${r2(cy)}" r="${r2(cr)}" fill="#111827" stroke="#e5e7eb" stroke-width="${r2(4*k)}"/><circle cx="0" cy="${r2(cy)}" r="${r2(cr*.4)}" fill="#e5e7eb"/>`;if(o.p.tcab)s+=tagPill(o.p.tcab,cr+14,cy,Math.min(46,Math.max(24,W*.05)),'start');}
+ if(o.p.ty!=='LVC'){const cy=yp+hpl/2,cr=Math.min(hpl*.32,32*k);s+=`<circle cx="0" cy="${r2(cy)}" r="${r2(cr)}" fill="#111827" stroke="#e5e7eb" stroke-width="${r2(4*k)}"/><circle cx="0" cy="${r2(cy)}" r="${r2(cr*.4)}" fill="#e5e7eb"/>`;if(o.p.tcab)s+=tagPill(o.p.tcab,cr+14,cy,Math.min(46,Math.max(24,W*.05)),'start');s+=`<rect data-mvsw="tcab" x="${r2(-W*.3)}" y="${r2(cy-hpl*.45)}" width="${r2(W*.6)}" height="${r2(hpl*.9)}" fill="transparent"/>`;}
  if(T[3]===null&&o.p.ty!=='LVC')s+=txt(0,yo+ho/2,'GIM',Math.min(W*.3,70*k),K,800);
  if(o.p.ty==='LVC'){const dy=yo,dh=yp-yo;s+=R(x0+12,dy,W-24,dh,'#ecede9',4)+R(-x0-50,dy+dh*.42,22,dh*.16,'#9ca3af',2,6);
   const rk=relOf(o)||'s40',RR=RELAYS[rk],sc=Math.min(1,(W*.8)/RR[1]),n=Math.max(1,Math.min(3,Math.floor((W-80)/(RR[1]*sc+40)))),gap=(W-n*RR[1]*sc)/(n+1);for(let i=0;i<n;i++)s+=relayDraw(rk,x0+gap+RR[1]*sc/2+i*(RR[1]*sc+gap),dy+dh*.2,sc);
@@ -1160,8 +1160,8 @@ function mvLbOn(o){return o.p.lbx!=='0'&&!!(String(o.p.tag||'').trim()||String(o
 function mvLabel(o,W,H,inY){if(!mvLbOn(o))return '';const tg=String(o.p.tag||'').trim(),nm=String(o.p.nm||'').trim(),two=tg&&nm,h=two?MVLB.h:150,bw=Math.max(inY!=null?W*.4:W*.92,Math.max(tg.length*90,nm.length*70)*.58+80),y=inY!=null?inY:-H/2-MVLB.g-h;
  let s=`<rect x="${r2(-bw/2)}" y="${r2(y)}" width="${r2(bw)}" height="${h}" rx="14" fill="#fff" stroke="#1f2937" stroke-width="5"/>`;
  if(two)s+=txt(0,y+h*.33,tg,90,'#b45309',800)+txt(0,y+h*.72,nm,70,'#111827',600);else s+=txt(0,y+h/2,tg||nm,tg?90:70,tg?'#b45309':'#111827',tg?800:600);
- s=s.replace(/<text /g,'<text direction="rtl" unicode-bidi="plaintext" ');if(inY!=null)return s;
- return s+`<path d="M0 ${r2(y+h)}V${r2(-H/2)}" stroke="#1f2937" stroke-width="4" stroke-dasharray="14 10"/>`;}
+ s=s.replace(/<text /g,'<text direction="rtl" unicode-bidi="plaintext" ');if(inY!=null)return s+`<rect data-mvsw="tag" x="${r2(-bw/2)}" y="${r2(y)}" width="${r2(bw)}" height="${r2(h/2)}" fill="transparent"/><rect data-mvsw="nm" x="${r2(-bw/2)}" y="${r2(y+h/2)}" width="${r2(bw)}" height="${r2(h/2)}" fill="transparent"/>`;
+ return s+`<rect data-mvsw="tag" x="${r2(-bw/2)}" y="${r2(y)}" width="${r2(bw)}" height="${r2(h/2)}" fill="transparent"/><rect data-mvsw="nm" x="${r2(-bw/2)}" y="${r2(y+h/2)}" width="${r2(bw)}" height="${r2(h/2)}" fill="transparent"/><path d="M0 ${r2(y+h)}V${r2(-H/2)}" stroke="#1f2937" stroke-width="4" stroke-dasharray="14 10"/>`;}
 const mvLbExt=o=>mvLbOn(o)?{l:0,r:0,t:MVLB.g+MVLB.h,b:0}:null;
 /* protection relays at their real front size (mm): Schneider Sepam series 20 / 40 / 80 and Easergy P3U30 */
 const RELAYS={s20:['Sepam סדרה 20',176,222,'SEPAM S20'],s40:['Sepam סדרה 40',176,222,'SEPAM S40'],s80:['Sepam סדרה 80',264,222,'SEPAM S80'],p3u30:['Easergy P3U30',171,183,'Easergy P3U30']};
@@ -4641,7 +4641,14 @@ function nmapEdit(o,cx,cy){const [wx,wy]=toWorld(cx,cy),c=nmapCell(o,wx,wy);if(!
 /* a room's name, typed in place over the room's middle */
 /* a part's own drawn dimension (room inner width / depth, equipment width / depth),
    typed in place where it was double-clicked */
-let RDIM=null;
+let RDIM=null,MVSW=null;
+/* edit one tag of an MV part in place: the box typed at the double-clicked spot (switching device t1..t3, earthing switch tes, cable entry tcab, tag / name box) */
+const MVSWN={t1:'תג מפסק / מנתק',t2:'תג מפסק / מנתק',t3:'תג מפסק / מנתק',tes:'תג מנתק הארקה',tcab:'תג כבל',tag:'תג התא',nm:'שם'};
+function mvTagEdit(o,M){const key=M.k,old=document.getElementById('inEdit');if(old)old.remove();const inp=document.createElement('input');inp.id='inEdit';inp.value=o.p[key]||'';inp.dir='auto';inp.placeholder=MVSWN[key]||'';
+ Object.assign(inp.style,{left:(M.x-90)+'px',top:(M.y-22)+'px',width:'180px',height:'44px',fontSize:'18px'});document.body.appendChild(inp);inp.focus();inp.select();let done=false;
+ const fin=keep=>{if(done)return;done=true;const v=inp.value.trim();inp.remove();if(keep&&v!==(o.p[key]||'')){o.p[key]=v;commit();renderNow();updateBar();}};
+ inp.addEventListener('keydown',ev=>{ev.stopPropagation();if(ev.key==='Enter'){ev.preventDefault();fin(true);}else if(ev.key==='Escape'){ev.preventDefault();fin(false);}});inp.addEventListener('blur',()=>fin(true));
+ toast((MVSWN[key]||'תג')+' — Enter לשמירה, Esc לביטול');}
 function ownDimEdit(o,rd){const k=rd.k==='h'?'h':'w',old=document.getElementById('inEdit');if(old)old.remove();const inp=document.createElement('input');inp.id='inEdit';inp.type='number';inp.inputMode='numeric';inp.value=Math.round(+o.p[k]);inp.dir='ltr';
  Object.assign(inp.style,{left:(rd.x-60)+'px',top:(rd.y-20)+'px',width:'120px',height:'40px',fontSize:'18px'});document.body.appendChild(inp);inp.focus();inp.select();let done=false;
  const fin=keep=>{if(done)return;done=true;const v=Math.round(+inp.value);inp.remove();if(keep&&v>0&&v!==Math.round(+o.p[k])){o.p[k]=Math.max(k==='w'||o.type!=='troom'?50:50,v);commit();renderNow();updateBar();toast((k==='w'?'רוחב':'עומק')+': '+v+' מ"מ');}};
@@ -4656,6 +4663,7 @@ function roomNameEdit(o,key){key=key||'rn';const old=document.getElementById('in
  toast((key==='tag'?'הכיתוב על הלוח':'שם החדר')+' — Enter לשמירה, Esc לביטול');}
 function dblEdit(o,e){if(!o||o.locked||globalLock)return;
  if(o.type==='nmap'&&e){nmapEdit(o,e.clientX,e.clientY);return;}
+ if(MVT.has(o.type)&&e){const hit=document.elementsFromPoint(e.clientX,e.clientY).find(el=>el.dataset&&el.dataset.mvsw);const M=hit?{k:hit.dataset.mvsw,x:e.clientX,y:e.clientY}:MVSW;if(M){mvTagEdit(o,M);return;}}
  if(RDIM&&DEF[o.type]&&(o.type==='troom'||DEF[o.type].ext)){ownDimEdit(o,RDIM);return;}
  if(o.type==='troom'){roomNameEdit(o);return;}
  if(o.type==='tcab'){roomNameEdit(o,'tag');return;}
@@ -5185,7 +5193,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  if(P.size>2)return;
  if(measMode){if(e.pointerType==='mouse'&&e.button!==0){G={sx:e.clientX,sy:e.clientY,t0:Date.now(),id:null,moved:false,mode:'pan',tx0:view.tx,ty0:view.ty};return;}
   const [mx,my]=toWorld(e.clientX,e.clientY),ti=e.target.closest('[data-id]');G={sx:e.clientX,sy:e.clientY,t0:Date.now(),moved:false,mode:'meas',p0:measMode==='tape'?(MS.a&&!MS.frozen?tapeAt(MS.a,mx,my):tapeAt(null,mx,my)):measMode==='obj'?mdSnap(mx,my):mdPick(mx,my),id:ti?ti.dataset.id:null};return;}
- const t=e.target.closest('[data-id]'),id=t?t.dataset.id:null;{const rd=e.target.closest&&e.target.closest('[data-rdim]');RDIM=rd?{k:rd.dataset.rdim,x:e.clientX,y:e.clientY}:null;}
+ const t=e.target.closest('[data-id]'),id=t?t.dataset.id:null;{const rd=e.target.closest&&e.target.closest('[data-rdim]');RDIM=rd?{k:rd.dataset.rdim,x:e.clientX,y:e.clientY}:null;const ms=e.target.closest&&e.target.closest('[data-mvsw]');MVSW=ms?{k:ms.dataset.mvsw,x:e.clientX,y:e.clientY}:null;}
  G={sx:e.clientX,sy:e.clientY,t0:Date.now(),id,moved:false,mode:'pan',tx0:view.tx,ty0:view.ty,add:e.shiftKey||e.ctrlKey||e.metaKey};
  if(e.pointerType==='mouse'&&e.button!==0)return;
  if(PEN){const [wx,wy]=toWorld(e.clientX,e.clientY),penBtn=e.pointerType==='pen'&&((e.buttons&2)||(e.buttons&32)||e.button===2||e.button===5);if(PEN.erase||penBtn){G.mode='erase';G.n=inkErase(wx,wy);}else{G.mode='ink';INKDRAFT=[[r2(wx),r2(wy)]];}return;}
