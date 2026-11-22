@@ -3356,13 +3356,17 @@ function hopPath(ps,hops,gaps){const R=5,GP=3.4;let d='M'+r2(ps[0].x)+' '+r2(ps[
   d+='L'+r2(b.x)+' '+r2(b.y);}
  return d;}
 function drawWire(w,isSel){const s=drawWire0(w,isSel),l=s?wnLabel(w)+(ABI?abMark(w):''):'';return (DMS&&!isSel&&s&&!(state.tab==='sld'||isSldObj(w))?s.replace('<g data-id=','<g mask="url(#dM)" data-id='):s)+l;}
+/* direction arrows on a medium-voltage cable: one in the middle of each long enough run, pointing from its first end to its second */
+function cableArrows(ps,sw,col){let s='';const A=Math.max(sw*5,80);for(let i=0;i<ps.length-1;i++){const a=ps[i],b=ps[i+1],L=Math.hypot(b.x-a.x,b.y-a.y);if(L<A*3)continue;const ux=(b.x-a.x)/L,uy=(b.y-a.y)/L,mx=(a.x+b.x)/2,my=(a.y+b.y)/2,tx=mx+ux*A/2,ty=my+uy*A/2,bx=mx-ux*A/2,by=my-uy*A/2,nx=-uy*A*.45,ny=ux*A*.45;
+ s+=`<path d="M${r2(tx)} ${r2(ty)}L${r2(bx+nx)} ${r2(by+ny)}L${r2(bx-nx)} ${r2(by-ny)}Z" fill="${col}" stroke="${isLight()?'rgba(0,0,0,.6)':'rgba(255,255,255,.8)'}" stroke-width="${isLight()?1:3}" pointer-events="none"/>`;}return s;}
 function drawWire0(w,isSel){const LP=WL.get(w.id);const d=LP&&LP.length>1?hopPath(LP,WG.get(w.id),WB.get(w.id)):wirePath(w);if(!d)return '';if(w.p.joint){const a=resolve(w.pts[0]),b=resolve(w.pts[1]);if(a&&b&&Math.hypot(a.x-b.x,a.y-b.y)<.6)return `<g data-id="${w.id}"><circle cx="${a.x}" cy="${a.y}" r="6" fill="transparent"/><circle cx="${a.x}" cy="${a.y}" r="${isSel?3.2:2.2}" fill="${isSel?'#60a5fa':'#8b5a2b'}"/></g>`;}const sld=state.tab==='sld'||isSldObj(w);let sw=SEC[w.p.sec]||2.3;if(sld)sw=1.3;if(EXPMIN)sw=Math.max(sw,EXPMIN);const c=WCOL[w.p.color]||WCOL.black;const P=`d="${d}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
  if(w.p.ph==='3'){const ps=LP&&LP.length>1?LP:wirePs(w),gap=sld?2.4:sw*1.25;let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${gap*2+sw+8}"/>`;if(isSel)s+=`<path ${P} stroke="#60a5fa" stroke-width="${gap*2+sw+3}"/>`;
   PH3.forEach((k,i)=>{const q=offPoly(ps,(i-1)*gap),dd='M'+q.map(p=>r2(p.x)+' '+r2(p.y)).join('L');s+=`<path d="${dd}" fill="none" stroke-linejoin="round" stroke="${WCOL[k].base}" stroke-width="${sw}"/>`;if(WCOL[k].dash)s+=`<path d="${dd}" fill="none" stroke="${WCOL[k].dash}" stroke-width="${sw}" stroke-dasharray="5 5"/>`;});return s+'</g>';}
  let s=`<g data-id="${w.id}"><path ${P} stroke="transparent" stroke-width="${sw+8}"/>`;
  if(isSel)s+=`<path ${P} stroke="#60a5fa" stroke-width="${sw+3.2}"/>`;
- s+=(sld?'':`<path ${P} stroke="rgba(0,0,0,.6)" stroke-width="${sw+.9}"/>`)+`<path ${P} stroke="${c.base}" stroke-width="${sw}"/>`;
+ s+=(sld?'':`<path ${P} stroke="${c.base==='#1d1d1d'&&!isLight()?'rgba(255,255,255,.7)':'rgba(0,0,0,.6)'}" stroke-width="${sw+(c.base==='#1d1d1d'&&!isLight()?2.4:.9)}"/>`)+`<path ${P} stroke="${c.base}" stroke-width="${sw}"/>`;
  if(c.dash)s+=`<path ${P} stroke="${c.dash}" stroke-width="${sw}" stroke-dasharray="5 5" stroke-linecap="butt"/>`;
+ if(!sld&&mvEnds(w.pts))s+=cableArrows(LP&&LP.length>1?LP:wirePs(w),sw,c.base);
  if(sld)[w.pts[0],w.pts[w.pts.length-1]].forEach(q=>{const b=q&&q.r&&get(q.r);if(b&&b.type==='sbusm'){const r=resolve(q);if(r)s+=`<circle cx="${r2(r.x)}" cy="${r2(r.y)}" r="2.3" fill="${SK}"/>`;}});
  return s+'</g>';}
 // text in a mirrored part is flipped back about its own x so it still reads left to right
@@ -3514,15 +3518,15 @@ function qRad(kind,touch){const S=view.s,sld=state.tab!=='panel'&&!!state.tab;
  return sld?(touch?16:9)/S:Math.min((touch?12:7)/S,4);}
 /* parts whose own terminals may be wired to each other (bridges inside a junction box) */
 const SELF_WIRE=new Set(['sjb']);
-function termAt(x,y,rad,skip,skipT){let best=null,bd=rad;for(const o of state.objs){if(o.type==='wire'||o.type==='label'||o.type==='sframe'||(skip&&o.id===skip&&skipT==null)||hiddenFront(o)||behindFront(o))continue;termsOf(o).forEach((t,i)=>{if(skipT!=null&&o.id===skip&&i===skipT)return;const [X,Y]=fromLocal(o,t[0],t[1]);const d=Math.hypot(X-x,Y-y);if(d<bd){bd=d;best={r:o.id,t:i};}});}return best;}
+function termAt(x,y,rad,skip,skipT){let best=null,bd=Infinity;for(const o of state.objs){if(o.type==='wire'||o.type==='label'||o.type==='sframe'||(skip&&o.id===skip&&skipT==null)||hiddenFront(o)||behindFront(o))continue;const R=o.type==='sm6'?Math.max(rad,45,14/view.s):rad;termsOf(o).forEach((t,i)=>{if(skipT!=null&&o.id===skip&&i===skipT)return;const [X,Y]=fromLocal(o,t[0],t[1]);const d=Math.hypot(X-x,Y-y);if(d<R&&d<bd){bd=d;best={r:o.id,t:i};}});}return best;}
 function qRoute(a,b){if(Math.abs(a.x-b.x)<.5||Math.abs(a.y-b.y)<.5)return [];if(Math.abs(b.y-a.y)>=Math.abs(b.x-a.x)){const ym=r2(gs((a.y+b.y)/2));return [{x:a.x,y:ym},{x:b.x,y:ym}];}const xm=r2(gs((a.x+b.x)/2));return [{x:xm,y:a.y},{x:xm,y:b.y}];}
 function qWireSVG(){let s='';const k=1/view.s,dot=(p,c,r)=>`<circle cx="${p.x}" cy="${p.y}" r="${r*k}" fill="${c}" fill-opacity=".35" stroke="${c}" stroke-width="${1.6*k}" pointer-events="none"/>`;
  if(G&&G.mode==='qwire'){const a=resolve(G.from);if(!a)return '';
   for(const o of state.objs){if(o.type==='wire'||o.type==='label'||o.type==='sframe')continue;termsOf(o).forEach(t=>{const [x,y]=fromLocal(o,t[0],t[1]);s+=`<circle cx="${x}" cy="${y}" r="${3*k}" fill="none" stroke="#60a5fa" stroke-width="${1*k}" pointer-events="none"/>`;});}
   const b=G.to?resolve(G.to):{x:G.cur[0],y:G.cur[1]};const pts=[a,...qRoute(a,b),b];
   s+=`<path d="M${pts.map(p=>p.x+' '+p.y).join('L')}" fill="none" stroke="${G.to?'#16a34a':'#3b82f6'}" stroke-width="${2.4*k}" stroke-dasharray="${G.to?'':6*k+' '+4*k}" stroke-linejoin="round" pointer-events="none"/>`;
-  s+=dot(a,'#3b82f6',6);if(G.to)s+=dot(b,'#16a34a',7);return s;}
- if(HOV){const p=resolve(HOV);if(p)s+=dot(p,'#3b82f6',6);}return s;}
+  const mvA=get(G.from.r)?.type==='sm6',mvB=G.to&&get(G.to.r)?.type==='sm6';s+=dot(a,'#3b82f6',mvA?14:6);if(G.to)s+=dot(b,'#16a34a',mvB?16:7);return s;}
+ if(HOV){const p=resolve(HOV);if(p){const mv=get(HOV.r)?.type==='sm6';s+=dot(p,'#3b82f6',mv?14:6);if(mv)s+=`<circle cx="${p.x}" cy="${p.y}" r="${22*k}" fill="none" stroke="#3b82f6" stroke-width="${2*k}" stroke-dasharray="${4*k} ${3*k}" pointer-events="none"/>`;}}return s;}
 function bandSVG(){if(!G||G.mode!=='band'||!G.moved)return '';const x=Math.min(G.w0[0],G.w1[0]),y=Math.min(G.w0[1],G.w1[1]),w=Math.abs(G.w1[0]-G.w0[0]),h=Math.abs(G.w1[1]-G.w0[1]);
  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(59,130,246,.12)" stroke="#3b82f6" stroke-width="1.2" stroke-dasharray="6 4" vector-effect="non-scaling-stroke" pointer-events="none"/>`;}
 let showTerms=true;try{showTerms=localStorage.getItem('epd.terms')!=='0';}catch(e){}
