@@ -4005,7 +4005,7 @@ function redo(){if(hi<hist.length-1){hi++;restore(hist[hi]);}}
 const SH=(()=>{try{return window.parent!==window&&window.parent.panelDesignsBridge||null;}catch(e){return null;}})();
 let cloudId=null;try{cloudId=localStorage.getItem('epd.cloudId')||null;}catch(e){}
 const DEEP=(()=>{try{return new URLSearchParams(location.search).get('d');}catch(e){return null;}})();
-async function openCloudDoc(id){const r=await SH.load(id);if(!r){toast('הלוח לא נמצא');return false;}recentAdd(r.id||id);await flushSave();state=JSON.parse(r.data);state.name=r.name;setCloud(r.id||id);sel=null;hist=[];hi=-1;lastSaved=JSON.stringify(state);commit();markSaved();renderNow();fit();toast('נפתח: '+r.name);return true;}
+async function openCloudDoc(id){const r=await SH.load(id);if(!r){toast('הלוח לא נמצא');return false;}recentAdd(r.id||id);await flushSave();let inf=null;try{inf=await SH.info(r.id||id);}catch(e){}state=JSON.parse(r.data);state.name=r.name;setCloud(r.id||id);cloudStamp=inf?inf.updatedAt:null;sel=null;hist=[];hi=-1;lastSaved=JSON.stringify(state);commit();lastSaved=JSON.stringify(state);clearTimeout(saveT);saveT=null;baseStore();markSaved();renderNow();fit();toast('נפתח: '+r.name);return true;}
 function setCloud(id){cloudId=id;if(id)try{recentAdd(id);}catch(e){}try{if(id)localStorage.setItem('epd.cloudId',id);else localStorage.removeItem('epd.cloudId');}catch(e){}}
 function fmtWhen(iso){try{return new Date(iso).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return iso||'';}}
 function partsCount(){return panelObjs().filter(o=>o.type!=='wire'&&o.type!=='label').length;}
@@ -4050,12 +4050,15 @@ function baseInit(){let b=null;try{b=JSON.parse(localStorage.getItem('epd.cloudB
  if(b&&b.id===cloudId){cloudStamp=b.at;lastSaved=hashStr(cur)===b.h?cur:null;}else{cloudStamp=null;lastSaved=cur;}setTimeout(cloudSync,300);}
 let CSYNC=false,CST=0;
 async function cloudSync(){if(!SH||!cloudId||CSYNC)return;if(saving){clearTimeout(CST);CST=setTimeout(cloudSync,1500);return;}CSYNC=true;
- try{const d=await SH.info(cloudId);if(!d||(cloudStamp&&d.updatedAt===cloudStamp))return;const r=await SH.load(cloudId);if(!r||!r.data||saving)return;
+ try{const d=await SH.info(cloudId);if(!d||(cloudStamp&&d.updatedAt===cloudStamp))return;
+  // not knowing which saved version this copy is based on, keep what is on screen (it is saved over the folder's copy as usual)
+  if(!cloudStamp){cloudStamp=d.updatedAt;if(lastSaved!==null)baseStore();return;}
+  const r=await SH.load(cloudId);if(!r||!r.data||saving)return;
   const cur=JSON.stringify(state);if(r.data===cur){lastSaved=cur;cloudStamp=d.updatedAt;baseStore();if(!saveT)setSaveSt('saved');return;}
-  const dirty=lastSaved===null||cur!==lastSaved||!!saveT;if(dirty)localBackup(cur);clearTimeout(saveT);saveT=null;
+  const dirty=lastSaved===null||cur!==lastSaved||!!saveT;if(dirty){localBackup(cur);try{const cp=JSON.parse(cur);await SH.save({name:(state.name||'לוח')+' (שינויים ממכשיר אחר שלא נשמרו)',data:JSON.stringify(cp),parts:(cp.objs||[]).length});}catch(e){}}clearTimeout(saveT);saveT=null;
   state=JSON.parse(r.data);state.name=r.name;sel=null;multi.clear();hist=[];hi=-1;commit();clearTimeout(saveT);saveT=null;
   lastSaved=JSON.stringify(state);cloudStamp=d.updatedAt;baseStore();setSaveSt('saved');try{applyView();}catch(e){}renderNow();updateBar();
-  toast(dirty?`הלוח עודכן ממכשיר אחר (${d.updatedBy||''}) — מה ששינית כאן ולא נשמר נשמר כגיבוי בפרויקטים שבמכשיר`:`הלוח עודכן — נטענו השינויים שנשמרו במכשיר אחר (${d.updatedBy||''})`);}
+  toast(dirty?`הלוח עודכן ממכשיר אחר (${d.updatedBy||''}) — מה ששינית כאן נשמר כשרטוט נפרד בתיקייה: "${state.name} (שינויים ממכשיר אחר שלא נשמרו)"`:`הלוח עודכן — נטענו השינויים שנשמרו במכשיר אחר (${d.updatedBy||''})`);}
  catch(e){console.warn('cloudSync',e);}finally{CSYNC=false;}}
 if(SH&&SH.onChange)try{SH.onChange(()=>{clearTimeout(CST);CST=setTimeout(cloudSync,500);});}catch(e){}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){clearTimeout(CST);CST=setTimeout(cloudSync,300);}});
