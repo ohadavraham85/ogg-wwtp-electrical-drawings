@@ -2659,7 +2659,7 @@ const FDEF={
  batten:{layer:4.5,edit:['tag','blen'],def:{tag:'',blen:'1200'},size:o=>({w:+o.p.blen||1200,h:90}),draw:o=>battenDraw(o)},
  shead:{layer:4.5,edit:['tag','fw'],def:{tag:'',fw:'100'},size:()=>({w:700,h:110}),draw:o=>shDraw(o)},
  lpole:{layer:4,edit:['tag','ph','parm','phead','pfn','fw','fcol'],def:{tag:'',ph:'6',parm:'none',phead:'flood',pfn:'1',fw:'200',fcol:'grey'},size:o=>{const G=lpGeo(o);return {w:G.w,h:G.h};},draw:o=>lpoleDraw(o)},
- sm6:{layer:4,edit:['tag','ser','ty','w','lvb'],def:{tag:'',ser:'36',ty:'IM',w:'',lvb:'0'},lbl:{tag:'כיתוב / מספר תא',ser:'סדרה',ty:'סוג התא',w:'רוחב (מ"מ, ריק = לפי הקטלוג)',lvb:'תא מתח נמוך מוגבה'},num:['w'],
+ sm6:{layer:4,edit:['tag','ty','w','lvb'],def:{tag:'',ser:'36',ty:'IM',w:'',lvb:'0'},lbl:{tag:'כיתוב / מספר תא',ser:'סדרה',ty:'סוג התא',w:'רוחב (מ"מ, ריק = לפי הקטלוג)',lvb:'תא מתח נמוך מוגבה'},num:['w'],
   sel:{ser:[['36','SM6-36 — 36 ק"ו (גובה 2250)'],['24','SM6-24 — 24 ק"ו (גובה 1600)']],ty:Object.entries(SM6T).map(([a,b])=>[a,b[0]]),lvb:[['0','בלי'],['1','עם תא מתח נמוך מוגבה']]},
   size:o=>{const d=sm6Dim(o);return {w:d.W,h:d.H};},
   terms:o=>{const d=sm6Dim(o),hp=d.H-(o.p.lvb==='1'?(d.s24?450:300):0);return [[0,r2(d.H/2-hp*.045),'כבל מ"ג']];},draw:o=>sm6Draw(o)},
@@ -3247,9 +3247,8 @@ const LIB=[
    {g:'צורות',items:[{t:'shrect',n:'ריבוע / מלבן'},{t:'shrect',n:'מלבן מקווקו (אזור)',p:{dash:'dash',fill:'light'}},{t:'shellipse',n:'עיגול'},{t:'shellipse',n:'אליפסה',p:{w:300,h:180}}]}]}];
  const keep=LIB.filter(T=>T.sld);keep.forEach((T,i)=>T.icon=T.icon||['⚡','⏻','🎛','◎'][i]);const di=NEW.findIndex(T=>T.draw);if(di>1)NEW.splice(1,0,...NEW.splice(di,1));LIB.length=0;LIB.push(...keep,...NEW);
   const R=(n,w,h,rn)=>({t:'troom',n,p:{rn:rn||n,w,h}});
-  LIB.push({tab:'מתח גבוה',icon:'⚡',hint:'תאי מתח גבוה (מסדרים) של שניידר אלקטריק בחזית, בקנה מידה 1:1 לפי הקטלוג. מניחים תאים זה ליד זה כדי לבנות מערך; את הסוג, הסדרה (SM6-36 / SM6-24) והכיתוב בוחרים במאפיינים.',groups:[
-    {g:'שניידר SM6-36 — 36 ק"ו, גובה 2250 מ"מ',items:Object.keys(SM6T).map(k=>({t:'sm6',n:'SM6-36 '+SM6T[k][0],p:{ser:'36',ty:k}}))},
-    {g:'שניידר SM6-24 — 24 ק"ו, גובה 1600 מ"מ',items:Object.keys(SM6T).map(k=>({t:'sm6',n:'SM6-24 '+SM6T[k][0],p:{ser:'24',ty:k}}))}]});
+  LIB.push({tab:'מתח גבוה',icon:'⚡',hint:'תאי מתח גבוה (מסדרים) של שניידר אלקטריק בחזית, בקנה מידה 1:1 לפי הקטלוג. מניחים תאים זה ליד זה כדי לבנות מערך; את סוג התא והכיתוב בוחרים במאפיינים.',groups:[
+    {g:'שניידר SM6-36 — 36 ק"ו, גובה 2250 מ"מ',items:Object.keys(SM6T).map(k=>({t:'sm6',n:'SM6-36 '+SM6T[k][0],p:{ser:'36',ty:k}}))}]});
   LIB.push({tab:'חדרים ומבנה',icon:'🏠',top:true,hint:'היטל על (מבט מלמעלה), במ"מ. חדר = קירות + רצפה עם שם ושטח; גוררים את הפינות לשינוי גודל. דלת וחלון מניחים על קו הקיר ומסובבים לפי הצורך.',groups:[
     {g:'חדרים',items:[{t:'troom',n:'חדר',p:{rn:'חדר',w:4000,h:3000}}]},
     {g:'קירות, פתחים ומדרגות',items:[{t:'wall',n:'קיר',p:{w:3000,h:200}},{t:'tdoor',n:'דלת',p:{}},{t:'tdoor',n:'דלת כפולה',p:{dk:'double',dw:1600}},{t:'tdoor',n:'דלת הזזה',p:{dk:'slide',dw:1200}},{t:'twin',n:'חלון',p:{}},{t:'tcol',n:'עמוד',p:{}},{t:'tcol',n:'עמוד עגול',p:{ck:'rd'}},{t:'tstair',n:'מדרגות',p:{}}]}]},
