@@ -3822,11 +3822,11 @@ function scheduleSave(){if(!SH)return;if(lastSaved!==null&&JSON.stringify(state)
 function flushSave(){if(saveT){clearTimeout(saveT);saveT=null;return doAutoSave();}}
 async function doAutoSave(){saveT=null;if(!cloudId&&state.tpl){if(state.tpl===tplHash()){setSaveSt('pending');return;}delete state.tpl;}dwgFix();if(!state.dwgno&&state.objs.length&&!saving){try{await ensureDwgNo();}catch(e){}}const data=JSON.stringify(state);if(data===lastSaved){setSaveSt('saved');return;}if(saving){scheduleSave();return;}saving=true;setSaveSt('saving');
  try{if(cloudId){const d=await SH.info(cloudId),me=SH.me();
-   if(d&&cloudStamp&&d.updatedAt!==cloudStamp&&me&&d.updatedBy!==me.label){const nd=await SH.save({name:state.name+' (עותק)',data,parts:partsCount()});setCloud(nd.id);cloudStamp=nd.updatedAt;state.name=nd.name;toast(`${d.updatedBy} ערך את הלוח הזה במקביל — השינויים שלך נשמרו כעותק`);}
+   if(d&&cloudStamp&&d.updatedAt!==cloudStamp){const r0=await SH.load(cloudId);if(r0&&r0.data===data){cloudStamp=d.updatedAt;}else{const nd=await SH.save({name:state.name+' (עותק)',data,parts:partsCount()});setCloud(nd.id);cloudStamp=nd.updatedAt;state.name=nd.name;toast(me&&d.updatedBy!==me.label?`${d.updatedBy} ערך את הלוח הזה במקביל — השינויים שלך נשמרו כעותק`:'הלוח נערך גם במכשיר אחר — השינויים מכאן נשמרו כעותק, כדי שלא יימחק כלום');}}
    else{const nd=await SH.save({id:cloudId,name:state.name,data,parts:partsCount()});if(nd.id!==cloudId)setCloud(nd.id);cloudStamp=nd.updatedAt;LAST_SAVE_PENDING=!!nd.pending;}}
   else{const nd=await SH.save({name:state.name,data,parts:partsCount()});setCloud(nd.id);cloudStamp=nd.updatedAt;LAST_SAVE_PENDING=!!nd.pending;toast(nd.pending?'אין חיבור לשרת — הלוח יישלח לתיקייה המשותפת כשיחזור החיבור':'הלוח נשמר אוטומטית בתיקייה המשותפת');}
   LAST_SAVE_ERR='';
-  lastSaved=data;setSaveSt(JSON.stringify(state)===data?'saved':'pending');if(JSON.stringify(state)!==data)scheduleSave();if(LAST_SAVE_PENDING)setSaveSt('pending');}
+  lastSaved=data;baseStore();setSaveSt(JSON.stringify(state)===data?'saved':'pending');if(JSON.stringify(state)!==data)scheduleSave();if(LAST_SAVE_PENDING)setSaveSt('pending');}
  catch(e){setSaveSt('error');localBackup(data);
   const why=e&&e.code==='too-big'?`הלוח גדול מדי לשמירה בענן (${Math.round((e.size||0)/1024)} KB, המקסימום כ־1000 KB) — הקטן או הסר תמונות רקע. עותק נשמר במכשיר.`:e&&e.code==='permission-denied'?'השרת סירב לשמור (אין הרשאה) — עותק נשמר במכשיר.':'השמירה בענן נכשלה — עותק נשמר במכשיר. נסה שוב בעוד רגע.';
   if(why!==LAST_SAVE_ERR){LAST_SAVE_ERR=why;toast('⚠ '+why);}if(e&&e.code!=='too-big')setTimeout(()=>{if(!saveT)scheduleSave();},20000);}finally{saving=false;}}
@@ -3834,7 +3834,28 @@ async function doAutoSave(){saveT=null;if(!cloudId&&state.tpl){if(state.tpl===tp
 let LAST_SAVE_ERR='',LAST_SAVE_PENDING=false;
 function localBackup(data){try{const P=loadProjects(),k=(state.name||'לוח')+' (גיבוי)';P[k]=JSON.parse(data);localStorage.setItem('epd.projects',JSON.stringify(P));}catch(e){}}
 /* What's on screen now is what the folder already has (just opened, or the app just started). */
-function markSaved(){lastSaved=JSON.stringify(state);if(SH&&cloudId)SH.info(cloudId).then(d=>{cloudStamp=d?d.updatedAt:null;if(!d)setCloud(null);}).catch(()=>{});setSaveSt(cloudId?'saved':'pending');}
+function markSaved0(){if(SH&&cloudId){baseInit();setSaveSt('saved');}else markSaved();}
+function markSaved(){lastSaved=JSON.stringify(state);if(SH&&cloudId)SH.info(cloudId).then(d=>{cloudStamp=d?d.updatedAt:null;if(!d)setCloud(null);else baseStore();}).catch(()=>{});setSaveSt(cloudId?'saved':'pending');}
+/* Keeping devices in step. 'epd.cloudBase' remembers which saved version of the open drawing this device's copy
+   is based on ({id, at = its updatedAt, h = hash of that content}). At start the device's own copy is shown first;
+   cloudSync then compares with the folder: a newer save made elsewhere (another person, or the same user on
+   another device) replaces what is shown, and changes made here that were not saved yet are kept as a backup
+   in this device's projects. It runs at start, whenever the folder changes and when the app comes back to the front. */
+function hashStr(t){let h=5381;for(let i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return (h>>>0).toString(36)+'.'+t.length;}
+function baseStore(){try{if(cloudId&&cloudStamp&&lastSaved!=null)localStorage.setItem('epd.cloudBase',JSON.stringify({id:cloudId,at:cloudStamp,h:hashStr(lastSaved)}));}catch(e){}}
+function baseInit(){let b=null;try{b=JSON.parse(localStorage.getItem('epd.cloudBase')||'null');}catch(e){}const cur=JSON.stringify(state);
+ if(b&&b.id===cloudId){cloudStamp=b.at;lastSaved=hashStr(cur)===b.h?cur:null;}else{cloudStamp=null;lastSaved=cur;}setTimeout(cloudSync,300);}
+let CSYNC=false,CST=0;
+async function cloudSync(){if(!SH||!cloudId||CSYNC)return;if(saving){clearTimeout(CST);CST=setTimeout(cloudSync,1500);return;}CSYNC=true;
+ try{const d=await SH.info(cloudId);if(!d||(cloudStamp&&d.updatedAt===cloudStamp))return;const r=await SH.load(cloudId);if(!r||!r.data||saving)return;
+  const cur=JSON.stringify(state);if(r.data===cur){lastSaved=cur;cloudStamp=d.updatedAt;baseStore();if(!saveT)setSaveSt('saved');return;}
+  const dirty=lastSaved===null||cur!==lastSaved||!!saveT;if(dirty)localBackup(cur);clearTimeout(saveT);saveT=null;
+  state=JSON.parse(r.data);state.name=r.name;sel=null;multi.clear();hist=[];hi=-1;commit();clearTimeout(saveT);saveT=null;
+  lastSaved=JSON.stringify(state);cloudStamp=d.updatedAt;baseStore();setSaveSt('saved');try{applyView();}catch(e){}renderNow();updateBar();
+  toast(dirty?`הלוח עודכן ממכשיר אחר (${d.updatedBy||''}) — מה ששינית כאן ולא נשמר נשמר כגיבוי בפרויקטים שבמכשיר`:`הלוח עודכן — נטענו השינויים שנשמרו במכשיר אחר (${d.updatedBy||''})`);}
+ catch(e){console.warn('cloudSync',e);}finally{CSYNC=false;}}
+if(SH&&SH.onChange)try{SH.onChange(()=>{clearTimeout(CST);CST=setTimeout(cloudSync,500);});}catch(e){}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){clearTimeout(CST);CST=setTimeout(cloudSync,300);}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)flushSave();});window.addEventListener('pagehide',()=>flushSave());
 async function saveShared(){if(!cloudId){saveSharedAs(false);return;}
  clearTimeout(saveT);saveT=null;await doAutoSave();toast('נשמר בתיקייה המשותפת');}
@@ -6610,7 +6631,7 @@ function starter(full=true){state={name:'לוח הדגמה',objs:[]};
 /* ================= init ================= */
 (function init(){let s=null;try{s=JSON.parse(localStorage.getItem('epd.current')||'null');}catch(e){}
  if(s&&Array.isArray(s.objs)&&s.objs.length){s.objs=s.objs.filter(o=>o.type==='wire'||DEF[o.type]);state=s;}else starter(true);
- gridLbl();buildSheet();commit();clearTimeout(saveT);saveT=null;markSaved();if(SH&&!cloudId&&state.name!=='לוח הדגמה'){lastSaved=null;scheduleSave();}applyView();renderNow();updateBar();setTimeout(fit,30);
+ gridLbl();buildSheet();commit();clearTimeout(saveT);saveT=null;markSaved0();if(SH&&!cloudId&&state.name!=='לוח הדגמה'){lastSaved=null;scheduleSave();}applyView();renderNow();updateBar();setTimeout(fit,30);
  window.addEventListener('resize',()=>applyView());
  if(DEEP&&SH&&DEEP!==cloudId)setTimeout(()=>openCloudDoc(DEEP).catch(e=>toast('לא הצלחתי לפתוח את הלוח מהקישור')),600);})();
 </script>
