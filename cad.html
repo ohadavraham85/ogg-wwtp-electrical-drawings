@@ -718,6 +718,11 @@ body.pro.uil #panel{border-width:0 0 0 1px}
 #home .srow:hover{background:var(--ctl)}
 
 @media (max-width:700px){#home .hero{grid-template-columns:1fr}#home .hero .th{height:150px;order:-1}#home .acts{grid-template-columns:repeat(2,minmax(0,1fr))}#home .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}#home .card .th{height:96px}#home .hwrap{padding:12px 12px calc(24px + env(safe-area-inset-bottom))}}
+
+/* the shell's top row has the menu and home buttons; the tool's own copies stay on phones (the row is hidden there) */
+body.shnav #bMenu,body.shnav #bHome{display:none}
+body.shnav #home .hello{visibility:hidden}
+@media (max-width:600px) and (min-height:501px){body.shnav #bMenu,body.shnav #bHome{display:inline-flex!important}body.shnav #home .hello{visibility:visible}}
 </style>
 <script src="vendor/qrcode/qrcode.js"></script>
 </head>
@@ -5604,6 +5609,7 @@ function dupMany(ids){const S=new Set(ids),src=ids.map(get).filter(o=>o&&o.type!
  state.objs.forEach(w=>{if(w.type!=='wire'||!w.pts.every(p=>!p.r||S.has(p.r)))return;if(!w.pts.some(p=>p.r))return;const c=JSON.parse(JSON.stringify(w));c.id=uid();c.locked=false;c.pts=c.pts.map(p=>p.r?{r:map[p.r],t:p.t}:{x:r2(p.x+dx),y:p.y});delete c.p.wn;out.push(c);});
  const bm={};out.forEach(c=>{if(c.blk)c.blk=bm[c.blk]||(bm[c.blk]='b'+uid());});state.objs.push(...out);multi.clear();out.forEach(c=>multi.add(c.id));sel=out[0].id;commit();renderNow();updateBar();toast(`שוכפלו ${src.length} רכיבים`);}
 $('bHome').onclick=()=>homeOpen();
+try{if(SH&&SH.topNav)document.body.classList.add('shnav');}catch(e){}
 $('bBlk').onclick=blkMake;$('bUnblk').onclick=blkBreak;
 $('bDup').onclick=()=>{const ids=selIds();if(ids.length>1){dupMany(ids);return;}const o=sel&&get(sel);if(!o)return;const c=JSON.parse(JSON.stringify(o));c.id=uid();c.locked=false;if(c.type==='label')delete c.p.of;
  if(c.type==='wire'){c.pts=c.pts.map(p=>{const q=resolve(p)||p;return {x:q.x+20,y:q.y};});}
