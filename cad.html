@@ -999,6 +999,25 @@ function bxDims(x0,y0,x1,y1,g,f){const c='#1d4ed8',lw=Math.max(3,f/14),k=f*.4,W=
  return `<g stroke="${c}" stroke-width="${lw}" fill="none" pointer-events="none"><path d="M${x0} ${y0}V${y-k}M${x1} ${y0}V${y-k}M${x0} ${y}H${x1}M${x0-k} ${y+k}l${2*k} ${-2*k}M${x1-k} ${y+k}l${2*k} ${-2*k}M${x0} ${y0}H${x-k}M${x0} ${y1}H${x-k}M${x} ${y0}V${y1}M${x-k} ${y0+k}l${2*k} ${-2*k}M${x-k} ${y1+k}l${2*k} ${-2*k}"/></g>`
   +`<g data-rdim="w">${txt((x0+x1)/2,y-f*.75,String(Math.round(W)),f,c,700)}</g><g data-rdim="h" transform="translate(${x-f*.75} ${(y0+y1)/2}) rotate(-90)">${txt(0,0,String(Math.round(H)),f,c,700)}</g>`;}
 const eqDimG=(w,h)=>{const f=Math.max(45,Math.min(110,Math.min(w,h)/6));return [f*1.8,f];};
+/* plan furniture and shelving (top view, mm): kind p.fk in TFK [name, fill]; p.bay = bays / doors, p.lv = shelf levels */
+const TFK={shelf:['כוננית / מדף','#eef2f7'],rack:['מדפי מחסן (כבד)','#e5e7eb'],desk:['שולחן עבודה','#f3e8d6'],ldesk:['שולחן פינתי (L)','#f3e8d6'],mtable:['שולחן ישיבות עם כיסאות','#f3e8d6'],table:['שולחן','#f3e8d6'],chair:['כיסא משרדי','#dbe4ee'],sofa:['ספה','#e7e0f0'],filing:['ארון תיוק (מגירות)','#e5e7eb'],cabinet:['ארון משרדי (דלתות)','#e5e7eb'],locker:['לוקרים','#dde5ec'],copier:['מכונת צילום / מדפסת','#e5e7eb']};
+function furnDraw(o){const w=+o.p.w,h=+o.p.h,k=TFK[o.p.fk]?o.p.fk:'shelf',F=TFK[k][1],K='#111827',lw=Math.max(4,Math.min(8,Math.min(w,h)/60)),x0=-w/2,y0=-h/2,R=(x,y,ww,hh,f=F,rx=0,sw=lw)=>`<rect x="${r2(x)}" y="${r2(y)}" width="${r2(ww)}" height="${r2(hh)}" rx="${rx}" fill="${f}" stroke="${K}" stroke-width="${sw}"/>`,L=(a,b,c,d,sw=lw*.6,da='')=>`<path d="M${r2(a)} ${r2(b)}L${r2(c)} ${r2(d)}" stroke="${K}" stroke-width="${sw}"${da?` stroke-dasharray="${da}"`:''} fill="none"/>`;
+ const nb=d=>Math.max(1,Math.min(40,Math.round(+o.p.bay||Math.max(1,Math.round(w/d))))),chair=(cx,cy,cw,ch,rot)=>`<g transform="translate(${r2(cx)} ${r2(cy)}) rotate(${rot})">${R(-cw/2,-ch/2+ch*.22,cw,ch*.78,'#dbe4ee',cw*.18,lw*.7)}${R(-cw/2,-ch/2,cw,ch*.24,'#c3cfdc',ch*.1,lw*.7)}</g>`;
+ let s='',fs=Math.max(60,Math.min(160,Math.min(w,h)/4));
+ if(k==='shelf'||k==='rack'){const n=nb(k==='rack'?2700:1000),bw=w/n;s+=R(x0,y0,w,h);for(let i=0;i<n;i++){const a=x0+i*bw;if(i)s+=L(a,y0,a,y0+h,lw);s+=L(a,y0,a+bw,y0+h,lw*.4,k==='rack'?'40 30':'')+L(a+bw,y0,a,y0+h,lw*.4,k==='rack'?'40 30':'');}
+  if(k==='rack'){const u=Math.min(90,h/5);for(let i=0;i<=n;i++){const a=Math.min(x0+w-u,Math.max(x0,x0+i*bw-u/2));s+=`<rect x="${r2(a)}" y="${r2(y0)}" width="${r2(u)}" height="${r2(u)}" fill="${K}"/><rect x="${r2(a)}" y="${r2(y0+h-u)}" width="${r2(u)}" height="${r2(u)}" fill="${K}"/>`;}}
+  if(+o.p.lv>0&&h>=250)s+=`<g>${txt(0,0,'×'+(+o.p.lv),Math.min(fs,h*.45),'#374151',800)}</g>`.replace('<g>','<g paint-order="stroke" stroke="'+F+'" stroke-width="'+r2(Math.min(fs,h*.45)/4)+'">');}
+ else if(k==='desk'||k==='table'){s+=R(x0,y0,w,h,F,k==='table'?Math.min(w,h)*.08:10);if(k==='desk'){const mw=Math.min(600,w*.45);s+=R(-mw/2,y0+Math.min(80,h*.1),mw,Math.min(60,h*.08),'#9ca3af',4,lw*.5)+R(-mw*.4,y0+h*.45,mw*.8,Math.min(160,h*.2),'#fff',6,lw*.5);}}
+ else if(k==='ldesk'){const a=Math.min(800,h*.45,w*.45);s+=`<path d="M${x0} ${y0}H${x0+w}V${y0+a}H${x0+a}V${y0+h}H${x0}Z" fill="${F}" stroke="${K}" stroke-width="${lw}" stroke-linejoin="round"/>`;}
+ else if(k==='mtable'){const cd=Math.min(520,h*.22),tw=w,th=h-2*cd,n=Math.max(1,Math.floor((tw-200)/700)),sp=tw/n;for(let i=0;i<n;i++){const cx=x0+sp*(i+.5);s+=chair(cx,y0+cd*.5,Math.min(480,sp*.7),cd,0)+chair(cx,y0+h-cd*.5,Math.min(480,sp*.7),cd,180);}s+=R(x0+Math.min(120,tw*.04),y0+cd,tw-2*Math.min(120,tw*.04),th,F,Math.min(th,tw)*.12);}
+ else if(k==='chair')s+=chair(0,0,w,h,0);
+ else if(k==='sofa'){const b=Math.min(220,h*.28),a=Math.min(200,w*.12);s+=R(x0,y0,w,h,F,30)+R(x0,y0,w,b,'#d8cde8',30,lw*.7)+R(x0,y0,a,h,'#d8cde8',30,lw*.7)+R(x0+w-a,y0,a,h,'#d8cde8',30,lw*.7);const n=Math.max(1,Math.round((w-2*a)/700)),cw=(w-2*a)/n;for(let i=1;i<n;i++)s+=L(x0+a+i*cw,y0+b,x0+a+i*cw,y0+h,lw*.5);}
+ else if(k==='filing'||k==='cabinet'||k==='locker'){const n=k==='filing'?nb(500):k==='locker'?nb(350):nb(500),dw=w/n,fy=y0+h;s+=R(x0,y0,w,h)+L(x0,fy-Math.min(40,h*.08),x0+w,fy-Math.min(40,h*.08),lw);for(let i=1;i<n;i++)s+=L(x0+i*dw,y0,x0+i*dw,fy,lw*.6);
+  if(k==='cabinet'||k==='locker')for(let i=0;i<n;i++){const hx=k==='cabinet'&&i%2?x0+(i+1)*dw:x0+i*dw,dir=k==='cabinet'&&i%2?-1:1;s+=`<path d="M${r2(hx)} ${r2(fy)}V${r2(fy+dw)}A${r2(dw)} ${r2(dw)} 0 0 ${dir>0?0:1} ${r2(hx+dir*dw)} ${r2(fy)}" fill="none" stroke="#6b7280" stroke-width="${r2(lw*.6)}" stroke-dasharray="30 20"/>`;}
+  else for(let i=0;i<n;i++)s+=R(x0+i*dw+dw*.3,fy-Math.min(40,h*.08)-Math.min(50,h*.1),dw*.4,Math.min(30,h*.06),'#9ca3af',4,lw*.4);}
+ else if(k==='copier'){s+=R(x0,y0,w,h,F,12)+R(x0+w*.1,y0+h*.12,w*.55,h*.55,'#fff',6,lw*.5)+R(x0+w*.72,y0+h*.15,w*.18,h*.3,'#9ca3af',4,lw*.4);}
+ if(o.p.tag)s+=`<g data-ctag="1">${tagBox(String(o.p.tag),0,k==='mtable'?0:0,w*.85,Math.max(h*.6,120))}</g>`;
+ if(o.p.dm!=='0'&&(state.tab!=='top'||tdOn())){const [g,f]=eqDimG(w,h);s+=bxDims(x0,y0,-x0,-y0,g,f);}return s;}
 const eqExt=o=>{if(o.p.dm==='0')return null;const {w,h}=sizeOf(o),[g,f]=eqDimG(+o.p.w||w,+o.p.h||h);return {l:g+f*1.6,t:g+f*1.6,r:0,b:0};};
 const DMSEL=[['1','הצג מידות'],['0','בלי מידות']];
 /* a white text box that keeps its text inside: the letters shrink to fit, and a long
@@ -1965,6 +1984,11 @@ const DEF={
    s+=`<path d="M${-w/2} ${y0}L${w/2} ${yf-50}M${w/2} ${y0}L${-w/2} ${yf-50}" stroke="#9ca3af" stroke-width="4"/>`;
    if(o.p.dsw==='1'){const arc=(hx,dir)=>`<path d="M${hx} ${yf}V${yf+lf}A${lf} ${lf} 0 0 ${dir>0?0:1} ${hx+dir*lf} ${yf}" fill="none" stroke="#6b7280" stroke-width="5" stroke-dasharray="30 20"/>`;s+=tcabDbl(o)?arc(-w/2,1)+arc(w/2,-1):arc(-w/2,1);}
    if(o.p.tag)s+=`<g data-ctag="1">${tagBox(String(o.p.tag),0,y0+d/2,w*.88,d*.8)}</g>`;if(o.p.dm!=='0'&&(state.tab!=='top'||tdOn())){const [g,f]=eqDimG(w,d);s+=bxDims(-w/2,y0,w/2,yf,g,f);}return s;}},
+ tfurn:{layer:2,resize:'box',minBox:150,edit:['fk','tag','w','h','bay','lv','dm'],def:{fk:'shelf',tag:'',w:1200,h:400,bay:'',lv:'5',dm:'1'},num:['bay','lv'],
+  lbl:{fk:'סוג',tag:'כיתוב',w:'רוחב (מ"מ)',h:'עומק (מ"מ)',bay:'מספר תאים / דלתות (ריק = לפי הרוחב)',lv:'מספר מדפים בגובה (למדפים)',dm:'מידות'},ext:o=>eqExt(o),
+  sel:{fk:Object.entries(TFK).map(([a,b])=>[a,b[0]]),dm:DMSEL},
+  size:o=>({w:+o.p.w,h:+o.p.h}),
+  draw:o=>furnDraw(o)},
  tequip:{layer:2,resize:'box',minBox:200,edit:['ek','tag','w','h','dm'],def:{ek:'trafo',tag:'',w:1800,h:1200,dm:'1'},lbl:{ek:'סוג',w:'רוחב (מ"מ)',h:'עומק (מ"מ)',dm:'מידות'},ext:o=>eqExt(o),
   sel:{ek:Object.entries({trafo:'שנאי',gen:'גנרטור',pump:'משאבה',motor:'מנוע',ups:'UPS',tank:'מיכל',hvac:'מזגן / מפוח',box:'ציוד'}),dm:DMSEL},
   size:o=>({w:+o.p.w,h:+o.p.h}),
@@ -3137,6 +3161,11 @@ const LIB=[
     {g:'לוחות וארונות',items:[{t:'tcab',n:'לוח — דלת אחת',p:{w:800,h:600,dk:'1'}},{t:'tcab',n:'לוח — דלת כפולה',p:{w:1200,h:600,dk:'2'}}]},
     {g:'ציוד',items:[{t:'tequip',n:'שנאי',p:{ek:'trafo',w:1800,h:1200}},{t:'tequip',n:'גנרטור',p:{ek:'gen',w:3000,h:1200}},{t:'tequip',n:'משאבה',p:{ek:'pump',w:900,h:900}},{t:'tequip',n:'מנוע',p:{ek:'motor',w:800,h:500}},{t:'tequip',n:'UPS',p:{ek:'ups',w:800,h:800}},{t:'tequip',n:'מיכל',p:{ek:'tank',w:2000,h:2000}},{t:'tequip',n:'מזגן / מפוח',p:{ek:'hvac',w:1000,h:600}},{t:'tequip',n:'ציוד כללי',p:{ek:'box',w:1000,h:800}}]},
     {g:'תעלות וקווי כבלים',items:[{t:'ttray',n:'תעלת כבלים 300',p:{}},{t:'ttray',n:'תעלת כבלים 600',p:{tw:600}},{t:'ttray',n:'תעלה ברצפה',p:{tk:'trench',tw:400}},{t:'ttray',n:'קו כבל / צינור',p:{tk:'conduit',tw:150}}]}]},
+   {tab:'ריהוט ומדפים',icon:'🪑',top:true,hint:'ריהוט משרדי ומדפים במבט מלמעלה, במ"מ. את הסוג, הרוחב, העומק, מספר התאים ומספר המדפים בגובה קובעים במאפיינים; אפשר גם לגרור את הפינות.',groups:[
+    {g:'מדפים — גודל, תאים ומספר מדפים במאפיינים',items:[{t:'tfurn',n:'כוננית משרדית',p:{fk:'shelf',w:900,h:350,lv:'5'}},{t:'tfurn',n:'מדף פתוח',p:{fk:'shelf',w:2000,h:400,lv:'5'}},{t:'tfurn',n:'מדפי מחסן (כבד)',p:{fk:'rack',w:2700,h:1100,lv:'4'}}]},
+    {g:'שולחנות',items:[{t:'tfurn',n:'שולחן עבודה',p:{fk:'desk',w:1400,h:700,lv:'0'}},{t:'tfurn',n:'שולחן פינתי (L)',p:{fk:'ldesk',w:1600,h:1600,lv:'0'}},{t:'tfurn',n:'שולחן ישיבות עם כיסאות',p:{fk:'mtable',w:2400,h:2100,lv:'0'}},{t:'tfurn',n:'שולחן',p:{fk:'table',w:1200,h:800,lv:'0'}}]},
+    {g:'ישיבה',items:[{t:'tfurn',n:'כיסא משרדי',p:{fk:'chair',w:600,h:600,lv:'0',dm:'0'}},{t:'tfurn',n:'ספה',p:{fk:'sofa',w:2000,h:850,lv:'0'}}]},
+    {g:'ארונות וציוד משרדי',items:[{t:'tfurn',n:'ארון תיוק (מגירות)',p:{fk:'filing',w:500,h:600,lv:'0'}},{t:'tfurn',n:'ארון משרדי',p:{fk:'cabinet',w:1000,h:450,lv:'0'}},{t:'tfurn',n:'לוקרים',p:{fk:'locker',w:1200,h:500,lv:'0'}},{t:'tfurn',n:'מכונת צילום / מדפסת',p:{fk:'copier',w:1100,h:700,lv:'0'}}]}]},
    {tab:'סמלי חשמל בתוכנית',icon:'⏚',top:true,hint:'סמלים לתוכנית חשמל בהיטל: שקעים, מפסקים, תאורה, לחצנים. גודל הסמל במ"מ בעריכה.',groups:[
     {g:'סמלים',items:[['sock','שקע'],['sock3','שקע תלת־פאזי'],['sw','מפסק / מתג'],['light','גוף תאורה'],['lightf','גוף תאורה לד ארוך'],['emerg','תאורת חירום'],['jb','קופסת חיבורים'],['pbs','עמדת לחצנים'],['estop','לחצן חירום'],['mot','מנוע (סמל)'],['smoke','גלאי עשן'],['pnl','לוח חשמל (סמל)']].map(([k,n])=>({t:'tsym',n,p:{sk:k}}))},
     {g:'טקסט וסימון',items:[{t:'tnorth',n:'חץ צפון'},{t:'label',n:'כיתוב בהיטל',p:{text:'כיתוב',fs:150}},{t:'callout',n:'הערה עם חץ בהיטל',p:{text:'הערה',fs:120,tx:-600,ty:-400}}]}]});})();
@@ -5094,7 +5123,7 @@ function dragDims(o,W){const L=[];if(W===undefined)W=WFG;
  let l=I.x0,r=I.x1,t=I.y0,bt=I.y1;OB.forEach(({b})=>{if(ovY(b)){if(b.x1<=A.x0+1)l=Math.max(l,b.x1);if(b.x0>=A.x1-1)r=Math.min(r,b.x0);}if(ovX(b)){if(b.y1<=A.y0+1)t=Math.max(t,b.y1);if(b.y0>=A.y1-1)bt=Math.min(bt,b.y0);}});
  if(A.x0-l>1)L.push([l,ya,A.x0,ya,'x',1]);if(r-A.x1>1)L.push([A.x1,ya,r,ya,'x',-1]);if(A.y0-t>1)L.push([xa,t,xa,A.y0,'y',1]);if(bt-A.y1>1)L.push([xa,A.y1,xa,bt,'y',-1]);return L;}
 /* the body of a plan part, without a cabinet's door swing */
-const PLAN_OB=new Set(['tcab','tequip','tstair','tcol']);
+const PLAN_OB=new Set(['tcab','tequip','tstair','tcol','tfurn']);
 function bodyBox(q){if(q.type!=='tcab')return bbW(q);const w=+q.p.w,d=+q.p.h,{h}=sizeOf(q),P=[[-w/2,-h/2],[w/2,-h/2],[w/2,-h/2+d],[-w/2,-h/2+d]].map(([u,v])=>fromLocal(q,u,v));return {x0:Math.min(...P.map(p=>p[0])),x1:Math.max(...P.map(p=>p[0])),y0:Math.min(...P.map(p=>p[1])),y1:Math.max(...P.map(p=>p[1]))};}
 /* where a door / window sits in a wall, without moving it */
 function wallOf(o){const S=wallSegs(),gp=o.type==='tdoor'?fromLocal(o,0,-DEF.tdoor.size(o).h/2+(+o.p.wt||200)/2):[o.x,o.y];let best=null;
@@ -5133,7 +5162,7 @@ function allDimsLayout(){const M=new Map(),seen=new Set(),boxes=[],c='#0f766e',f
  state.objs.forEach(q=>{if(PLAN_OB.has(q.type))boxes.push(bodyBox(q));});
  // the parts' own (blue) dimension numbers are taken space too
  const lbl=(q,u,v,t,f,vert)=>{const [x,y]=fromLocal(q,u,v),tw=String(t).length*f*.62+f*.4,th=f*1.25,rv=((q.rot||0)%180!==0)!==!!vert;boxes.push(rv?{x0:x-th/2,x1:x+th/2,y0:y-tw/2,y1:y+tw/2}:{x0:x-tw/2,x1:x+tw/2,y0:y-th/2,y1:y+th/2});};
- state.objs.forEach(q=>{if(!['tcab','tequip','tstair'].includes(q.type)||q.p.dm==='0'||!tdOn())return;const w=+q.p.w,d=+q.p.h,{h}=sizeOf(q),y0=-h/2,y1=q.type==='tcab'?y0+d:h/2,[g,f]=eqDimG(w,y1-y0);
+ state.objs.forEach(q=>{if(!['tcab','tequip','tstair','tfurn'].includes(q.type)||q.p.dm==='0'||!tdOn())return;const w=+q.p.w,d=+q.p.h,{h}=sizeOf(q),y0=-h/2,y1=q.type==='tcab'?y0+d:h/2,[g,f]=eqDimG(w,y1-y0);
   lbl(q,0,y0-g-f*.75,Math.round(w),f,0);lbl(q,-w/2-g-f*.75,(y0+y1)/2,Math.round(y1-y0),f,1);});
  L0.forEach(([id,x1,y1,x2,y2])=>put(id,x1,y1,x2,y2));
  M.forEach((v,id)=>M.set(id,'<g pointer-events="none">'+v+'</g>'));return M;}
