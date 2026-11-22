@@ -40,7 +40,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
 @media (max-width:1000px) and (min-height:501px){:root{--toph:118px}
  #top{flex-wrap:wrap;align-content:center;row-gap:0;padding:2px 6px}
  #top>.sep{display:none}
- #bMenu{order:1}#selInfo{order:2}#top>.tbtns{order:3}
+ #bMenu{order:1}#bHome{order:1}#selInfo{order:2}#top>.tbtns{order:3}
  #rail{order:4;flex:1 0 100%;height:58px;justify-content:space-between;border-top:1px solid var(--line)}
  #rail .rb{width:auto;min-width:40px;flex:1 0 auto;height:54px;padding:0 1px}
  #rail .rb span{font-size:10px}#rail .rb svg{width:22px;height:22px}
@@ -674,7 +674,7 @@ body.pro.uil #panel{border-width:0 0 0 1px}
  #penBar{bottom:calc(70px + env(safe-area-inset-bottom))!important}
  #toast{top:auto!important;bottom:calc(122px + env(safe-area-inset-bottom))!important;font-size:13.5px!important;padding:8px 12px!important;max-width:calc(100vw - 40px)!important;line-height:1.35}
  #saveSt.svst{padding:4px 6px!important;order:3!important;flex:none}#saveSt.svst b{display:none}
- #bMenu{order:1!important}#selInfo{order:2!important}#top>.tbtns{order:4!important}
+ #bMenu{order:1!important}#bHome{order:1!important}#selInfo{order:2!important}#top>.tbtns{order:4!important}
  #selInfo{display:grid!important;grid-template-columns:26px minmax(0,1fr);grid-template-rows:auto auto;column-gap:8px;row-gap:0;align-items:center;align-content:center}
  #selInfo::before{content:'';grid-row:1/3;grid-column:1;width:26px;height:26px;background:url(icons/mark.svg) center/contain no-repeat}
  #hello{display:block!important;grid-column:2;grid-row:1;font-size:11.5px;line-height:1.2;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -736,6 +736,7 @@ body.pro.uil #panel{border-width:0 0 0 1px}
 <div id="penBar" class="hidden"></div>
 <div id="top" class="card">
   <button class="tb" id="bMenu" title="תפריט"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <button class="tb" id="bHome" title="מסך הבית — שרטוטים אחרונים, חדש, פתח והגדרות"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/></svg></button>
   <div id="selInfo" title="מאפיינים"><div id="selThumb"></div><span id="hello"></span><div id="selName"></div></div>
   <div id="rail">
     <button class="rb" id="rAdd"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>הוסף</span></button>
@@ -5599,6 +5600,7 @@ function dupMany(ids){const S=new Set(ids),src=ids.map(get).filter(o=>o&&o.type!
  out.forEach(c=>{if(c.p&&c.p.of){if(map[c.p.of])c.p.of=map[c.p.of];else delete c.p.of;}});
  state.objs.forEach(w=>{if(w.type!=='wire'||!w.pts.every(p=>!p.r||S.has(p.r)))return;if(!w.pts.some(p=>p.r))return;const c=JSON.parse(JSON.stringify(w));c.id=uid();c.locked=false;c.pts=c.pts.map(p=>p.r?{r:map[p.r],t:p.t}:{x:r2(p.x+dx),y:p.y});delete c.p.wn;out.push(c);});
  const bm={};out.forEach(c=>{if(c.blk)c.blk=bm[c.blk]||(bm[c.blk]='b'+uid());});state.objs.push(...out);multi.clear();out.forEach(c=>multi.add(c.id));sel=out[0].id;commit();renderNow();updateBar();toast(`שוכפלו ${src.length} רכיבים`);}
+$('bHome').onclick=()=>homeOpen();
 $('bBlk').onclick=blkMake;$('bUnblk').onclick=blkBreak;
 $('bDup').onclick=()=>{const ids=selIds();if(ids.length>1){dupMany(ids);return;}const o=sel&&get(sel);if(!o)return;const c=JSON.parse(JSON.stringify(o));c.id=uid();c.locked=false;if(c.type==='label')delete c.p.of;
  if(c.type==='wire'){c.pts=c.pts.map(p=>{const q=resolve(p)||p;return {x:q.x+20,y:q.y};});}
