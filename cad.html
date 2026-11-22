@@ -768,8 +768,10 @@ const CNAME={red:'אדום',green:'ירוק',blue:'כחול',orange:'כתום',o
 const ACC=['mcb','pb','pbl','pl22'];
 const CISZ={K1:{w:80,h:131,n:'CI-K1 131×80'},K2:{w:100,h:181,n:'CI-K2 181×100'},K3:{w:120,h:222,n:'CI-K3 222×120'},K4:{w:160,h:240,n:'CI-K4 240×160'},K5:{w:200,h:280,n:'CI-K5 280×200'},C1:{w:187.5,h:250,n:'Ci 250×187.5'},C2:{w:250,h:375,n:'Ci 375×250'},C3:{w:375,h:250,n:'Ci 250×375'},C4:{w:375,h:375,n:'Ci 375×375'}};
 const WCOL={brown:{base:'#8b5a2b',n:'חום'},black:{base:'#1d1d1d',n:'שחור'},grey:{base:'#8f8f8f',n:'אפור'},blue:{base:'#2563eb',n:'כחול'},yg:{base:'#f2c94c',dash:'#16a34a',n:'צהוב-ירוק'},red:{base:'#dc2626',n:'אדום'},white:{base:'#f1f1f1',n:'לבן'},orange:{base:'#f97316',n:'כתום'},bo:{base:'#8b5a2b',dash:'#f97316',n:'חום-כתום'},bk:{base:'#8b5a2b',dash:'#1d1d1d',n:'חום-שחור'},purple:{base:'#7c3aed',n:'סגול'},yellow:{base:'#facc15',n:'צהוב'},green:{base:'#16a34a',n:'ירוק'},pink:{base:'#ec4899',n:'ורוד'},turq:{base:'#14b8a6',n:'טורקיז'},lblue:{base:'#7dd3fc',n:'תכלת'},navy:{base:'#1e3a8a',n:'כחול כהה'},violet:{base:'#c4b5fd',n:'סגול בהיר'},beige:{base:'#d6c29b',n:'בז׳'},gold:{base:'#b8860b',n:'זהב'},rw:{base:'#dc2626',dash:'#f1f1f1',n:'אדום-לבן'},bw:{base:'#2563eb',dash:'#f1f1f1',n:'כחול-לבן'},wb:{base:'#f1f1f1',dash:'#1d1d1d',n:'לבן-שחור'},rb:{base:'#dc2626',dash:'#1d1d1d',n:'אדום-שחור'},gy:{base:'#16a34a',dash:'#facc15',n:'ירוק-צהוב'},pw:{base:'#7c3aed',dash:'#f1f1f1',n:'סגול-לבן'}};
-const SEC={'0.75':1.8,'1':2,'1.5':2.3,'2.5':2.7,'4':3.1,'6':3.6,'10':4.4,'16':5.2};
-const SECK=['0.75','1','1.5','2.5','4','6','10','16'];
+const SEC={'0.75':1.8,'1':2,'1.5':2.3,'2.5':2.7,'4':3.1,'6':3.6,'10':4.4,'16':5.2,'25':7,'35':8.5,'50':10,'70':12,'95':14,'120':16,'150':18,'185':20,'240':23};
+const SECK=['0.75','1','1.5','2.5','4','6','10','16','25','35','50','70','95','120','150','185','240'];
+/* a wire to a medium-voltage cubicle is an MV cable: at least 95 mm² (drawn thick enough to read at its size) */
+const wSecFor=(ends,sec)=>ends.some(p=>p&&p.r&&get(p.r)?.type==='sm6')&&+sec<95?'95':sec;
 let GRID=10;try{const g=localStorage.getItem('epd.grid');if(g!==null)GRID=+g;}catch(e){}
 const GS=()=>GRID>0?GRID:1;const gs=v=>Math.round(v/GS())*GS();
 function snapBox(o,x,y){let {w,h}=DEF[o.type].size(o);if(o.rot%180)[w,h]=[h,w];return [r2(gs(x-w/2)+w/2),r2(gs(y-h/2)+h/2)];}
@@ -2658,7 +2660,8 @@ const FDEF={
  lpole:{layer:4,edit:['tag','ph','parm','phead','pfn','fw','fcol'],def:{tag:'',ph:'6',parm:'none',phead:'flood',pfn:'1',fw:'200',fcol:'grey'},size:o=>{const G=lpGeo(o);return {w:G.w,h:G.h};},draw:o=>lpoleDraw(o)},
  sm6:{layer:4,edit:['tag','ser','ty','w','lvb'],def:{tag:'',ser:'36',ty:'IM',w:'',lvb:'0'},lbl:{tag:'כיתוב / מספר תא',ser:'סדרה',ty:'סוג התא',w:'רוחב (מ"מ, ריק = לפי הקטלוג)',lvb:'תא מתח נמוך מוגבה'},num:['w'],
   sel:{ser:[['36','SM6-36 — 36 ק"ו (גובה 2250)'],['24','SM6-24 — 24 ק"ו (גובה 1600)']],ty:Object.entries(SM6T).map(([a,b])=>[a,b[0]]),lvb:[['0','בלי'],['1','עם תא מתח נמוך מוגבה']]},
-  size:o=>{const d=sm6Dim(o);return {w:d.W,h:d.H};},draw:o=>sm6Draw(o)},
+  size:o=>{const d=sm6Dim(o);return {w:d.W,h:d.H};},
+  terms:o=>{const d=sm6Dim(o),hp=d.H-(o.p.lvb==='1'?(d.s24?450:300):0);return [[0,r2(d.H/2-hp*.045),'כבל מ"ג']];},draw:o=>sm6Draw(o)},
  pillar:{layer:4,edit:['tag','pk','pmat','plw','plh','pld','pdn','plb'],def:{tag:'P1',pk:'dist',pmat:'grp',plw:'800',plh:'1300',pld:'350',pdn:'1',plb:'250'},size:o=>{const d=plDim(o);return {w:d.W,h:d.H};},draw:o=>pillarDraw(o)},
  genset:{layer:4,edit:['tag','gk','kva'],def:{tag:'G1',gk:'canopy',kva:'250'},size:o=>genDim(o),draw:o=>genDraw(o)},
  ink:{layer:9,edit:['icol','iw'],def:{icol:'red',iw:'3',pts:[]},size:o=>{const P=o.p.pts||[];if(!P.length)return {w:1,h:1};let a=1e9,b=-1e9,c=1e9,d=-1e9;P.forEach(([x,y])=>{a=Math.min(a,x);b=Math.max(b,x);c=Math.min(c,y);d=Math.max(d,y);});const w=+o.p.iw||3;return {w:Math.max(2,b-a+w),h:Math.max(2,d-c+w)};},
@@ -4263,7 +4266,7 @@ function wireTap(x,y){const tr=nearestTerm(x,y,Math.max(5,20/view.s));let pt=tr?
 function termLbl(p){if(!p||!p.r)return '';const o=get(p.r);if(!o)return '';if(o.type==='sfeed')return o.p.feed||'';if(o.type==='tb'&&o.p.kind==='blue')return 'N';const t=termsOf(o)[p.t];return t&&t[2]!=null?String(t[2]).trim():'';}
 function wireAutoColor(ends,def){if(ends.some(p=>/^N\d*$/.test(termLbl(p))))return 'blue';
  for(const p of ends){if(!p||!p.r)continue;const w=state.objs.find(o=>o.type==='wire'&&o.pts.some(q=>q.r===p.r&&q.t===p.t));if(w)return w.p.color;}return def;}
-function finishWire(){if(draft&&draft.pts.length>=2){const w={id:uid(),type:'wire',p:{color:wireAutoColor([draft.pts[0],draft.pts[draft.pts.length-1]],wireColor),sec:wireSec,name:'חוט'},pts:draft.pts};state.objs.push(w);draft=null;commit();toast('החוט נוסף');}else draft=null;renderNow();updateBar();}
+function finishWire(){if(draft&&draft.pts.length>=2){const w={id:uid(),type:'wire',p:{color:wireAutoColor([draft.pts[0],draft.pts[draft.pts.length-1]],wireColor),sec:wSecFor([draft.pts[0],draft.pts[draft.pts.length-1]],wireSec),name:'חוט'},pts:draft.pts};state.objs.push(w);draft=null;commit();toast('החוט נוסף');}else draft=null;renderNow();updateBar();}
 
 /* ================= multi-wire =================
    One action wires every pole between two parts: a busbar and a breaker, a
@@ -5319,7 +5322,7 @@ function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(g.mode==='cutx')return;
  if(g.mode==='cpt'){CGUIDE=[];PORTHIT=null;const o=g.o,R=o.p.route;if(!g.moved){if(g.added){R.splice(g.i,1);}else if(g.i>0&&g.i<R.length-1){R.splice(g.i,1);toast('הכיפוף הוסר');}else{renderNow();return;}}
   if(CABRT[o.type])o.p.cl=Math.round((CABLEN[o.type]||0)+senLen(o));else cabRecentre(o);commit();renderNow();updateBar();return;}
- if(g.mode==='qwire'){svg.style.cursor='';if(g.to){const a=resolve(g.from),b=resolve(g.to);const w={id:uid(),type:'wire',p:{color:wireAutoColor([g.from,g.to],isSldObj(get(g.from.r))?'brown':wireColor),sec:wireSec,name:'חוט',auto:1},pts:[g.from,g.to]};
+ if(g.mode==='qwire'){svg.style.cursor='';if(g.to){const a=resolve(g.from),b=resolve(g.to);const w={id:uid(),type:'wire',p:{color:wireAutoColor([g.from,g.to],isSldObj(get(g.from.r))?'brown':wireColor),sec:wSecFor([g.from,g.to],wireSec),name:'חוט',auto:1},pts:[g.from,g.to]};
    state.objs.push(w);commit();renderNow();updateBar();toast('חובר');}else if(!g.moved){select(g.id||null);}else{renderNow();toast('שחרר ליד נקודת חיבור של רכיב אחר כדי לחבר');}return;}
  if(g.mode==='band'&&g.moved){const x0=Math.min(g.w0[0],g.w1[0]),x1=Math.max(g.w0[0],g.w1[0]),y0=Math.min(g.w0[1],g.w1[1]),y1=Math.max(g.w0[1],g.w1[1]);
   const hit=state.objs.filter(o=>!hiddenFront(o)&&boundsOf(o).every(([x,y])=>x>=x0&&x<=x1&&y>=y0&&y<=y1)).map(o=>o.id);
