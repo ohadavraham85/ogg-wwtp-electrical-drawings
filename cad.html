@@ -4045,11 +4045,11 @@ function prefsFlush(){const o=PRQ;PRQ={};const ks=Object.keys(o);if(!ks.length)r
   PRERR=bad.map(x=>x.k+': '+x.r).join(' · ');prSt(favBad?'err':'ok');
   if(favBad&&!window._prefsWarned){window._prefsWarned=1;toast('המועדפים לא נשמרו בחשבון — הקש על סימן הענן האדום לפרטים');}});}
 function prefsApply(d){if(!d)return;let ch=false;
- [['fav','ohadcad.fav.'],['rec','ohadcad.rec.']].forEach(([f,pre])=>{if(d[f]&&typeof d[f]==='object')['panel','sld'].forEach(k=>{if(Array.isArray(d[f][k])){const v=JSON.stringify(d[f][k]);if(localStorage.getItem(pre+k)!==v){try{localStorage.setItem(pre+k,v);}catch(e){}ch=true;}}});});
+ [['fav','ohadcad.fav.'],['rec','ohadcad.rec.']].forEach(([f,pre])=>{if(d[f]&&typeof d[f]==='object')['panel','sld','top'].forEach(k=>{if(Array.isArray(d[f][k])){const v=JSON.stringify(d[f][k]);if(localStorage.getItem(pre+k)!==v){try{localStorage.setItem(pre+k,v);}catch(e){}ch=true;}}});});
  if(d.tb&&typeof d.tb==='object'){const lg=tbLoad().logo;const v=JSON.stringify(d.tb.logo||!lg?d.tb:Object.assign({},d.tb,{logo:lg}));if(localStorage.getItem('epd.tb')!==v){try{localStorage.setItem('epd.tb',v);}catch(e){}}}
  if(ch){try{buildFav();}catch(e){}if(pMode==='lib')buildSheet();}}
 let PRINIT=false;async function prefsInit(){if(!PREFS_OK()||PRINIT)return;const d=await SH.prefs.get();if(d===null){prSt('err');return;}PRINIT=true;prSt('ok');
- const up={};if(!d.fav){const f={panel:favList('panel'),sld:favList('sld')};if(f.panel.length||f.sld.length)up.fav=f;}if(!d.rec){const r={panel:recList('panel'),sld:recList('sld')};if(r.panel.length||r.sld.length)up.rec=r;}if(!d.tb){const t=tbLoad();if(Object.keys(t).length)up.tb=t;}
+ const up={},nz=x=>x.panel.length||x.sld.length||x.top.length;if(!d.fav){const f={panel:favList('panel'),sld:favList('sld'),top:favList('top')};if(nz(f))up.fav=f;}else if(!d.fav.top&&favList('top').length)up.fav=Object.assign({},d.fav,{top:favList('top')});if(!d.rec){const r={panel:recList('panel'),sld:recList('sld'),top:recList('top')};if(nz(r))up.rec=r;}else if(!d.rec.top&&recList('top').length)up.rec=Object.assign({},d.rec,{top:recList('top')});if(!d.tb){const t=tbLoad();if(Object.keys(t).length)up.tb=t;}
  if(Object.keys(up).length)prefsPush(up);prefsApply(d);try{SH.prefs.watch(prefsApply);}catch(e){}}
 setTimeout(()=>prefsInit().catch(()=>{}),500);
 // if the account couldn't be read at start (offline, rules not yet published) try again when the app comes back to the front
@@ -4062,7 +4062,7 @@ async function prefsCheck(){toast('בודק…');let r;try{r=await SH.prefs.test
   :`❌ השמירה בחשבון נכשלה.<br>כתיבה: ${esc(r.write||'-')}<br>קריאה: ${esc(r.read||'-')}`;
  const le=(SH.prefs.lastErr||'')+(PRERR?' · '+PRERR:''),msg2=`<br><br><span style="font-size:12px;opacity:.75" dir="ltr">${esc(r.email||'')} · write=${esc(r.write||'-')} · read=${esc(r.read||'-')}${le?' · '+esc(le):''}</span>`;
  modal('בדיקת סנכרון',`<div style="line-height:1.7">${msg}${msg2}</div>`);
- if(r.write==='ok'&&r.read==='ok'){prSt('ok');PRERR='';const d=await SH.prefs.get();if(d&&!d.fav){const f={panel:favList('panel'),sld:favList('sld')};if(f.panel.length||f.sld.length)prefsPush({fav:f});}else if(d)prefsApply(d);if(!PRINIT)prefsInit().catch(()=>{});}}
+ if(r.write==='ok'&&r.read==='ok'){prSt('ok');PRERR='';const d=await SH.prefs.get();if(d&&!d.fav){const f={panel:favList('panel'),sld:favList('sld'),top:favList('top')};if(f.panel.length||f.sld.length)prefsPush({fav:f});}else if(d)prefsApply(d);if(!PRINIT)prefsInit().catch(()=>{});}}
 /* ================= favourites bar =================
    Up to 10 parts per view (panel front / single-line), starred in the library;
    a strip under the document bar adds them with a click or a drag. Kept per device. */
@@ -4073,12 +4073,12 @@ const FAVMAX=10;
 function recList(k){try{return JSON.parse(localStorage.getItem('ohadcad.rec.'+k)||'[]');}catch(e){return [];}}
 function recKind(e){for(const T of LIB)for(const g of T.groups)if(g.items.includes(e))return T.sld?'sld':T.top?'top':'panel';return null;}
 function recPush(e){const k=e&&recKind(e);if(!k)return;const L=[e.n,...recList(k).filter(n=>n!==e.n)].slice(0,FAVMAX);try{localStorage.setItem('ohadcad.rec.'+k,JSON.stringify(L));}catch(_){}
- prefsPush({rec:{panel:recList('panel'),sld:recList('sld')}});buildFav();}
+ prefsPush({rec:{panel:recList('panel'),sld:recList('sld'),top:recList('top')}});buildFav();}
 // the first time, the old favourites start the list
 try{['panel','sld'].forEach(k=>{if(localStorage.getItem('ohadcad.rec.'+k)===null){const f=localStorage.getItem('ohadcad.fav.'+k);if(f)localStorage.setItem('ohadcad.rec.'+k,f);}});}catch(e){}
-function recDrop(k,n){try{localStorage.setItem('ohadcad.rec.'+k,JSON.stringify(recList(k).filter(x=>x!==n)));}catch(_){}prefsPush({rec:{panel:recList('panel'),sld:recList('sld')}});buildFav();}
+function recDrop(k,n){try{localStorage.setItem('ohadcad.rec.'+k,JSON.stringify(recList(k).filter(x=>x!==n)));}catch(_){}prefsPush({rec:{panel:recList('panel'),sld:recList('sld'),top:recList('top')}});buildFav();}
 function favList(k){try{return JSON.parse(localStorage.getItem('ohadcad.fav.'+k)||'[]');}catch(e){return [];}}
-function favToggle(k,n){setTimeout(()=>prefsPush({fav:{panel:favList('panel'),sld:favList('sld')}}),0);let L=favList(k);if(L.includes(n))L=L.filter(x=>x!==n);else{if(L.length>=FAVMAX){toast(`אפשר עד ${FAVMAX} מועדפים — הסר אחד קודם`);return;}L.push(n);toast('נוסף למועדפים: '+n);}
+function favToggle(k,n){setTimeout(()=>prefsPush({fav:{panel:favList('panel'),sld:favList('sld'),top:favList('top')}}),0);let L=favList(k);if(L.includes(n))L=L.filter(x=>x!==n);else{if(L.length>=FAVMAX){toast(`אפשר עד ${FAVMAX} מועדפים — הסר אחד קודם`);return;}L.push(n);toast('נוסף למועדפים: '+n);}
  try{localStorage.setItem('ohadcad.fav.'+k,JSON.stringify(L));}catch(e){}buildFav();}
 function favFind(k,n){for(let ti=0;ti<LIB.length;ti++){const T=LIB[ti];if(!!T.sld!==(k==='sld'))continue;for(let gi=0;gi<T.groups.length;gi++){const ii=T.groups[gi].items.findIndex(e=>e.n===n);if(ii>=0)return [ti,gi,ii,T.groups[gi].items[ii]];}}return null;}
 function buildFav(){const B=$('favBar');if(!B)return;const ks=state.tab==='both'?['panel','sld']:[state.tab==='sld'?'sld':state.tab==='top'?'top':'panel'];let h='<span class="favlbl">🕘 אחרונים</span>'+(PREFS_OK()&&PRST==='err'?`<span class="favsync" title="${PRST==='ok'?'מסונכרן לחשבון — מופיע בכל המכשירים':PRST==='err'?'לא מסונכרן לחשבון — הקש לבדיקה':'מתחבר לחשבון…'}" style="flex:none;cursor:pointer;font-size:12px;font-weight:800;padding:2px 6px;border-radius:4px;color:#fff;background:${PRST==='ok'?'#16a34a':PRST==='err'?'#dc2626':'#6b7280'}">☁${PRST==='ok'?'✓':PRST==='err'?'✗':'…'}</span>`:''),n=0;
