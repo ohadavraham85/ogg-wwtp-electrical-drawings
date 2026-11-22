@@ -4065,20 +4065,31 @@ function prefsFlush(){const o=PRQ;PRQ={};const ks=Object.keys(o);if(!ks.length)r
  Promise.all(ks.map(k=>SH.prefs.set({[k]:prefsSafe(k,o[k])}).then(r=>({k,r})))).then(R=>{const bad=R.filter(x=>x.r!==true),favBad=bad.some(x=>x.k==='fav');
   PRERR=bad.map(x=>x.k+': '+x.r).join(' · ');prSt(favBad?'err':'ok');
   if(favBad&&!window._prefsWarned){window._prefsWarned=1;toast('המועדפים לא נשמרו בחשבון — הקש על סימן הענן האדום לפרטים');}});}
-function prefsApply(d){if(!d)return;let ch=false;
+function prefsApply(d,atStart){if(!d)return;let ch=false;if(d.set&&typeof d.set==='object')setsApply(d.set,atStart);
  [['fav','ohadcad.fav.'],['rec','ohadcad.rec.']].forEach(([f,pre])=>{if(d[f]&&typeof d[f]==='object')['panel','sld','top'].forEach(k=>{if(Array.isArray(d[f][k])){const v=JSON.stringify(d[f][k]);if(localStorage.getItem(pre+k)!==v){try{localStorage.setItem(pre+k,v);}catch(e){}ch=true;}}});});
  if(d.tb&&typeof d.tb==='object'){const lg=tbLoad().logo;const v=JSON.stringify(d.tb.logo||!lg?d.tb:Object.assign({},d.tb,{logo:lg}));if(localStorage.getItem('epd.tb')!==v){try{localStorage.setItem('epd.tb',v);}catch(e){}}}
  if(ch){try{buildFav();}catch(e){}if(pMode==='lib')buildSheet();}}
 let PRINIT=false;async function prefsInit(){if(!PREFS_OK()||PRINIT)return;const d=await SH.prefs.get();if(d===null){prSt('err');return;}PRINIT=true;prSt('ok');
  const up={},nz=x=>x.panel.length||x.sld.length||x.top.length;if(!d.fav){const f={panel:favList('panel'),sld:favList('sld'),top:favList('top')};if(nz(f))up.fav=f;}else if(!d.fav.top&&favList('top').length)up.fav=Object.assign({},d.fav,{top:favList('top')});if(!d.rec){const r={panel:recList('panel'),sld:recList('sld'),top:recList('top')};if(nz(r))up.rec=r;}else if(!d.rec.top&&recList('top').length)up.rec=Object.assign({},d.rec,{top:recList('top')});if(!d.tb){const t=tbLoad();if(Object.keys(t).length)up.tb=t;}
- if(Object.keys(up).length)prefsPush(up);prefsApply(d);try{SH.prefs.watch(prefsApply);}catch(e){}}
+ if(!d.set){SETS=JSON.stringify(setSnap());up.set=setEnc(setSnap());}if(Object.keys(up).length)prefsPush(up);prefsApply(d,1);try{SH.prefs.watch(x=>prefsApply(x));}catch(e){}}
+/* the device settings that follow the account to every device: toolbar, look, language, size, theme per document,
+   grid / axes / terminals, pen, library view, drawer groups. Kept in the account's prefs under "set" (dots in the
+   key names become "~"); the account's copy wins when the app starts, a change here is sent within a few seconds. */
+const SYNC_KEYS=['ohadcad.toolbar.v1','ohadcad.lang','ohadcad.look','ohadcad.ui','ohadcad.uiscale','ohadcad.font','ohadcad.icons','ohadcad.cross','ohadcad.libview','ohadcad.penc','ohadcad.penw','ohadcad.dsec','epd.themes','epd.grid','epd.gridbg','epd.axes','epd.terms'];
+let SETS='';
+function setSnap(){const o={};try{SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!=null)o[k]=v;});}catch(e){}return o;}
+const setEnc=o=>Object.fromEntries(Object.entries(o).map(([k,v])=>[k.replace(/\./g,'~'),v]));
+function setsApply(rs,atStart){let ch=false;try{SYNC_KEYS.forEach(k=>{const v=rs[k.replace(/\./g,'~')];if(typeof v==='string'&&localStorage.getItem(k)!==v){localStorage.setItem(k,v);ch=true;}});}catch(e){}SETS=JSON.stringify(setSnap());
+ if(!ch)return;let rl=false;try{rl=atStart&&!sessionStorage.getItem('ohadcad.setrl');if(rl)sessionStorage.setItem('ohadcad.setrl','1');}catch(e){}
+ if(rl){flushSave();setTimeout(()=>location.reload(),300);}else toast('ההגדרות עודכנו ממכשיר אחר — חלק מהן יחולו בפתיחה הבאה של האפליקציה');}
+setInterval(()=>{if(!PRINIT)return;const o=setSnap(),j=JSON.stringify(o);if(j!==SETS){SETS=j;prefsPush({set:setEnc(o)});}},3000);
 setTimeout(()=>prefsInit().catch(()=>{}),500);
 // if the account couldn't be read at start (offline, rules not yet published) try again when the app comes back to the front
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!PRINIT)prefsInit().catch(()=>{});});
 // the drawer's "check sync": writes to the account, reads it back and says in plain words what happened
 async function prefsCheck(){toast('בודק…');let r;try{r=await SH.prefs.test();}catch(e){r={write:String(e),read:''};}
  const loc={panel:favList('panel').length,sld:favList('sld').length},denied=/permission/i.test(r.write+r.read);
- const msg=r.write==='ok'&&r.read==='ok'?`✅ הסנכרון עובד.<br>בחשבון שמורים: ${r.fav?`${r.fav.panel} מועדפים בחזית לוח, ${r.fav.sld} בחד קווי`:'עדיין אין מועדפים'}.<br>במכשיר הזה: ${loc.panel} בחזית לוח, ${loc.sld} בחד קווי.<br><br>המועדפים מוצגים לפי הלשונית: מה שסומן בחד קווי מופיע רק כשפתוח חד קווי.`
+ const msg=r.write==='ok'&&r.read==='ok'?`✅ הסנכרון עובד.<br>בחשבון שמורים: ${r.fav?`${r.fav.panel} מועדפים בחזית לוח, ${r.fav.sld} בחד קווי`:'עדיין אין מועדפים'}.<br>במכשיר הזה: ${loc.panel} בחזית לוח, ${loc.sld} בחד קווי.<br>גם הגדרות המסך (סרגל הכלים, מראה, שפה, גודל, רשת וצירים) עוברות לכל המכשירים.<br><br>המועדפים מוצגים לפי הלשונית: מה שסומן בחד קווי מופיע רק כשפתוח חד קווי.`
   :denied?'❌ Firebase חוסם את השמירה — החוקים החדשים עדיין לא פורסמו. צריך להדביק את הקובץ firestore.rules במסך Rules וללחוץ Publish.'
   :`❌ השמירה בחשבון נכשלה.<br>כתיבה: ${esc(r.write||'-')}<br>קריאה: ${esc(r.read||'-')}`;
  const le=(SH.prefs.lastErr||'')+(PRERR?' · '+PRERR:''),msg2=`<br><br><span style="font-size:12px;opacity:.75" dir="ltr">${esc(r.email||'')} · write=${esc(r.write||'-')} · read=${esc(r.read||'-')}${le?' · '+esc(le):''}</span>`;
