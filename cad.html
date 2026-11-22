@@ -1134,17 +1134,17 @@ function mvtxDraw(o){const {W,H}=mvtxDim(o),x0=-W/2,y0=-H/2,K='#1f2937',lw=5,dry
    for(let k=1;k<6;k++)s+=L(x-cw*.38,fT+H*.18+((fB-fT)-H*.32)*k/6,x+cw*.38,fT+H*.18+((fB-fT)-H*.32)*k/6,3,'#6b7280');s+=R(x-28,fT+H*.06,56,H*.08,'#d6d3d1',3,6);});
   const pw=Math.min(W*.34,560),ph=H*.09;s+=R(-pw/2,fB-ph-40,pw,ph,'#f8fafc',3,4)+txt(0,fB-ph-40+ph*.32,'ARDEN · ארדן',ph*.26,'#0f4c81',800)+txt(0,fB-ph-40+ph*.72,`${o.p.kva} kVA · ${o.p.kv||'33'}/0.4 kV · יבש`,ph*.22,K,700);}
  {const h=mvtxHV(o);s+=`<circle cx="${h[0]}" cy="${h[1]}" r="22" fill="#111827" stroke="#e5e7eb" stroke-width="4"/>`+txt(h[0]+60,h[1],'מ"ג',40,K,800,'start');}
- s+=mvLabel(o,W,H);
+ s+=mvLabel(o,W,H,dry?y0+H*.2:y0+H*.3+50);
  // cable entries at the base: HV left, LV right
  [[-x0-W*.25,'מ"נ']].forEach(([x,t])=>{s+=`<circle cx="${r2(x)}" cy="${r2(yb+35)}" r="26" fill="#111827" stroke="#e5e7eb" stroke-width="4"/>`+txt(x,yb-24,t,40,K,800);});
  return s;}
 /* a text box above an MV part (SM6 cubicle, transformer): its tag and name, on unless p.lbx==='0' */
 const MVLB={g:80,h:240};
 function mvLbOn(o){return o.p.lbx!=='0'&&!!(String(o.p.tag||'').trim()||String(o.p.nm||'').trim());}
-function mvLabel(o,W,H){if(!mvLbOn(o))return '';const tg=String(o.p.tag||'').trim(),nm=String(o.p.nm||'').trim(),two=tg&&nm,h=two?MVLB.h:150,bw=Math.max(W*.92,Math.max(tg.length*90,nm.length*70)*.58+80),y=-H/2-MVLB.g-h;
+function mvLabel(o,W,H,inY){if(!mvLbOn(o))return '';const tg=String(o.p.tag||'').trim(),nm=String(o.p.nm||'').trim(),two=tg&&nm,h=two?MVLB.h:150,bw=Math.max(inY!=null?W*.4:W*.92,Math.max(tg.length*90,nm.length*70)*.58+80),y=inY!=null?inY:-H/2-MVLB.g-h;
  let s=`<rect x="${r2(-bw/2)}" y="${r2(y)}" width="${r2(bw)}" height="${h}" rx="14" fill="#fff" stroke="#1f2937" stroke-width="5"/>`;
  if(two)s+=txt(0,y+h*.33,tg,90,'#b45309',800)+txt(0,y+h*.72,nm,70,'#111827',600);else s+=txt(0,y+h/2,tg||nm,tg?90:70,tg?'#b45309':'#111827',tg?800:600);
- s=s.replace(/<text /g,'<text direction="rtl" unicode-bidi="plaintext" ');
+ s=s.replace(/<text /g,'<text direction="rtl" unicode-bidi="plaintext" ');if(inY!=null)return s;
  return s+`<path d="M0 ${r2(y+h)}V${r2(-H/2)}" stroke="#1f2937" stroke-width="4" stroke-dasharray="14 10"/>`;}
 const mvLbExt=o=>mvLbOn(o)?{l:0,r:0,t:MVLB.g+MVLB.h,b:0}:null;
 const eqExt=o=>{if(o.p.dm==='0')return null;const {w,h}=sizeOf(o),[g,f]=eqDimG(+o.p.w||w,+o.p.h||h);return {l:g+f*1.6,t:g+f*1.6,r:0,b:0};};
@@ -2701,8 +2701,8 @@ const FDEF={
  batten:{layer:4.5,edit:['tag','blen'],def:{tag:'',blen:'1200'},size:o=>({w:+o.p.blen||1200,h:90}),draw:o=>battenDraw(o)},
  shead:{layer:4.5,edit:['tag','fw'],def:{tag:'',fw:'100'},size:()=>({w:700,h:110}),draw:o=>shDraw(o)},
  lpole:{layer:4,edit:['tag','ph','parm','phead','pfn','fw','fcol'],def:{tag:'',ph:'6',parm:'none',phead:'flood',pfn:'1',fw:'200',fcol:'grey'},size:o=>{const G=lpGeo(o);return {w:G.w,h:G.h};},draw:o=>lpoleDraw(o)},
- mvtx:{layer:4,edit:['tag','nm','lbx','kva','kv','tk'],def:{tag:'T1',nm:'',lbx:'1',kva:'800',kv:'33',tk:'oil'},ext:o=>mvLbExt(o),lbl:{tag:'תג',nm:'שם',lbx:'תיבת טקסט מעל',kva:'הספק (kVA)',kv:'מתח ראשוני (ק"ו)',tk:'סוג'},
-  sel:{kva:Object.keys(MVTX).map(k=>[k,k+' kVA']),kv:[['33','33 ק"ו'],['22','22 ק"ו'],['12.6','12.6 ק"ו']],tk:[['oil','שמן, הרמטי (ONAN)'],['dry','יבש (יציקת שרף)']],lbx:[['1','הצג תג ושם מעל'],['0','בלי']]},
+ mvtx:{layer:4,edit:['tag','nm','lbx','kva','kv','tk'],def:{tag:'T1',nm:'',lbx:'1',kva:'800',kv:'33',tk:'oil'},lbl:{tag:'תג',nm:'שם',lbx:'תיבת טקסט על השנאי',kva:'הספק (kVA)',kv:'מתח ראשוני (ק"ו)',tk:'סוג'},
+  sel:{kva:Object.keys(MVTX).map(k=>[k,k+' kVA']),kv:[['33','33 ק"ו'],['22','22 ק"ו'],['12.6','12.6 ק"ו']],tk:[['oil','שמן, הרמטי (ONAN)'],['dry','יבש (יציקת שרף)']],lbx:[['1','הצג תג ושם על השנאי'],['0','בלי']]},
   size:o=>{const d=mvtxDim(o);return {w:d.W,h:d.H};},
   terms:o=>{const d=mvtxDim(o),y=r2(d.H/2-130+35);return [mvtxHV(o),[r2(d.W/2-d.W*.25),y,'מ"נ']];},draw:o=>mvtxDraw(o)},
  sm6:{layer:4,edit:['tag','nm','lbx','ty','w','lvb'],def:{tag:'',nm:'',lbx:'1',ser:'36',ty:'IM',w:'',lvb:'0'},ext:o=>mvLbExt(o),lbl:{tag:'תג / מספר תא',nm:'שם (למשל כניסה מחח"י)',lbx:'תיבת טקסט מעל',ser:'סדרה',ty:'סוג התא',w:'רוחב (מ"מ, ריק = לפי הקטלוג)',lvb:'תא מתח נמוך מוגבה'},num:['w'],
