@@ -1,7 +1,7 @@
 // OhadCad service worker: keeps the app on the device so it opens offline.
 // Pages are network-first (an update you push shows up on the next open);
 // everything else is served from the cache and refreshed in the background.
-const CACHE = 'ohadcad-v313';
+const CACHE = 'ohadcad-v314';
 const CORE = [
   './', './index.html', './cad.html', './manifest.webmanifest',
   './vendor/firebase/firebase-app-compat.js',
@@ -32,7 +32,8 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
-  const isPage = req.mode === 'navigate' || url.pathname.endsWith('.html');
+  // pages and the English dictionary (it changes with every release) are network-first
+  const isPage = req.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.includes('/i18n/');
   if (isPage) {
     event.respondWith(
       // Always asks the server whether the page changed, past the browser's own cache.
