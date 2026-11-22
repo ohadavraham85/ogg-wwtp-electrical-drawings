@@ -1112,13 +1112,13 @@ function sm6Draw(o){const {W,H,T,s24,F}=sm6Dim(o),x0=-W/2,y0=-H/2,K='#1f2937',BG
   if(W>=300&&(it.includes('sw')||it.includes('ds')||it.includes('es'))){const hx0=cx+W*.2+M*.7,vw=Math.max(60*k,Math.min(W*.42,260*k,-x0-30-hx0)),vh=Math.min(vw*.38,ho*.2),vx=-x0-30-vw,vy=yo+ho-vh-ho*.05;s+=R(vx,vy,vw,vh,'#f3f4f6',2.5,4);[0,1,2].forEach(i=>{const lx=vx+vw*(.25+i*.25);s+=`<circle cx="${r2(lx)}" cy="${r2(vy+vh*.42)}" r="${r2(vh*.2)}" fill="#fde68a" stroke="${K}" stroke-width="2"/>`+txt(lx,vy+vh*.8,'L'+(i+1),vh*.17,K,700);});}}
  // cable compartment front panel: window, warning sticker, handle
  s+=R(x0+12,yc+8,W-24,hc-12,'#e4e5e1',3);
- const wdb=o.type==='f400'&&T[3]&&T[3].includes('cb');
- // F400: the withdrawable circuit breaker sits in the lower compartment, seen through the door's window
+ const wdb=(o.type==='f400'||o.type==='sm6')&&T[3]&&T[3].includes('cb'),wdr=o.type==='f400'||o.p.ty==='DM1D',wlab=o.type==='f400'?'SF1 / EVOLIS — נשלף':wdr?'SF1 — נשלף':'SF1 — קבוע';
+ // F400 and SM6 DM1 / DM2: the SF1 circuit breaker sits in the lower compartment, seen through the door's window (withdrawable: F400, DM1-D — on wheels)
  if(wdb){const bw=W*.62,bh=hc*.66,bx=-bw/2-W*.04,by=yc+hc*.17,K2='#111827';s+=R(bx-14,by-14,bw+28,bh+28,'#cbd5e1',3,8)+R(bx,by,bw,bh,'#374151',4,6)+R(bx+bw*.06,by+bh*.06,bw*.88,bh*.88,'#4b5563',2,4);
   const cx2=bx+bw/2,cy2=by+bh*.42,bs=Math.min(bw*.12,70);s+=`<circle cx="${r2(cx2-bs*1.3)}" cy="${r2(cy2)}" r="${r2(bs*.55)}" fill="#16a34a" stroke="${K2}" stroke-width="4"/><circle cx="${r2(cx2+bs*1.3)}" cy="${r2(cy2)}" r="${r2(bs*.55)}" fill="#dc2626" stroke="${K2}" stroke-width="4"/>`+txt(cx2-bs*1.3,cy2,'O',bs*.6,'#fff',800)+txt(cx2+bs*1.3,cy2,'I',bs*.6,'#fff',800);
-  [['OFF','#16a34a'],['CHARGED','#f59e0b']].forEach(([t,c],i)=>{const iy=by+bh*.12,ix=bx+bw*(.18+i*.42),iw=bw*.24,ih=bh*.1;s+=R(ix,iy,iw,ih,'#f8fafc',2,3)+txt(ix+iw/2,iy+ih/2,t,ih*.55,c,800);});
-  s+=`<circle cx="${r2(cx2)}" cy="${r2(by+bh*.72)}" r="${r2(bs*.35)}" fill="#1f2937" stroke="#9ca3af" stroke-width="4"/><rect x="${r2(cx2-bs*.08)}" y="${r2(by+bh*.72-bs*.25)}" width="${r2(bs*.16)}" height="${r2(bs*.5)}" fill="#9ca3af"/>`+txt(cx2,by+bh*.88,'SF1 / EVOLIS — נשלף',Math.min(bh*.06,40),'#e5e7eb',700);
-  [.15,.85].forEach(f=>s+=`<circle cx="${r2(bx+bw*f)}" cy="${r2(by+bh+6)}" r="18" fill="#111827"/>`);s+=R(-x0-24-W*.07,yc+hc*.45,W*.05,hc*.2,'#9ca3af',2,6);}
+  [['OFF','#16a34a'],['CHARGED','#f59e0b']].forEach(([t,c],i)=>{const iy=by+bh*.12,ix=bx+bw*(.18+i*.42),iw=bw*.24,ih=bh*.1;s+=R(ix,iy,iw,ih,'#f8fafc',2,3)+txt(ix+iw/2,iy+ih/2,t,Math.min(ih*.55,iw*.92/(t.length*.66)),c,800);});
+  s+=`<circle cx="${r2(cx2)}" cy="${r2(by+bh*.72)}" r="${r2(bs*.35)}" fill="#1f2937" stroke="#9ca3af" stroke-width="4"/><rect x="${r2(cx2-bs*.08)}" y="${r2(by+bh*.72-bs*.25)}" width="${r2(bs*.16)}" height="${r2(bs*.5)}" fill="#9ca3af"/>`+txt(cx2,by+bh*.88,wlab,Math.min(bh*.06,40),'#e5e7eb',700);
+  if(wdr)[.15,.85].forEach(f=>s+=`<circle cx="${r2(bx+bw*f)}" cy="${r2(by+bh+6)}" r="18" fill="#111827"/>`);s+=R(-x0-24-W*.07,yc+hc*.45,W*.05,hc*.2,'#9ca3af',2,6);}
  else if(W>=200){const ww=Math.min(W*.22,120*k);s+=R(-ww/2,yc+hc*.35,ww,ww*1.2,'#cbd5e1',3,4);const tz=Math.min(W*.12,80*k),tx=-tz/2,ty=yc+hc*.12;s+=`<path d="M${r2(tx)} ${r2(ty+tz*.87)}L${r2(tx+tz/2)} ${r2(ty)}L${r2(tx+tz)} ${r2(ty+tz*.87)}Z" fill="#facc15" stroke="${K}" stroke-width="3"/>`+txt(tx+tz/2,ty+tz*.58,'⚡',tz*.45,K,700);
   s+=R(-x0-24-W*.07,yc+hc*.45,W*.05,hc*.2,'#9ca3af',2,6);}
  // plinth
