@@ -773,7 +773,7 @@ const WCOL={brown:{base:'#8b5a2b',n:'חום'},black:{base:'#1d1d1d',n:'שחור'
 const SEC={'0.75':1.8,'1':2,'1.5':2.3,'2.5':2.7,'4':3.1,'6':3.6,'10':4.4,'16':5.2,'25':7,'35':8.5,'50':10,'70':12,'95':14,'120':16,'150':18,'185':20,'240':23};
 const SECK=['0.75','1','1.5','2.5','4','6','10','16','25','35','50','70','95','120','150','185','240'];
 /* a wire to a medium-voltage cubicle is an MV cable: at least 95 mm² (drawn thick enough to read at its size) */
-const mvEnds=ends=>ends.some(p=>p&&p.r&&get(p.r)?.type==='sm6'),wSecFor=(ends,sec)=>mvEnds(ends)&&+sec<95?'95':sec;
+const MVT=new Set(['sm6','mvtx']),mvEnds=ends=>ends.some(p=>p&&p.r&&MVT.has(get(p.r)?.type)),wSecFor=(ends,sec)=>mvEnds(ends)&&+sec<95?'95':sec;
 let GRID=10;try{const g=localStorage.getItem('epd.grid');if(g!==null)GRID=+g;}catch(e){}
 const GS=()=>GRID>0?GRID:1;const gs=v=>Math.round(v/GS())*GS();
 function snapBox(o,x,y){let {w,h}=DEF[o.type].size(o);if(o.rot%180)[w,h]=[h,w];return [r2(gs(x-w/2)+w/2),r2(gs(y-h/2)+h/2)];}
@@ -1106,6 +1106,34 @@ function sm6Draw(o){const {W,H,T,s24}=sm6Dim(o),x0=-W/2,y0=-H/2,K='#1f2937',BG='
  s+=`<rect x="${r2(x0)}" y="${r2(yp)}" width="${r2(W)}" height="${r2(hpl)}" fill="#6b7280" stroke="${K}" stroke-width="${lw}"/>`;
  {const cy=yp+hpl/2,cr=Math.min(hpl*.32,32*k);s+=`<circle cx="0" cy="${r2(cy)}" r="${r2(cr)}" fill="#111827" stroke="#e5e7eb" stroke-width="${r2(4*k)}"/><circle cx="0" cy="${r2(cy)}" r="${r2(cr*.4)}" fill="#e5e7eb"/>`;}
  if(T[3]===null)s+=txt(0,yo+ho/2,'GIM',Math.min(W*.3,70*k),K,800);
+ return s;}
+/* MV/LV distribution transformer (Arden style), front view of its long side at 1:1 (mm). Rating p.kva in MVTX =
+   [length, depth, height] for oil hermetic 33/0.4 kV (typical sizes, not a maker's drawing), dry (cast resin) in a
+   ventilated frame by p.tk. Terminals at the base: HV cable (left) and LV cable (right), fed from the trench. */
+const MVTX={'630':[1650,1050,1750],'800':[1750,1100,1850],'1000':[1850,1150,1950],'1250':[1950,1200,2050],'1600':[2050,1300,2250],'2000':[2150,1400,2450],'2500':[2300,1450,2550]};
+const MVTXD={'630':[1600,950,1850],'800':[1700,1000,2000],'1000':[1800,1050,2100],'1250':[1900,1100,2200],'1600':[2000,1200,2350],'2000':[2100,1300,2500],'2500':[2250,1350,2650]};
+function mvtxDim(o){const T=(o.p.tk==='dry'?MVTXD:MVTX)[o.p.kva]||MVTX['800'];return {W:T[0],D:T[1],H:T[2]};}
+function mvtxDraw(o){const {W,H}=mvtxDim(o),x0=-W/2,y0=-H/2,K='#1f2937',lw=5,dry=o.p.tk==='dry',R=(x,y,w,h,f,sw=lw,rx=0)=>`<rect x="${r2(x)}" y="${r2(y)}" width="${r2(w)}" height="${r2(h)}" rx="${rx}" fill="${f}" stroke="${K}" stroke-width="${sw}"/>`,L=(a,b,c,d,sw=lw*.6,col=K)=>`<path d="M${r2(a)} ${r2(b)}L${r2(c)} ${r2(d)}" stroke="${col}" stroke-width="${sw}" fill="none"/>`;
+ const yb=y0+H-130;let s=`<rect x="${r2(x0)}" y="${r2(y0)}" width="${r2(W)}" height="${r2(H)}" fill="transparent"/>`;
+ // base: channel skid with four wheels
+ s+=R(x0+40,yb,W-80,70,'#4b5563',4);[.12,.3,.7,.88].forEach(f=>s+=`<circle cx="${r2(x0+W*f)}" cy="${r2(yb+92)}" r="38" fill="#374151" stroke="${K}" stroke-width="4"/><circle cx="${r2(x0+W*f)}" cy="${r2(yb+92)}" r="12" fill="#9ca3af"/>`);
+ if(!dry){const tT=y0+H*.3,tB=yb,TC='#a3adb2';
+  // tank with corrugated cooling fins across the front, cover and bushings on top
+  s+=R(x0+60,tT,W-120,tB-tT,TC,6,6);const fx0=x0+W*.14,fx1=-x0-W*.14,n=Math.max(10,Math.round((fx1-fx0)/45));for(let i=0;i<=n;i++){const x=fx0+(fx1-fx0)*i/n;s+=L(x,tT+70,x,tB-40,i%2?3:6,i%2?'#7b868c':'#d3d9dc');}
+  s+=R(x0+30,tT-60,W-60,60,'#8f9a9f',5,4);
+  const hb=H*.22,hx=[-W*.3,-W*.18,-W*.06];hx.forEach(x=>{s+=R(x-24,tT-60-hb,48,hb,'#8b5a2b',3,10);for(let k=1;k<6;k++)s+=`<ellipse cx="${r2(x)}" cy="${r2(tT-60-hb+hb*k/6)}" rx="46" ry="11" fill="#a16207" stroke="${K}" stroke-width="2"/>`;s+=R(x-10,tT-60-hb-40,20,40,'#9ca3af',2);});
+  const lb=H*.08;[W*.1,W*.18,W*.26,W*.34].forEach((x,i)=>{s+=R(x-18,tT-60-lb,36,lb,'#d6d3d1',3,6)+R(x-28,tT-60-lb-26,56,26,'#cbd5e1',2,3);});
+  // nameplate, thermometer, oil level / pressure relief (hermetic)
+  const pw=Math.min(W*.3,560),ph=H*.13,px=-pw/2,py=tT+(tB-tT)*.35;s+=R(px,py,pw,ph,'#f8fafc',3,4)+txt(0,py+ph*.26,'ARDEN · ארדן',ph*.2,'#0f4c81',800)+txt(0,py+ph*.56,`${o.p.kva} kVA · ${o.p.kv||'33'}/0.4 kV`,ph*.18,K,700)+txt(0,py+ph*.82,'ONAN · Dyn11',ph*.14,'#374151',600);
+  s+=`<circle cx="${r2(x0+W*.12)}" cy="${r2(tT+(tB-tT)*.25)}" r="55" fill="#fff" stroke="${K}" stroke-width="5"/>`+L(x0+W*.12,tT+(tB-tT)*.25,x0+W*.12+30,tT+(tB-tT)*.25-30,5);
+  s+=R(-x0-W*.16,tT-110,60,50,'#facc15',3,4);}
+ else{const fT=y0+H*.06,fB=yb;s+=R(x0+40,fT,W-80,fB-fT,'none',8)+L(x0+40,fT+60,-x0-40,fT+60,10);
+  [-W*.28,0,W*.28].forEach(x=>{const cw=W*.22;s+=R(x-cw/2,fT+H*.14,cw,(fB-fT)-H*.24,'#1f2937',4,cw*.15)+R(x-cw*.42,fT+H*.18,cw*.84,(fB-fT)-H*.32,'#374151',2,cw*.1);
+   for(let k=1;k<6;k++)s+=L(x-cw*.38,fT+H*.18+((fB-fT)-H*.32)*k/6,x+cw*.38,fT+H*.18+((fB-fT)-H*.32)*k/6,3,'#6b7280');s+=R(x-28,fT+H*.06,56,H*.08,'#d6d3d1',3,6);});
+  const pw=Math.min(W*.34,560),ph=H*.09;s+=R(-pw/2,fB-ph-40,pw,ph,'#f8fafc',3,4)+txt(0,fB-ph-40+ph*.32,'ARDEN · ארדן',ph*.26,'#0f4c81',800)+txt(0,fB-ph-40+ph*.72,`${o.p.kva} kVA · ${o.p.kv||'33'}/0.4 kV · יבש`,ph*.22,K,700);}
+ if(o.p.tag)s+=txt(0,y0+60,o.p.tag,90,'#b45309',800);
+ // cable entries at the base: HV left, LV right
+ [[x0+W*.25,'מ"ג'],[-x0-W*.25,'מ"נ']].forEach(([x,t])=>{s+=`<circle cx="${r2(x)}" cy="${r2(yb+35)}" r="26" fill="#111827" stroke="#e5e7eb" stroke-width="4"/>`+txt(x,yb-24,t,40,K,800);});
  return s;}
 const eqExt=o=>{if(o.p.dm==='0')return null;const {w,h}=sizeOf(o),[g,f]=eqDimG(+o.p.w||w,+o.p.h||h);return {l:g+f*1.6,t:g+f*1.6,r:0,b:0};};
 const DMSEL=[['1','הצג מידות'],['0','בלי מידות']];
@@ -2661,6 +2689,10 @@ const FDEF={
  batten:{layer:4.5,edit:['tag','blen'],def:{tag:'',blen:'1200'},size:o=>({w:+o.p.blen||1200,h:90}),draw:o=>battenDraw(o)},
  shead:{layer:4.5,edit:['tag','fw'],def:{tag:'',fw:'100'},size:()=>({w:700,h:110}),draw:o=>shDraw(o)},
  lpole:{layer:4,edit:['tag','ph','parm','phead','pfn','fw','fcol'],def:{tag:'',ph:'6',parm:'none',phead:'flood',pfn:'1',fw:'200',fcol:'grey'},size:o=>{const G=lpGeo(o);return {w:G.w,h:G.h};},draw:o=>lpoleDraw(o)},
+ mvtx:{layer:4,edit:['tag','kva','kv','tk'],def:{tag:'T1',kva:'800',kv:'33',tk:'oil'},lbl:{tag:'כיתוב',kva:'הספק (kVA)',kv:'מתח ראשוני (ק"ו)',tk:'סוג'},
+  sel:{kva:Object.keys(MVTX).map(k=>[k,k+' kVA']),kv:[['33','33 ק"ו'],['22','22 ק"ו'],['12.6','12.6 ק"ו']],tk:[['oil','שמן, הרמטי (ONAN)'],['dry','יבש (יציקת שרף)']]},
+  size:o=>{const d=mvtxDim(o);return {w:d.W,h:d.H};},
+  terms:o=>{const d=mvtxDim(o),y=r2(d.H/2-130+35);return [[r2(-d.W/2+d.W*.25),y,'מ"ג'],[r2(d.W/2-d.W*.25),y,'מ"נ']];},draw:o=>mvtxDraw(o)},
  sm6:{layer:4,edit:['tag','ty','w','lvb'],def:{tag:'',ser:'36',ty:'IM',w:'',lvb:'0'},lbl:{tag:'כיתוב / מספר תא',ser:'סדרה',ty:'סוג התא',w:'רוחב (מ"מ, ריק = לפי הקטלוג)',lvb:'תא מתח נמוך מוגבה'},num:['w'],
   sel:{ser:[['36','SM6-36 — 36 ק"ו (גובה 2250)'],['24','SM6-24 — 24 ק"ו (גובה 1600)']],ty:Object.entries(SM6T).map(([a,b])=>[a,b[0]]),lvb:[['0','בלי'],['1','עם תא מתח נמוך מוגבה']]},
   size:o=>{const d=sm6Dim(o);return {w:d.W,h:d.H};},
@@ -3250,7 +3282,8 @@ const LIB=[
  const keep=LIB.filter(T=>T.sld);keep.forEach((T,i)=>T.icon=T.icon||['⚡','⏻','🎛','◎'][i]);const di=NEW.findIndex(T=>T.draw);if(di>1)NEW.splice(1,0,...NEW.splice(di,1));LIB.length=0;LIB.push(...keep,...NEW);
   const R=(n,w,h,rn)=>({t:'troom',n,p:{rn:rn||n,w,h}});
   LIB.push({tab:'מתח גבוה',icon:'⚡',hint:'תאי מתח גבוה (מסדרים) של שניידר אלקטריק בחזית, בקנה מידה 1:1 לפי הקטלוג. מניחים תאים זה ליד זה כדי לבנות מערך; את סוג התא והכיתוב בוחרים במאפיינים.',groups:[
-    {g:'שניידר SM6-36 — 36 ק"ו, גובה 2250 מ"מ',items:Object.keys(SM6T).map(k=>({t:'sm6',n:'SM6-36 '+SM6T[k][0],p:{ser:'36',ty:k}}))}]});
+    {g:'שניידר SM6-36 — 36 ק"ו, גובה 2250 מ"מ',items:Object.keys(SM6T).map(k=>({t:'sm6',n:'SM6-36 '+SM6T[k][0],p:{ser:'36',ty:k}}))},
+    {g:'שנאים ארדן 33/0.4 ק"ו — הספק וסוג במאפיינים',items:[{t:'mvtx',n:'שנאי ארדן 800 kVA 33 ק"ו',p:{kva:'800',tag:'T1'}},{t:'mvtx',n:'שנאי ארדן 2000 kVA 33 ק"ו',p:{kva:'2000',tag:'T2'}},{t:'mvtx',n:'שנאי יבש ארדן 800 kVA 33 ק"ו',p:{kva:'800',tk:'dry',tag:'T1'}},{t:'mvtx',n:'שנאי יבש ארדן 2000 kVA 33 ק"ו',p:{kva:'2000',tk:'dry',tag:'T2'}}]}]});
   LIB.push({tab:'חדרים ומבנה',icon:'🏠',top:true,hint:'היטל על (מבט מלמעלה), במ"מ. חדר = קירות + רצפה עם שם ושטח; גוררים את הפינות לשינוי גודל. דלת וחלון מניחים על קו הקיר ומסובבים לפי הצורך.',groups:[
     {g:'חדרים',items:[{t:'troom',n:'חדר',p:{rn:'חדר',w:4000,h:3000}}]},
     {g:'קירות, פתחים ומדרגות',items:[{t:'wall',n:'קיר',p:{w:3000,h:200}},{t:'tdoor',n:'דלת',p:{}},{t:'tdoor',n:'דלת כפולה',p:{dk:'double',dw:1600}},{t:'tdoor',n:'דלת הזזה',p:{dk:'slide',dw:1200}},{t:'twin',n:'חלון',p:{}},{t:'tcol',n:'עמוד',p:{}},{t:'tcol',n:'עמוד עגול',p:{ck:'rd'}},{t:'tstair',n:'מדרגות',p:{}}]}]},
@@ -3518,15 +3551,15 @@ function qRad(kind,touch){const S=view.s,sld=state.tab!=='panel'&&!!state.tab;
  return sld?(touch?16:9)/S:Math.min((touch?12:7)/S,4);}
 /* parts whose own terminals may be wired to each other (bridges inside a junction box) */
 const SELF_WIRE=new Set(['sjb']);
-function termAt(x,y,rad,skip,skipT){let best=null,bd=Infinity;for(const o of state.objs){if(o.type==='wire'||o.type==='label'||o.type==='sframe'||(skip&&o.id===skip&&skipT==null)||hiddenFront(o)||behindFront(o))continue;const R=o.type==='sm6'?Math.max(rad,45,14/view.s):rad;termsOf(o).forEach((t,i)=>{if(skipT!=null&&o.id===skip&&i===skipT)return;const [X,Y]=fromLocal(o,t[0],t[1]);const d=Math.hypot(X-x,Y-y);if(d<R&&d<bd){bd=d;best={r:o.id,t:i};}});}return best;}
+function termAt(x,y,rad,skip,skipT){let best=null,bd=Infinity;for(const o of state.objs){if(o.type==='wire'||o.type==='label'||o.type==='sframe'||(skip&&o.id===skip&&skipT==null)||hiddenFront(o)||behindFront(o))continue;const R=MVT.has(o.type)?Math.max(rad,45,14/view.s):rad;termsOf(o).forEach((t,i)=>{if(skipT!=null&&o.id===skip&&i===skipT)return;const [X,Y]=fromLocal(o,t[0],t[1]);const d=Math.hypot(X-x,Y-y);if(d<R&&d<bd){bd=d;best={r:o.id,t:i};}});}return best;}
 function qRoute(a,b){if(Math.abs(a.x-b.x)<.5||Math.abs(a.y-b.y)<.5)return [];if(Math.abs(b.y-a.y)>=Math.abs(b.x-a.x)){const ym=r2(gs((a.y+b.y)/2));return [{x:a.x,y:ym},{x:b.x,y:ym}];}const xm=r2(gs((a.x+b.x)/2));return [{x:xm,y:a.y},{x:xm,y:b.y}];}
 function qWireSVG(){let s='';const k=1/view.s,dot=(p,c,r)=>`<circle cx="${p.x}" cy="${p.y}" r="${r*k}" fill="${c}" fill-opacity=".35" stroke="${c}" stroke-width="${1.6*k}" pointer-events="none"/>`;
  if(G&&G.mode==='qwire'){const a=resolve(G.from);if(!a)return '';
   for(const o of state.objs){if(o.type==='wire'||o.type==='label'||o.type==='sframe')continue;termsOf(o).forEach(t=>{const [x,y]=fromLocal(o,t[0],t[1]);s+=`<circle cx="${x}" cy="${y}" r="${3*k}" fill="none" stroke="#60a5fa" stroke-width="${1*k}" pointer-events="none"/>`;});}
   const b=G.to?resolve(G.to):{x:G.cur[0],y:G.cur[1]};const pts=[a,...qRoute(a,b),b];
   s+=`<path d="M${pts.map(p=>p.x+' '+p.y).join('L')}" fill="none" stroke="${G.to?'#16a34a':'#3b82f6'}" stroke-width="${2.4*k}" stroke-dasharray="${G.to?'':6*k+' '+4*k}" stroke-linejoin="round" pointer-events="none"/>`;
-  const mvA=get(G.from.r)?.type==='sm6',mvB=G.to&&get(G.to.r)?.type==='sm6';s+=dot(a,'#3b82f6',mvA?14:6);if(G.to)s+=dot(b,'#16a34a',mvB?16:7);return s;}
- if(HOV){const p=resolve(HOV);if(p){const mv=get(HOV.r)?.type==='sm6';s+=dot(p,'#3b82f6',mv?14:6);if(mv)s+=`<circle cx="${p.x}" cy="${p.y}" r="${22*k}" fill="none" stroke="#3b82f6" stroke-width="${2*k}" stroke-dasharray="${4*k} ${3*k}" pointer-events="none"/>`;}}return s;}
+  const mvA=MVT.has(get(G.from.r)?.type),mvB=G.to&&MVT.has(get(G.to.r)?.type);s+=dot(a,'#3b82f6',mvA?14:6);if(G.to)s+=dot(b,'#16a34a',mvB?16:7);return s;}
+ if(HOV){const p=resolve(HOV);if(p){const mv=MVT.has(get(HOV.r)?.type);s+=dot(p,'#3b82f6',mv?14:6);if(mv)s+=`<circle cx="${p.x}" cy="${p.y}" r="${22*k}" fill="none" stroke="#3b82f6" stroke-width="${2*k}" stroke-dasharray="${4*k} ${3*k}" pointer-events="none"/>`;}}return s;}
 function bandSVG(){if(!G||G.mode!=='band'||!G.moved)return '';const x=Math.min(G.w0[0],G.w1[0]),y=Math.min(G.w0[1],G.w1[1]),w=Math.abs(G.w1[0]-G.w0[0]),h=Math.abs(G.w1[1]-G.w0[1]);
  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(59,130,246,.12)" stroke="#3b82f6" stroke-width="1.2" stroke-dasharray="6 4" vector-effect="non-scaling-stroke" pointer-events="none"/>`;}
 let showTerms=true;try{showTerms=localStorage.getItem('epd.terms')!=='0';}catch(e){}
@@ -3537,7 +3570,7 @@ function behindFront(o){if(DEF[o.type]?.front||o.type==='wire')return false;cons
  return state.objs.some(c=>c!==o&&c.type==='cabinet'&&isFrontV(c)&&inCab(c,o.x,o.y)&&cabG(c).S.some(sc=>o.x>sc.x0&&o.x<sc.x1&&secFace(c,sc)!=='none'));}
 function termsSVG(){if(!showTerms||wireMode)return '';const k=1/view.s,used=new Set();state.objs.forEach(w=>{if(w.type==='wire')w.pts.forEach(p=>{if(p.r)used.add(p.r+'#'+p.t);});});
  let s='<g pointer-events="none">';for(const o of state.objs){if(o.type==='wire'||hiddenFront(o)||behindFront(o))continue;termsOf(o).forEach((t,i)=>{const [x,y]=fromLocal(o,t[0],t[1]),u=used.has(o.id+'#'+i);
-  if(!u&&(o.type==='sbus'||o.type==='busbar'))return;const R=isSldObj(o)?4.5*k:o.type==='sm6'?Math.max(7*k,30):Math.max(4*k,3.6);s+=u?`<circle cx="${x}" cy="${y}" r="${R}" fill="rgba(22,163,74,.35)" stroke="#16a34a" stroke-width="${1.6*k}"/>`:`<circle cx="${x}" cy="${y}" r="${R}" fill="rgba(6,182,212,.22)" stroke="#06b6d4" stroke-width="${1.6*k}"/>`;});}
+  if(!u&&(o.type==='sbus'||o.type==='busbar'))return;const R=isSldObj(o)?4.5*k:MVT.has(o.type)?Math.max(7*k,30):Math.max(4*k,3.6);s+=u?`<circle cx="${x}" cy="${y}" r="${R}" fill="rgba(22,163,74,.35)" stroke="#16a34a" stroke-width="${1.6*k}"/>`:`<circle cx="${x}" cy="${y}" r="${R}" fill="rgba(6,182,212,.22)" stroke="#06b6d4" stroke-width="${1.6*k}"/>`;});}
  return s+'</g>';}
 function toggleTerms(){showTerms=!showTerms;setTimeout(()=>window.sbSync&&sbSync());try{localStorage.setItem('epd.terms',showTerms?'1':'0');}catch(e){}renderNow();toast(showTerms?'נקודות החיבור מודגשות':'הדגשת נקודות החיבור כבויה');}
 let drawnS=0;
@@ -3559,7 +3592,7 @@ function renderNow(){ADIC=null;world.style.color=isLight()?'#1f2937':'#e5e7eb';X
  const pre=fast?layoutSVG()+axesSVG():'';
  let tail=handlesSVG()+dimsSVG()+guidesSVG()+portHitSVG()+inkDraftSVG()+dropSVG()+measSVG()+rotSVG()+layHandlesSVG()+calSVG()+shpSVG()+ddSVG()+cableGuideSVG()+(DRAGNEW?`<g opacity=".8" pointer-events="none">${objSVG(DRAGNEW,true)}</g>`:'')+bandSVG()+qWireSVG();
  const terms=termsSVG();LODMIN=0;if(!fast)s+=terms+tail,tail='';
- if(s===undefined)s='';if(wireMode){for(const o of state.objs){if(o.type==='wire')continue;const rr=o.type==='sm6'?Math.max(30,7/view.s):Math.max(2.8,3.5/view.s),sw=Math.max(.7,1.4/view.s);termsOf(o).forEach(t=>{const [x,y]=fromLocal(o,t[0],t[1]);s+=`<circle cx="${x}" cy="${y}" r="${r2(rr)}" fill="rgba(34,211,238,.25)" stroke="#22d3ee" stroke-width="${r2(sw)}" pointer-events="none"/>`;});}
+ if(s===undefined)s='';if(wireMode){for(const o of state.objs){if(o.type==='wire')continue;const rr=MVT.has(o.type)?Math.max(30,7/view.s):Math.max(2.8,3.5/view.s),sw=Math.max(.7,1.4/view.s);termsOf(o).forEach(t=>{const [x,y]=fromLocal(o,t[0],t[1]);s+=`<circle cx="${x}" cy="${y}" r="${r2(rr)}" fill="rgba(34,211,238,.25)" stroke="#22d3ee" stroke-width="${r2(sw)}" pointer-events="none"/>`;});}
   if(draft&&draft.pts.length){const c=WCOL[wireColor];const d=wirePath(null,draft.pts);if(d)s+=`<path d="${d}" fill="none" stroke="${c.base}" stroke-width="${SEC[wireSec]}" stroke-linecap="round" stroke-linejoin="round" opacity=".85" pointer-events="none"/>`;
    draft.pts.map(resolve).forEach((p,i)=>{if(p)s+=`<circle cx="${p.x}" cy="${p.y}" r="${i?2.2:3.4}" fill="#fff" stroke="#22d3ee" stroke-width="1" pointer-events="none"/>`;});}}
  if(fast)patchWorld([['pre',pre],...P,['terms',terms],['tail',tail+s]]);else world.innerHTML=s;renderUlay();}
@@ -5983,7 +6016,7 @@ const V3FLAT=new Set(['label','callout','shline','ink','nplate']);
 /* depth of a part that stands on its own (not inside a board): about its real thickness */
 function v3Free(o){if(+o.p.d3>0)return +o.p.d3;const {w,h}=sizeOf(o),m=Math.min(w,h);if(o.type==='genset')return h*.85;if(o.type==='pillar')return Math.max(150,+o.p.pld||350);if(o.type==='xck')return o.p.xs==='xckj'?44:o.p.xs==='xcmd'?28:32;if(o.type==='emotor')return h*.8;if(o.type==='person')return 260;if(o.type==='shrect'||o.type==='shellipse')return Math.max(20,m*.15);return Math.max(v3Depth(o),Math.min(3000,m*.8));}
 const V3DEP={lc1k:57,lc2k:57,pbdbl:30,mcb:72,rcd:72,spd:72,iso:72,gv2:88,mpcb:88,cont:88,lc1d:88,lc2d:92,relay:62,rxm:48,lrd:72,nsx:98,nsxm:82,acb:330,atv630:230,psu:62,meter:62,m340mod:110,clxmod:120,kconv:62,socket:52,comb:14,gland:30,ctie:5,zprof:40,rail:7.5,duct:62,busbar:12,partition:2,traysh:60,traymesh:60};
-function v3Depth(o){if(+o.p.d3>0)return +o.p.d3;if(o.type==='sm6')return sm6Dim(o).D;const D=DEF[o.type],L=D.layer;if(V3DEP[o.type]!=null)return V3DEP[o.type];if(D.front)return 22;if(L<1)return 3;if(L<2)return 50;if(L<3)return 8;if(L<3.6)return 120;if(L<4.6){const {w,h}=sizeOf(o);return Math.max(30,Math.min(200,Math.min(w,h)*.7));}return 18;}
+function v3Depth(o){if(+o.p.d3>0)return +o.p.d3;if(o.type==='mvtx')return mvtxDim(o).D;if(o.type==='sm6')return sm6Dim(o).D;const D=DEF[o.type],L=D.layer;if(V3DEP[o.type]!=null)return V3DEP[o.type];if(D.front)return 22;if(L<1)return 3;if(L<2)return 50;if(L<3)return 8;if(L<3.6)return 120;if(L<4.6){const {w,h}=sizeOf(o);return Math.max(30,Math.min(200,Math.min(w,h)*.7));}return 18;}
 function v3Base(o){return o.type==='busbar'?36:0;}
 let V3=null;
 async function open3D(keepV){if(!keepV||!keepV.tg)keepV=null;if(state.tab==='sld'||state.tab==='top'){toast('התלת־ממד מוצג לחזית הלוח — עבור ללשונית "לוח"');return;}
