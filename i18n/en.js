@@ -10,6 +10,7 @@ window.OHAD_EN={
 };
 /* patterns for text made of parts: [regex, replacement] */
 window.OHAD_EN_RX=[
+[/^שוכפלו (\d+) רכיבים$/,'Duplicated $1 parts'],
 [/^שלום, (.+)$/,'Hello, $1'],[/^נוסף: (.+)$/,'Added: $1'],[/^נפתח: (.+)$/,'Opened: $1'],[/^נמחק$/,'Deleted'],
 [/מ"מ/g,'mm'],[/ממ"ר/g,'mm²'],[/מ"ר/g,'m²'],[/ יח'/g,' pcs']
 ];

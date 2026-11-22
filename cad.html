@@ -3300,7 +3300,8 @@ function tDir(p){const o=get(p.r),t=o&&termsOf(o)[p.t];if(!t)return 1;const [,y0
 function tSide(p){const o=get(p.r),t=o&&termsOf(o)[p.t];if(!t||o.type==='sbusm')return 0;const {w,h}=sizeOf(o);if(Math.abs(t[0])<w/2-.6||Math.abs(t[1])>=h/2-.6)return 0;
  const [x0,y0]=fromLocal(o,t[0],t[1]),[x1,y1]=fromLocal(o,t[0]+Math.sign(t[0]),t[1]);if(Math.abs(y1-y0)>Math.abs(x1-x0))return 0;return x1<x0?-1:1;}
 function wireLayout(){WL=new Map();WG=new Map();WB=new Map();
- const W=state.objs.filter(w=>w.type==='wire'&&!jointClosed(w)&&(state.tab==='sld'||isSldObj(w)));if(!W.length)return;
+ // laid-out wires: the single-line's, and medium-voltage cables between SM6 cubicles (they run under the floor)
+ const W=state.objs.filter(w=>w.type==='wire'&&!jointClosed(w)&&(state.tab==='sld'||isSldObj(w)||mvEnds(w.pts)));if(!W.length)return;
  // symbols' terminals point up or down: an auto wire leaves each end that way, runs across at one
  // height (its own "ym" once dragged there) and goes into the other end — over the top when both
  // ends point up, under when both point down, half way otherwise
@@ -3311,7 +3312,7 @@ function wireLayout(){WL=new Map();WG=new Map();WB=new Map();
     if(sa||sb){let xm=w.p.xm;if(xm==null)xm=sa&&sb&&sa===sb?(sa<0?Math.min(a.x,b.x)-20:Math.max(a.x,b.x)+20):sa&&!sb?b.x:!sa&&sb?a.x:gs((a.x+b.x)/2);
      q=sa&&sb?(Math.abs(a.y-b.y)<.5&&xm>=Math.min(a.x,b.x)&&xm<=Math.max(a.x,b.x)?[a,b]:[a,{x:r2(xm),y:a.y},{x:r2(xm),y:b.y},b]):sa?(w.p.xm==null?[a,{x:b.x,y:a.y},b]:(()=>{const yb=r2(b.y+tDir(w.pts[1])*12);return [a,{x:r2(xm),y:a.y},{x:r2(xm),y:yb},{x:b.x,y:yb},b];})()):(w.p.xm==null?[a,{x:a.x,y:b.y},b]:(()=>{const ya=r2(a.y+tDir(w.pts[0])*12);return [a,{x:a.x,y:ya},{x:r2(xm),y:ya},{x:r2(xm),y:b.y},b];})());WL.set(w.id,q);return;}
     const da=tDir(w.pts[0]),db=tDir(w.pts[1]);let ym=w.p.ym;
-    const off=w.pts[0].r===w.pts[1].r&&SELF_WIRE.has(get(w.pts[0].r)?.type)?7:20; // inside the box for a bridge between its own terminals
+    const off=w.pts[0].r===w.pts[1].r&&SELF_WIRE.has(get(w.pts[0].r)?.type)?7:mvEnds(w.pts)?320:20; // inside the box for a bridge between its own terminals
     if(ym==null)ym=da<0&&db<0?Math.min(a.y,b.y)-off:da>0&&db>0?Math.max(a.y,b.y)+off:gs((a.y+b.y)/2);
     q=Math.abs(a.x-b.x)<.5&&ym>=Math.min(a.y,b.y)&&ym<=Math.max(a.y,b.y)?[a,b]:[a,{x:a.x,y:r2(ym)},{x:b.x,y:r2(ym)},b];}}
   WL.set(w.id,q);});
@@ -3325,7 +3326,7 @@ function wireLayout(){WL=new Map();WG=new Map();WB=new Map();
    if(grp.length<2)return;
    const dir=Math.sign(grp.reduce((t,g)=>t+(g.q[3][o]-g.q[0][o]),0))||1,down=Math.sign(grp.reduce((t,g)=>t+(g.q[3][ax]-g.q[0][ax]),0))||1;
    grp.sort((a,b)=>(a.q[0][o]-b.q[0][o])*dir);
-   const n=grp.length;grp.forEach((g,i)=>{const d=((n-1)/2-i)*10*down;g.q[1][ax]=r2(g.q[1][ax]+d);g.q[2][ax]=r2(g.q[2][ax]+d);});});}
+   const n=grp.length,stp=mvEnds(grp[0].w.pts)?90:10;grp.forEach((g,i)=>{const d=((n-1)/2-i)*stp*down;g.q[1][ax]=r2(g.q[1][ax]+d);g.q[2][ax]=r2(g.q[2][ax]+d);});});}
  // crossings: the run going across hops over the upright one
  const segs=[];W.forEach(w=>{const q=WL.get(w.id);for(let i=0;i<q.length-1;i++){const a=q[i],b=q[i+1];if(Math.abs(a.x-b.x)<.01)segs.push({w,v:true,c:a.x,lo:Math.min(a.y,b.y),hi:Math.max(a.y,b.y)});else if(Math.abs(a.y-b.y)<.01)segs.push({w,v:false,c:a.y,lo:Math.min(a.x,b.x),hi:Math.max(a.x,b.x)});}});
  // default: the run going across is broken with a short gap; state.hops = an arc over the upright one
@@ -5100,7 +5101,7 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  if(hEl&&so&&!so.locked&&!wireMode&&!globalLock){G.mode='resize';G.o=so;G.h=hEl.dataset.h.split(',').map(Number);G.o0={x:so.x,y:so.y,rot:so.rot};G.s0=sizeOf(so);G.fs0=+so.p.fs||0;return;}
  if(QW()){const [wx,wy]=toWorld(e.clientX,e.clientY),tr=termAt(wx,wy,qRad('press',e.pointerType!=='mouse'));if(tr){G.mode='qwire';G.from=tr;G.to=null;G.cur=[wx,wy];HOV=null;return;}}
  const o=id&&get(id);
- if(o&&o.type==='wire'&&o.p.auto&&o.pts.length===2&&!jointClosed(o)&&(state.tab==='sld'||isSldObj(o))&&!wireMode&&!globalLock&&!o.locked){G.mode='wmid';G.o=o;G.ax=(tSide(o.pts[0])||tSide(o.pts[1]))?'x':'y';return;}
+ if(o&&o.type==='wire'&&o.p.auto&&o.pts.length===2&&!jointClosed(o)&&(state.tab==='sld'||isSldObj(o)||mvEnds(o.pts))&&!wireMode&&!globalLock&&!o.locked){G.mode='wmid';G.o=o;G.ax=(tSide(o.pts[0])||tSide(o.pts[1]))?'x':'y';return;}
  if(o&&!wireMode&&!globalLock&&!o.locked&&o.type!=='wire'&&((o.type!=='enclosure'&&o.type!=='cibox'&&o.type!=='cabinet'&&o.type!=='troom')||sel===o.id)){
   if(o.type==='mdim'){G.mode='mdoff';G.o=o;G.off0=+o.p.off||0;G.w0=toWorld(e.clientX,e.clientY);return;}
   G.mode='drag';G.o=o;G.ox=o.x;G.oy=o.y;G.w0=toWorld(e.clientX,e.clientY);G.kids=[];
@@ -5383,7 +5384,17 @@ $('bMir').onclick=()=>{const L=selIds().map(get).filter(o=>o&&o.type!=='wire'&&o
  let cx=0;if(L.length>1){const b=L.map(bbW);cx=(Math.min(...b.map(q=>q.x0))+Math.max(...b.map(q=>q.x1)))/2;}
  L.forEach(o=>{o.mx=!o.mx;if(o.mx===false)delete o.mx;o.rot=r2((360-(+o.rot||0))%360);if(L.length>1)o.x=r2(2*cx-o.x);});commit();renderNow();updateBar();toast(L.length>1?`${L.length} רכיבים הופכו במראה`:'הרכיב הופך במראה');};
 $('bRot').onclick=()=>{const o=sel&&get(sel);if(!o||o.type==='wire'||o.type==='mdim'||o.type==='callout'||o.locked)return;if(o.type==='cabinet'){toast('ארון לא מסתובב');return;}o.rot=(o.rot+90)%360;commit();renderNow();};
-$('bDup').onclick=()=>{const o=sel&&get(sel);if(!o)return;const c=JSON.parse(JSON.stringify(o));c.id=uid();c.locked=false;if(c.type==='label')delete c.p.of;
+/* duplicate several selected parts at once: they keep their layout, wires between them (and their own
+   text boxes) come along, and the group lands to the right of the originals at the first free spot */
+function dupMany(ids){const S=new Set(ids),src=ids.map(get).filter(o=>o&&o.type!=='wire'),map={};if(!src.length)return;
+ let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;src.forEach(o=>{const b=bbW(o);x0=Math.min(x0,b.x0);x1=Math.max(x1,b.x1);y0=Math.min(y0,b.y0);y1=Math.max(y1,b.y1);});
+ const W=x1-x0,gap=Math.max(5,Math.min(60,W*.08)),hit=dx=>state.objs.some(q=>{if(S.has(q.id)||q.type==='wire'||isBox(q)||q.type==='underlay')return false;const k=bbW(q);return k.x0<x1+dx-.5&&k.x1>x0+dx+.5&&k.y0<y1-.5&&k.y1>y0+.5;});
+ let dx=W+gap;for(let i=0;i<60&&hit(dx);i++)dx+=W+gap;dx=r2(dx);
+ const out=[];src.forEach(o=>{const c=JSON.parse(JSON.stringify(o));c.id=uid();c.locked=false;map[o.id]=c.id;c.x=r2(o.x+dx);if(c.p&&Array.isArray(c.p.route))c.p.route=c.p.route.map(q=>Object.assign({},q));out.push(c);});
+ out.forEach(c=>{if(c.p&&c.p.of){if(map[c.p.of])c.p.of=map[c.p.of];else delete c.p.of;}});
+ state.objs.forEach(w=>{if(w.type!=='wire'||!w.pts.every(p=>!p.r||S.has(p.r)))return;if(!w.pts.some(p=>p.r))return;const c=JSON.parse(JSON.stringify(w));c.id=uid();c.locked=false;c.pts=c.pts.map(p=>p.r?{r:map[p.r],t:p.t}:{x:r2(p.x+dx),y:p.y});delete c.p.wn;out.push(c);});
+ state.objs.push(...out);multi.clear();out.forEach(c=>multi.add(c.id));sel=out[0].id;commit();renderNow();updateBar();toast(`שוכפלו ${src.length} רכיבים`);}
+$('bDup').onclick=()=>{const ids=selIds();if(ids.length>1){dupMany(ids);return;}const o=sel&&get(sel);if(!o)return;const c=JSON.parse(JSON.stringify(o));c.id=uid();c.locked=false;if(c.type==='label')delete c.p.of;
  if(c.type==='wire'){c.pts=c.pts.map(p=>{const q=resolve(p)||p;return {x:q.x+20,y:q.y};});}
  else{c.x=o.x;c.y=o.y;const sv=sel;placeNew(c);
   // the copy goes to the right of the original (DIN-rail parts already land next to it on the rail), at the first free spot
