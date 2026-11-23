@@ -3707,7 +3707,7 @@ function patchWorld(items){const seen=new Map();for(const n of [...world.childre
   if(n.__s!==str){n.innerHTML=str;n.__s=str;}
   if(n!==cur)world.insertBefore(n,cur);else cur=cur.nextSibling;}
  while(cur){const nx=cur.nextSibling;cur.remove();cur=nx;}}
-function renderNow(){if(HOME_OPEN&&HOME_ST&&state!==HOME_ST)homeClose();ADIC=null;world.style.color=isLight()?'#1f2937':'#e5e7eb';XRI=state.xrShow?xrIndex():null;ABI=state.ab&&state.ab.on?abIndex():null;if(state.tab!=='sld')glandAuto();drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}
+function renderNow(){if(HOME_OPEN&&HOME_ST&&state!==HOME_ST)homeClose();docNamePush();ADIC=null;world.style.color=isLight()?'#1f2937':'#e5e7eb';XRI=state.xrShow?xrIndex():null;ABI=state.ab&&state.ab.on?abIndex():null;if(state.tab!=='sld')glandAuto();drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}
  const fast=state.tab!=='both'&&!(state.tab==='sld'&&sldDark);LODMIN=2.2/view.s;let s,P=null;
  try{if(fast){PIECES=[];content({sel:true});P=PIECES;}else s=layoutSVG()+axesSVG()+content({sel:true});}finally{PIECES=null;}
  const pre=fast?layoutSVG()+axesSVG():'';
@@ -4024,7 +4024,7 @@ function partsCount(){return panelObjs().filter(o=>o.type!=='wire'&&o.type!=='la
    nothing to save by hand. If someone else saved the same board in between, ours
    is kept as a copy rather than written over theirs. */
 let saveT=null,saving=false,lastSaved=null,cloudStamp=null;
-function setSaveSt(k){const el=$('saveSt');if(!el)return;if(!SH){el.style.display='none';return;}
+function setSaveSt(k){try{docNamePush();}catch(e){}const el=$('saveSt');if(!el)return;if(!SH){el.style.display='none';return;}
  const txt={pending:'● לא נשמר',saving:'⟳ שומר…',saved:'☁ נשמר',error:'⚠ לא נשמר'}[k]||'',ttl={pending:'יישמר אוטומטית בעוד רגע',saving:'שומר בתיקייה המשותפת',saved:'נשמר אוטומטית בתיקייה המשותפת',error:'השמירה נכשלה — ננסה שוב בשינוי הבא'}[k]||'';
  // the app's top bar shows it when the shell offers that; otherwise it stays in the document bar
  if(SH.saveStatus){try{SH.saveStatus(k,txt,ttl);}catch(e){}}
@@ -4139,7 +4139,7 @@ function saveProjects(p){try{localStorage.setItem('epd.projects',JSON.stringify(
 let AUTOP=null,PANEL_SEL=null;
 function autoProps(){const n=selIds().length;if(!sel||n!==1){if(!sel){AUTOP=null;if(pMode==='props'&&PANEL_SEL)closePanel();}return;}
  if(sel===AUTOP||innerWidth<760||PEN||measMode||wireMode||(typeof BRUSH!=='undefined'&&BRUSH))return;AUTOP=sel;const id=sel;setTimeout(()=>{if(sel===id&&selIds().length===1&&get(id))editDialog();},0);}
-function updateBar(){const o=sel&&get(sel);if($('bAlign'))$('bAlign').disabled=selIds().length<2;setTimeout(autoProps,0);{const df=doorsFront();$('bDoor').disabled=df===null;$('bDoor').classList.toggle('on',df===true);$('bDoor').title=df?'הצג את פנים הלוח':'הצג את חזית הלוח (דלת סגורה)';}$('bLockAll').classList.toggle('on',globalLock);$('bText').disabled=wireMode||globalLock;{const o2=sel&&get(sel);$('bText').title=o2&&o2.type!=='wire'&&o2.type!=='label'?'הוסף תיבת טקסט ל'+o2.p.name:'הוסף תיבת טקסט';}$('bLockAll').title=globalLock?'פתח עריכה':'נעל עריכה (צפייה בלבד)';['bDel','bLock','bRot','bMir','bDup'].forEach(b=>$(b).disabled=!o||wireMode);$('bBlk').disabled=wireMode||globalLock||selIds().filter(i=>get(i)?.type!=='wire').length<2||(()=>{const B=new Set(selIds().map(i=>get(i)?.blk||'-'));return B.size===1&&!B.has('-');})();$('bUnblk').disabled=wireMode||globalLock||!selIds().some(i=>get(i)?.blk);if(!o)$('bMir').classList.remove('on');$('bOrder').disabled=!selIds().length||wireMode||globalLock;$('bLock').disabled=!selIds().length||wireMode;$('rWire').classList.toggle('on',wireMode);$('bMeas').classList.toggle('on',!!measMode);if(pMode!=='lib')DRAWOPEN=false;$('rAdd').classList.toggle('on',pMode==='lib'&&!DRAWOPEN);$('bDraw').classList.toggle('on',pMode==='lib'&&DRAWOPEN);$('rProps').classList.toggle('on',pMode==='props');$('libStrip').classList.toggle('on',pMode==='lib');
+function updateBar(){const o=sel&&get(sel);docNamePush();if($('bAlign'))$('bAlign').disabled=selIds().length<2;setTimeout(autoProps,0);{const df=doorsFront();$('bDoor').disabled=df===null;$('bDoor').classList.toggle('on',df===true);$('bDoor').title=df?'הצג את פנים הלוח':'הצג את חזית הלוח (דלת סגורה)';}$('bLockAll').classList.toggle('on',globalLock);$('bText').disabled=wireMode||globalLock;{const o2=sel&&get(sel);$('bText').title=o2&&o2.type!=='wire'&&o2.type!=='label'?'הוסף תיבת טקסט ל'+o2.p.name:'הוסף תיבת טקסט';}$('bLockAll').title=globalLock?'פתח עריכה':'נעל עריכה (צפייה בלבד)';['bDel','bLock','bRot','bMir','bDup'].forEach(b=>$(b).disabled=!o||wireMode);$('bBlk').disabled=wireMode||globalLock||selIds().filter(i=>get(i)?.type!=='wire').length<2||(()=>{const B=new Set(selIds().map(i=>get(i)?.blk||'-'));return B.size===1&&!B.has('-');})();$('bUnblk').disabled=wireMode||globalLock||!selIds().some(i=>get(i)?.blk);if(!o)$('bMir').classList.remove('on');$('bOrder').disabled=!selIds().length||wireMode||globalLock;$('bLock').disabled=!selIds().length||wireMode;$('rWire').classList.toggle('on',wireMode);$('bMeas').classList.toggle('on',!!measMode);if(pMode!=='lib')DRAWOPEN=false;$('rAdd').classList.toggle('on',pMode==='lib'&&!DRAWOPEN);$('bDraw').classList.toggle('on',pMode==='lib'&&DRAWOPEN);$('rProps').classList.toggle('on',pMode==='props');$('libStrip').classList.toggle('on',pMode==='lib');
  {const ids=selIds(),many=ids.length>1||(o&&isBox(o)),lk=ids.length&&ids.every(i=>get(i)?.locked);if(ids.length)$('lockLbl').textContent=lk?(many?'שחרר הכל':'שחרר רכיב'):(many?'נעל הכל':'נעל רכיב');}
  if(o){$('selName').textContent=o.type==='wire'?`חוט ${WCOL[o.p.color]?.n||''} ${o.p.sec} ממ"ר`:(o.p.name+(o.p.tag&&o.type!=='label'?' · '+o.p.tag:''));
   $('selThumb').innerHTML=o.type==='wire'?`<svg viewBox="0 0 24 24"><path d="M3 18C9 18 9 6 21 6" stroke="${WCOL[o.p.color]?.base}" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>`:thumbSVG(Object.assign({},o,{p:Object.assign({},o.p,THUMBP[o.type]||{})}));
@@ -5684,6 +5684,9 @@ $('bDup').onclick=()=>{const ids=selIds();if(ids.length>1){dupMany(ids);return;}
   sel=sv;}
  state.objs.push(c);sel=c.id;commit();renderNow();updateBar();};
 $('selInfo').onclick=()=>editDialog();
+/* the drawing's properties from anywhere (the shell's top bar name button): nothing selected → editDialog shows the drawing */
+function docProps(){if(HOME_OPEN)homeClose();sel=null;try{multi.clear();}catch(e){}renderNow();updateBar();editDialog();}
+let DOCN='';function docNamePush(){if(!SH||!SH.docName)return;const sub=[state.dwgno?'מס׳ '+state.dwgno:'',state.rev!=null&&state.rev!==''?'גרסה '+state.rev:''].filter(Boolean).join(' · '),k=(state.name||'')+'|'+sub;if(k===DOCN)return;DOCN=k;try{SH.docName(state.name||'לוח חדש',sub);}catch(e){}}
 /* A text box for the selected part (or a free one with nothing selected): it sits
    just under the part, keeps to it when the part is dragged, and goes with it
    when the part is deleted. */

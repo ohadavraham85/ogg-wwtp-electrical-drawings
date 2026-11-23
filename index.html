@@ -31,7 +31,17 @@ button{font:inherit;cursor:pointer}
 #topbar{position:fixed;top:0;left:0;right:0;z-index:5;height:calc(var(--topbar-h) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:14px;padding-inline:20px;background:var(--card);border-bottom:1px solid var(--line-acc);overflow:hidden}
 #topbar b{color:var(--txt);font-weight:700}
 #topbar .tbClock{flex:none;font-size:14px;color:var(--mut);white-space:nowrap}
-#topbar .tbBrand{flex:1;min-width:0;display:flex;align-items:center;justify-content:center}
+#topbar .tbBrand{flex:none;min-width:0;display:flex;align-items:center;justify-content:center}
+#topbar .tbDocW{flex:1;min-width:0;display:flex;justify-content:center}
+#topbar .tbDoc{display:flex;align-items:center;gap:8px;max-width:100%;min-width:0;height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:none;color:var(--txt);cursor:pointer;font:700 16px Heebo,system-ui,sans-serif}
+#topbar .tbDoc[hidden]{display:none}
+#topbar .tbDoc:hover{border-color:var(--amber-light,#ffb547)}
+#topbar .tbDoc svg{flex:none;width:20px;height:20px;fill:none;stroke:var(--amber-light,#ffb547);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+#topbar .tbDoc b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#topbar #tbDocS{flex:none;font-size:13px;font-weight:500;color:var(--mut);white-space:nowrap}
+@media (max-width:1400px){#topbar.hasdoc .tbWho>.sep,#topbar.hasdoc #tbClock,#topbar.hasdoc .tbWho>span:last-child{display:none}}
+@media (max-width:950px){#topbar.hasdoc .tbWho{display:none}#topbar #tbDocS{display:none}}
+@media (max-width:520px){#topbar .tbWm{display:none}}
 #topbar .tbBrand img{height:22px;width:auto;display:block}
 #topbar .tbWho{flex:none;display:flex;align-items:center;gap:8px;max-width:60%;font-size:14px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:Heebo,system-ui,sans-serif}
 #topbar .tbWho b{color:var(--txt);font-weight:700}
@@ -172,6 +182,7 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <div id="topbar" hidden>
   <span class="tbNav"><button id="tbMenu" class="tbNavB" title="תפריט" aria-label="תפריט"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="tbHome" class="tbNavB" title="מסך הבית — שרטוטים אחרונים, חדש, פתח והגדרות" aria-label="מסך הבית"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/></svg></button></span>
   <span class="tbWho"><span>שלום, <b id="tbName"></b></span><span class="sep">·</span><span id="tbClock"></span><span class="sep">·</span><span>גרסה <b id="tbVer"></b></span></span>
+  <span class="tbDocW"><button id="tbDoc" class="tbDoc" hidden title="מאפייני השרטוט — שם, מספר שרטוט, גרסה"><svg viewBox="0 0 24 24"><path d="M6 2.8h8l4.5 4.5V21.2H6z"/><path d="M14 2.8v4.5h4.5"/><path d="M9 12h6M9 15.5h6"/></svg><b id="tbDocN"></b><span id="tbDocS"></span></button></span>
   <span class="tbBrand"><img class="tbIcon" src="icons/icon.svg" alt=""><img class="tbWm" src="icons/wordmark-dark.svg" alt="OhadCad"></span>
   <span id="tbSave" class="tbSave" hidden></span>
   <button id="tbTheme" class="tbTheme" title="מצב בהיר / כהה לאפליקציה" aria-label="מצב בהיר או כהה"></button>
@@ -185,11 +196,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 328;
+const VERSION = 329;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'תיקיות משותפות לשרטוטים, שמירת שרטוט כתבנית, וחלונות ממסך הבית חוזרים אליו';
+const WHATS_NEW = 'שם השרטוט הפתוח מוצג בשורה העליונה — לחיצה עליו פותחת את מאפייני השרטוט';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -457,6 +468,8 @@ const bridge = {
     el.hidden = !text; el.textContent = k === 'saved' ? '☁' : (text || ''); el.title = title || text || ''; el.dataset.k = k || '';
   },
   refresh() { location.reload(); },
+  // the open drawing's name (and number / revision) in this top bar; a click opens its properties
+  docName(name, sub) { const b = $('tbDoc'); if (!b) return; b.hidden = !name; $('topbar').classList.toggle('hasdoc', !!name); $('tbDocN').textContent = name || ''; $('tbDocS').textContent = sub || ''; b.title = (name || '') + (sub ? ' · ' + sub : '') + ' — מאפייני השרטוט'; },
   applyUI() { applyUI(); applyFontScale(); },
   // Extra items at the bottom of the drawing tool's menu.
   menu() {
@@ -568,6 +581,7 @@ function start() {
   $('tbMenu').onclick = () => toolCall('openDrawer');
   $('tbHome').onclick = () => toolCall('homeOpen');
   document.querySelector('#topbar .tbBrand').onclick = () => toolCall('homeOpen');
+  $('tbDoc').onclick = () => toolCall('docProps');
   f.title = 'OhadCad';
   f.allow = 'clipboard-read; clipboard-write; fullscreen';
   const deep = new URLSearchParams(location.search).get('d');
