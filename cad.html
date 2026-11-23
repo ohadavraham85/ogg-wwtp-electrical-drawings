@@ -704,7 +704,7 @@ body.pro.uil #panel{border-width:0 0 0 1px}
 #home .q{width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-size:15px;margin-bottom:4px}
 #home .stats{display:flex;gap:8px;flex-wrap:wrap;margin:-4px 0 6px}#home .stats span{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12.5px;color:var(--mut)}
 #home .empty{color:var(--mut);font-size:14px;padding:8px 2px}
-body.homeon #modal{z-index:70}body.homeon #toast{z-index:80;top:auto;bottom:calc(24px + env(safe-area-inset-bottom))}
+body.homeon #drawer{z-index:66}body.homeon #modal{z-index:70}body.homeon #toast{z-index:80;top:auto;bottom:calc(24px + env(safe-area-inset-bottom))}
 #home .hstar.hmv{left:52px;font-size:15px}#home .hstar.hdel{left:auto;right:12px;font-size:15px;opacity:0;transition:opacity .15s}#home .card:hover .hstar.hdel,#home .hstar.hdel:focus{opacity:1}#home .hstar.hdel:hover{background:#b91c1c;color:#fff}@media (hover:none){#home .hstar.hdel{opacity:.85}}
 #home .folds{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
 #home .fold{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;color:var(--txt);font:600 14.5px Heebo,Arial,sans-serif;text-align:right}
@@ -4385,7 +4385,7 @@ async function homeOpen(keepSide){HOME_OPEN=true;HOME_ST=state;document.body.cla
   ${shm.length?`<div class="box"><h4>👤 חשבון</h4>${shm.map((m,i)=>row('acc'+i,/התנתק/.test(m[0])?'⎋':/משתמש/.test(m[0])?'👥':/ייבוא/.test(m[0])?'⬇':/שנמחקו/.test(m[0])?'♻':'•',esc(String(m[0]).replace(/^[^\p{L}\d(]+/u,'')),null)).join('')}</div>`:''}
   <div class="box" style="font-size:12.5px;color:var(--mut);line-height:1.7">${me&&me.label?esc(me.label)+'<br>':''}${SH&&SH.version?'גרסה '+esc(SH.version):''}</div></div>`;
  H.innerHTML=`<div class="hwrap"><div class="htop"><img src="icons/${uiLight()?'wordmark-light':'wordmark-dark'}.svg" alt="OhadCad"><div class="hello">${me&&me.label?'שלום, '+esc(me.label):''}</div><button class="hset" data-h="set" title="הגדרות וחשבון">⚙</button><button class="hx" data-h="close">המשך לשרטוט ←</button></div>
-  <div class="hcols"><div class="main"><div class="hero"><div><div class="meta">השרטוט הפתוח</div><h2>${esc(state.name||'לוח חדש')}${cloudId?` <span class="hstar big${isFavDoc(cloudId)?' on':''}" data-hstar="${esc(cloudId)}" title="מועדף">${isFavDoc(cloudId)?'★':'☆'}</span>`:''}</h2><div class="meta">${state.objs.length} רכיבים${state.dwgno?' · מס׳ שרטוט '+esc(state.dwgno):''}${curD?`<br>נערך לאחרונה ע״י ${esc(curD.updatedBy||'')} · ${fmtWhen(curD.updatedAt)}${curD.updatedDevice?` · 📱 ${esc(curD.updatedDevice)}`:''}`:''}</div><div style="margin-top:14px"><button class="hx" data-h="close">פתח והמשך לעבוד</button></div></div><div class="th">${curTh}</div></div>
+  <div class="hcols"><div class="main"><div class="hero"><div><div class="meta">השרטוט הפתוח</div><h2>${esc(state.name||'לוח חדש')}${cloudId?` <span class="hstar big${isFavDoc(cloudId)?' on':''}" data-hstar="${esc(cloudId)}" title="מועדף">${isFavDoc(cloudId)?'★':'☆'}</span>`:''}</h2><div class="meta">${state.objs.length} רכיבים${state.dwgno?' · מס׳ שרטוט '+esc(state.dwgno):''}${curD?`<br>נערך לאחרונה ע״י ${esc(curD.updatedBy||'')} · ${fmtWhen(curD.updatedAt)}${curD.updatedDevice?` · 📱 ${esc(curD.updatedDevice)}`:''}`:''}</div></div><div class="th">${curTh}</div></div>
   <div class="acts"><button class="act" data-h="new"><b>＋</b>שרטוט חדש</button><button class="act" data-h="tpl"><b>▦</b>מתבנית</button><button class="act" data-h="open"><b>📂</b>${SH?'כל השרטוטים':'פרויקטים'}</button><button class="act" data-h="lib"><b>🔍</b>ספריית רכיבים</button><button class="act" data-h="savetpl"><b>⧉</b>שמור כתבנית</button></div>
   ${ds.length?`<input class="q" id="homeQ" placeholder="🔍 חיפוש שרטוט לפי שם או לפי מי שערך…" autocomplete="off"><div class="stats"><span>${ds.length} שרטוטים בתיקייה</span>${me?`<span>${mine} שלך</span>`:''}${lk.length?`<span>${lk.length} במכשיר הזה</span>`:''}</div>`:''}
   ${foldH}${fview}${HOME_FOLD?'':`
@@ -6087,7 +6087,9 @@ function openDrawer(){const T=(ic,n,fn,tip,on)=>({ic,n,fn,tip:tip||n,on:!!on});
  $('dbox').onclick=e=>{const sc=e.target.closest('[data-sec]');if(sc){const box=sc.parentElement,k=sc.dataset.sec,o=dsecOpen();box.classList.toggle('open');o[k]=box.classList.contains('open')?1:0;try{localStorage.setItem(DSEC_KEY,JSON.stringify(o));}catch(_){}return;}
   if(e.target.closest('[data-x]')){$('drawer').classList.add('hidden');return;}
   if(e.target.closest('[data-ab]')){$('drawer').classList.add('hidden');aboutDialog();return;}
-  const b=e.target.closest('[data-i]');if(!b)return;$('drawer').classList.add('hidden');fl[+b.dataset.i].fn();};}
+  const b=e.target.closest('[data-i]');if(!b)return;$('drawer').classList.add('hidden');const fn=fl[+b.dataset.i].fn;
+  // over the home screen: dialogs that belong to it stay there, anything else works on the drawing, so home closes first
+  if(HOME_OPEN&&![homeOpen,templatesDialog,openShared,openProjects,newProject,saveAsTemplate].includes(fn))homeClose();fn();if(HOME_OPEN&&fn===favCurrent)homeRefresh();};}
 $('drawer').addEventListener('click',e=>{if(e.target.id==='drawer')$('drawer').classList.add('hidden');});
 /* ================= panel ↔ single-line cross-check ================= */
 /* Devices are matched by tag (Q1, K1, U1…). Listed: what the single-line has but the panel front doesn't, what the
