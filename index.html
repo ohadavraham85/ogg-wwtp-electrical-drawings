@@ -410,7 +410,7 @@ const bridge = {
   },
   async info(id) { await ready; const d = designs.get(id); return d ? info(d) : null; },
   // ids of drawings whose name or content holds the text (finds a drawing that was renamed)
-  async find(q) { await ready; q = String(q || '').trim().toLowerCase(); if (!q) return []; return [...designs.values()].filter((d) => !d.kind && (String(d.name || '') + '\n' + String(d.data || '')).toLowerCase().includes(q))).map((d) => d.id); },
+  async find(q) { await ready; q = String(q || '').trim().toLowerCase(); if (!q) return []; return [...designs.values()].filter((d) => !d.kind && (String(d.name || '') + '\n' + String(d.data || '')).toLowerCase().includes(q)).map((d) => d.id); },
   async load(id) { await ready; const d = designs.get(id); return d ? { id: d.id, name: d.name, data: d.data } : null; },
   async save(input) {
     await ready;
