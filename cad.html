@@ -705,7 +705,7 @@ body.pro.uil #panel{border-width:0 0 0 1px}
 #home .stats{display:flex;gap:8px;flex-wrap:wrap;margin:-4px 0 6px}#home .stats span{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12.5px;color:var(--mut)}
 #home .empty{color:var(--mut);font-size:14px;padding:8px 2px}
 body.homeon #modal{z-index:70}body.homeon #toast{z-index:80;top:auto;bottom:calc(24px + env(safe-area-inset-bottom))}
-#home .hstar.hmv{left:52px;font-size:15px}
+#home .hstar.hmv{left:52px;font-size:15px}#home .hstar.hdel{left:auto;right:12px;font-size:15px;opacity:0;transition:opacity .15s}#home .card:hover .hstar.hdel,#home .hstar.hdel:focus{opacity:1}#home .hstar.hdel:hover{background:#b91c1c;color:#fff}@media (hover:none){#home .hstar.hdel{opacity:.85}}
 #home .folds{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
 #home .fold{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;color:var(--txt);font:600 14.5px Heebo,Arial,sans-serif;text-align:right}
 #home .fold .fi{font-size:22px}#home .fold .fn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#home .fold .fc{color:var(--mut);font-size:12.5px;background:var(--bg);border-radius:10px;padding:2px 8px}
@@ -4368,7 +4368,7 @@ async function homeOpen(keepSide){HOME_OPEN=true;HOME_ST=state;document.body.cla
  H.classList.remove('hidden');H.style.display='';H.classList.toggle('sopen',!!keepSide);const me=SH&&SH.me&&(typeof SH.me==='function'?SH.me():SH.me);
  let ds=[];if(SH)try{ds=await SH.list();}catch(e){}const byId=new Map(ds.map(d=>[d.id,d])),loc=loadProjects();
  const cur=JSON.stringify(state),curTh=thumbOf(cur,null),curD=cloudId&&byId.get(cloudId);
- const card=(d,th,sub)=>`<button class="card" draggable="true" style="position:relative" data-hopen="${esc(d.id)}" data-hq="${esc((d.name+' '+(d.createdBy||'')+' '+(d.updatedBy||'')).toLowerCase())}"><span class="hstar${isFavDoc(d.id)?' on':''}" data-hstar="${esc(d.id)}" title="מועדף">${isFavDoc(d.id)?'★':'☆'}</span>${SH&&SH.setFolder?`<span class="hstar hmv" data-hmv="${esc(d.id)}" title="העבר לתיקייה">📁</span>`:''}<div class="th">${th}</div><div class="nm">${esc(d.name)}</div><div class="sub">${d.folder&&HOME_FOLD!==d.folder?'📁 '+esc(d.folder)+' · ':''}${sub}</div></button>`;
+ const card=(d,th,sub)=>`<button class="card" draggable="true" style="position:relative" data-hopen="${esc(d.id)}" data-hq="${esc((d.name+' '+(d.createdBy||'')+' '+(d.updatedBy||'')).toLowerCase())}"><span class="hstar${isFavDoc(d.id)?' on':''}" data-hstar="${esc(d.id)}" title="מועדף">${isFavDoc(d.id)?'★':'☆'}</span>${SH&&SH.setFolder?`<span class="hstar hmv" data-hmv="${esc(d.id)}" title="העבר לתיקייה">📁</span>`:''}${d.canDelete?`<span class="hstar hdel" data-hdel="${esc(d.id)}" title="מחק שרטוט">🗑</span>`:''}<div class="th">${th}</div><div class="nm">${esc(d.name)}</div><div class="sub">${d.folder&&HOME_FOLD!==d.folder?'📁 '+esc(d.folder)+' · ':''}${sub}</div></button>`;
  const thOf=async d=>{const k=d.id+'|'+d.updatedAt;if(HTHC.has(k))return HTHC.get(k);try{const r=await SH.load(d.id);return thumbOf(r&&r.data,k);}catch(e){return '<span class="no">▦</span>';}};
  const favs=favDocs().map(id=>byId.get(id)).filter(Boolean),rec=recentDocs().map(x=>byId.get(x.id)).filter(d=>d&&!favs.includes(d)).slice(0,8),latest=ds.filter(d=>!rec.includes(d)&&!favs.includes(d)).slice(0,8);
  const FN=SH?foldNames(ds):[];if(HOME_FOLD&&HOME_FOLD!=='★'&&!FN.includes(HOME_FOLD))HOME_FOLD=null;
@@ -4397,11 +4397,14 @@ function homeDnD(H){H.addEventListener('dragstart',e=>{const c=e.target.closest&
  H.addEventListener('dragover',e=>{const f=e.target.closest('[data-hf]');if(f&&[...e.dataTransfer.types].includes('text/ohad-doc')){e.preventDefault();f.classList.add('drop');}});
  H.addEventListener('dragleave',e=>{const f=e.target.closest('[data-hf]');if(f)f.classList.remove('drop');});
  H.addEventListener('drop',async e=>{const f=e.target.closest('[data-hf]'),id=e.dataTransfer.getData('text/ohad-doc');if(!f||!id)return;e.preventDefault();f.classList.remove('drop');const k=f.dataset.hf;if(k==='★'){if(!isFavDoc(id))favDocToggle(id);}else await foldMove(id,k);homeRefresh();});}
+/* delete a drawing from its home card (soft delete — the shell's "לוחות שנמחקו" restores it) */
+async function homeDel(id){let d=null;try{d=await SH.info(id);}catch(e){}if(!d)return;
+ modal('מחיקת שרטוט',`<div class="hint">למחוק את "${esc(d.name)}" מהתיקייה המשותפת? הוא יימחק לכל המשתמשים.<br>אפשר להחזיר אותו אחר כך מ"לוחות שנמחקו — שחזור" (בהגדרות ⚙ ← חשבון).</div>`,[{t:'מחק',cls:'pri',fn:async()=>{try{await SH.remove(id);}catch(e){}if(cloudId===id)setCloud(null);try{const L=favDocs().filter(x=>x!==id);localStorage.setItem(FAVD_KEY,JSON.stringify(L));}catch(e){}toast('השרטוט נמחק');homeRefresh();}},{t:'ביטול'}]);}
 function homeRefresh(){if(!HOME_OPEN)return;const H=$('home');homeOpen(!!(H&&H.classList.contains('sopen')));}
 function homeClose(){HOME_OPEN=false;HOME_ST=null;document.body.classList.remove('homeon');const H=$('home');if(H)H.style.display='none';try{renderNow();fit();}catch(e){}}
 function homeFilter(e){if(e.target.id!=='homeQ')return;const q=e.target.value.trim().toLowerCase();document.querySelectorAll('#home [data-hq]').forEach(c=>{c.style.display=!q||c.dataset.hq.includes(q)?'':'none';});}
 let HSM=[];
-async function homeClick(e){const mv=e.target.closest('[data-hmv]');if(mv){e.stopPropagation();foldPick(mv.dataset.hmv,homeRefresh);return;}const hs=e.target.closest('[data-hstar]');if(hs){e.stopPropagation();favDocToggle(hs.dataset.hstar);homeRefresh();return;}
+async function homeClick(e){const hd=e.target.closest('[data-hdel]');if(hd){e.stopPropagation();homeDel(hd.dataset.hdel);return;}const mv=e.target.closest('[data-hmv]');if(mv){e.stopPropagation();foldPick(mv.dataset.hmv,homeRefresh);return;}const hs=e.target.closest('[data-hstar]');if(hs){e.stopPropagation();favDocToggle(hs.dataset.hstar);homeRefresh();return;}
  const hf=e.target.closest('[data-hf]');if(hf){HOME_FOLD=HOME_FOLD===hf.dataset.hf?null:hf.dataset.hf;homeRefresh();return;}const sr=e.target.closest('[data-hs]');if(sr){const k=sr.dataset.hs;
   if(k==='ui'){toggleUI();homeOpen(1);}else if(k==='pro'){togglePro();homeOpen(1);}else if(k==='lang')toggleLang();else if(k==='terms'){toggleTerms();homeOpen(1);}else if(k==='axes'){toggleAxes();homeOpen(1);}
   else if(k==='disp')displayDialog();else if(k==='tb')tbEditor();else if(k==='sync')prefsCheck();
