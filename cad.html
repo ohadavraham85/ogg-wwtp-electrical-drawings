@@ -704,6 +704,8 @@ body.pro.uil #panel{border-width:0 0 0 1px}
 #home .q{width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-size:15px;margin-bottom:4px}
 #home .stats{display:flex;gap:8px;flex-wrap:wrap;margin:-4px 0 6px}#home .stats span{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12.5px;color:var(--mut)}
 #home .empty{color:var(--mut);font-size:14px;padding:8px 2px}
+#home .hstar{position:absolute;top:12px;left:12px;z-index:1;width:34px;height:34px;border-radius:50%;background:rgba(17,24,39,.72);color:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer}
+#home .hstar.on{color:#fbbf24}#home .hstar.big{position:static;display:inline-flex;vertical-align:middle;margin-inline-start:8px;background:var(--ctl)}
 #home .hset{display:block;width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-size:20px;cursor:pointer}
 #home .hcols{display:block}
 #home .side{display:none}
@@ -4082,16 +4084,16 @@ async function versionsDialog(){if(!SH||!SH.versions){toast('היסטוריית 
   modal('שחזור גרסה','<div class="hint">הלוח יחזור לגרסה שבחרת. המצב הנוכחי יישמר קודם כגרסה, כך שאפשר לחזור אליו.</div>',[{t:'↺ שחזר',cls:'pri',fn:async()=>{try{await SH.snapshot(cloudId);}catch(_){}const nm=state.name;state=JSON.parse(v.data);state.name=nm;sel=null;multi.clear();hist=[];hi=-1;commit();renderNow();fit();toast('הגרסה שוחזרה');}},{t:'ביטול'}]);};}
 async function openShared(){let ds=[];try{ds=await SH.list();}catch(e){toast('לא ניתן לקרוא את התיקייה המשותפת');return;}
  const loc=loadProjects(),lk=Object.keys(loc);
- const mine=d=>SH.me()&&d.createdBy===SH.me().label;ds.sort((a,b)=>(mine(b)?1:0)-(mine(a)?1:0));
+ const mine=d=>SH.me()&&d.createdBy===SH.me().label;ds.sort((a,b)=>(isFavDoc(b.id)?2:0)+(mine(b)?1:0)-(isFavDoc(a.id)?2:0)-(mine(a)?1:0));
  const row=d=>`<div style="display:flex;gap:8px;align-items:stretch"><button data-k="${esc(d.id)}" class="op" style="${d.id===cloudId?'outline:2px solid var(--acc);':''}">${mine(d)?'<span style="float:left;font-size:11.5px;background:#1e3a5f;color:#bfdbfe;border-radius:8px;padding:2px 7px">שלי</span>':''}<div style="font-size:16px;font-weight:700">📋 ${esc(d.name)} <span style="color:#999;font-size:13px;font-weight:400">(${d.parts} רכיבים)</span></div>
    <div style="color:#bdbdbd;font-size:12.5px;margin-top:4px">נוצר ע״י ${esc(d.createdBy)} · ${fmtWhen(d.createdAt)}${d.updatedAt===d.createdAt&&d.updatedDevice?' · 📱 '+esc(d.updatedDevice):''}</div>${d.updatedAt!==d.createdAt?`<div style="color:#bdbdbd;font-size:12.5px">נערך לאחרונה ע״י ${esc(d.updatedBy)} · ${fmtWhen(d.updatedAt)}${d.updatedDevice?' · 📱 '+esc(d.updatedDevice):''}</div>`:''}</button>
-   ${d.canDelete?`<button data-d="${esc(d.id)}" style="width:52px;flex:none;text-align:center">🗑</button>`:''}</div>`;
+   <button data-fv="${esc(d.id)}" title="מועדף" style="width:52px;flex:none;text-align:center;font-size:20px;${isFavDoc(d.id)?'color:#fbbf24':''}">${isFavDoc(d.id)?'★':'☆'}</button>${d.canDelete?`<button data-d="${esc(d.id)}" style="width:52px;flex:none;text-align:center">🗑</button>`:''}</div>`;
  let h=(ds.length+lk.length>0?`<input id="shQ" placeholder="🔍 חיפוש בשם, ביוצר או בתוך השרטוט…" autocomplete="off" style="margin-bottom:10px">`:'')+(ds.length?`<div class="plist">${ds.map(row).join('')}</div>`:'<div class="hint">התיקייה המשותפת ריקה. שמור לוח מהתפריט ("שמור בתיקייה המשותפת") כדי שיופיע כאן.</div>');
  if(lk.length)h+=`<div style="color:#8a8a8a;font-size:13px;margin:16px 2px 6px">שמורים רק במכשיר הזה — אפשר להעביר לתיקייה המשותפת</div><div class="plist">${lk.map(k=>`<div style="display:flex;gap:8px"><button data-lo="${esc(k)}">📋 ${esc(k)} <span style="color:#999;font-size:13px">(${loc[k].objs.length} רכיבים)</span></button><button data-up="${esc(k)}" style="width:auto;flex:none;padding:0 12px">⬆ העבר</button></div>`).join('')}</div>`;
  modal('התיקייה המשותפת',h);
  {const q=$('shQ');if(q){let tq=0;q.oninput=()=>{clearTimeout(tq);tq=setTimeout(async()=>{const t=q.value.trim().toLowerCase();let ids=null;try{ids=t&&SH.find?new Set(await SH.find(t)):null;}catch(e){}
   $('mBody').querySelectorAll('.plist>div').forEach(r=>{const k=r.querySelector('[data-k]');r.style.display=!t||r.textContent.toLowerCase().includes(t)||(ids&&k&&ids.has(k.dataset.k))?'':'none';});},200);};setTimeout(()=>q.focus(),50);}}
- $('mBody').onclick=async e=>{const o=e.target.closest('[data-k]'),d=e.target.closest('[data-d]'),lo=e.target.closest('[data-lo]'),up=e.target.closest('[data-up]');
+ $('mBody').onclick=async e=>{const fv=e.target.closest('[data-fv]');if(fv){const on=favDocToggle(fv.dataset.fv);fv.textContent=on?'★':'☆';fv.style.color=on?'#fbbf24':'';return;}const o=e.target.closest('[data-k]'),d=e.target.closest('[data-d]'),lo=e.target.closest('[data-lo]'),up=e.target.closest('[data-up]');
   if(o){if(await openCloudDoc(o.dataset.k))closeModal();else openShared();}
   if(d){const it=ds.find(x=>x.id===d.dataset.d);modal('מחיקת לוח',`<div class="hint">למחוק את "${esc(it?it.name:'')}" מהתיקייה המשותפת? הוא יימחק לכולם.</div>`,[{t:'מחק',cls:'pri',fn:async()=>{await SH.remove(d.dataset.d);if(cloudId===d.dataset.d)setCloud(null);toast('נמחק');openShared();}},{t:'ביטול',fn:()=>openShared()}]);}
   if(lo){setCloud(null);state=JSON.parse(JSON.stringify(loc[lo.dataset.lo]));sel=null;hist=[];hi=-1;commit();renderNow();fit();closeModal();toast('נפתח: '+lo.dataset.lo);}
@@ -4286,7 +4288,7 @@ let PRINIT=false;async function prefsInit(){if(!PREFS_OK()||PRINIT)return;const 
 /* the device settings that follow the account to every device: toolbar, look, language, size, theme per document,
    grid / axes / terminals, pen, library view, drawer groups. Kept in the account's prefs under "set" (dots in the
    key names become "~"); the account's copy wins when the app starts, a change here is sent within a few seconds. */
-const SYNC_KEYS=['ohadcad.recent','ohadcad.toolbar.v1','ohadcad.lang','ohadcad.look','ohadcad.ui','ohadcad.uiscale','ohadcad.font','ohadcad.icons','ohadcad.cross','ohadcad.libview','ohadcad.penc','ohadcad.penw','ohadcad.dsec','epd.themes','epd.grid','epd.gridbg','epd.axes','epd.terms'];
+const SYNC_KEYS=['ohadcad.recent','ohadcad.favdocs','ohadcad.toolbar.v1','ohadcad.lang','ohadcad.look','ohadcad.ui','ohadcad.uiscale','ohadcad.font','ohadcad.icons','ohadcad.cross','ohadcad.libview','ohadcad.penc','ohadcad.penw','ohadcad.dsec','epd.themes','epd.grid','epd.gridbg','epd.axes','epd.terms'];
 let SETS='';
 function setSnap(){const o={};try{SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!=null)o[k]=v;});}catch(e){}return o;}
 const setEnc=o=>Object.fromEntries(Object.entries(o).map(([k,v])=>[k.replace(/\./g,'~'),v]));
@@ -4316,7 +4318,12 @@ async function prefsCheck(){toast('בודק…');let r;try{r=await SH.prefs.test
    Shown when the app opens (not for a ?d= link) and from the drawer tile "מסך הבית": continue the open drawing,
    new / template / open / search, the drawings this device opened lately ('ohadcad.recent', synced with the
    account), the folder's latest updates and its counts. Previews are drawn from each drawing's own data. */
-const RECENT_KEY='ohadcad.recent';
+const RECENT_KEY='ohadcad.recent',FAVD_KEY='ohadcad.favdocs';
+/* favourite drawings (ids), per user, synced with the account (SYNC_KEYS) */
+function favDocs(){try{return JSON.parse(localStorage.getItem(FAVD_KEY)||'[]');}catch(e){return [];}}
+const isFavDoc=id=>!!id&&favDocs().includes(id);
+function favDocToggle(id){if(!id)return false;let L=favDocs();const on=!L.includes(id);L=on?[id,...L]:L.filter(x=>x!==id);try{localStorage.setItem(FAVD_KEY,JSON.stringify(L));}catch(e){}setsPushNow&&setTimeout(()=>{try{setsPushNow();}catch(e){}},0);toast(on?'⭐ נוסף למועדפים':'הוסר מהמועדפים');return on;}
+function favCurrent(){if(!cloudId){toast('השרטוט עוד לא נשמר בתיקייה המשותפת');return;}favDocToggle(cloudId);}
 function recentDocs(){try{return JSON.parse(localStorage.getItem(RECENT_KEY)||'[]');}catch(e){return [];}}
 function recentAdd(id){if(!id)return;try{const L=[{id,t:Date.now()},...recentDocs().filter(x=>x.id!==id)].slice(0,24);localStorage.setItem(RECENT_KEY,JSON.stringify(L));}catch(e){}}
 const HTHC=new Map();
@@ -4331,9 +4338,10 @@ async function homeOpen(keepSide){HOME_OPEN=true;let H=$('home');if(!H){H=docume
  H.classList.remove('hidden');H.style.display='';H.classList.toggle('sopen',!!keepSide);const me=SH&&SH.me&&(typeof SH.me==='function'?SH.me():SH.me);
  let ds=[];if(SH)try{ds=await SH.list();}catch(e){}const byId=new Map(ds.map(d=>[d.id,d])),loc=loadProjects();
  const cur=JSON.stringify(state),curTh=thumbOf(cur,null),curD=cloudId&&byId.get(cloudId);
- const card=(d,th,sub)=>`<button class="card" data-hopen="${esc(d.id)}" data-hq="${esc((d.name+' '+(d.createdBy||'')+' '+(d.updatedBy||'')).toLowerCase())}"><div class="th">${th}</div><div class="nm">${esc(d.name)}</div><div class="sub">${sub}</div></button>`;
+ const card=(d,th,sub)=>`<button class="card" style="position:relative" data-hopen="${esc(d.id)}" data-hq="${esc((d.name+' '+(d.createdBy||'')+' '+(d.updatedBy||'')).toLowerCase())}"><span class="hstar${isFavDoc(d.id)?' on':''}" data-hstar="${esc(d.id)}" title="מועדף">${isFavDoc(d.id)?'★':'☆'}</span><div class="th">${th}</div><div class="nm">${esc(d.name)}</div><div class="sub">${sub}</div></button>`;
  const thOf=async d=>{const k=d.id+'|'+d.updatedAt;if(HTHC.has(k))return HTHC.get(k);try{const r=await SH.load(d.id);return thumbOf(r&&r.data,k);}catch(e){return '<span class="no">▦</span>';}};
- const rec=recentDocs().map(x=>byId.get(x.id)).filter(Boolean).slice(0,8),latest=ds.filter(d=>!rec.includes(d)).slice(0,8);
+ const favs=favDocs().map(id=>byId.get(id)).filter(Boolean),rec=recentDocs().map(x=>byId.get(x.id)).filter(d=>d&&!favs.includes(d)).slice(0,8),latest=ds.filter(d=>!rec.includes(d)&&!favs.includes(d)).slice(0,8);
+ const favH=[];for(const d of favs)favH.push(card(d,await thOf(d),`${fmtWhen(d.updatedAt)}${d.updatedDevice?' · '+esc(d.updatedDevice):''}`));
  const recH=[];for(const d of rec)recH.push(card(d,await thOf(d),`${fmtWhen(d.updatedAt)}${d.updatedDevice?' · '+esc(d.updatedDevice):''}`));
  const latH=[];for(const d of latest)latH.push(card(d,await thOf(d),`${esc(d.updatedBy||d.createdBy||'')} · ${fmtWhen(d.updatedAt)}${d.updatedDevice?' · '+esc(d.updatedDevice):''}`));
  const mine=me?ds.filter(d=>d.createdBy===me.label).length:0,lk=Object.keys(loc);
@@ -4343,16 +4351,17 @@ async function homeOpen(keepSide){HOME_OPEN=true;let H=$('home');if(!H){H=docume
   ${shm.length?`<div class="box"><h4>👤 חשבון</h4>${shm.map((m,i)=>row('acc'+i,/התנתק/.test(m[0])?'⎋':/משתמש/.test(m[0])?'👥':/ייבוא/.test(m[0])?'⬇':/שנמחקו/.test(m[0])?'♻':'•',esc(String(m[0]).replace(/^[^\p{L}\d(]+/u,'')),null)).join('')}</div>`:''}
   <div class="box" style="font-size:12.5px;color:var(--mut);line-height:1.7">${me&&me.label?esc(me.label)+'<br>':''}${SH&&SH.version?'גרסה '+esc(SH.version):''}</div></div>`;
  H.innerHTML=`<div class="hwrap"><div class="htop"><img src="icons/${uiLight()?'wordmark-light':'wordmark-dark'}.svg" alt="OhadCad"><div class="hello">${me&&me.label?'שלום, '+esc(me.label):''}</div><button class="hset" data-h="set" title="הגדרות וחשבון">⚙</button><button class="hx" data-h="close">המשך לשרטוט ←</button></div>
-  <div class="hcols"><div class="main"><div class="hero"><div><div class="meta">השרטוט הפתוח</div><h2>${esc(state.name||'לוח חדש')}</h2><div class="meta">${state.objs.length} רכיבים${state.dwgno?' · מס׳ שרטוט '+esc(state.dwgno):''}${curD?`<br>נערך לאחרונה ע״י ${esc(curD.updatedBy||'')} · ${fmtWhen(curD.updatedAt)}${curD.updatedDevice?` · 📱 ${esc(curD.updatedDevice)}`:''}`:''}</div><div style="margin-top:14px"><button class="hx" data-h="close">פתח והמשך לעבוד</button></div></div><div class="th">${curTh}</div></div>
+  <div class="hcols"><div class="main"><div class="hero"><div><div class="meta">השרטוט הפתוח</div><h2>${esc(state.name||'לוח חדש')}${cloudId?` <span class="hstar big${isFavDoc(cloudId)?' on':''}" data-hstar="${esc(cloudId)}" title="מועדף">${isFavDoc(cloudId)?'★':'☆'}</span>`:''}</h2><div class="meta">${state.objs.length} רכיבים${state.dwgno?' · מס׳ שרטוט '+esc(state.dwgno):''}${curD?`<br>נערך לאחרונה ע״י ${esc(curD.updatedBy||'')} · ${fmtWhen(curD.updatedAt)}${curD.updatedDevice?` · 📱 ${esc(curD.updatedDevice)}`:''}`:''}</div><div style="margin-top:14px"><button class="hx" data-h="close">פתח והמשך לעבוד</button></div></div><div class="th">${curTh}</div></div>
   <div class="acts"><button class="act" data-h="new"><b>＋</b>שרטוט חדש</button><button class="act" data-h="tpl"><b>▦</b>מתבנית</button><button class="act" data-h="open"><b>📂</b>${SH?'כל השרטוטים':'פרויקטים'}</button><button class="act" data-h="lib"><b>🔍</b>ספריית רכיבים</button></div>
   ${ds.length?`<input class="q" id="homeQ" placeholder="🔍 חיפוש שרטוט לפי שם או לפי מי שערך…" autocomplete="off"><div class="stats"><span>${ds.length} שרטוטים בתיקייה</span>${me?`<span>${mine} שלך</span>`:''}${lk.length?`<span>${lk.length} במכשיר הזה</span>`:''}</div>`:''}
+  ${SH?`<h3>⭐ מועדפים <small>${favH.length?favH.length+' שרטוטים':'סמן שרטוט בכוכב כדי שיופיע כאן'}</small></h3>${favH.length?`<div class="grid">${favH.join('')}</div>`:''}`:''}
   <h3>🕘 פתחת לאחרונה <small>במכשירים שלך</small></h3>${recH.length?`<div class="grid">${recH.join('')}</div>`:'<div class="empty">עוד לא פתחת שרטוטים מהתיקייה — הם יופיעו כאן.</div>'}
   ${latH.length?`<h3>☁ עודכנו לאחרונה בתיקייה <small>כל המשתמשים</small></h3><div class="grid">${latH.join('')}</div>`:''}
   ${!SH&&lk.length?`<h3>💾 שמורים במכשיר</h3><div class="grid">${lk.map(k=>`<button class="card" data-hloc="${esc(k)}" data-hq="${esc(k.toLowerCase())}"><div class="th">${thumbOf(loc[k],'loc|'+k)}</div><div class="nm">${esc(k)}</div><div class="sub">${(loc[k].objs||[]).length} רכיבים</div></button>`).join('')}</div>`:''}</div>${side}</div></div>`;}
 function homeClose(){HOME_OPEN=false;const H=$('home');if(H)H.style.display='none';try{renderNow();fit();}catch(e){}}
 function homeFilter(e){if(e.target.id!=='homeQ')return;const q=e.target.value.trim().toLowerCase();document.querySelectorAll('#home [data-hq]').forEach(c=>{c.style.display=!q||c.dataset.hq.includes(q)?'':'none';});}
 let HSM=[];
-async function homeClick(e){const sr=e.target.closest('[data-hs]');if(sr){const k=sr.dataset.hs;
+async function homeClick(e){const hs=e.target.closest('[data-hstar]');if(hs){e.stopPropagation();favDocToggle(hs.dataset.hstar);homeOpen(document.getElementById('home').classList.contains('sopen'));return;}const sr=e.target.closest('[data-hs]');if(sr){const k=sr.dataset.hs;
   if(k==='ui'){toggleUI();homeOpen(1);}else if(k==='pro'){togglePro();homeOpen(1);}else if(k==='lang')toggleLang();else if(k==='terms'){toggleTerms();homeOpen(1);}else if(k==='axes'){toggleAxes();homeOpen(1);}
   else if(k==='disp'){homeClose();displayDialog();}else if(k==='tb'){homeClose();tbEditor();}else if(k==='sync'){homeClose();prefsCheck();}
   else if(k.startsWith('acc')){const m=HSM[+k.slice(3)];homeClose();if(m&&m[1])m[1]();}return;}
@@ -6009,7 +6018,7 @@ function openDrawer(){const T=(ic,n,fn,tip,on)=>({ic,n,fn,tip:tip||n,on:!!on});
    ...(SH?[T('open','פתח',openShared,'פתח מהתיקייה המשותפת'),T('save','שמור',saveShared,'שמור עכשיו בתיקייה המשותפת (נשמר גם אוטומטית)'),T('saveas','שמור עותק',()=>saveSharedAs(true),'שמור עותק בשם…')]:[T('open','פתח',openProjects,'פתח פרויקט שמור'),T('saveas','שמור בשם',saveAs,'שמור בשם…')]),T('tpl','מתבנית',templatesDialog,'פרויקט חדש מתבנית (דוגמאות)'),
    T('reset','גרסאות',versionsDialog,'היסטוריית הגרסאות של הלוח — שחזור או פתיחה כעותק'),
    T('info','פרטי פרויקט',()=>{sel=null;multi.clear();renderNow();editDialog();},'שם, מספר שרטוט, גרסה')]},
-  {k:'home',t:'מסך הבית',it:[T('view','מסך הבית',homeOpen,'מסך הבית: השרטוט הפתוח, שרטוטים אחרונים, חדש / מתבנית / פתח')]},
+  {k:'home',t:'מסך הבית',it:[T('view','מסך הבית',homeOpen,'מסך הבית: השרטוט הפתוח, שרטוטים אחרונים, חדש / מתבנית / פתח'),T('save',isFavDoc(cloudId)?'הסר ממועדפים':'למועדפים',favCurrent,'מוסיף את השרטוט הפתוח לתיקיית המועדפים (מופיעה בראש מסך הבית)',isFavDoc(cloudId))]},
   {k:'out',t:'הדפסה וייצוא',it:[T('table','מקרא בדף',toggleLegCol,'עמודת מקרא צרה בצד ימין של דף הייצור (סמל, תיאור וכמות — מתעדכנת לבד, גם ב-PDF). מקרא חופשי שמזיזים: בספרייה, שרטוט וסימון',!state.legOff),T('print','הדפסה',printPreview,'תצוגה לפני הדפסה (Ctrl+P)'),T('pdf','PDF',pdfDialog,'ייצוא PDF עם טבלת שרטוט'),T('png','תמונה',exportImage,'ייצוא תמונה (PNG)'),T('dxf','AutoCAD',dxfExport,'ייצוא DXF ל-AutoCAD'),
    T('bom','רשימת ציוד',bom,'רשימת ציוד (BOM)'),T('exp','הורד קובץ',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state)),'הורד קובץ פרויקט (JSON)'),T('imp','ייבוא קובץ',importJSON,'ייבוא קובץ פרויקט'),T('clip','העתק קובץ',copyJSON,'העתק את קובץ הפרויקט')]},
   {k:'chk',t:'בדיקה וחיווט',it:[T('check','התאמת מסמכים',xcheckDialog,'בדיקת התאמה: חזית ↔ חד קווי'),T('sld','חד קווי מהלוח',sldFromPanel,'צור טיוטת חד קווי מרכיבי חזית הלוח (מחליף את החד קווי הנוכחי — אפשר לבטל)'),T('link','הפניות',toggleXR,'הצג / הסתר הפניות חזית ↔ חד קווי ליד כל רכיב',state.xrShow),T('cross','קשתות בהצטלבות',toggleHops,'חוטים שמצטלבים בלי חיבור: קשת קפיצה מעל החוט השני (כבוי = רווח קטן בחוט החוצה)',state.hops),
