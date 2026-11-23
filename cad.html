@@ -730,9 +730,9 @@ body.homeon #modal{z-index:70}body.homeon #toast{z-index:80;top:auto;bottom:calc
 @media (max-width:700px){#home .hero{grid-template-columns:1fr}#home .hero .th{height:150px;order:-1}#home .acts{grid-template-columns:repeat(3,minmax(0,1fr))}#home .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}#home .card .th{height:96px}#home .hwrap{padding:12px 12px calc(24px + env(safe-area-inset-bottom))}}
 
 /* the shell's top row has the menu and home buttons; the tool's own copies stay on phones (the row is hidden there) */
-body.shnav #bMenu,body.shnav #bHome{display:none}
+body.shnav #bMenu,body.shnav #bHome{display:none}body.shnav #selInfo{display:none}
 body.shnav #home .hello{visibility:hidden}
-@media (max-width:600px) and (min-height:501px){body.shnav #bMenu,body.shnav #bHome{display:inline-flex!important}body.shnav #home .hello{visibility:visible}}
+@media (max-width:600px) and (min-height:501px){body.shnav #bMenu,body.shnav #bHome{display:inline-flex!important}body.shnav #selInfo{display:flex!important}body.shnav #home .hello{visibility:visible}}
 </style>
 <script src="vendor/qrcode/qrcode.js"></script>
 </head>
