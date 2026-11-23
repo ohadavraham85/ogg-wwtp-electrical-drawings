@@ -14,7 +14,7 @@ Live at https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/ (GitHub Pa
   - `saveStatus(k, text, title)`: the tool's save state, shown in the shell's top bar.
   - `refresh()`: reloads the app (the tool's `appRefresh` saves first).
   - `menu()`, which returns extra items for the tool's drawer.
-  - `docName(name, sub)`: the open drawing's name (and drawing number / revision) as a button in the shell's top row (`#tbDoc`, `#topbar.hasdoc` hides the clock / version on narrower screens and the greeting under 950 px); a click calls the tool's `docProps` (drawing properties). The tool pushes it from `docNamePush` (in `updateBar`, `renderNow`, `setSaveSt`).
+  - `docName(name, sub)`: the open drawing's name (and drawing number / revision) as a button in the shell's top row (`#tbDoc`, on the right after the menu / home buttons; the greeting / clock / version `.tbWho` sits centred; `#topbar.hasdoc` hides the clock under 1250 px and `.tbWho` under 950 px); a click calls the tool's `docProps` (drawing properties). The tool pushes it from `docNamePush` (in `updateBar`, `renderNow`, `setSaveSt`).
   - `topNav: true`: the shell's top row has the menu (☰ → the tool's `openDrawer`) and home (→ `homeOpen`) buttons, and its logo opens home too; the tool then hides its own `bMenu` / `bHome` and the name / selection box `#selInfo` (`body.shnav`) except on phones, where the shell row is hidden.
 - `cad.html`: the drawing tool, a single file. It finds the bridge as `SH` (via `window.parent.panelDesignsBridge`). Opened directly, it saves to localStorage.
   - Parts live in `DEF[type]`.
