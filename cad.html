@@ -4357,7 +4357,7 @@ function favCurrent(){if(!cloudId){toast('השרטוט עוד לא נשמר בת
 function recentDocs(){try{return JSON.parse(localStorage.getItem(RECENT_KEY)||'[]');}catch(e){return [];}}
 function recentAdd(id){if(!id)return;try{const L=[{id,t:Date.now()},...recentDocs().filter(x=>x.id!==id)].slice(0,24);localStorage.setItem(RECENT_KEY,JSON.stringify(L));}catch(e){}}
 const HTHC=new Map();
-function thumbOf(data,key){if(key&&HTHC.has(key))return HTHC.get(key);let out='<span class="no">▦</span>';
+function docThumb(data,key){if(key&&HTHC.has(key))return HTHC.get(key);let out='<span class="no">▦</span>';
  try{const st=typeof data==='string'?JSON.parse(data):data,objs=(st.objs||[]).filter(o=>o.type!=='wire'&&o.type!=='underlay'&&DEF[o.type]).slice(0,350);
   if(objs.length){const keep=state;state=Object.assign({},st,{objs:st.objs});let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,b='';
    try{objs.forEach(o=>{try{boundsX(o).forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);});b+=objSVG(o,false);}catch(e){}});}finally{state=keep;}
@@ -4367,9 +4367,9 @@ let HOME_OPEN=false;
 async function homeOpen(keepSide){HOME_OPEN=true;HOME_ST=state;document.body.classList.add('homeon');let H=$('home');if(!H){H=document.createElement('div');H.id='home';document.body.appendChild(H);H.addEventListener('click',homeClick);H.addEventListener('input',homeFilter);homeDnD(H);}const sTop=H.scrollTop;
  H.classList.remove('hidden');H.style.display='';H.classList.toggle('sopen',!!keepSide);const me=SH&&SH.me&&(typeof SH.me==='function'?SH.me():SH.me);
  let ds=[];if(SH)try{ds=await SH.list();}catch(e){}const byId=new Map(ds.map(d=>[d.id,d])),loc=loadProjects();
- const cur=JSON.stringify(state),curTh=thumbOf(cur,null),curD=cloudId&&byId.get(cloudId);
+ const cur=JSON.stringify(state),curTh=docThumb(cur,null),curD=cloudId&&byId.get(cloudId);
  const card=(d,th,sub)=>`<button class="card" draggable="true" style="position:relative" data-hopen="${esc(d.id)}" data-hq="${esc((d.name+' '+(d.createdBy||'')+' '+(d.updatedBy||'')).toLowerCase())}"><span class="hstar${isFavDoc(d.id)?' on':''}" data-hstar="${esc(d.id)}" title="מועדף">${isFavDoc(d.id)?'★':'☆'}</span>${SH&&SH.setFolder?`<span class="hstar hmv" data-hmv="${esc(d.id)}" title="העבר לתיקייה">📁</span>`:''}${d.canDelete?`<span class="hstar hdel" data-hdel="${esc(d.id)}" title="מחק שרטוט">🗑</span>`:''}<div class="th">${th}</div><div class="nm">${esc(d.name)}</div><div class="sub">${d.folder&&HOME_FOLD!==d.folder?'📁 '+esc(d.folder)+' · ':''}${sub}</div></button>`;
- const thOf=async d=>{const k=d.id+'|'+d.updatedAt;if(HTHC.has(k))return HTHC.get(k);try{const r=await SH.load(d.id);return thumbOf(r&&r.data,k);}catch(e){return '<span class="no">▦</span>';}};
+ const thOf=async d=>{const k=d.id+'|'+d.updatedAt;if(HTHC.has(k))return HTHC.get(k);try{const r=await SH.load(d.id);return docThumb(r&&r.data,k);}catch(e){return '<span class="no">▦</span>';}};
  const favs=favDocs().map(id=>byId.get(id)).filter(Boolean),rec=recentDocs().map(x=>byId.get(x.id)).filter(d=>d&&!favs.includes(d)).slice(0,8),latest=ds.filter(d=>!rec.includes(d)&&!favs.includes(d)).slice(0,8);
  const FN=SH?foldNames(ds):[];if(HOME_FOLD&&HOME_FOLD!=='★'&&!FN.includes(HOME_FOLD))HOME_FOLD=null;
  const inF=HOME_FOLD==='★'?favs:HOME_FOLD?ds.filter(d=>d.folder===HOME_FOLD):[];const favH=[];for(const d of inF)favH.push(card(d,await thOf(d),`${esc(d.updatedBy||d.createdBy||'')} · ${fmtWhen(d.updatedAt)}${d.updatedDevice?' · '+esc(d.updatedDevice):''}`));
@@ -4391,7 +4391,7 @@ async function homeOpen(keepSide){HOME_OPEN=true;HOME_ST=state;document.body.cla
   ${foldH}${fview}${HOME_FOLD?'':`
   <h3>🕘 פתחת לאחרונה <small>במכשירים שלך</small></h3>${recH.length?`<div class="grid">${recH.join('')}</div>`:'<div class="empty">עוד לא פתחת שרטוטים מהתיקייה — הם יופיעו כאן.</div>'}
   ${latH.length?`<h3>☁ עודכנו לאחרונה בתיקייה <small>כל המשתמשים</small></h3><div class="grid">${latH.join('')}</div>`:''}`}
-  ${!SH&&lk.length?`<h3>💾 שמורים במכשיר</h3><div class="grid">${lk.map(k=>`<button class="card" data-hloc="${esc(k)}" data-hq="${esc(k.toLowerCase())}"><div class="th">${thumbOf(loc[k],'loc|'+k)}</div><div class="nm">${esc(k)}</div><div class="sub">${(loc[k].objs||[]).length} רכיבים</div></button>`).join('')}</div>`:''}</div>${side}</div></div>`;H.scrollTop=sTop;}
+  ${!SH&&lk.length?`<h3>💾 שמורים במכשיר</h3><div class="grid">${lk.map(k=>`<button class="card" data-hloc="${esc(k)}" data-hq="${esc(k.toLowerCase())}"><div class="th">${docThumb(loc[k],'loc|'+k)}</div><div class="nm">${esc(k)}</div><div class="sub">${(loc[k].objs||[]).length} רכיבים</div></button>`).join('')}</div>`:''}</div>${side}</div></div>`;H.scrollTop=sTop;}
 /* desktop: drag a drawing card onto a folder tile */
 function homeDnD(H){H.addEventListener('dragstart',e=>{const c=e.target.closest&&e.target.closest('[data-hopen]');if(!c)return;e.dataTransfer.setData('text/ohad-doc',c.dataset.hopen);e.dataTransfer.effectAllowed='move';});
  H.addEventListener('dragover',e=>{const f=e.target.closest('[data-hf]');if(f&&[...e.dataTransfer.types].includes('text/ohad-doc')){e.preventDefault();f.classList.add('drop');}});
