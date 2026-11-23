@@ -4294,6 +4294,11 @@ function setsApply(rs,atStart){let ch=false;try{SYNC_KEYS.forEach(k=>{const v=rs
  if(!ch)return;let rl=false;try{rl=atStart&&!sessionStorage.getItem('ohadcad.setrl');if(rl)sessionStorage.setItem('ohadcad.setrl','1');}catch(e){}
  if(rl){flushSave();try{sessionStorage.removeItem('ohadcad.homeShown');}catch(e){}setTimeout(()=>location.reload(),300);}else toast('ההגדרות עודכנו ממכשיר אחר — חלק מהן יחולו בפתיחה הבאה של האפליקציה');}
 setInterval(()=>{if(!PRINIT)return;const o=setSnap(),j=JSON.stringify(o);if(j!==SETS){SETS=j;prefsPush({set:setEnc(o)});}},3000);
+/* send this device's settings to the account right now (before a reload, or when the app goes to the background),
+   so the account's older copy doesn't win at the next start; resolves within 2.5 s at most */
+function setsPushNow(){try{if(!PREFS_OK()||!PRINIT)return Promise.resolve();const o=setSnap(),j=JSON.stringify(o);if(j===SETS)return Promise.resolve();SETS=j;delete PRQ.set;
+ return Promise.race([SH.prefs.set({set:setEnc(o)}),new Promise(r=>setTimeout(r,2500))]).catch(()=>{});}catch(e){return Promise.resolve();}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)setsPushNow();});
 setTimeout(()=>prefsInit().catch(()=>{}),500);
 // if the account couldn't be read at start (offline, rules not yet published) try again when the app comes back to the front
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!PRINIT)prefsInit().catch(()=>{});});
@@ -4590,7 +4595,7 @@ const I18N={on:false,D:null,RX:[],busy:false,
   this.node(document.body);new MutationObserver(ms=>{if(this.busy)return;this.busy=true;try{for(const m of ms){if(m.type==='characterData')this.node(m.target);else if(m.type==='attributes')this.node(m.target);else m.addedNodes.forEach(x=>this.node(x));}}finally{this.busy=false;}})
    .observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['title','placeholder']});}};
 if(uiLang()==='en'){const sc=document.createElement('script');sc.src='i18n/en.js';sc.onload=()=>I18N.start();document.head.appendChild(sc);}
-function toggleLang(){const en=uiLang()!=='en';try{localStorage.setItem(LANG_KEY,en?'en':'he');}catch(e){}toast(en?'Switching to English…':'עובר לעברית…');setTimeout(()=>{try{if(SH&&SH.refresh){SH.refresh();return;}}catch(e){}location.reload();},400);}
+function toggleLang(){const en=uiLang()!=='en';try{localStorage.setItem(LANG_KEY,en?'en':'he');}catch(e){}toast(en?'Switching to English…':'עובר לעברית…');setsPushNow().then(()=>{try{if(SH&&SH.refresh){SH.refresh();return;}}catch(e){}location.reload();});}
 const PRO_KEY='ohadcad.look';
 function uiPro(){try{return localStorage.getItem(PRO_KEY)!=='classic';}catch(e){return true;}}
 function applyUI(){document.body.classList.toggle('uil',uiLight());document.body.classList.toggle('pro',uiPro());}
@@ -4708,7 +4713,7 @@ document.addEventListener('pointerover',e=>{if(!ddHover.matches||e.pointerType!=
    The shell's ⟳ button and a pull down on the top bars both land here: any
    pending save goes out first, then the whole app reloads. */
 async function appRefresh(){const el=$('ptr');if(el){el.classList.add('go');el.querySelector('span').textContent='מרענן…';}
- try{persist();await Promise.race([flushSave()||Promise.resolve(),new Promise(r=>setTimeout(r,4000))]);}catch(e){}
+ try{persist();await Promise.race([Promise.all([flushSave()||Promise.resolve(),setsPushNow()]),new Promise(r=>setTimeout(r,4000))]);}catch(e){}
  if(SH&&SH.refresh)SH.refresh();else location.reload();}
 (()=>{const el=document.createElement('div');el.id='ptr';el.innerHTML='<i>⟳</i><span></span>';document.body.appendChild(el);let P=null;const NEED=90;
  document.addEventListener('touchstart',e=>{if(e.touches.length!==1||!e.target.closest('#top,#docTabs')){P=null;return;}P={x:e.touches[0].clientX,y:e.touches[0].clientY,d:0};},{passive:true});
