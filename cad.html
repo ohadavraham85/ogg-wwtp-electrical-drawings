@@ -693,7 +693,7 @@ body.pro.uil #panel{border-width:0 0 0 1px}
 #home .hero h2{margin:0 0 6px;font-size:22px}#home .hero .meta{color:var(--mut);font-size:13.5px;line-height:1.6}
 #home .hero .th{height:170px}#home .th{background:#f4f4f1;border-radius:10px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden}
 #home .th svg{width:100%;height:100%}#home .th .no{color:#9ca3af;font-size:34px}
-#home .acts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}
+#home .acts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:18px}
 #home .act{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;color:var(--txt);font:700 14.5px Heebo,Arial,sans-serif}
 #home .act b{display:block;font-size:26px;margin-bottom:4px}#home .act:hover{border-color:var(--acc)}
 #home h3{font-size:16px;margin:20px 2px 10px;display:flex;gap:8px;align-items:center}#home h3 small{color:var(--mut);font-weight:400;font-size:12.5px}
@@ -704,6 +704,14 @@ body.pro.uil #panel{border-width:0 0 0 1px}
 #home .q{width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-size:15px;margin-bottom:4px}
 #home .stats{display:flex;gap:8px;flex-wrap:wrap;margin:-4px 0 6px}#home .stats span{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12.5px;color:var(--mut)}
 #home .empty{color:var(--mut);font-size:14px;padding:8px 2px}
+body.homeon #modal{z-index:70}body.homeon #toast{z-index:80;top:auto;bottom:calc(24px + env(safe-area-inset-bottom))}
+#home .hstar.hmv{left:52px;font-size:15px}
+#home .folds{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+#home .fold{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;color:var(--txt);font:600 14.5px Heebo,Arial,sans-serif;text-align:right}
+#home .fold .fi{font-size:22px}#home .fold .fn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#home .fold .fc{color:var(--mut);font-size:12.5px;background:var(--bg);border-radius:10px;padding:2px 8px}
+#home .fold.on,#home .fold.drop{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc) inset}#home .fold.add{border-style:dashed;color:var(--mut)}
+#home .fhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:20px 2px 12px}
+#home .fbk{background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:8px 12px;cursor:pointer;font:600 13.5px Heebo,Arial,sans-serif}
 #home .hstar{position:absolute;top:12px;left:12px;z-index:1;width:34px;height:34px;border-radius:50%;background:rgba(17,24,39,.72);color:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer}
 #home .hstar.on{color:#fbbf24}#home .hstar.big{position:static;display:inline-flex;vertical-align:middle;margin-inline-start:8px;background:var(--ctl)}
 #home .hset{display:block;width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-size:20px;cursor:pointer}
@@ -719,7 +727,7 @@ body.pro.uil #panel{border-width:0 0 0 1px}
 #home .srow .st{font-size:12px;padding:3px 9px;border-radius:12px;background:var(--ctl);color:var(--mut)}#home .srow .st.on{background:var(--acc-tint,rgba(255,154,31,.18));color:var(--acc)}
 #home .srow:hover{background:var(--ctl)}
 
-@media (max-width:700px){#home .hero{grid-template-columns:1fr}#home .hero .th{height:150px;order:-1}#home .acts{grid-template-columns:repeat(2,minmax(0,1fr))}#home .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}#home .card .th{height:96px}#home .hwrap{padding:12px 12px calc(24px + env(safe-area-inset-bottom))}}
+@media (max-width:700px){#home .hero{grid-template-columns:1fr}#home .hero .th{height:150px;order:-1}#home .acts{grid-template-columns:repeat(3,minmax(0,1fr))}#home .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}#home .card .th{height:96px}#home .hwrap{padding:12px 12px calc(24px + env(safe-area-inset-bottom))}}
 
 /* the shell's top row has the menu and home buttons; the tool's own copies stay on phones (the row is hidden there) */
 body.shnav #bMenu,body.shnav #bHome{display:none}
@@ -3699,7 +3707,7 @@ function patchWorld(items){const seen=new Map();for(const n of [...world.childre
   if(n.__s!==str){n.innerHTML=str;n.__s=str;}
   if(n!==cur)world.insertBefore(n,cur);else cur=cur.nextSibling;}
  while(cur){const nx=cur.nextSibling;cur.remove();cur=nx;}}
-function renderNow(){ADIC=null;world.style.color=isLight()?'#1f2937':'#e5e7eb';XRI=state.xrShow?xrIndex():null;ABI=state.ab&&state.ab.on?abIndex():null;if(state.tab!=='sld')glandAuto();drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}
+function renderNow(){if(HOME_OPEN&&HOME_ST&&state!==HOME_ST)homeClose();ADIC=null;world.style.color=isLight()?'#1f2937':'#e5e7eb';XRI=state.xrShow?xrIndex():null;ABI=state.ab&&state.ab.on?abIndex():null;if(state.tab!=='sld')glandAuto();drawnS=view.s;try{wireLayout();}catch(e){WL=new Map();WG=new Map();}
  const fast=state.tab!=='both'&&!(state.tab==='sld'&&sldDark);LODMIN=2.2/view.s;let s,P=null;
  try{if(fast){PIECES=[];content({sel:true});P=PIECES;}else s=layoutSVG()+axesSVG()+content({sel:true});}finally{PIECES=null;}
  const pre=fast?layoutSVG()+axesSVG():'';
@@ -4007,7 +4015,7 @@ function redo(){if(hi<hist.length-1){hi++;restore(hist[hi]);}}
 const SH=(()=>{try{return window.parent!==window&&window.parent.panelDesignsBridge||null;}catch(e){return null;}})();
 let cloudId=null;try{cloudId=localStorage.getItem('epd.cloudId')||null;}catch(e){}
 const DEEP=(()=>{try{return new URLSearchParams(location.search).get('d');}catch(e){return null;}})();
-async function openCloudDoc(id){const r=await SH.load(id);if(!r){toast('הלוח לא נמצא');return false;}recentAdd(r.id||id);await flushSave();let inf=null;try{inf=await SH.info(r.id||id);}catch(e){}state=JSON.parse(r.data);state.name=r.name;setCloud(r.id||id);cloudStamp=inf?inf.updatedAt:null;sel=null;hist=[];hi=-1;lastSaved=JSON.stringify(state);commit();lastSaved=JSON.stringify(state);clearTimeout(saveT);saveT=null;baseStore();markSaved();renderNow();fit();toast('נפתח: '+r.name);return true;}
+async function openCloudDoc(id){const r=await SH.load(id);if(!r){toast('הלוח לא נמצא');return false;}if(HOME_OPEN)homeClose();recentAdd(r.id||id);await flushSave();let inf=null;try{inf=await SH.info(r.id||id);}catch(e){}state=JSON.parse(r.data);state.name=r.name;setCloud(r.id||id);cloudStamp=inf?inf.updatedAt:null;sel=null;hist=[];hi=-1;lastSaved=JSON.stringify(state);commit();lastSaved=JSON.stringify(state);clearTimeout(saveT);saveT=null;baseStore();markSaved();renderNow();fit();toast('נפתח: '+r.name);return true;}
 function setCloud(id){cloudId=id;if(id)try{recentAdd(id);}catch(e){}try{if(id)localStorage.setItem('epd.cloudId',id);else localStorage.removeItem('epd.cloudId');}catch(e){}}
 function fmtWhen(iso){try{return new Date(iso).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return iso||'';}}
 function partsCount(){return panelObjs().filter(o=>o.type!=='wire'&&o.type!=='label').length;}
@@ -4058,7 +4066,7 @@ async function cloudSync(){if(!SH||!cloudId||CSYNC)return;if(saving){clearTimeou
   const r=await SH.load(cloudId);if(!r||!r.data||saving)return;
   const cur=JSON.stringify(state);if(r.data===cur){lastSaved=cur;cloudStamp=d.updatedAt;baseStore();if(!saveT)setSaveSt('saved');return;}
   const dirty=lastSaved===null||cur!==lastSaved||!!saveT;if(dirty){localBackup(cur);try{const cp=JSON.parse(cur);await SH.save({name:(state.name||'לוח')+' (שינויים ממכשיר אחר שלא נשמרו)',data:JSON.stringify(cp),parts:(cp.objs||[]).length});}catch(e){}}clearTimeout(saveT);saveT=null;
-  state=JSON.parse(r.data);state.name=r.name;sel=null;multi.clear();hist=[];hi=-1;commit();clearTimeout(saveT);saveT=null;
+  state=JSON.parse(r.data);state.name=r.name;if(HOME_OPEN)HOME_ST=state;sel=null;multi.clear();hist=[];hi=-1;commit();clearTimeout(saveT);saveT=null;
   lastSaved=JSON.stringify(state);cloudStamp=d.updatedAt;baseStore();setSaveSt('saved');try{applyView();}catch(e){}renderNow();updateBar();
   toast(dirty?`הלוח עודכן ממכשיר אחר (${d.updatedBy||''}) — מה ששינית כאן נשמר כשרטוט נפרד בתיקייה: "${state.name} (שינויים ממכשיר אחר שלא נשמרו)"`:`הלוח עודכן — נטענו השינויים שנשמרו במכשיר אחר (${d.updatedBy||''})`);}
  catch(e){console.warn('cloudSync',e);}finally{CSYNC=false;}}
@@ -4085,16 +4093,16 @@ async function versionsDialog(){if(!SH||!SH.versions){toast('היסטוריית 
 async function openShared(){let ds=[];try{ds=await SH.list();}catch(e){toast('לא ניתן לקרוא את התיקייה המשותפת');return;}
  const loc=loadProjects(),lk=Object.keys(loc);
  const mine=d=>SH.me()&&d.createdBy===SH.me().label;ds.sort((a,b)=>(isFavDoc(b.id)?2:0)+(mine(b)?1:0)-(isFavDoc(a.id)?2:0)-(mine(a)?1:0));
- const row=d=>`<div style="display:flex;gap:8px;align-items:stretch"><button data-k="${esc(d.id)}" class="op" style="${d.id===cloudId?'outline:2px solid var(--acc);':''}">${mine(d)?'<span style="float:left;font-size:11.5px;background:#1e3a5f;color:#bfdbfe;border-radius:8px;padding:2px 7px">שלי</span>':''}<div style="font-size:16px;font-weight:700">📋 ${esc(d.name)} <span style="color:#999;font-size:13px;font-weight:400">(${d.parts} רכיבים)</span></div>
+ const row=d=>`<div style="display:flex;gap:8px;align-items:stretch"><button data-k="${esc(d.id)}" class="op" style="${d.id===cloudId?'outline:2px solid var(--acc);':''}">${mine(d)?'<span style="float:left;font-size:11.5px;background:#1e3a5f;color:#bfdbfe;border-radius:8px;padding:2px 7px">שלי</span>':''}<div style="font-size:16px;font-weight:700">📋 ${esc(d.name)}${d.folder?` <span style="font-size:12px;font-weight:600;background:var(--card,#222);border:1px solid #555;border-radius:8px;padding:1px 7px">📁 ${esc(d.folder)}</span>`:''} <span style="color:#999;font-size:13px;font-weight:400">(${d.parts} רכיבים)</span></div>
    <div style="color:#bdbdbd;font-size:12.5px;margin-top:4px">נוצר ע״י ${esc(d.createdBy)} · ${fmtWhen(d.createdAt)}${d.updatedAt===d.createdAt&&d.updatedDevice?' · 📱 '+esc(d.updatedDevice):''}</div>${d.updatedAt!==d.createdAt?`<div style="color:#bdbdbd;font-size:12.5px">נערך לאחרונה ע״י ${esc(d.updatedBy)} · ${fmtWhen(d.updatedAt)}${d.updatedDevice?' · 📱 '+esc(d.updatedDevice):''}</div>`:''}</button>
-   <button data-fv="${esc(d.id)}" title="מועדף" style="width:52px;flex:none;text-align:center;font-size:20px;${isFavDoc(d.id)?'color:#fbbf24':''}">${isFavDoc(d.id)?'★':'☆'}</button>${d.canDelete?`<button data-d="${esc(d.id)}" style="width:52px;flex:none;text-align:center">🗑</button>`:''}</div>`;
+   ${SH.setFolder?`<button data-mv="${esc(d.id)}" title="העבר לתיקייה" style="width:52px;flex:none;text-align:center;font-size:18px">📁</button>`:''}<button data-fv="${esc(d.id)}" title="מועדף" style="width:52px;flex:none;text-align:center;font-size:20px;${isFavDoc(d.id)?'color:#fbbf24':''}">${isFavDoc(d.id)?'★':'☆'}</button>${d.canDelete?`<button data-d="${esc(d.id)}" style="width:52px;flex:none;text-align:center">🗑</button>`:''}</div>`;
  let h=(ds.length+lk.length>0?`<input id="shQ" placeholder="🔍 חיפוש בשם, ביוצר או בתוך השרטוט…" autocomplete="off" style="margin-bottom:10px">`:'')+(ds.length?`<div class="plist">${ds.map(row).join('')}</div>`:'<div class="hint">התיקייה המשותפת ריקה. שמור לוח מהתפריט ("שמור בתיקייה המשותפת") כדי שיופיע כאן.</div>');
  if(lk.length)h+=`<div style="color:#8a8a8a;font-size:13px;margin:16px 2px 6px">שמורים רק במכשיר הזה — אפשר להעביר לתיקייה המשותפת</div><div class="plist">${lk.map(k=>`<div style="display:flex;gap:8px"><button data-lo="${esc(k)}">📋 ${esc(k)} <span style="color:#999;font-size:13px">(${loc[k].objs.length} רכיבים)</span></button><button data-up="${esc(k)}" style="width:auto;flex:none;padding:0 12px">⬆ העבר</button></div>`).join('')}</div>`;
  modal('התיקייה המשותפת',h);
  {const q=$('shQ');if(q){let tq=0;q.oninput=()=>{clearTimeout(tq);tq=setTimeout(async()=>{const t=q.value.trim().toLowerCase();let ids=null;try{ids=t&&SH.find?new Set(await SH.find(t)):null;}catch(e){}
   $('mBody').querySelectorAll('.plist>div').forEach(r=>{const k=r.querySelector('[data-k]');r.style.display=!t||r.textContent.toLowerCase().includes(t)||(ids&&k&&ids.has(k.dataset.k))?'':'none';});},200);};setTimeout(()=>q.focus(),50);}}
- $('mBody').onclick=async e=>{const fv=e.target.closest('[data-fv]');if(fv){const on=favDocToggle(fv.dataset.fv);fv.textContent=on?'★':'☆';fv.style.color=on?'#fbbf24':'';return;}const o=e.target.closest('[data-k]'),d=e.target.closest('[data-d]'),lo=e.target.closest('[data-lo]'),up=e.target.closest('[data-up]');
-  if(o){if(await openCloudDoc(o.dataset.k))closeModal();else openShared();}
+ $('mBody').onclick=async e=>{const mv=e.target.closest('[data-mv]');if(mv){foldPick(mv.dataset.mv,openShared);return;}const fv=e.target.closest('[data-fv]');if(fv){const on=favDocToggle(fv.dataset.fv);fv.textContent=on?'★':'☆';fv.style.color=on?'#fbbf24':'';return;}const o=e.target.closest('[data-k]'),d=e.target.closest('[data-d]'),lo=e.target.closest('[data-lo]'),up=e.target.closest('[data-up]');
+  if(o){if(await openCloudDoc(o.dataset.k)){closeModal();if(HOME_OPEN)homeClose();}else openShared();}
   if(d){const it=ds.find(x=>x.id===d.dataset.d);modal('מחיקת לוח',`<div class="hint">למחוק את "${esc(it?it.name:'')}" מהתיקייה המשותפת? הוא יימחק לכולם.</div>`,[{t:'מחק',cls:'pri',fn:async()=>{await SH.remove(d.dataset.d);if(cloudId===d.dataset.d)setCloud(null);toast('נמחק');openShared();}},{t:'ביטול',fn:()=>openShared()}]);}
   if(lo){setCloud(null);state=JSON.parse(JSON.stringify(loc[lo.dataset.lo]));sel=null;hist=[];hi=-1;commit();renderNow();fit();closeModal();toast('נפתח: '+lo.dataset.lo);}
   if(up){const k=up.dataset.up,s0=loc[k];try{await SH.save({name:k,data:JSON.stringify(s0),parts:s0.objs.filter(o=>o.type!=='wire'&&o.type!=='label').length});delete loc[k];saveProjects(loc);toast('הועבר לתיקייה המשותפת: '+k);openShared();}catch(err){toast('ההעברה נכשלה');}}};}
@@ -4288,7 +4296,7 @@ let PRINIT=false;async function prefsInit(){if(!PREFS_OK()||PRINIT)return;const 
 /* the device settings that follow the account to every device: toolbar, look, language, size, theme per document,
    grid / axes / terminals, pen, library view, drawer groups. Kept in the account's prefs under "set" (dots in the
    key names become "~"); the account's copy wins when the app starts, a change here is sent within a few seconds. */
-const SYNC_KEYS=['ohadcad.recent','ohadcad.favdocs','ohadcad.toolbar.v1','ohadcad.lang','ohadcad.look','ohadcad.ui','ohadcad.uiscale','ohadcad.font','ohadcad.icons','ohadcad.cross','ohadcad.libview','ohadcad.penc','ohadcad.penw','ohadcad.dsec','epd.themes','epd.grid','epd.gridbg','epd.axes','epd.terms'];
+const SYNC_KEYS=['ohadcad.recent','ohadcad.favdocs','ohadcad.folders','ohadcad.toolbar.v1','ohadcad.lang','ohadcad.look','ohadcad.ui','ohadcad.uiscale','ohadcad.font','ohadcad.icons','ohadcad.cross','ohadcad.libview','ohadcad.penc','ohadcad.penw','ohadcad.dsec','epd.themes','epd.grid','epd.gridbg','epd.axes','epd.terms'];
 let SETS='';
 function setSnap(){const o={};try{SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!=null)o[k]=v;});}catch(e){}return o;}
 const setEnc=o=>Object.fromEntries(Object.entries(o).map(([k,v])=>[k.replace(/\./g,'~'),v]));
@@ -4323,6 +4331,28 @@ const RECENT_KEY='ohadcad.recent',FAVD_KEY='ohadcad.favdocs';
 function favDocs(){try{return JSON.parse(localStorage.getItem(FAVD_KEY)||'[]');}catch(e){return [];}}
 const isFavDoc=id=>!!id&&favDocs().includes(id);
 function favDocToggle(id){if(!id)return false;let L=favDocs();const on=!L.includes(id);L=on?[id,...L]:L.filter(x=>x!==id);try{localStorage.setItem(FAVD_KEY,JSON.stringify(L));}catch(e){}setsPushNow&&setTimeout(()=>{try{setsPushNow();}catch(e){}},0);toast(on?'⭐ נוסף למועדפים':'הוסר מהמועדפים');return on;}
+/* shared folders: a drawing's `folder` field (bridge setFolder, seen by every user); folders made empty wait in ohadcad.folders (synced) */
+const FOLD_KEY='ohadcad.folders';let HOME_FOLD=null,HOME_ST=null,HOME_RT=0;
+function foldLocal(){try{return JSON.parse(localStorage.getItem(FOLD_KEY)||'[]');}catch(e){return [];}}
+function foldLocalSet(L){try{localStorage.setItem(FOLD_KEY,JSON.stringify([...new Set(L.filter(Boolean))]));}catch(e){}setTimeout(()=>{try{setsPushNow();}catch(e){}},0);}
+function foldNames(ds){const S=new Set(foldLocal());ds.forEach(d=>{if(d.folder)S.add(d.folder);});return [...S].sort((a,b)=>a.localeCompare(b,'he'));}
+async function foldMove(id,f){if(!SH||!SH.setFolder){toast('תיקיות זמינות רק בתיקייה המשותפת');return false;}try{await SH.setFolder(id,f);if(f)foldLocalSet([...foldLocal(),f]);toast(f?'הועבר לתיקייה "'+f+'"':'הוצא מהתיקייה');return true;}catch(e){toast('לא הצלחתי להעביר — אין חיבור או אין הרשאה');return false;}}
+/* folder picker for one drawing; after = what to show next */
+async function foldPick(id,after){let ds=[];try{ds=await SH.list();}catch(e){}const d=ds.find(x=>x.id===id),cur=d&&d.folder||'',F=foldNames(ds);
+ modal('העבר לתיקייה',`<div class="hint">${esc(d?d.name:'')}</div><div class="plist">${F.map(f=>`<button data-pf="${esc(f)}" style="${f===cur?'outline:2px solid var(--acc)':''}">📁 ${esc(f)} <span style="color:#999;font-size:13px">(${ds.filter(x=>x.folder===f).length})</span></button>`).join('')}${cur?'<button data-pf="">⤴ בלי תיקייה</button>':''}</div><div class="fld" style="margin-top:12px"><label>או תיקייה חדשה</label><input id="f_nf" placeholder="שם התיקייה"></div>`,
+  [{t:'צור והעבר',cls:'pri',fn:()=>{const n=($('f_nf').value||'').trim();if(!n){toast('הקלד שם לתיקייה');return false;}foldMove(id,n).then(()=>after&&after());}},{t:'ביטול',fn:()=>{after&&after();}}]);
+ $('mBody').onclick=e=>{const b=e.target.closest('[data-pf]');if(!b)return;closeModal();foldMove(id,b.dataset.pf).then(()=>after&&after());};}
+function foldNew(after){modal('תיקייה חדשה',`<div class="fld"><label>שם התיקייה</label><input id="f_nf" placeholder="למשל: מכון טיהור — מבנה B"></div><div class="hint">התיקייה משותפת לכל המשתמשים. מעבירים אליה שרטוט בכפתור 📁 שעל השרטוט, או בגרירה (במחשב).</div>`,[{t:'צור',cls:'pri',fn:()=>{const n=($('f_nf').value||'').trim().slice(0,60);if(!n){toast('הקלד שם');return false;}foldLocalSet([...foldLocal(),n]);HOME_FOLD=n;after&&after();}},{t:'ביטול'}]);setTimeout(()=>{const i=$('f_nf');if(i)i.focus();},50);}
+async function foldRename(old,after){modal('שינוי שם תיקייה',`<div class="fld"><label>שם חדש</label><input id="f_nf" value="${esc(old)}"></div>`,[{t:'שמור',cls:'pri',fn:async()=>{const n=($('f_nf').value||'').trim().slice(0,60);if(!n||n===old)return;let ds=[];try{ds=await SH.list();}catch(e){}for(const d of ds)if(d.folder===old)try{await SH.setFolder(d.id,n);}catch(e){}foldLocalSet([...foldLocal().filter(x=>x!==old),n]);HOME_FOLD=n;toast('שם התיקייה שונה');after&&after();}},{t:'ביטול'}]);}
+function foldDelete(f,after){modal('מחיקת תיקייה',`<div class="hint">למחוק את התיקייה "${esc(f)}"? השרטוטים שבה לא יימחקו — הם רק יוצאו מהתיקייה.</div>`,[{t:'מחק תיקייה',cls:'pri',fn:async()=>{let ds=[];try{ds=await SH.list();}catch(e){}for(const d of ds)if(d.folder===f)try{await SH.setFolder(d.id,'');}catch(e){}foldLocalSet(foldLocal().filter(x=>x!==f));HOME_FOLD=null;toast('התיקייה נמחקה');after&&after();}},{t:'ביטול'}]);}
+/* save the open drawing as a template: in the shared folder as kind 'tpl' (everyone sees it in "מתבנית"), or on this device */
+const UTPL_KEY='ohadcad.utpl';function utplLocal(){try{return JSON.parse(localStorage.getItem(UTPL_KEY)||'{}');}catch(e){return {};}}
+function saveAsTemplate(){modal('שמירה כתבנית',`<div class="fld"><label>שם התבנית</label><input id="f_tn" value="${esc((state.name||'תבנית').replace(/ \((עותק|גיבוי)\)$/,''))}"></div><div class="fld"><label>תיאור (לא חובה)</label><input id="f_td" placeholder="למשל: לוח 2 משאבות עם ממירים"></div><div class="hint">${SH?'התבנית נשמרת בתיקייה המשותפת ותופיע לכל המשתמשים בחלון "מתבנית". השרטוט הפתוח לא משתנה.':'התבנית נשמרת במכשיר הזה ותופיע בחלון "מתבנית".'}</div>`,
+ [{t:'שמור תבנית',cls:'pri',fn:async()=>{const n=($('f_tn').value||'').trim()||'תבנית',c=JSON.parse(JSON.stringify(state));delete c.tpl;delete c.dwgno;delete c.ab;c.name=n;c.tdesc=($('f_td').value||'').trim();const data=JSON.stringify(c);
+  if(SH){try{await SH.save({name:n,data,parts:(c.objs||[]).length,kind:'tpl'});toast('נשמר כתבנית: '+n);}catch(e){toast(e&&e.code==='too-big'?'השרטוט גדול מדי לתבנית':'שמירת התבנית נכשלה');}}
+  else{const L=utplLocal();L['l'+Date.now()]={name:n,data};try{localStorage.setItem(UTPL_KEY,JSON.stringify(L));toast('נשמר כתבנית: '+n);}catch(e){toast('אין מקום במכשיר לתבנית');}}}},{t:'ביטול'}]);}
+async function newFromUserTpl(id){let data=null;try{if(SH){const r=await SH.load(id);data=r&&r.data;}else{const t=utplLocal()[id];data=t&&t.data;}}catch(e){}if(!data){toast('התבנית לא נמצאה');return;}
+ if(typeof flushSave==='function')await flushSave();const T=JSON.parse(data);delete T.dwgno;delete T.tdesc;delete T.tpl;setCloud(null);lastSaved=null;cloudStamp=null;state=T;sel=null;multi.clear();hist=[];hi=-1;commit();state.tpl=tplHash();try{applyView();}catch(e){}renderNow();fit();toast('נפתח מתבנית: '+(T.name||'')+' — נשמר בתיקייה המשותפת רק אחרי שתשנה בו משהו');}
 function favCurrent(){if(!cloudId){toast('השרטוט עוד לא נשמר בתיקייה המשותפת');return;}favDocToggle(cloudId);}
 function recentDocs(){try{return JSON.parse(localStorage.getItem(RECENT_KEY)||'[]');}catch(e){return [];}}
 function recentAdd(id){if(!id)return;try{const L=[{id,t:Date.now()},...recentDocs().filter(x=>x.id!==id)].slice(0,24);localStorage.setItem(RECENT_KEY,JSON.stringify(L));}catch(e){}}
@@ -4334,14 +4364,18 @@ function thumbOf(data,key){if(key&&HTHC.has(key))return HTHC.get(key);let out='<
    if(x1>x0){const pd=Math.max(x1-x0,y1-y0)*.04;out=`<svg viewBox="${r2(x0-pd)} ${r2(y0-pd)} ${r2(x1-x0+2*pd)} ${r2(y1-y0+2*pd)}" preserveAspectRatio="xMidYMid meet" style="direction:ltr;color:#111">${b.replace(/\sdata-[a-z0-9-]+="[^"]*"/g,'')}</svg>`;}}}catch(e){}
  if(key)HTHC.set(key,out);return out;}
 let HOME_OPEN=false;
-async function homeOpen(keepSide){HOME_OPEN=true;let H=$('home');if(!H){H=document.createElement('div');H.id='home';document.body.appendChild(H);H.addEventListener('click',homeClick);H.addEventListener('input',homeFilter);}
+async function homeOpen(keepSide){HOME_OPEN=true;HOME_ST=state;document.body.classList.add('homeon');let H=$('home');if(!H){H=document.createElement('div');H.id='home';document.body.appendChild(H);H.addEventListener('click',homeClick);H.addEventListener('input',homeFilter);homeDnD(H);}const sTop=H.scrollTop;
  H.classList.remove('hidden');H.style.display='';H.classList.toggle('sopen',!!keepSide);const me=SH&&SH.me&&(typeof SH.me==='function'?SH.me():SH.me);
  let ds=[];if(SH)try{ds=await SH.list();}catch(e){}const byId=new Map(ds.map(d=>[d.id,d])),loc=loadProjects();
  const cur=JSON.stringify(state),curTh=thumbOf(cur,null),curD=cloudId&&byId.get(cloudId);
- const card=(d,th,sub)=>`<button class="card" style="position:relative" data-hopen="${esc(d.id)}" data-hq="${esc((d.name+' '+(d.createdBy||'')+' '+(d.updatedBy||'')).toLowerCase())}"><span class="hstar${isFavDoc(d.id)?' on':''}" data-hstar="${esc(d.id)}" title="מועדף">${isFavDoc(d.id)?'★':'☆'}</span><div class="th">${th}</div><div class="nm">${esc(d.name)}</div><div class="sub">${sub}</div></button>`;
+ const card=(d,th,sub)=>`<button class="card" draggable="true" style="position:relative" data-hopen="${esc(d.id)}" data-hq="${esc((d.name+' '+(d.createdBy||'')+' '+(d.updatedBy||'')).toLowerCase())}"><span class="hstar${isFavDoc(d.id)?' on':''}" data-hstar="${esc(d.id)}" title="מועדף">${isFavDoc(d.id)?'★':'☆'}</span>${SH&&SH.setFolder?`<span class="hstar hmv" data-hmv="${esc(d.id)}" title="העבר לתיקייה">📁</span>`:''}<div class="th">${th}</div><div class="nm">${esc(d.name)}</div><div class="sub">${d.folder&&HOME_FOLD!==d.folder?'📁 '+esc(d.folder)+' · ':''}${sub}</div></button>`;
  const thOf=async d=>{const k=d.id+'|'+d.updatedAt;if(HTHC.has(k))return HTHC.get(k);try{const r=await SH.load(d.id);return thumbOf(r&&r.data,k);}catch(e){return '<span class="no">▦</span>';}};
  const favs=favDocs().map(id=>byId.get(id)).filter(Boolean),rec=recentDocs().map(x=>byId.get(x.id)).filter(d=>d&&!favs.includes(d)).slice(0,8),latest=ds.filter(d=>!rec.includes(d)&&!favs.includes(d)).slice(0,8);
- const favH=[];for(const d of favs)favH.push(card(d,await thOf(d),`${fmtWhen(d.updatedAt)}${d.updatedDevice?' · '+esc(d.updatedDevice):''}`));
+ const FN=SH?foldNames(ds):[];if(HOME_FOLD&&HOME_FOLD!=='★'&&!FN.includes(HOME_FOLD))HOME_FOLD=null;
+ const inF=HOME_FOLD==='★'?favs:HOME_FOLD?ds.filter(d=>d.folder===HOME_FOLD):[];const favH=[];for(const d of inF)favH.push(card(d,await thOf(d),`${esc(d.updatedBy||d.createdBy||'')} · ${fmtWhen(d.updatedAt)}${d.updatedDevice?' · '+esc(d.updatedDevice):''}`));
+ const ftile=(k,ic,nm,n)=>`<button class="fold${HOME_FOLD===k?' on':''}" data-hf="${esc(k)}" data-hq="${esc(nm.toLowerCase())}"><span class="fi">${ic}</span><span class="fn">${esc(nm)}</span><span class="fc">${n}</span></button>`;
+ const foldH=SH?`<h3>📁 תיקיות <small>משותפות לכל המשתמשים</small></h3><div class="folds">${ftile('★','⭐','מועדפים',favs.length)}${FN.map(f=>ftile(f,'📁',f,ds.filter(d=>d.folder===f).length)).join('')}${SH.setFolder?'<button class="fold add" data-h="fnew"><span class="fi">＋</span><span class="fn">תיקייה חדשה</span></button>':''}</div>`:'';
+ const fview=HOME_FOLD?`<div class="fhead"><button class="fbk" data-h="fback">→ כל השרטוטים</button><h3 style="margin:0">${HOME_FOLD==='★'?'⭐ מועדפים <small>שלך בלבד</small>':'📁 '+esc(HOME_FOLD)}</h3>${HOME_FOLD!=='★'?'<span style="flex:1"></span><button class="fbk" data-h="fren">✎ שנה שם</button><button class="fbk" data-h="fdel">🗑 מחק תיקייה</button>':''}</div>${favH.length?`<div class="grid">${favH.join('')}</div>`:`<div class="empty">${HOME_FOLD==='★'?'סמן שרטוט בכוכב ☆ כדי שיופיע כאן.':'התיקייה ריקה — העבר אליה שרטוט בכפתור 📁 שעל השרטוט, או גרור אותו אל התיקייה.'}</div>`}`:'';
  const recH=[];for(const d of rec)recH.push(card(d,await thOf(d),`${fmtWhen(d.updatedAt)}${d.updatedDevice?' · '+esc(d.updatedDevice):''}`));
  const latH=[];for(const d of latest)latH.push(card(d,await thOf(d),`${esc(d.updatedBy||d.createdBy||'')} · ${fmtWhen(d.updatedAt)}${d.updatedDevice?' · '+esc(d.updatedDevice):''}`));
  const mine=me?ds.filter(d=>d.createdBy===me.label).length:0,lk=Object.keys(loc);
@@ -4352,23 +4386,35 @@ async function homeOpen(keepSide){HOME_OPEN=true;let H=$('home');if(!H){H=docume
   <div class="box" style="font-size:12.5px;color:var(--mut);line-height:1.7">${me&&me.label?esc(me.label)+'<br>':''}${SH&&SH.version?'גרסה '+esc(SH.version):''}</div></div>`;
  H.innerHTML=`<div class="hwrap"><div class="htop"><img src="icons/${uiLight()?'wordmark-light':'wordmark-dark'}.svg" alt="OhadCad"><div class="hello">${me&&me.label?'שלום, '+esc(me.label):''}</div><button class="hset" data-h="set" title="הגדרות וחשבון">⚙</button><button class="hx" data-h="close">המשך לשרטוט ←</button></div>
   <div class="hcols"><div class="main"><div class="hero"><div><div class="meta">השרטוט הפתוח</div><h2>${esc(state.name||'לוח חדש')}${cloudId?` <span class="hstar big${isFavDoc(cloudId)?' on':''}" data-hstar="${esc(cloudId)}" title="מועדף">${isFavDoc(cloudId)?'★':'☆'}</span>`:''}</h2><div class="meta">${state.objs.length} רכיבים${state.dwgno?' · מס׳ שרטוט '+esc(state.dwgno):''}${curD?`<br>נערך לאחרונה ע״י ${esc(curD.updatedBy||'')} · ${fmtWhen(curD.updatedAt)}${curD.updatedDevice?` · 📱 ${esc(curD.updatedDevice)}`:''}`:''}</div><div style="margin-top:14px"><button class="hx" data-h="close">פתח והמשך לעבוד</button></div></div><div class="th">${curTh}</div></div>
-  <div class="acts"><button class="act" data-h="new"><b>＋</b>שרטוט חדש</button><button class="act" data-h="tpl"><b>▦</b>מתבנית</button><button class="act" data-h="open"><b>📂</b>${SH?'כל השרטוטים':'פרויקטים'}</button><button class="act" data-h="lib"><b>🔍</b>ספריית רכיבים</button></div>
+  <div class="acts"><button class="act" data-h="new"><b>＋</b>שרטוט חדש</button><button class="act" data-h="tpl"><b>▦</b>מתבנית</button><button class="act" data-h="open"><b>📂</b>${SH?'כל השרטוטים':'פרויקטים'}</button><button class="act" data-h="lib"><b>🔍</b>ספריית רכיבים</button><button class="act" data-h="savetpl"><b>⧉</b>שמור כתבנית</button></div>
   ${ds.length?`<input class="q" id="homeQ" placeholder="🔍 חיפוש שרטוט לפי שם או לפי מי שערך…" autocomplete="off"><div class="stats"><span>${ds.length} שרטוטים בתיקייה</span>${me?`<span>${mine} שלך</span>`:''}${lk.length?`<span>${lk.length} במכשיר הזה</span>`:''}</div>`:''}
-  ${SH?`<h3>⭐ מועדפים <small>${favH.length?favH.length+' שרטוטים':'סמן שרטוט בכוכב כדי שיופיע כאן'}</small></h3>${favH.length?`<div class="grid">${favH.join('')}</div>`:''}`:''}
+  ${foldH}${fview}${HOME_FOLD?'':`
   <h3>🕘 פתחת לאחרונה <small>במכשירים שלך</small></h3>${recH.length?`<div class="grid">${recH.join('')}</div>`:'<div class="empty">עוד לא פתחת שרטוטים מהתיקייה — הם יופיעו כאן.</div>'}
-  ${latH.length?`<h3>☁ עודכנו לאחרונה בתיקייה <small>כל המשתמשים</small></h3><div class="grid">${latH.join('')}</div>`:''}
-  ${!SH&&lk.length?`<h3>💾 שמורים במכשיר</h3><div class="grid">${lk.map(k=>`<button class="card" data-hloc="${esc(k)}" data-hq="${esc(k.toLowerCase())}"><div class="th">${thumbOf(loc[k],'loc|'+k)}</div><div class="nm">${esc(k)}</div><div class="sub">${(loc[k].objs||[]).length} רכיבים</div></button>`).join('')}</div>`:''}</div>${side}</div></div>`;}
-function homeClose(){HOME_OPEN=false;const H=$('home');if(H)H.style.display='none';try{renderNow();fit();}catch(e){}}
+  ${latH.length?`<h3>☁ עודכנו לאחרונה בתיקייה <small>כל המשתמשים</small></h3><div class="grid">${latH.join('')}</div>`:''}`}
+  ${!SH&&lk.length?`<h3>💾 שמורים במכשיר</h3><div class="grid">${lk.map(k=>`<button class="card" data-hloc="${esc(k)}" data-hq="${esc(k.toLowerCase())}"><div class="th">${thumbOf(loc[k],'loc|'+k)}</div><div class="nm">${esc(k)}</div><div class="sub">${(loc[k].objs||[]).length} רכיבים</div></button>`).join('')}</div>`:''}</div>${side}</div></div>`;H.scrollTop=sTop;}
+/* desktop: drag a drawing card onto a folder tile */
+function homeDnD(H){H.addEventListener('dragstart',e=>{const c=e.target.closest&&e.target.closest('[data-hopen]');if(!c)return;e.dataTransfer.setData('text/ohad-doc',c.dataset.hopen);e.dataTransfer.effectAllowed='move';});
+ H.addEventListener('dragover',e=>{const f=e.target.closest('[data-hf]');if(f&&[...e.dataTransfer.types].includes('text/ohad-doc')){e.preventDefault();f.classList.add('drop');}});
+ H.addEventListener('dragleave',e=>{const f=e.target.closest('[data-hf]');if(f)f.classList.remove('drop');});
+ H.addEventListener('drop',async e=>{const f=e.target.closest('[data-hf]'),id=e.dataTransfer.getData('text/ohad-doc');if(!f||!id)return;e.preventDefault();f.classList.remove('drop');const k=f.dataset.hf;if(k==='★'){if(!isFavDoc(id))favDocToggle(id);}else await foldMove(id,k);homeRefresh();});}
+function homeRefresh(){if(!HOME_OPEN)return;const H=$('home');homeOpen(!!(H&&H.classList.contains('sopen')));}
+function homeClose(){HOME_OPEN=false;HOME_ST=null;document.body.classList.remove('homeon');const H=$('home');if(H)H.style.display='none';try{renderNow();fit();}catch(e){}}
 function homeFilter(e){if(e.target.id!=='homeQ')return;const q=e.target.value.trim().toLowerCase();document.querySelectorAll('#home [data-hq]').forEach(c=>{c.style.display=!q||c.dataset.hq.includes(q)?'':'none';});}
 let HSM=[];
-async function homeClick(e){const hs=e.target.closest('[data-hstar]');if(hs){e.stopPropagation();favDocToggle(hs.dataset.hstar);homeOpen(document.getElementById('home').classList.contains('sopen'));return;}const sr=e.target.closest('[data-hs]');if(sr){const k=sr.dataset.hs;
+async function homeClick(e){const mv=e.target.closest('[data-hmv]');if(mv){e.stopPropagation();foldPick(mv.dataset.hmv,homeRefresh);return;}const hs=e.target.closest('[data-hstar]');if(hs){e.stopPropagation();favDocToggle(hs.dataset.hstar);homeRefresh();return;}
+ const hf=e.target.closest('[data-hf]');if(hf){HOME_FOLD=HOME_FOLD===hf.dataset.hf?null:hf.dataset.hf;homeRefresh();return;}const sr=e.target.closest('[data-hs]');if(sr){const k=sr.dataset.hs;
   if(k==='ui'){toggleUI();homeOpen(1);}else if(k==='pro'){togglePro();homeOpen(1);}else if(k==='lang')toggleLang();else if(k==='terms'){toggleTerms();homeOpen(1);}else if(k==='axes'){toggleAxes();homeOpen(1);}
-  else if(k==='disp'){homeClose();displayDialog();}else if(k==='tb'){homeClose();tbEditor();}else if(k==='sync'){homeClose();prefsCheck();}
-  else if(k.startsWith('acc')){const m=HSM[+k.slice(3)];homeClose();if(m&&m[1])m[1]();}return;}
+  else if(k==='disp')displayDialog();else if(k==='tb')tbEditor();else if(k==='sync')prefsCheck();
+  else if(k.startsWith('acc')){const m=HSM[+k.slice(3)];if(m&&m[1])m[1]();}return;}
  const b=e.target.closest('[data-h],[data-hopen],[data-hloc]');if(!b)return;
  if(b.dataset.hopen){const id=b.dataset.hopen;homeClose();if(id!==cloudId)await openCloudDoc(id).catch(()=>toast('לא הצלחתי לפתוח את השרטוט'));return;}
  if(b.dataset.hloc){homeClose();const P=loadProjects()[b.dataset.hloc];if(P){await flushSave();state=JSON.parse(JSON.stringify(P));state.name=b.dataset.hloc;setCloud(null);sel=null;hist=[];hi=-1;commit();renderNow();fit();}return;}
- const k=b.dataset.h;if(k==='set'||k==='sclose'){$('home').classList.toggle('sopen',k==='set');return;}homeClose();if(k==='new')newProject();else if(k==='tpl')templatesDialog();else if(k==='open')(SH?openShared:openProjects)();else if(k==='lib'){try{openPanel('lib','ספרייה');}catch(e){}}}
+ const k=b.dataset.h;if(k==='set'||k==='sclose'){$('home').classList.toggle('sopen',k==='set');return;}
+ // dialogs open over the home screen and come back to it; only opening a drawing (or the library / the drawing itself) leaves it
+ if(k==='fback'){HOME_FOLD=null;homeRefresh();return;}if(k==='fnew'){foldNew(homeRefresh);return;}if(k==='fren'){foldRename(HOME_FOLD,homeRefresh);return;}if(k==='fdel'){foldDelete(HOME_FOLD,homeRefresh);return;}
+ if(k==='new'){newProject();return;}if(k==='tpl'){templatesDialog();return;}if(k==='open'){(SH?openShared:openProjects)();return;}if(k==='savetpl'){saveAsTemplate();return;}
+ homeClose();if(k==='lib'){try{openPanel('lib','ספרייה');}catch(e){}}}
+if(SH&&SH.onChange)try{SH.onChange(()=>{if(!HOME_OPEN)return;clearTimeout(HOME_RT);HOME_RT=setTimeout(()=>{const q=$('homeQ'),m=$('modal');if((q&&q.value)||(m&&!m.classList.contains('hidden')))return;homeRefresh();},900);});}catch(e){}
 document.addEventListener('keydown',e=>{if(HOME_OPEN&&e.key==='Escape'){e.preventDefault();const H=$('home');if(H&&H.classList.contains('sopen'))H.classList.remove('sopen');else homeClose();}},true);
 /* ================= favourites bar =================
    Up to 10 parts per view (panel front / single-line), starred in the library;
@@ -4604,7 +4650,7 @@ const I18N={on:false,D:null,RX:[],busy:false,
   this.node(document.body);new MutationObserver(ms=>{if(this.busy)return;this.busy=true;try{for(const m of ms){if(m.type==='characterData')this.node(m.target);else if(m.type==='attributes')this.node(m.target);else m.addedNodes.forEach(x=>this.node(x));}}finally{this.busy=false;}})
    .observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['title','placeholder']});}};
 if(uiLang()==='en'){const sc=document.createElement('script');sc.src='i18n/en.js';sc.onload=()=>I18N.start();document.head.appendChild(sc);}
-function toggleLang(){const en=uiLang()!=='en';try{localStorage.setItem(LANG_KEY,en?'en':'he');}catch(e){}toast(en?'Switching to English…':'עובר לעברית…');setsPushNow().then(()=>{try{if(SH&&SH.refresh){SH.refresh();return;}}catch(e){}location.reload();});}
+function toggleLang(){if(HOME_OPEN)try{sessionStorage.removeItem('ohadcad.homeShown');}catch(e){}const en=uiLang()!=='en';try{localStorage.setItem(LANG_KEY,en?'en':'he');}catch(e){}toast(en?'Switching to English…':'עובר לעברית…');setsPushNow().then(()=>{try{if(SH&&SH.refresh){SH.refresh();return;}}catch(e){}location.reload();});}
 const PRO_KEY='ohadcad.look';
 function uiPro(){try{return localStorage.getItem(PRO_KEY)!=='classic';}catch(e){return true;}}
 function applyUI(){document.body.classList.toggle('uil',uiLight());document.body.classList.toggle('pro',uiPro());}
@@ -4721,7 +4767,7 @@ document.addEventListener('pointerover',e=>{if(!ddHover.matches||e.pointerType!=
 /* ================= refresh =================
    The shell's ⟳ button and a pull down on the top bars both land here: any
    pending save goes out first, then the whole app reloads. */
-async function appRefresh(){const el=$('ptr');if(el){el.classList.add('go');el.querySelector('span').textContent='מרענן…';}
+async function appRefresh(){if(HOME_OPEN)try{sessionStorage.removeItem('ohadcad.homeShown');}catch(e){}const el=$('ptr');if(el){el.classList.add('go');el.querySelector('span').textContent='מרענן…';}
  try{persist();await Promise.race([Promise.all([flushSave()||Promise.resolve(),setsPushNow()]),new Promise(r=>setTimeout(r,4000))]);}catch(e){}
  if(SH&&SH.refresh)SH.refresh();else location.reload();}
 (()=>{const el=document.createElement('div');el.id='ptr';el.innerHTML='<i>⟳</i><span></span>';document.body.appendChild(el);let P=null;const NEED=90;
@@ -6015,10 +6061,10 @@ function openDrawer(){const T=(ic,n,fn,tip,on)=>({ic,n,fn,tip:tip||n,on:!!on});
   shN=t=>String(t).replace(/^[^\p{L}\d(]+/u,'').replace(/^לוחות שנמחקו — שחזור$/,'לוחות שנמחקו').replace(/^ייבוא לוחות מהאפליקציה הקודמת$/,'ייבוא מהאפליקציה הישנה').replace(/^ארכיון: .*$/,'ארכיון תוכניות').replace(/^התנתקות \((.*)\)$/,'התנתקות');
  const S=[
   {k:'proj',t:'פרויקט',it:[T('newp','חדש',newProject,'פרויקט חדש'),
-   ...(SH?[T('open','פתח',openShared,'פתח מהתיקייה המשותפת'),T('save','שמור',saveShared,'שמור עכשיו בתיקייה המשותפת (נשמר גם אוטומטית)'),T('saveas','שמור עותק',()=>saveSharedAs(true),'שמור עותק בשם…')]:[T('open','פתח',openProjects,'פתח פרויקט שמור'),T('saveas','שמור בשם',saveAs,'שמור בשם…')]),T('tpl','מתבנית',templatesDialog,'פרויקט חדש מתבנית (דוגמאות)'),
+   ...(SH?[T('open','פתח',openShared,'פתח מהתיקייה המשותפת'),T('save','שמור',saveShared,'שמור עכשיו בתיקייה המשותפת (נשמר גם אוטומטית)'),T('saveas','שמור עותק',()=>saveSharedAs(true),'שמור עותק בשם…')]:[T('open','פתח',openProjects,'פתח פרויקט שמור'),T('saveas','שמור בשם',saveAs,'שמור בשם…')]),T('tpl','מתבנית',templatesDialog,'פרויקט חדש מתבנית (שלנו ודוגמאות)'),T('saveas','שמור כתבנית',saveAsTemplate,'שומר את השרטוט הפתוח כתבנית — תופיע לכולם בחלון "מתבנית"'),
    T('reset','גרסאות',versionsDialog,'היסטוריית הגרסאות של הלוח — שחזור או פתיחה כעותק'),
    T('info','פרטי פרויקט',()=>{sel=null;multi.clear();renderNow();editDialog();},'שם, מספר שרטוט, גרסה')]},
-  {k:'home',t:'מסך הבית',it:[T('view','מסך הבית',homeOpen,'מסך הבית: השרטוט הפתוח, שרטוטים אחרונים, חדש / מתבנית / פתח'),T('save',isFavDoc(cloudId)?'הסר ממועדפים':'למועדפים',favCurrent,'מוסיף את השרטוט הפתוח לתיקיית המועדפים (מופיעה בראש מסך הבית)',isFavDoc(cloudId))]},
+  {k:'home',t:'מסך הבית',it:[T('view','מסך הבית',homeOpen,'מסך הבית: השרטוט הפתוח, שרטוטים אחרונים, חדש / מתבנית / פתח'),T('save',isFavDoc(cloudId)?'הסר ממועדפים':'למועדפים',favCurrent,'מוסיף את השרטוט הפתוח לתיקיית המועדפים (מופיעה בראש מסך הבית)',isFavDoc(cloudId)),...(SH&&SH.setFolder?[T('open','העבר לתיקייה',()=>{if(!cloudId){toast('השרטוט עוד לא נשמר בתיקייה המשותפת');return;}foldPick(cloudId);},'מעביר את השרטוט הפתוח לתיקייה (משותפת לכולם)')]:[])]},
   {k:'out',t:'הדפסה וייצוא',it:[T('table','מקרא בדף',toggleLegCol,'עמודת מקרא צרה בצד ימין של דף הייצור (סמל, תיאור וכמות — מתעדכנת לבד, גם ב-PDF). מקרא חופשי שמזיזים: בספרייה, שרטוט וסימון',!state.legOff),T('print','הדפסה',printPreview,'תצוגה לפני הדפסה (Ctrl+P)'),T('pdf','PDF',pdfDialog,'ייצוא PDF עם טבלת שרטוט'),T('png','תמונה',exportImage,'ייצוא תמונה (PNG)'),T('dxf','AutoCAD',dxfExport,'ייצוא DXF ל-AutoCAD'),
    T('bom','רשימת ציוד',bom,'רשימת ציוד (BOM)'),T('exp','הורד קובץ',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state)),'הורד קובץ פרויקט (JSON)'),T('imp','ייבוא קובץ',importJSON,'ייבוא קובץ פרויקט'),T('clip','העתק קובץ',copyJSON,'העתק את קובץ הפרויקט')]},
   {k:'chk',t:'בדיקה וחיווט',it:[T('check','התאמת מסמכים',xcheckDialog,'בדיקת התאמה: חזית ↔ חד קווי'),T('sld','חד קווי מהלוח',sldFromPanel,'צור טיוטת חד קווי מרכיבי חזית הלוח (מחליף את החד קווי הנוכחי — אפשר לבטל)'),T('link','הפניות',toggleXR,'הצג / הסתר הפניות חזית ↔ חד קווי ליד כל רכיב',state.xrShow),T('cross','קשתות בהצטלבות',toggleHops,'חוטים שמצטלבים בלי חיבור: קשת קפיצה מעל החוט השני (כבוי = רווח קטן בחוט החוצה)',state.hops),
@@ -6638,8 +6684,14 @@ function newFromTemplate(i){const T=TEMPLATES[i].build();setCloud(null);lastSave
 /* a fingerprint of the drawing without its template mark: an example opened from the
    templates is not saved to the shared folder until something in it changes */
 function tplHash(){const c=Object.assign({},state);delete c.tpl;delete c.dwgno;const j=JSON.stringify(c);let h=5381;for(let i=0;i<j.length;i++)h=((h<<5)+h+j.charCodeAt(i))|0;return 't'+(h>>>0).toString(36);}
-function templatesDialog(){modal('פרויקט חדש מתבנית',`<div class="hint">כל תבנית כוללת חזית לוח מפורטת בקנה מידה ותרשים חד קווי מחובר, עם אותם סימונים בשניהם — בסיס לשינוי. בחזית: "חזית" מציג את הדלתות והאביזרים שעליהן.</div><div class="plist">${TEMPLATES.map((t,i)=>`<button data-tp="${i}"><div style="font-size:15.5px;font-weight:700">${esc(t.name)}</div><div style="color:#93c5fd;font-size:12.5px;margin:2px 0 4px">${esc(t.kind)}</div><div style="color:#bdbdbd;font-size:12.5px;line-height:1.45">${esc(t.desc)}</div></button>`).join('')}</div>`,[{t:'ביטול'}]);
- $('mBody').onclick=async e=>{const b=e.target.closest('[data-tp]');if(!b)return;closeModal();if(typeof flushSave==='function')await flushSave();newFromTemplate(+b.dataset.tp);};}
+async function templatesDialog(){let U=[];try{if(SH&&SH.templates)U=await SH.templates();else{const L=utplLocal();U=Object.keys(L).map(id=>({id,name:L[id].name,canDelete:true}));}}catch(e){}
+ const desc={};if(!SH){const L=utplLocal();for(const k in L)try{desc[k]=JSON.parse(L[k].data).tdesc||'';}catch(e){}}
+ const uh=`<div style="display:flex;align-items:center;gap:8px;margin:2px 2px 8px"><b style="font-size:15px">⧉ התבניות שלנו</b><span style="flex:1"></span><button id="tpSave" style="width:auto;padding:6px 12px">＋ שמור את השרטוט הפתוח כתבנית</button></div>${U.length?`<div class="plist" style="margin-bottom:14px">${U.map(t=>`<div style="display:flex;gap:8px"><button data-utp="${esc(t.id)}"><div style="font-size:15.5px;font-weight:700">${esc(t.name)}</div><div style="color:#bdbdbd;font-size:12.5px">${t.parts!=null?t.parts+' רכיבים':''}${t.createdBy?' · נשמרה ע״י '+esc(t.createdBy):''}${desc[t.id]?' · '+esc(desc[t.id]):''}</div></button>${t.canDelete?`<button data-utd="${esc(t.id)}" style="width:52px;flex:none;text-align:center">🗑</button>`:''}</div>`).join('')}</div>`:'<div class="hint" style="margin-bottom:14px">עוד אין תבניות שלכם — פתח שרטוט ולחץ "שמור את השרטוט הפתוח כתבנית".</div>'}<b style="font-size:15px;display:block;margin:0 2px 6px">▦ תבניות לדוגמה</b>`;
+ modal('פרויקט חדש מתבנית',uh+`<div class="hint">כל תבנית כוללת חזית לוח מפורטת בקנה מידה ותרשים חד קווי מחובר, עם אותם סימונים בשניהם — בסיס לשינוי. בחזית: "חזית" מציג את הדלתות והאביזרים שעליהן.</div><div class="plist">${TEMPLATES.map((t,i)=>`<button data-tp="${i}"><div style="font-size:15.5px;font-weight:700">${esc(t.name)}</div><div style="color:#93c5fd;font-size:12.5px;margin:2px 0 4px">${esc(t.kind)}</div><div style="color:#bdbdbd;font-size:12.5px;line-height:1.45">${esc(t.desc)}</div></button>`).join('')}</div>`,[{t:'ביטול'}]);
+ $('mBody').onclick=async e=>{if(e.target.closest('#tpSave')){closeModal();saveAsTemplate();return;}
+  const ut=e.target.closest('[data-utp]');if(ut){closeModal();newFromUserTpl(ut.dataset.utp);return;}
+  const ud=e.target.closest('[data-utd]');if(ud){const t=U.find(x=>x.id===ud.dataset.utd);modal('מחיקת תבנית',`<div class="hint">למחוק את התבנית "${esc(t?t.name:'')}"? שרטוטים שנפתחו ממנה לא נפגעים.</div>`,[{t:'מחק',cls:'pri',fn:async()=>{if(SH)await SH.remove(ud.dataset.utd);else{const L=utplLocal();delete L[ud.dataset.utd];try{localStorage.setItem(UTPL_KEY,JSON.stringify(L));}catch(e){}}toast('התבנית נמחקה');setTimeout(templatesDialog,0);}},{t:'ביטול',fn:()=>{setTimeout(templatesDialog,0);}}]);return;}
+  const b=e.target.closest('[data-tp]');if(!b)return;closeModal();if(typeof flushSave==='function')await flushSave();newFromTemplate(+b.dataset.tp);};}
 
 function newProject(){modal('פרויקט חדש',`<div class="fld"><label>שם הלוח</label><input id="f_pn" value="לוח חדש"></div><div class="hint">${SH?'הלוח החדש יישמר אוטומטית בתיקייה המשותפת, וגם הלוח הנוכחי נשמר.':'מומלץ לשמור את הלוח הנוכחי לפני כן.'}</div>`,[{t:'ריק',fn:async()=>{const n=$('f_pn').value||'לוח חדש';await flushSave();setCloud(null);lastSaved=null;cloudStamp=null;state={name:n,objs:[]};sel=null;hist=[];hi=-1;commit();renderNow();fit();flushSave();}},{t:'עם ארון ופסים',cls:'pri',fn:async()=>{const n=$('f_pn').value||'לוח חדש';await flushSave();setCloud(null);lastSaved=null;cloudStamp=null;starter(false);state.name=n;sel=null;hist=[];hi=-1;commit();renderNow();fit();flushSave();}},{t:'מתבנית…',fn:()=>{setTimeout(templatesDialog,0);}},{t:'ביטול'}]);}
 function saveAs(){modal('שמירת פרויקט',`<div class="fld"><label>שם</label><input id="f_sn" value="${esc(state.name)}"></div><div class="hint">השמירה נשמרת בדפדפן במכשיר הזה בלבד. לגיבוי או מעבר למכשיר אחר — "העתק קובץ פרויקט" מהתפריט.</div>`,

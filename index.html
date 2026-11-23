@@ -185,11 +185,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 327;
+const VERSION = 328;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'תיקיית מועדפים: סמן שרטוט בכוכב והוא יופיע בראש מסך הבית';
+const WHATS_NEW = 'תיקיות משותפות לשרטוטים, שמירת שרטוט כתבנית, וחלונות ממסך הבית חוזרים אליו';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -330,6 +330,7 @@ function info(d) {
     id: d.id, name: d.name, parts: d.parts || 0, dwgno: d.dwgno || '',
     createdBy: d.createdBy, createdAt: d.createdAt,
     updatedBy: d.updatedBy, updatedAt: d.updatedAt, updatedDevice: d.updatedDevice || '',
+    folder: d.folder || '', kind: d.kind || '',
     canDelete: isOwner || d.createdByEmail === me.email,
   };
 }
@@ -391,11 +392,25 @@ const bridge = {
   },
   async list() {
     await ready;
-    return [...designs.values()].sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt))).map(info);
+    return [...designs.values()].filter((d) => !d.kind).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt))).map(info);
+  },
+  // drawings saved as templates (kind 'tpl'), shared with everyone, kept out of list()
+  async templates() {
+    await ready;
+    return [...designs.values()].filter((d) => d.kind === 'tpl').sort((a, b) => String(a.name).localeCompare(String(b.name), 'he')).map(info);
+  },
+  // the shared folder a drawing sits in ('' = none); seen by every user, does not change updatedAt
+  async setFolder(id, folder) {
+    await ready;
+    const d = designs.get(id); if (!d) return false;
+    const prev = d.folder || ''; folder = String(folder || '').trim().slice(0, 60);
+    designs.set(id, { ...d, folder }); listeners.forEach((f) => f());
+    try { await DESIGNS.doc(id).update({ folder }); return true; }
+    catch (e) { const c = designs.get(id); if (c) designs.set(id, { ...c, folder: prev }); listeners.forEach((f) => f()); throw e; }
   },
   async info(id) { await ready; const d = designs.get(id); return d ? info(d) : null; },
   // ids of drawings whose name or content holds the text (finds a drawing that was renamed)
-  async find(q) { await ready; q = String(q || '').trim().toLowerCase(); if (!q) return []; return [...designs.values()].filter((d) => (String(d.name || '') + '\n' + String(d.data || '')).toLowerCase().includes(q)).map((d) => d.id); },
+  async find(q) { await ready; q = String(q || '').trim().toLowerCase(); if (!q) return []; return [...designs.values()].filter((d) => !d.kind && (String(d.name || '') + '\n' + String(d.data || '')).toLowerCase().includes(q))).map((d) => d.id); },
   async load(id) { await ready; const d = designs.get(id); return d ? { id: d.id, name: d.name, data: d.data } : null; },
   async save(input) {
     await ready;
@@ -405,7 +420,7 @@ const bridge = {
     let dwgno = '';try { dwgno = String(JSON.parse(input.data).dwgno || ''); } catch (e) {}
     const d0 = ex
       ? { ...ex, name: input.name, data: input.data, parts: input.parts, updatedBy: me.label, updatedByEmail: me.email, updatedAt: now, updatedDevice: deviceName() }
-      : { id: DESIGNS.doc().id, name: input.name, data: input.data, parts: input.parts,
+      : { id: DESIGNS.doc().id, name: input.name, data: input.data, parts: input.parts, ...(input.kind ? { kind: input.kind } : {}), ...(input.folder ? { folder: input.folder } : {}),
           createdBy: me.label, createdByEmail: me.email, createdAt: now,
           updatedBy: me.label, updatedByEmail: me.email, updatedAt: now, updatedDevice: deviceName(), deleted: false };
     let d = dwgno ? { ...d0, dwgno } : d0;
