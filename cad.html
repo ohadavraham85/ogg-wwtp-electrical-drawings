@@ -4035,8 +4035,11 @@ function scheduleSave(){if(!SH)return;if(lastSaved!==null&&JSON.stringify(state)
 function flushSave(){if(saveT){clearTimeout(saveT);saveT=null;return doAutoSave();}}
 async function doAutoSave(){saveT=null;if(!cloudId&&state.tpl){if(state.tpl===tplHash()){setSaveSt('pending');return;}delete state.tpl;}dwgFix();if(!state.dwgno&&state.objs.length&&!saving){try{await ensureDwgNo();}catch(e){}}const data=JSON.stringify(state);if(data===lastSaved){setSaveSt('saved');return;}if(saving){scheduleSave();return;}saving=true;setSaveSt('saving');
  try{if(cloudId){const d=await SH.info(cloudId),me=SH.me();
-   if(d&&cloudStamp&&d.updatedAt!==cloudStamp){const r0=await SH.load(cloudId);if(r0&&r0.data===data){cloudStamp=d.updatedAt;}else{const nd=await SH.save({name:state.name+' (עותק)',data,parts:partsCount()});setCloud(nd.id);cloudStamp=nd.updatedAt;state.name=nd.name;toast(me&&d.updatedBy!==me.label?`${d.updatedBy} ערך את הלוח הזה במקביל — השינויים שלך נשמרו כעותק`:'הלוח נערך גם במכשיר אחר — השינויים מכאן נשמרו כעותק, כדי שלא יימחק כלום');}}
-   else{const nd=await SH.save({id:cloudId,name:state.name,data,parts:partsCount()});if(nd.id!==cloudId)setCloud(nd.id);cloudStamp=nd.updatedAt;LAST_SAVE_PENDING=!!nd.pending;}}
+   const asCopy=async(by)=>{const nd=await SH.save({name:state.name+' (עותק)',data,parts:partsCount()});setCloud(nd.id);cloudStamp=nd.updatedAt;state.name=nd.name;toast(me&&by&&by!==me.label?`${by} ערך את הלוח הזה במקביל — השינויים שלך נשמרו כעותק`:'הלוח נערך גם במכשיר אחר — השינויים מכאן נשמרו כעותק, כדי שלא יימחק כלום');};
+   if(d&&cloudStamp&&String(d.updatedAt)>String(cloudStamp)){const r0=await SH.load(cloudId);if(r0&&r0.data===data){cloudStamp=d.updatedAt;}else await asCopy(d.updatedBy);}
+   else if(!d&&SH.fresh&&!SH.fresh()){saving=false;setSaveSt('pending');saveT=setTimeout(doAutoSave,4000);return;} // the list is not in from the server yet: wait, don't make a duplicate
+   else{let nd;try{nd=await SH.save({id:cloudId,base:cloudStamp||'',name:state.name,data,parts:partsCount()});}catch(e){if(e&&e.code==='conflict'){await asCopy(e.server&&e.server.updatedBy);nd=null;}else throw e;}
+    if(nd){if(nd.id!==cloudId)setCloud(nd.id);cloudStamp=nd.updatedAt;LAST_SAVE_PENDING=!!nd.pending;}}}
   else{const nd=await SH.save({name:state.name,data,parts:partsCount()});setCloud(nd.id);cloudStamp=nd.updatedAt;LAST_SAVE_PENDING=!!nd.pending;toast(nd.pending?'אין חיבור לשרת — הלוח יישלח לתיקייה המשותפת כשיחזור החיבור':'הלוח נשמר אוטומטית בתיקייה המשותפת');}
   LAST_SAVE_ERR='';
   lastSaved=data;baseStore();setSaveSt(JSON.stringify(state)===data?'saved':'pending');if(JSON.stringify(state)!==data)scheduleSave();if(LAST_SAVE_PENDING)setSaveSt('pending');}
@@ -4048,7 +4051,7 @@ let LAST_SAVE_ERR='',LAST_SAVE_PENDING=false;
 function localBackup(data){try{const P=loadProjects(),k=(state.name||'לוח')+' (גיבוי)';P[k]=JSON.parse(data);localStorage.setItem('epd.projects',JSON.stringify(P));}catch(e){}}
 /* What's on screen now is what the folder already has (just opened, or the app just started). */
 function markSaved0(){if(SH&&cloudId){baseInit();setSaveSt('saved');}else markSaved();}
-function markSaved(){lastSaved=JSON.stringify(state);if(SH&&cloudId)SH.info(cloudId).then(d=>{cloudStamp=d?d.updatedAt:null;if(!d)setCloud(null);else baseStore();}).catch(()=>{});setSaveSt(cloudId?'saved':'pending');}
+function markSaved(){lastSaved=JSON.stringify(state);if(SH&&cloudId)SH.info(cloudId).then(d=>{cloudStamp=d?d.updatedAt:null;if(!d){if(!SH.fresh||SH.fresh())setCloud(null);}else baseStore();}).catch(()=>{});setSaveSt(cloudId?'saved':'pending');}
 /* Keeping devices in step. 'epd.cloudBase' remembers which saved version of the open drawing this device's copy
    is based on ({id, at = its updatedAt, h = hash of that content}). At start the device's own copy is shown first;
    cloudSync then compares with the folder: a newer save made elsewhere (another person, or the same user on
@@ -4060,7 +4063,7 @@ function baseInit(){let b=null;try{b=JSON.parse(localStorage.getItem('epd.cloudB
  if(b&&b.id===cloudId){cloudStamp=b.at;lastSaved=hashStr(cur)===b.h?cur:null;}else{cloudStamp=null;lastSaved=cur;}setTimeout(cloudSync,300);}
 let CSYNC=false,CST=0;
 async function cloudSync(){if(!SH||!cloudId||CSYNC)return;if(saving){clearTimeout(CST);CST=setTimeout(cloudSync,1500);return;}CSYNC=true;
- try{const d=await SH.info(cloudId);if(!d||(cloudStamp&&d.updatedAt===cloudStamp))return;
+ try{const d=await SH.info(cloudId);if(!d||(cloudStamp&&String(d.updatedAt)<=String(cloudStamp)))return; // never go back to an older copy (an offline cache can be behind)
   // not knowing which saved version this copy is based on, keep what is on screen (it is saved over the folder's copy as usual)
   if(!cloudStamp){cloudStamp=d.updatedAt;if(lastSaved!==null)baseStore();return;}
   const r=await SH.load(cloudId);if(!r||!r.data||saving)return;

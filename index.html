@@ -196,11 +196,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 334;
+const VERSION = 335;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'תיקון: התמונות של הרכיבים בשורת "אחרונים" ובספרייה חזרו';
+const WHATS_NEW = 'תיקון חשוב בסנכרון: שמירה לא דורסת יותר גרסה חדשה יותר ממכשיר אחר, והאפליקציה מחכה לרשימה מהשרת';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -334,6 +334,7 @@ $('bRetry').addEventListener('click', () => location.reload());
 // ---------- the shared folder of drawings ----------
 let designs = new Map();
 const listeners = new Set();
+let fresh = false; // the drawings list came from the server (not only from the offline cache)
 let ready;
 
 function info(d) {
@@ -419,6 +420,8 @@ const bridge = {
     try { await DESIGNS.doc(id).update({ folder }); return true; }
     catch (e) { const c = designs.get(id); if (c) designs.set(id, { ...c, folder: prev }); listeners.forEach((f) => f()); throw e; }
   },
+  // true once the drawings list came from the server
+  fresh() { return fresh; },
   async info(id) { await ready; const d = designs.get(id); return d ? info(d) : null; },
   // ids of drawings whose name or content holds the text (finds a drawing that was renamed)
   async find(q) { await ready; q = String(q || '').trim().toLowerCase(); if (!q) return []; return [...designs.values()].filter((d) => !d.kind && (String(d.name || '') + '\n' + String(d.data || '')).toLowerCase().includes(q)).map((d) => d.id); },
@@ -435,10 +438,20 @@ const bridge = {
           createdBy: me.label, createdByEmail: me.email, createdAt: now,
           updatedBy: me.label, updatedByEmail: me.email, updatedAt: now, updatedDevice: deviceName(), deleted: false };
     let d = dwgno ? { ...d0, dwgno } : d0;
+    // never write over a newer save: ask the server which version it holds (input.base = the version the tool's copy is
+    // based on); a newer one there is refused as 'conflict' so the tool keeps its changes as a copy. Offline: no answer, write as before.
+    let sv = null;
+    if (ex && input.base) {
+      try { const snap = await Promise.race([DESIGNS.doc(ex.id).get({ source: 'server' }), new Promise((res) => setTimeout(() => res(null), 4000))]); sv = snap && snap.exists ? snap.data() : null; } catch (e) { sv = null; }
+      if (sv && !sv.deleted && sv.updatedAt && String(sv.updatedAt) > String(input.base) && sv.data !== input.data) {
+        designs.set(ex.id, { id: ex.id, ...sv }); listeners.forEach((f) => f());
+        const e = new Error('conflict'); e.code = 'conflict'; e.server = info({ id: ex.id, ...sv }); throw e;
+      }
+    }
     // version history: before overwriting, keep the previous content when the last kept
     // version is 10+ minutes old or someone else saved it
     if (ex && ex.data && ex.data !== input.data && (!ex.verAt || Date.now() - Date.parse(ex.verAt) > VER_GAP || (ex.updatedByEmail && ex.updatedByEmail !== me.email))) {
-      keepVersion(ex); d = { ...d, verAt: now };
+      keepVersion(sv && sv.data ? { ...ex, ...sv, id: ex.id } : ex); d = { ...d, verAt: now };
     }
     if (new Blob([input.data]).size > MAX_DESIGN) { const e = new Error('too-big'); e.code = 'too-big'; e.size = new Blob([input.data]).size; throw e; }
     const w = writeDesign(d);
@@ -566,12 +579,15 @@ function start() {
   const lastSeen = localStorage.getItem(LAST_VER_KEY);
   if (lastSeen && Number(lastSeen) !== VERSION) toast('🆕 עודכן לגרסה ' + VERSION + ': ' + WHATS_NEW, 7000);
   localStorage.setItem(LAST_VER_KEY, String(VERSION));
+  // The list is "ready" once the server has answered. A first answer from this device's offline cache can be
+  // old (a drawing saved since on another device), so it is used only if the server does not answer within 7 s.
   ready = new Promise((res) => {
-    unsubs.push(DESIGNS.where('deleted', '==', false).onSnapshot((snap) => {
+    setTimeout(res, 7000);
+    unsubs.push(DESIGNS.where('deleted', '==', false).onSnapshot({ includeMetadataChanges: true }, (snap) => {
       const m = new Map();
       snap.forEach((doc) => m.set(doc.id, { id: doc.id, ...doc.data() }));
       designs = m;
-      res();
+      if (!snap.metadata.fromCache) { fresh = true; res(); }
       listeners.forEach((f) => f());
     }, (e) => { console.warn('designs', e); res(); }));
   });
