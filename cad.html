@@ -1345,6 +1345,7 @@ function roomDims(o){const t=+o.p.wt||0,W=+o.p.w,H=+o.p.h,ow=W+2*t,oh=H+2*t,[g,f
  s+=`<g data-rdim="w">${txt(0,y-f*.75,String(Math.round(W)),f,c,700)}</g><g data-rdim="h" transform="translate(${x-f*.75} 0) rotate(-90)">${txt(0,0,String(Math.round(H)),f,c,700)}</g>`;return s;}
 /* Enclosure brands: door colour and the maker's badge. Rittal VX25 / AE are RAL 7035
    light grey; Schneider PrismaSeT P / G are RAL 9003 white. '' = generic. */
+const PFIN=[['std','רגיל (בז׳)'],['zn','מגולוון (Rittal)'],['7035','צבוע RAL 7035']];
 const BRANDS={'':'כללי',rittal:'Rittal (VX25 / AE)',prisma:'Schneider PrismaSeT (P / G)'};
 const brFill=o=>({rittal:'#d4d6d1',prisma:'#efefeb'}[o.p.brand]||'#d9dbd7');
 function brBadge(o,cx,y,f){f=f||1;const b=o.p.brand;
@@ -1981,8 +1982,8 @@ const DEF={
    if(o.p.perf==='1')for(let u=-L/2+20;u<L/2-15;u+=9)s+=`<circle cx="${u}" cy="0" r="2.2" fill="#5b6066"/>`;
    else for(let u=-L/2+40;u<L/2-30;u+=50)s+=`<rect x="${u-6}" y="-2.5" width="12" height="5" rx="2.5" fill="#6b7280"/>`;
    [-1,1].forEach(g=>s+=`<circle cx="${g*(L/2-12)}" cy="0" r="4" fill="#e5e7eb" stroke="#374151" stroke-width=".8"/>`);return s;}},
- enclosure:{layer:0,resize:'box',edit:['tag','w','h','door','hinge','closed','brand'],def:{w:520,h:640,tag:'',door:'key',hinge:'L',closed:'0'},size:o=>({w:o.p.w,h:o.p.h}),
-  draw:o=>{const w=o.p.w,h=o.p.h;let s=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="6" fill="${o.p.brand==='prisma'?'#e9eae6':'#d5d8dc'}" stroke="#4b5563" stroke-width="3"/><rect x="${-w/2+18}" y="${-h/2+18}" width="${w-36}" height="${h-36}" fill="${o.p.brand==='rittal'?'#c3c8cb':'#ebe7da'}" stroke="${o.p.brand==='rittal'?'#8e969b':'#b8b09a'}" stroke-width="1"/>`;
+ enclosure:{layer:0,resize:'box',edit:['tag','w','h','door','hinge','closed','brand','mp','pfin'],lbl:{mp:'פח אחורי (פלטת הרכבה)',pfin:'גימור הפח האחורי'},sel:{mp:[['1','עם פח אחורי'],['0','ללא']],pfin:[['','לפי היצרן'],...PFIN]},def:{w:520,h:640,tag:'',door:'key',hinge:'L',closed:'0'},size:o=>({w:o.p.w,h:o.p.h}),
+  draw:o=>{const w=o.p.w,h=o.p.h;let s=`<rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="6" fill="${o.p.brand==='prisma'?'#e9eae6':'#d5d8dc'}" stroke="#4b5563" stroke-width="3"/>`;if(o.p.mp!=='0'){const [pf,ps]=plFin(o);s+=`<rect x="${-w/2+18}" y="${-h/2+18}" width="${w-36}" height="${h-36}" fill="${pf}" stroke="${ps}" stroke-width="1"/>`;}
    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>s+=`<circle cx="${a*(w/2-9)}" cy="${b*(h/2-9)}" r="3.5" fill="#9ca3af" stroke="#555" stroke-width=".6"/>`);
    s+=doorMarks(o);if(o.p.tag)s+=txt(0,h/2-9,o.p.tag,8,'#333',700);return s;}},
  cibox:{layer:0,edit:['tag','size','window','lid'],def:{size:'K2',window:'0',tag:'',lid:'1'},
@@ -2224,11 +2225,11 @@ const DEF={
      for(let x=sc.x0+90;x<sc.x1-100;x+=22)s+=`<rect x="${x}" y="${g.y0+g.H+g.P*.3}" width="10" height="${g.P*.4}" rx="3" fill="#25282a"/>`;});}
    if(g.E)g.S.forEach(sc=>[sc.x0+55,sc.x1-55].forEach(x=>s+=`<rect x="${x-5}" y="${g.y0-12}" width="10" height="12" fill="#8a8d90"/><circle cx="${x}" cy="${g.y0-25}" r="12" fill="none" stroke="#8a8d90" stroke-width="6"/>`));
    g.S.forEach(sc=>{const w=sc.w;s+=`<rect x="${sc.x0}" y="${g.y0}" width="${w}" height="${g.H}" fill="#cfd2d4" stroke="#55595c" stroke-width="2.5"/><rect x="${sc.x0+25}" y="${g.y0+25}" width="${w-50}" height="${g.H-50}" fill="#9aa0a6" stroke="#6d7277" stroke-width="1"/>`;
-    s+=`<rect x="${sc.x0+45}" y="${g.y0+45}" width="${w-90}" height="${g.H-90}" fill="${o.p.brand==='rittal'?'#c3c8cb':'#e7e3d6'}" stroke="${o.p.brand==='rittal'?'#8e969b':'#b8b09a'}" stroke-width="1.2"/>`;
-    [[sc.x0+55,g.y0+55],[sc.x1-55,g.y0+55],[sc.x0+55,g.y0+g.H-55],[sc.x1-55,g.y0+g.H-55]].forEach(([x,y])=>s+=`<circle cx="${x}" cy="${y}" r="5" fill="#a8a294" stroke="#6f6a5e" stroke-width=".8"/>`);
+    if(sc.mp!=='0'){const [pf,ps]=plFin(o);s+=`<rect x="${sc.x0+45}" y="${g.y0+45}" width="${w-90}" height="${g.H-90}" fill="${pf}" stroke="${ps}" stroke-width="1.2"/>`;
+    [[sc.x0+55,g.y0+55],[sc.x1-55,g.y0+55],[sc.x0+55,g.y0+g.H-55],[sc.x1-55,g.y0+g.H-55]].forEach(([x,y])=>s+=`<circle cx="${x}" cy="${y}" r="5" fill="#a8a294" stroke="#6f6a5e" stroke-width=".8"/>`);}
     if(!isFrontV(o)&&sc.f!=='none'){s+=`<rect x="${sc.x0+8}" y="${g.y0+8}" width="${w-16}" height="${g.H-16}" fill="none" stroke="#6b7280" stroke-width="1.6" stroke-dasharray="10 7"/>`;
      const hs=sc.f==='double'?[sc.x0,sc.x1]:sc.f==='door'?[sc.hinge==='R'?sc.x1:sc.x0]:[];hs.forEach(x=>cabHingeYs(g).forEach(y=>s+=`<rect x="${x-5}" y="${y-30}" width="10" height="60" rx="3" fill="#6b7280" stroke="#374151" stroke-width=".8"/>`));}});
-   return s;}},
+   return s+cabParts(o,g);}},
  mdim:{layer:8,edit:[],def:{mode:'a',off:0,fs:6,color:'red',txt:''},size:o=>mdSync(o),draw:o=>mdDraw(o)},
  /* ---- panel nameplate (engraved plate): name, fed from, voltage, Icc, main breaker, notes ---- */
  nplate:{layer:7.2,front:true,resize:'scale',edit:['title','from','volt','ic','main','notes','pcol','fs'],def:{title:'לוח חשמל',from:'לוח ראשי',volt:'3×400/230V 50Hz',ic:'10kA',main:'',notes:'',pcol:'white',fs:7},
@@ -3352,7 +3353,7 @@ const LIB=[
   {t:'cabinet',n:'Rittal VX25 1800×600×400',p:{brand:'rittal',h:1800,d:'400',secs:[{w:600,f:'door',hinge:'L'}]}},
   {t:'cabinet',n:'PrismaSeT P 650 + תעלה 300',p:{brand:'prisma',d:'600',secs:[{w:650,f:'door',hinge:'L'},{w:300,f:'door',hinge:'R'}]}},{t:'cabinet',n:'PrismaSeT P 800',p:{brand:'prisma',d:'600',secs:[{w:800,f:'door',hinge:'L'}]}},
   {t:'cabinet',n:'PrismaSeT P שורה 3 שדות',p:{brand:'prisma',d:'600',secs:[{w:650,f:'door',hinge:'L'},{w:650,f:'door',hinge:'L'},{w:800,f:'door',hinge:'R'}]}},
-  {t:'cabinet',n:'PrismaSeT P עם פאנלים ודלת',p:{brand:'prisma',d:'600',view:'door',secs:[{w:650,f:'cover',od:'1'},{w:300,f:'door',hinge:'R'}]}}]},{g:'מחיצות פח',items:[{t:'partition',n:'מחיצה אופקית'},{t:'partition',n:'מחיצה אנכית',rot:90}]},{g:'Rittal — פח אחורי (פלטת הרכבה) ומחיצות',items:[{t:'mplate',n:'Rittal פח אחורי (פלטת הרכבה) — נכנס לשדה / ללוח הנבחר',p:{brand:'rittal',fin:'zn'}},{t:'partition',n:'Rittal מחיצה אופקית',p:{brand:'rittal'}},{t:'partition',n:'Rittal מחיצה אנכית',rot:90,p:{brand:'rittal'}},{t:'partition',n:'Rittal מחיצה מחוררת (אוורור)',p:{brand:'rittal',perf:'1'}}]},{g:'פתחים בחזית למפסקים',items:[{t:'cutdin',n:'פתח למאמ"תים 12 מודולים',p:{mods:12}},{t:'cutdin',n:'פתח למאמ"תים 24 מודולים',p:{mods:24}},{t:'cutmccb',n:'פתח למפסק כוח (MCCB)'},{t:'cutmccb',n:'פתח למפסק כוח גדול',p:{w:105,h:160}}]}]},
+  {t:'cabinet',n:'PrismaSeT P עם פאנלים ודלת',p:{brand:'prisma',d:'600',view:'door',secs:[{w:650,f:'cover',od:'1'},{w:300,f:'door',hinge:'R'}]}}]},{g:'מחיצות פח',items:[{t:'partition',n:'מחיצה אופקית'},{t:'partition',n:'מחיצה אנכית',rot:90}]},{g:'פתחים בחזית למפסקים',items:[{t:'cutdin',n:'פתח למאמ"תים 12 מודולים',p:{mods:12}},{t:'cutdin',n:'פתח למאמ"תים 24 מודולים',p:{mods:24}},{t:'cutmccb',n:'פתח למפסק כוח (MCCB)'},{t:'cutmccb',n:'פתח למפסק כוח גדול',p:{w:105,h:160}}]}]},
  {tab:'לוח ותוויות',groups:[{g:'מבנה',items:[{t:'enclosure',n:'לוח עם דלת ומנעול',p:{door:'key'}},{t:'enclosure',n:'לוח עם ידית ומנעול',p:{door:'handle'}},{t:'enclosure',n:'לוח ללא דלת',p:{door:'none'}},
   {t:'enclosure',n:'Rittal AE 300×300×155',p:{brand:'rittal',door:'key',w:300,h:300,d3:155}},{t:'enclosure',n:'Rittal AE 380×600×210',p:{brand:'rittal',door:'key',w:380,h:600,d3:210}},{t:'enclosure',n:'Rittal AE 500×500×210',p:{brand:'rittal',door:'key',w:500,h:500,d3:210}},
   {t:'enclosure',n:'Rittal AE 600×600×250',p:{brand:'rittal',door:'key',w:600,h:600,d3:250}},{t:'enclosure',n:'Rittal AE 600×760×300',p:{brand:'rittal',door:'handle',w:600,h:760,d3:300}},{t:'enclosure',n:'Rittal AE 800×1000×300',p:{brand:'rittal',door:'handle',w:800,h:1000,d3:300}},{t:'enclosure',n:'Rittal AE 1000×1000×300',p:{brand:'rittal',door:'handle',w:1000,h:1000,d3:300}},
@@ -3374,7 +3375,6 @@ const LIB=[
    {g:'קופסאות לחצנים CI-K (גובה×רוחב מ"מ)',items:I('CI-K1 131×80','CI-K2 181×100','CI-K3 222×120','CI-K4 240×160','CI-K5 280×200')},
    {g:'קופסאות Ci מודולריות',items:I('Ci 250×187.5','Ci 375×250','Ci 250×375','Ci 375×375','Ci 250×375 עם חלון')},
    {g:'מחיצות פח',items:I('מחיצה אופקית','מחיצה אנכית')},
-   {g:'Rittal — פח אחורי (פלטת הרכבה) ומחיצות',items:I('Rittal פח אחורי (פלטת הרכבה) — נכנס לשדה / ללוח הנבחר','Rittal מחיצה אופקית','Rittal מחיצה אנכית','Rittal מחיצה מחוררת (אוורור)')},
    {g:'כניסות כבל — אנטיגרונים (מבט מהצד; כשמניחים על דופן של לוח הם מסתובבים לבד — הכיפה החוצה)',items:['M12','M16','M20','M25','M32','M40','M50','M63'].map(m=>({t:'gland',n:`אנטיגרון ${m} (כבל ${GLAND[m][5].join('-')} מ"מ)`,p:{rating:m}}))},
    {g:'אנטיגרונים — מבט מלפנים (לפלטת כניסות)',items:['M16','M20','M25','M32','M40','M50'].map(m=>({t:'gland',n:`אנטיגרון ${m} — מלפנים`,p:{rating:m,gv:'front'}}))},
    {g:'פתחים בחזית למפסקים',items:I('פתח למאמ"תים 12 מודולים','פתח למאמ"תים 24 מודולים','פתח למפסק כוח (MCCB)','פתח למפסק כוח גדול')}]},
@@ -4006,6 +4006,12 @@ function fitPlate(o,cx,cy){const s=sel&&get(sel),isE=q=>q.type==='enclosure',inE
  if(isE(c)){o.p.w=Math.max(50,c.p.w-36);o.p.h=Math.max(50,c.p.h-36);o.x=c.x;o.y=c.y;return true;}
  const g=cabG(c),sc=g.S.find(z=>!state.objs.some(q=>q!==o&&q.type==='mplate'&&Math.abs(q.x-(z.x0+z.x1)/2)<20&&Math.abs(q.y-(g.y0+g.H/2))<20))||g.S[0];
  o.p.w=sc.w-90;o.p.h=g.H-90;o.x=r2((sc.x0+sc.x1)/2);o.y=r2(g.y0+g.H/2);return true;}
+/* The mounting plate and partitions are cabinet / enclosure settings: p.pfin finish ('std' beige, 'zn' galvanised,
+   '7035'; default galvanised on Rittal), per section sc.mp '0' = no plate, sc.ph horizontal / sc.pv vertical partitions
+   (evenly spaced), o.p.pperf '1' = perforated partitions. */
+function plFin(o){const f=o.p.pfin||(o.p.brand==='rittal'?'zn':'std');return f==='zn'?['#c3c8cb','#8e969b']:f==='7035'?['#d4d6d1','#9a9d97']:['#e7e3d6','#b8b09a'];}
+function cabParts(o,g){let s='';g.S.forEach(sc=>{const nh=+sc.ph||0,nv=+sc.pv||0;if(!nh&&!nv)return;const P=(len,x,y,r)=>`<g transform="translate(${x} ${y})${r?' rotate(90)':''}">${DEF.partition.draw({p:{len,brand:o.p.brand,perf:o.p.pperf}})}</g>`;
+ const cx=(sc.x0+sc.x1)/2,cy=g.y0+g.H/2;for(let k=1;k<=nh;k++)s+=P(sc.w-50,cx,g.y0+25+(g.H-50)*k/(nh+1),0);for(let k=1;k<=nv;k++)s+=P(g.H-50,sc.x0+25+(sc.w-50)*k/(nv+1),cy,1);});return s;}
 function inCab(c,x,y){const g=cabG(c);return x>g.x0&&x<g.x0+g.W&&y>g.y0&&y<g.y0+g.H;}
 /* Designations by IEC 81346 letter, numbered as parts are added: the next free
    number for that letter in this document (H1, H2… lamps; Q1, Q2… breakers…). A
@@ -5967,15 +5973,15 @@ function cabDialog(o,tmp){tmp=tmp||JSON.parse(JSON.stringify(o.p));const sel_=(f
  let h=`<div class="fld"><label>שם</label><input id="c_name" value="${esc(tmp.name||'')}"></div><div class="fld"><label>שלט על הדלת</label><input id="c_tag" value="${esc(tmp.tag||'')}"></div>`;
  h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="fld"><label>גובה ארון</label>${sel_('h',[1400,1600,1800,2000,2200].map(v=>[v,v+' מ"מ']),tmp.h)}</div><div class="fld"><label>סוקל</label>${sel_('plinth',[[0,'ללא סוקל'],[100,'100 מ"מ'],[200,'200 מ"מ']],tmp.plinth)}</div>
   <div class="fld"><label>תצוגה</label>${sel_('view',[['inside','פנים הארון'],['front','חזית (סגור)'],...(tmp.secs.some(z=>z.f==='cover'&&z.od==='1')?[['door','חזית — דלת חיצונית סגורה']]:[])],tmp.view)}</div><div class="fld"><label>עיני הרמה</label>${sel_('eyes',[['1','כן'],['0','לא']],tmp.eyes)}</div>
-  <div class="fld"><label>יצרן</label>${sel_('brand',Object.entries(BRANDS),tmp.brand||'')}</div><div class="fld"><label>עומק (לתלת־ממד ולכתב הכמויות)</label>${sel_('d',[400,500,600,800].map(v=>[v,v+' מ"מ']),tmp.d||((tmp.secs||[]).reduce((a,z)=>a+(+z.w),0)>=1000?500:400))}</div></div>`;
+  <div class="fld"><label>יצרן</label>${sel_('brand',Object.entries(BRANDS),tmp.brand||'')}</div><div class="fld"><label>גימור הפח האחורי</label>${sel_('pfin',[['','לפי היצרן'],...PFIN],tmp.pfin||'')}</div><div class="fld"><label>מחיצות</label>${sel_('pperf',[['0','פח מלא'],['1','מחוררות (אוורור)']],tmp.pperf||'0')}</div><div class="fld"><label>עומק (לתלת־ממד ולכתב הכמויות)</label>${sel_('d',[400,500,600,800].map(v=>[v,v+' מ"מ']),tmp.d||((tmp.secs||[]).reduce((a,z)=>a+(+z.w),0)>=1000?500:400))}</div></div>`;
  h+=`<div class="grp" style="font-size:16px">שדות (${tmp.secs.length}) — משמאל לימין</div>`;
- tmp.secs.forEach((z,i)=>{h+=`<div data-i="${i}" style="display:grid;grid-template-columns:auto 1fr 1fr;gap:6px;align-items:center;margin-bottom:8px;background:#2f2f2f;border-radius:10px;padding:8px"><b>${i+1}</b>${sel_('w',WS,z.w)}${sel_('fr',FS,z.f)}<span></span>${z.f==='door'?sel_('hinge',HS,z.hinge||'L'):z.f==='cover'?sel_('od',[['0','ללא דלת חיצונית'],['1','עם דלת חיצונית']],z.od||'0'):'<span></span>'}<button data-del="${i}" class="wbtn" style="padding:8px">🗑 הסר</button>${z.f==='cover'&&z.od==='1'?`<span></span>${sel_('hinge',HS,z.hinge||'L')}<span></span>`:''}</div>`;});
+ tmp.secs.forEach((z,i)=>{h+=`<div data-i="${i}" style="display:grid;grid-template-columns:auto 1fr 1fr;gap:6px;align-items:center;margin-bottom:8px;background:#2f2f2f;border-radius:10px;padding:8px"><b>${i+1}</b>${sel_('w',WS,z.w)}${sel_('fr',FS,z.f)}<span></span>${z.f==='door'?sel_('hinge',HS,z.hinge||'L'):z.f==='cover'?sel_('od',[['0','ללא דלת חיצונית'],['1','עם דלת חיצונית']],z.od||'0'):'<span></span>'}<button data-del="${i}" class="wbtn" style="padding:8px">🗑 הסר</button>${z.f==='cover'&&z.od==='1'?`<span></span>${sel_('hinge',HS,z.hinge||'L')}<span></span>`:''}<span></span>${sel_('mp',[['1','עם פח אחורי'],['0','ללא פח אחורי']],z.mp||'1')}<span></span><span></span>${sel_('ph',[0,1,2,3,4,5].map(n=>[n,n?n+' מחיצות אופקיות':'ללא מחיצות אופקיות']),z.ph||0)}${sel_('pv',[0,1,2,3].map(n=>[n,n?n+' מחיצות אנכיות':'ללא מחיצות אנכיות']),z.pv||0)}</div>`;});
  h+=`<button class="wbtn pri" id="c_add" style="width:100%">+ הוסף שדה</button>`;
  openPanel('props','ארון מתכת');const B=$('propsBody');B.innerHTML=h;B.oninput=null;
  const save=()=>{tmp.name=$('c_name').value||tmp.name;tmp.tag=$('c_tag').value;const g0=cabG(o);o.p=JSON.parse(JSON.stringify(tmp));const g1=cabG(o);o.x=r2(o.x+g0.x0-g1.x0);o.y=r2(o.y+g0.floor-g1.floor);commit();renderNow();updateBar();};
  const sync=()=>{tmp.name=$('c_name').value;tmp.tag=$('c_tag').value;};
  B.onchange=e=>{const t=e.target,f=t.dataset.f;if(t.id==='c_name'||t.id==='c_tag'){save();return;}if(!f)return;const row=t.closest('[data-i]');
-  if(row){const z=tmp.secs[+row.dataset.i];if(f==='w')z.w=+t.value;if(f==='fr'){z.f=t.value;sync();save();cabDialog(o,tmp);return;}if(f==='hinge')z.hinge=t.value;if(f==='od'){z.od=t.value;if(t.value!=='1'&&tmp.view==='door')tmp.view='front';sync();save();cabDialog(o,tmp);return;}}
+  if(row){const z=tmp.secs[+row.dataset.i];if(f==='w')z.w=+t.value;if(f==='fr'){z.f=t.value;sync();save();cabDialog(o,tmp);return;}if(f==='hinge')z.hinge=t.value;if(f==='mp')z.mp=t.value;if(f==='ph')z.ph=+t.value;if(f==='pv')z.pv=+t.value;if(f==='od'){z.od=t.value;if(t.value!=='1'&&tmp.view==='door')tmp.view='front';sync();save();cabDialog(o,tmp);return;}}
   else tmp[f]=['h','plinth'].includes(f)?+t.value:t.value;save();};
  B.onclick=e=>{const d=e.target.closest('[data-del]');if(d){if(tmp.secs.length<2){toast('לפחות שדה אחד');return;}sync();tmp.secs.splice(+d.dataset.del,1);save();cabDialog(o,tmp);return;}
   if(e.target.closest('#c_add')){sync();const l=tmp.secs[tmp.secs.length-1];tmp.secs.push({w:l.w,f:l.f,hinge:'L'});save();cabDialog(o,tmp);}};}
