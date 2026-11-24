@@ -31,11 +31,25 @@ button{font:inherit;cursor:pointer}
 #topbar{position:fixed;top:0;left:0;right:0;z-index:5;height:calc(var(--topbar-h) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:14px;padding-inline:20px;background:var(--card);border-bottom:1px solid var(--line-acc);overflow:hidden}
 #topbar b{color:var(--txt);font-weight:700}
 #topbar .tbClock{flex:none;font-size:14px;color:var(--mut);white-space:nowrap}
-#topbar .tbBrand{flex:1;min-width:0;display:flex;align-items:center;justify-content:center}
+#topbar .tbBrand{flex:none;min-width:0;display:flex;align-items:center;justify-content:center}
+#topbar .tbDocW{flex:0 1 auto;min-width:0;max-width:48%;display:flex}
+#topbar .tbDoc{display:flex;align-items:center;gap:8px;max-width:100%;min-width:0;height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:none;color:var(--txt);cursor:pointer;font:700 16px Heebo,system-ui,sans-serif}
+#topbar .tbDoc[hidden]{display:none}
+#topbar .tbDoc:hover{border-color:var(--amber-light,#ffb547)}
+#topbar .tbDoc svg{flex:none;width:20px;height:20px;fill:none;stroke:var(--amber-light,#ffb547);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+#topbar .tbDoc b{unicode-bidi:plaintext;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#topbar #tbDocS{flex:none;font-size:13px;font-weight:500;color:var(--mut);white-space:nowrap}
+@media (max-width:1250px){#topbar.hasdoc #tbClock,#topbar.hasdoc #tbClock+.sep{display:none}}
+@media (max-width:950px){#topbar.hasdoc .tbWho{display:none}#topbar #tbDocS{display:none}}
+@media (max-width:520px){#topbar .tbWm{display:none}}
 #topbar .tbBrand img{height:22px;width:auto;display:block}
-#topbar .tbWho{flex:none;display:flex;align-items:center;gap:8px;max-width:60%;font-size:14px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:Heebo,system-ui,sans-serif}
+#topbar .tbWho{flex:1;justify-content:center;min-width:0;display:flex;align-items:center;gap:8px;max-width:60%;font-size:14px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:Heebo,system-ui,sans-serif}
 #topbar .tbWho b{color:var(--txt);font-weight:700}
 #topbar .sep{color:var(--line)}
+#topbar .tbNav{flex:none;display:flex;gap:6px}
+#topbar .tbNavB{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:none;color:var(--txt);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+#topbar .tbNavB:hover{border-color:var(--amber-light,#ffb547)}#topbar .tbNavB svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#topbar #tbMenu svg{stroke:var(--amber-light,#ffb547)}#topbar .tbBrand{cursor:pointer}
 #cad{position:fixed;inset:calc(var(--topbar-h) + env(safe-area-inset-top)) 0 0 0;width:100%;height:calc(100% - var(--topbar-h) - env(safe-area-inset-top));border:0;background:var(--bg)}
 #gate{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px 16px;
   background:radial-gradient(120% 70% at 50% 0%,rgba(245,165,36,.16),transparent 60%),repeating-linear-gradient(0deg,var(--grid) 0 1px,transparent 1px 20px),repeating-linear-gradient(90deg,var(--grid) 0 1px,transparent 1px 20px),var(--bg)}
@@ -166,6 +180,8 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
   </div>
 </div>
 <div id="topbar" hidden>
+  <span class="tbNav"><button id="tbMenu" class="tbNavB" title="תפריט" aria-label="תפריט"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="tbHome" class="tbNavB" title="מסך הבית — שרטוטים אחרונים, חדש, פתח והגדרות" aria-label="מסך הבית"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/></svg></button></span>
+  <span class="tbDocW"><button id="tbDoc" class="tbDoc" hidden title="מאפייני השרטוט — שם, מספר שרטוט, גרסה"><svg viewBox="0 0 24 24"><path d="M6 2.8h8l4.5 4.5V21.2H6z"/><path d="M14 2.8v4.5h4.5"/><path d="M9 12h6M9 15.5h6"/></svg><b id="tbDocN"></b><span id="tbDocS"></span></button></span>
   <span class="tbWho"><span>שלום, <b id="tbName"></b></span><span class="sep">·</span><span id="tbClock"></span><span class="sep">·</span><span>גרסה <b id="tbVer"></b></span></span>
   <span class="tbBrand"><img class="tbIcon" src="icons/icon.svg" alt=""><img class="tbWm" src="icons/wordmark-dark.svg" alt="OhadCad"></span>
   <span id="tbSave" class="tbSave" hidden></span>
@@ -180,7 +196,7 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 285;
+const VERSION = 337;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
@@ -318,13 +334,15 @@ $('bRetry').addEventListener('click', () => location.reload());
 // ---------- the shared folder of drawings ----------
 let designs = new Map();
 const listeners = new Set();
+let fresh = false; // the drawings list came from the server (not only from the offline cache)
 let ready;
 
 function info(d) {
   return {
     id: d.id, name: d.name, parts: d.parts || 0, dwgno: d.dwgno || '',
     createdBy: d.createdBy, createdAt: d.createdAt,
-    updatedBy: d.updatedBy, updatedAt: d.updatedAt,
+    updatedBy: d.updatedBy, updatedAt: d.updatedAt, updatedDevice: d.updatedDevice || '',
+    folder: d.folder || '', kind: d.kind || '',
     canDelete: isOwner || d.createdByEmail === me.email,
   };
 }
@@ -348,9 +366,17 @@ const MAX_DESIGN = 1000000;
 // ---------- version history: ohadcad_designs/{id}/versions/{auto} ----------
 const VER_GAP = 10 * 60 * 1000, VER_MAX = 40;
 let verWarned = false;
+// which device a save came from, in plain words (kept on the drawing as updatedDevice)
+function deviceName() {
+  const ua = navigator.userAgent || '', touchMac = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+  const os = /iPhone/.test(ua) ? 'iPhone' : (/iPad/.test(ua) || touchMac) ? 'iPad' : /Android/.test(ua) ? (/Mobile/.test(ua) ? 'טלפון Android' : 'טאבלט Android')
+    : /Windows/.test(ua) ? 'מחשב Windows' : /Macintosh|Mac OS/.test(ua) ? 'מחשב Mac' : /CrOS/.test(ua) ? 'Chromebook' : /Linux/.test(ua) ? 'מחשב Linux' : 'מכשיר';
+  let app = false; try { app = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) {}
+  return os + (app ? ' · אפליקציה' : ' · דפדפן');
+}
 function keepVersion(ex) {
   const V = DESIGNS.doc(ex.id).collection('versions');
-  return V.add({ name: ex.name || '', data: ex.data, parts: ex.parts || 0, savedBy: ex.updatedBy || ex.createdBy || '', savedByEmail: me.email, savedAt: ex.updatedAt || new Date().toISOString(), keptAt: new Date().toISOString() })
+  return V.add({ name: ex.name || '', data: ex.data, parts: ex.parts || 0, savedBy: ex.updatedBy || ex.createdBy || '', savedDevice: ex.updatedDevice || '', savedByEmail: me.email, savedAt: ex.updatedAt || new Date().toISOString(), keptAt: new Date().toISOString() })
     .then(() => V.orderBy('savedAt', 'desc').get()).then((snap) => { snap.docs.slice(VER_MAX).forEach((doc) => doc.ref.delete().catch(() => {})); })
     .catch((e) => { if (!verWarned) { verWarned = true; console.warn('versions', e); if (e && e.code === 'permission-denied') toast('היסטוריית הגרסאות עוד לא פעילה — צריך לעדכן את הכללים ב-Firebase'); } });
 }
@@ -358,6 +384,8 @@ function keepVersion(ex) {
 const bridge = {
   me: () => ({ label: me.label, email: me.email, owner: isOwner }),
   version: String(VERSION),
+  // the shell's top row carries the drawing tool's menu and home buttons (on screens where the row is shown)
+  topNav: true,
   // the user's own settings (favourites, title-block details), the same on every device they sign in from
   prefs: {
     lastErr: '',
@@ -376,11 +404,27 @@ const bridge = {
   },
   async list() {
     await ready;
-    return [...designs.values()].sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt))).map(info);
+    return [...designs.values()].filter((d) => !d.kind).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt))).map(info);
   },
+  // drawings saved as templates (kind 'tpl'), shared with everyone, kept out of list()
+  async templates() {
+    await ready;
+    return [...designs.values()].filter((d) => d.kind === 'tpl').sort((a, b) => String(a.name).localeCompare(String(b.name), 'he')).map(info);
+  },
+  // the shared folder a drawing sits in ('' = none); seen by every user, does not change updatedAt
+  async setFolder(id, folder) {
+    await ready;
+    const d = designs.get(id); if (!d) return false;
+    const prev = d.folder || ''; folder = String(folder || '').trim().slice(0, 60);
+    designs.set(id, { ...d, folder }); listeners.forEach((f) => f());
+    try { await DESIGNS.doc(id).update({ folder }); return true; }
+    catch (e) { const c = designs.get(id); if (c) designs.set(id, { ...c, folder: prev }); listeners.forEach((f) => f()); throw e; }
+  },
+  // true once the drawings list came from the server
+  fresh() { return fresh; },
   async info(id) { await ready; const d = designs.get(id); return d ? info(d) : null; },
   // ids of drawings whose name or content holds the text (finds a drawing that was renamed)
-  async find(q) { await ready; q = String(q || '').trim().toLowerCase(); if (!q) return []; return [...designs.values()].filter((d) => (String(d.name || '') + '\n' + String(d.data || '')).toLowerCase().includes(q)).map((d) => d.id); },
+  async find(q) { await ready; q = String(q || '').trim().toLowerCase(); if (!q) return []; return [...designs.values()].filter((d) => !d.kind && (String(d.name || '') + '\n' + String(d.data || '')).toLowerCase().includes(q)).map((d) => d.id); },
   async load(id) { await ready; const d = designs.get(id); return d ? { id: d.id, name: d.name, data: d.data } : null; },
   async save(input) {
     await ready;
@@ -389,15 +433,25 @@ const bridge = {
     // the drawing number travels with the design, so new numbers can follow on from the last one
     let dwgno = '';try { dwgno = String(JSON.parse(input.data).dwgno || ''); } catch (e) {}
     const d0 = ex
-      ? { ...ex, name: input.name, data: input.data, parts: input.parts, updatedBy: me.label, updatedByEmail: me.email, updatedAt: now }
-      : { id: DESIGNS.doc().id, name: input.name, data: input.data, parts: input.parts,
+      ? { ...ex, name: input.name, data: input.data, parts: input.parts, updatedBy: me.label, updatedByEmail: me.email, updatedAt: now, updatedDevice: deviceName() }
+      : { id: DESIGNS.doc().id, name: input.name, data: input.data, parts: input.parts, ...(input.kind ? { kind: input.kind } : {}), ...(input.folder ? { folder: input.folder } : {}),
           createdBy: me.label, createdByEmail: me.email, createdAt: now,
-          updatedBy: me.label, updatedByEmail: me.email, updatedAt: now, deleted: false };
+          updatedBy: me.label, updatedByEmail: me.email, updatedAt: now, updatedDevice: deviceName(), deleted: false };
     let d = dwgno ? { ...d0, dwgno } : d0;
+    // never write over a newer save: ask the server which version it holds (input.base = the version the tool's copy is
+    // based on); a newer one there is refused as 'conflict' so the tool keeps its changes as a copy. Offline: no answer, write as before.
+    let sv = null;
+    if (ex && input.base) {
+      try { const snap = await Promise.race([DESIGNS.doc(ex.id).get({ source: 'server' }), new Promise((res) => setTimeout(() => res(null), 4000))]); sv = snap && snap.exists ? snap.data() : null; } catch (e) { sv = null; }
+      if (sv && !sv.deleted && sv.updatedAt && String(sv.updatedAt) > String(input.base) && sv.data !== input.data) {
+        designs.set(ex.id, { id: ex.id, ...sv }); listeners.forEach((f) => f());
+        const e = new Error('conflict'); e.code = 'conflict'; e.server = info({ id: ex.id, ...sv }); throw e;
+      }
+    }
     // version history: before overwriting, keep the previous content when the last kept
     // version is 10+ minutes old or someone else saved it
     if (ex && ex.data && ex.data !== input.data && (!ex.verAt || Date.now() - Date.parse(ex.verAt) > VER_GAP || (ex.updatedByEmail && ex.updatedByEmail !== me.email))) {
-      keepVersion(ex); d = { ...d, verAt: now };
+      keepVersion(sv && sv.data ? { ...ex, ...sv, id: ex.id } : ex); d = { ...d, verAt: now };
     }
     if (new Blob([input.data]).size > MAX_DESIGN) { const e = new Error('too-big'); e.code = 'too-big'; e.size = new Blob([input.data]).size; throw e; }
     const w = writeDesign(d);
@@ -406,7 +460,7 @@ const bridge = {
     return { ...info(d), pending: r === 'later' };
   },
   // version history of a drawing, newest first (without the data)
-  async versions(id) { const snap = await DESIGNS.doc(id).collection('versions').orderBy('savedAt', 'desc').limit(VER_MAX).get(); return snap.docs.map((doc) => { const v = doc.data(); return { vid: doc.id, name: v.name, parts: v.parts || 0, savedBy: v.savedBy, savedAt: v.savedAt }; }); },
+  async versions(id) { const snap = await DESIGNS.doc(id).collection('versions').orderBy('savedAt', 'desc').limit(VER_MAX).get(); return snap.docs.map((doc) => { const v = doc.data(); return { vid: doc.id, name: v.name, parts: v.parts || 0, savedBy: v.savedBy, savedDevice: v.savedDevice || '', savedAt: v.savedAt }; }); },
   async version(id, vid) { const doc = await DESIGNS.doc(id).collection('versions').doc(vid).get(); return doc.exists ? { name: doc.data().name, data: doc.data().data } : null; },
   // keep the drawing as it is now as a version (before a restore)
   async snapshot(id) { await ready; const d = designs.get(id); if (d && d.data) await keepVersion(d); },
@@ -427,6 +481,8 @@ const bridge = {
     el.hidden = !text; el.textContent = k === 'saved' ? '☁' : (text || ''); el.title = title || text || ''; el.dataset.k = k || '';
   },
   refresh() { location.reload(); },
+  // the open drawing's name (and number / revision) in this top bar; a click opens its properties
+  docName(name, sub) { const b = $('tbDoc'); if (!b) return; b.hidden = !name; $('topbar').classList.toggle('hasdoc', !!name); $('tbDocN').textContent = name || ''; $('tbDocS').textContent = sub || ''; b.title = (name || '') + (sub ? ' · ' + sub : '') + ' — מאפייני השרטוט'; },
   applyUI() { applyUI(); applyFontScale(); },
   // Extra items at the bottom of the drawing tool's menu.
   menu() {
@@ -523,17 +579,25 @@ function start() {
   const lastSeen = localStorage.getItem(LAST_VER_KEY);
   if (lastSeen && Number(lastSeen) !== VERSION) toast('🆕 עודכן לגרסה ' + VERSION + ': ' + WHATS_NEW, 7000);
   localStorage.setItem(LAST_VER_KEY, String(VERSION));
+  // The list is "ready" once the server has answered. A first answer from this device's offline cache can be
+  // old (a drawing saved since on another device), so it is used only if the server does not answer within 7 s.
   ready = new Promise((res) => {
-    unsubs.push(DESIGNS.where('deleted', '==', false).onSnapshot((snap) => {
+    setTimeout(res, 7000);
+    unsubs.push(DESIGNS.where('deleted', '==', false).onSnapshot({ includeMetadataChanges: true }, (snap) => {
       const m = new Map();
       snap.forEach((doc) => m.set(doc.id, { id: doc.id, ...doc.data() }));
       designs = m;
-      res();
+      if (!snap.metadata.fromCache) { fresh = true; res(); }
       listeners.forEach((f) => f());
     }, (e) => { console.warn('designs', e); res(); }));
   });
   const f = document.createElement('iframe');
   f.id = 'cad';
+  const toolCall = (fn) => { try { const w = f.contentWindow; if (w && typeof w[fn] === 'function') w[fn](); } catch (_) {} };
+  $('tbMenu').onclick = () => toolCall('openDrawer');
+  $('tbHome').onclick = () => toolCall('homeOpen');
+  document.querySelector('#topbar .tbBrand').onclick = () => toolCall('homeOpen');
+  $('tbDoc').onclick = () => toolCall('docProps');
   f.title = 'OhadCad';
   f.allow = 'clipboard-read; clipboard-write; fullscreen';
   const deep = new URLSearchParams(location.search).get('d');
