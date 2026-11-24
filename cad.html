@@ -4075,7 +4075,12 @@ async function cloudSync(){if(!SH||!cloudId||CSYNC)return;if(saving){clearTimeou
  catch(e){console.warn('cloudSync',e);}finally{CSYNC=false;}}
 if(SH&&SH.onChange)try{SH.onChange(()=>{clearTimeout(CST);CST=setTimeout(cloudSync,500);});}catch(e){}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){clearTimeout(CST);CST=setTimeout(cloudSync,300);}});
-document.addEventListener('visibilitychange',()=>{if(document.hidden)flushSave();});window.addEventListener('pagehide',()=>flushSave());
+/* leaving the app saves at once; coming back after 10+ minutes away (on a phone the app is rarely really closed) shows the home screen,
+   and a close with changes not yet saved asks first */
+let HIDDEN_AT=0;
+document.addEventListener('visibilitychange',()=>{if(document.hidden){HIDDEN_AT=Date.now();flushSave();}else if(HIDDEN_AT&&Date.now()-HIDDEN_AT>600000&&!HOME_OPEN&&!wireMode&&$('modal').classList.contains('hidden')){HIDDEN_AT=0;setTimeout(()=>homeOpen().catch(()=>{}),600);}});
+window.addEventListener('pagehide',()=>flushSave());
+window.addEventListener('beforeunload',e=>{if(!SH)return;const unsaved=!!saveT||saving||!!LAST_SAVE_ERR;if(saveT)flushSave();if(unsaved){e.preventDefault();e.returnValue='השרטוט עוד לא נשמר';return e.returnValue;}});
 async function saveShared(){if(!cloudId){saveSharedAs(false);return;}
  clearTimeout(saveT);saveT=null;await doAutoSave();toast('נשמר בתיקייה המשותפת');}
 function saveSharedAs(copy){modal(copy?'שמירת עותק בתיקייה המשותפת':'שמירה בתיקייה המשותפת',`<div class="fld"><label>שם הלוח</label><input id="f_sn" value="${esc(copy?state.name+' (עותק)':state.name)}"></div><div class="hint">הלוח יישמר בתיקייה המשותפת של מחלקת החשמל. כולם יוכלו לפתוח אותו, ויראו מי יצר אותו ומי ערך אותו לאחרונה.</div>`,
@@ -4305,7 +4310,7 @@ function setSnap(){const o={};try{SYNC_KEYS.forEach(k=>{const v=localStorage.get
 const setEnc=o=>Object.fromEntries(Object.entries(o).map(([k,v])=>[k.replace(/\./g,'~'),v]));
 function setsApply(rs,atStart){let ch=false;try{SYNC_KEYS.forEach(k=>{const v=rs[k.replace(/\./g,'~')];if(typeof v==='string'&&localStorage.getItem(k)!==v){localStorage.setItem(k,v);ch=true;}});}catch(e){}SETS=JSON.stringify(setSnap());
  if(!ch)return;let rl=false;try{rl=atStart&&!sessionStorage.getItem('ohadcad.setrl');if(rl)sessionStorage.setItem('ohadcad.setrl','1');}catch(e){}
- if(rl){flushSave();try{sessionStorage.removeItem('ohadcad.homeShown');}catch(e){}setTimeout(()=>location.reload(),300);}else toast('ההגדרות עודכנו ממכשיר אחר — חלק מהן יחולו בפתיחה הבאה של האפליקציה');}
+ if(rl){Promise.resolve(flushSave()).catch(()=>{}).then(()=>setTimeout(()=>location.reload(),300));}else toast('ההגדרות עודכנו ממכשיר אחר — חלק מהן יחולו בפתיחה הבאה של האפליקציה');}
 setInterval(()=>{if(!PRINIT)return;const o=setSnap(),j=JSON.stringify(o);if(j!==SETS){SETS=j;prefsPush({set:setEnc(o)});}},3000);
 /* send this device's settings to the account right now (before a reload, or when the app goes to the background),
    so the account's older copy doesn't win at the next start; resolves within 2.5 s at most */
@@ -4656,7 +4661,7 @@ const I18N={on:false,D:null,RX:[],busy:false,
   this.node(document.body);new MutationObserver(ms=>{if(this.busy)return;this.busy=true;try{for(const m of ms){if(m.type==='characterData')this.node(m.target);else if(m.type==='attributes')this.node(m.target);else m.addedNodes.forEach(x=>this.node(x));}}finally{this.busy=false;}})
    .observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['title','placeholder']});}};
 if(uiLang()==='en'){const sc=document.createElement('script');sc.src='i18n/en.js';sc.onload=()=>I18N.start();document.head.appendChild(sc);}
-function toggleLang(){if(HOME_OPEN)try{sessionStorage.removeItem('ohadcad.homeShown');}catch(e){}const en=uiLang()!=='en';try{localStorage.setItem(LANG_KEY,en?'en':'he');}catch(e){}toast(en?'Switching to English…':'עובר לעברית…');setsPushNow().then(()=>{try{if(SH&&SH.refresh){SH.refresh();return;}}catch(e){}location.reload();});}
+function toggleLang(){const en=uiLang()!=='en';try{localStorage.setItem(LANG_KEY,en?'en':'he');}catch(e){}toast(en?'Switching to English…':'עובר לעברית…');Promise.resolve(flushSave()).catch(()=>{}).then(()=>setsPushNow()).then(()=>{try{if(SH&&SH.refresh){SH.refresh();return;}}catch(e){}location.reload();});}
 const PRO_KEY='ohadcad.look';
 function uiPro(){try{return localStorage.getItem(PRO_KEY)!=='classic';}catch(e){return true;}}
 function applyUI(){document.body.classList.toggle('uil',uiLight());document.body.classList.toggle('pro',uiPro());}
@@ -4773,7 +4778,7 @@ document.addEventListener('pointerover',e=>{if(!ddHover.matches||e.pointerType!=
 /* ================= refresh =================
    The shell's ⟳ button and a pull down on the top bars both land here: any
    pending save goes out first, then the whole app reloads. */
-async function appRefresh(){if(HOME_OPEN)try{sessionStorage.removeItem('ohadcad.homeShown');}catch(e){}const el=$('ptr');if(el){el.classList.add('go');el.querySelector('span').textContent='מרענן…';}
+async function appRefresh(){const el=$('ptr');if(el){el.classList.add('go');el.querySelector('span').textContent='מרענן…';}
  try{persist();await Promise.race([Promise.all([flushSave()||Promise.resolve(),setsPushNow()]),new Promise(r=>setTimeout(r,4000))]);}catch(e){}
  if(SH&&SH.refresh)SH.refresh();else location.reload();}
 (()=>{const el=document.createElement('div');el.id='ptr';el.innerHTML='<i>⟳</i><span></span>';document.body.appendChild(el);let P=null;const NEED=90;
@@ -7006,7 +7011,7 @@ function starter(full=true){state={name:'לוח הדגמה',objs:[]};
  gridLbl();buildSheet();commit();clearTimeout(saveT);saveT=null;markSaved0();if(SH&&!cloudId&&state.name!=='לוח הדגמה'){lastSaved=null;scheduleSave();}applyView();renderNow();updateBar();setTimeout(fit,30);
  window.addEventListener('resize',()=>applyView());
  if(DEEP&&SH&&DEEP!==cloudId)setTimeout(()=>openCloudDoc(DEEP).catch(e=>toast('לא הצלחתי לפתוח את הלוח מהקישור')),600);
- else{let hs=null;try{hs=sessionStorage.getItem('ohadcad.homeShown');sessionStorage.setItem('ohadcad.homeShown','1');}catch(e){}if(!hs)setTimeout(()=>homeOpen().catch(()=>{}),350);}})();
+ else setTimeout(()=>homeOpen().catch(()=>{}),350);})(); // every start of the app opens on the home screen (a ?d= link opens its drawing)
 </script>
 </body>
 </html>
