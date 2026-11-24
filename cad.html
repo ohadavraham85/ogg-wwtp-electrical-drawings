@@ -1242,14 +1242,22 @@ function tagBox(t,cx,cy,maxW,maxH){const cw=.58,pad=.7;let fz=Math.min(110,maxH/
  const fit=L=>Math.max(...L.map(x=>x.length))*cw+pad*2;if(fit(lines)*fz>maxW){const sp=[...t.matchAll(/ /g)].map(m=>m.index);if(sp.length){const mid=sp.reduce((a,b)=>Math.abs(b-t.length/2)<Math.abs(a-t.length/2)?b:a);lines=[t.slice(0,mid),t.slice(mid+1)];}}
  fz=Math.max(20,Math.min(fz,maxW/fit(lines),maxH/(lines.length*1.3+.6)));const bw=Math.min(maxW,fit(lines)*fz),bh=(lines.length*1.3+.5)*fz;
  return `<rect x="${cx-bw/2}" y="${cy-bh/2}" width="${bw}" height="${bh}" rx="${fz*.25}" fill="#fff" stroke="#111827" stroke-width="${Math.max(2,fz/20)}"/>`+lines.map((x,i)=>txt(cx,cy+(i-(lines.length-1)/2)*fz*1.3,x,fz,'#111827',800)).join('');}
-/* Allen-Bradley FLEX 5000 I/O (5094): an EtherNet/IP adapter and I/O modules on a DIN
-   rail, light grey like the real ones (sizes approximate). F5KM: model → [kind, text, channels]. */
-const F5KM={'5094-AEN2TR':['ad','מתאם EtherNet/IP — 2 פורטים, DLR / PRP',0],'5094-IB16':['di','16 כניסות דיגיטליות 24VDC',16],'5094-IB16XT':['di','16 כניסות דיגיטליות 24VDC (XT)',16],
- '5094-OB16':['do','16 יציאות דיגיטליות 24VDC 0.5A',16],'5094-OB16XT':['do','16 יציאות דיגיטליות 24VDC (XT)',16],'5094-OW8I':['ro','8 יציאות ממסר מבודדות',8],
- '5094-IF8':['ai','8 כניסות אנלוגיות mA / V',8],'5094-IY8':['ai','8 כניסות אנלוגיות אוניברסליות (mA / V / RTD / TC)',8],'5094-OF8':['ao','8 יציאות אנלוגיות mA / V',8],'5094-HSC':['hs','מונה מהיר — 2 ערוצים',2]};
+/* Allen-Bradley FLEX 5000 I/O (5094): an EtherNet/IP adapter and I/O modules on a DIN rail.
+   An I/O module is drawn as installed: the module (front 94 × 54 mm, per the 5094 installation
+   instructions) seated on its terminal base (5094-MB + RTB, three rows of 16 terminals with
+   SA+ / SA− at the ends; base height approximate). F5KM: model → [kind, text, channels, front text, keys]. */
+const F5KM={'5094-AEN2TR':['ad','מתאם EtherNet/IP — 2 פורטים, DLR / PRP',0,'ETHERNET/IP ADAPTER',''],
+ '5094-IB16':['di','16 כניסות דיגיטליות 24VDC',16,'DIGITAL 16 INPUT 24VDC SINK',''],'5094-IB16XT':['di','16 כניסות דיגיטליות 24VDC (XT)',16,'DIGITAL 16 INPUT 24VDC SINK',''],
+ '5094-OB16':['do','16 יציאות דיגיטליות 24VDC 0.5A',16,'DIGITAL 16 OUTPUT 24VDC SOURCE',''],'5094-OB16XT':['do','16 יציאות דיגיטליות 24VDC (XT)',16,'DIGITAL 16 OUTPUT 24VDC SOURCE',''],
+ '5094-OW8I':['ro','8 יציאות ממסר מבודדות',8,'RELAY 8 OUTPUT ISOLATED',''],'5094-OW8IXT':['ro','8 יציאות ממסר מבודדות (XT)',8,'RELAY 8 OUTPUT ISOLATED',''],
+ '5094-IF8':['ai','8 כניסות אנלוגיות mA / V',8,'ANALOG 8 INPUT',''],'5094-IF8XT':['ai','8 כניסות אנלוגיות mA / V (XT)',8,'ANALOG 8 INPUT',''],
+ '5094-IF8IH':['aih','8 כניסות אנלוגיות מבודדות mA / V / HART',8,'ANALOG 8 INPUT HART ISOLATED','5 3 TB3I'],'5094-IF8IHXT':['aih','8 כניסות אנלוגיות מבודדות mA / V / HART (XT)',8,'ANALOG 8 INPUT HART ISOLATED','5 3 TB3I'],
+ '5094-IY8':['ai','8 כניסות אנלוגיות אוניברסליות (mA / V / RTD / TC)',8,'ANALOG 8 INPUT UNIVERSAL',''],'5094-IY8XT':['ai','8 כניסות אנלוגיות אוניברסליות (XT)',8,'ANALOG 8 INPUT UNIVERSAL',''],
+ '5094-OF8':['ao','8 יציאות אנלוגיות mA / V',8,'ANALOG 8 OUTPUT',''],'5094-OF8XT':['ao','8 יציאות אנלוגיות mA / V (XT)',8,'ANALOG 8 OUTPUT',''],
+ '5094-HSC':['hs','מונה מהיר — 2 ערוצים',2,'HIGH SPEED COUNTER',''],'5094-HSCXT':['hs','מונה מהיר — 2 ערוצים (XT)',2,'HIGH SPEED COUNTER','']};
 const F5K_SEL=Object.entries(F5KM).map(([k,[,d]])=>[k,k+' — '+d]);
 const f5kAd=m=>(F5KM[m]||['io'])[0]==='ad';
-function f5kDraw(o){const m=o.p.fm,M=F5KM[m]||['di','',16],{w,h}=sizeOf(o),x0=-w/2,y0=-h/2,lg='#e3e4e0',ed='#a7a9a4';let s='';
+function f5kDraw(o){const m=o.p.fm,M=F5KM[m]||['di','',16,'',''],{w,h}=sizeOf(o),x0=-w/2,y0=-h/2,lg='#e3e4e0',ed='#a7a9a4';let s='';
  const vents=(a,b)=>{let v='';for(let x=a+3;x<b-3;x+=6)v+=`<rect x="${x}" y="${y0+2}" width="3.2" height="7" rx="1" fill="#cfd0cb" stroke="${ed}" stroke-width=".4"/>`;return v;};
  if(M[0]==='ad'){const xs=x0+w*.58;
   s+=`<rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="2.5" fill="${lg}" stroke="#8d8f8a" stroke-width=".8"/>`+vents(x0,x0+w)+`<path d="M${xs} ${y0+10}V${y0+h}" stroke="${ed}" stroke-width=".6"/>`;
@@ -1264,19 +1272,33 @@ function f5kDraw(o){const m=o.p.fm,M=F5KM[m]||['di','',16],{w,h}=sizeOf(o),x0=-w
   s+=`<rect x="${xs+16}" y="${y0+55}" width="${x0+w-xs-19}" height="7" fill="#3a3c3e"/>`+txt(xs+16+(x0+w-xs-19)/2,y0+58.6,m,Math.min(3.3,(x0+w-xs-21)/(m.length*.6)),'#fff',800);
   s+=`<rect x="${xs+5}" y="${y0+66}" width="7" height="13" rx="3" fill="#d6d7d2" stroke="#888" stroke-width=".5"/><rect x="${xs+7.2}" y="${y0+68}" width="2.6" height="5" rx="1.2" fill="#666"/>`+txt(xs+3,y0+69,'PRP',2.2,'#333',800,'end')+txt(xs+3,y0+77,'DLR',2.2,'#333',800,'end');
   return s;}
- const n=M[2],col=M[0]==='di'?'#7ad94a':M[0]==='do'||M[0]==='ro'?'#f5c542':M[0]==='ai'||M[0]==='ao'?'#5aa9f0':'#7ad94a';
- s+=`<rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="2.5" fill="${lg}" stroke="#8d8f8a" stroke-width=".8"/>`+vents(x0,x0+w);
- s+=`<rect x="${x0+3}" y="${y0+12}" width="${w-6}" height="${h*.34}" rx="1.5" fill="#d3d4cf"/>`+txt(0,y0+16.5,'FLEX 5000',2.6,'#444',800);
- const rows=Math.ceil(n/2)||1;for(let i=0;i<n;i++){const c=i%2,r=Math.floor(i/2),yy=y0+21+r*((h*.34-12)/rows);s+=`<rect x="${c?3:-8}" y="${yy}" width="3" height="2.6" fill="${col}" fill-opacity=".85" stroke="#777" stroke-width=".2"/>`+txt(c?7.5:-9.5,yy+1.3,String(i),1.9,'#444',600,c?'start':'end');}
- s+=`<rect x="${x0+3}" y="${y0+h*.34+13}" width="${w-6}" height="6.5" fill="#3a3c3e"/>`+txt(0,y0+h*.34+16.3,m.replace('5094-',''),3,'#fff',800);
- // removable terminal block: spring clamps in two columns
- const ty=y0+h*.34+22,th=h-(h*.34+25);s+=`<rect x="${x0+2.5}" y="${ty}" width="${w-5}" height="${th}" rx="1.5" fill="#d9dad5" stroke="${ed}" stroke-width=".5"/>`;
- const k=Math.max(8,Math.ceil(n/2)+2);for(let r=0;r<k;r++){const yy=ty+3+r*((th-5)/k);[-1,1].forEach(c=>s+=`<rect x="${c*w*.22-3.4}" y="${yy}" width="6.8" height="${Math.max(2,(th-5)/k-1.4)}" rx=".8" fill="#b9bab5"/><rect x="${c*w*.22-1.4}" y="${yy+.6}" width="2.8" height="1.6" fill="#f17c2a"/>`);}
+ const n=M[2],MH=54,col={di:'#7ad94a',do:'#f5c542',ro:'#f5c542'}[M[0]]||'#7ad94a';
+ // terminal base (behind / below the module): three tiers of 16 terminals, SA− / SA+ at the row ends
+ const by=y0+MH-6,bh=h-MH+6,rh=(bh-4)/3,cw=(w-8)/18;
+ s+=`<rect x="${x0+.5}" y="${by}" width="${w-1}" height="${bh}" rx="2" fill="#5b5e61" stroke="#3d3f41" stroke-width=".6"/>`;
+ for(let r=0;r<3;r++){const ry=by+2+r*rh+(r?0:6),rr=r?rh:rh-6;s+=`<rect x="${x0+2}" y="${ry}" width="${w-4}" height="${rr-1}" rx="1" fill="#6c7073"/>`;
+  for(let c=0;c<18;c++){const cx=x0+4+c*cw+cw/2,end=c===0||c===17,num=end?(r===1?'SA−':'SA+'):String(r*16+c-1);
+   if(r===0&&end)continue;const top=ry+rr*.28;
+   s+=txt(cx,ry+rr*.15,num,end?1.4:1.6,'#f2f2ef',700)+`<rect x="${cx-cw*.38}" y="${top}" width="${cw*.76}" height="${rr*.3}" rx=".5" fill="#2e3032"/><rect x="${cx-cw*.2}" y="${top+rr*.07}" width="${cw*.4}" height="${rr*.16}" fill="#f17c2a"/><rect x="${cx-cw*.36}" y="${top+rr*.36}" width="${cw*.72}" height="${rr*.28}" rx=".6" fill="#202224"/>`;}}
+ // the module itself
+ s+=`<rect x="${x0}" y="${y0}" width="${w}" height="${MH}" rx="2.5" fill="${lg}" stroke="#8d8f8a" stroke-width=".8"/>`;
+ s+=`<rect x="${x0+w*.22}" y="${y0+.8}" width="${w*.56}" height="5.4" rx="1.5" fill="#d0d1cc" stroke="${ed}" stroke-width=".4"/>`;
+ for(let x=x0+w*.25;x<x0+w*.75;x+=3)s+=`<path d="M${x} ${y0+2}v3" stroke="${ed}" stroke-width=".5"/>`;
+ [x0+1.2,x0+w-4.2].forEach(x=>{for(let y=y0+8;y<y0+MH-4;y+=3.2)s+=`<rect x="${x}" y="${y}" width="3" height="1.8" rx=".4" fill="#c9cac5"/>`;});
+ s+=`<circle cx="${x0+8}" cy="${y0+10.5}" r="2.1" fill="#4b4d4f"/>`+txt(x0+8,y0+10.6,'AB',1.6,'#fff',800)+txt(x0+11,y0+10.6,'Allen-Bradley',2.5,'#3f4143',800,'start');
+ s+=txt(x0+w*.43,y0+10.6,'FLEX 5000 I/O',3.2,'#3f4143',800);
+ [['POWER',w*.61],['STATUS',w*.75]].forEach(([l,dx])=>s+=`<rect x="${x0+dx}" y="${y0+8.9}" width="3" height="3" fill="#f7f7f4" stroke="#777" stroke-width=".3"/>`+txt(x0+dx+4,y0+10.6,l,1.9,'#555',600,'start'));
+ s+=`<rect x="${x0+6}" y="${y0+14}" width="${w-12}" height="${MH*.42}" rx="1" fill="#ececea" stroke="${ed}" stroke-width=".4"/>`;
+ if(o.p.tag)s+=txt(0,y0+14+MH*.21,o.p.tag,Math.min(6,(w-20)/(o.p.tag.length*.62)),'#333',700);
+ const ly=y0+MH-13;s+=`<path d="M${x0+5} ${ly}H${x0+w-5}" stroke="${ed}" stroke-width=".3"/>`+txt(x0+6,ly+2.8,m,3.2,'#333',600,'start')+txt(x0+w*.52,ly+2.8,M[3]||'',Math.min(1.9,(w*.34)/((M[3]||'x').length*.58)),'#444',600);
+ if(M[4]){const [k1,k2,tb]=M[4].split(' ');s+=txt(x0+w-21,ly+2.8,k1,1.9,'#444',700)+`<circle cx="${x0+w-18.4}" cy="${ly+2.8}" r="1.1" fill="none" stroke="#444" stroke-width=".3"/><circle cx="${x0+w-15.9}" cy="${ly+2.8}" r="1.1" fill="none" stroke="#444" stroke-width=".3"/>`+txt(x0+w-13.3,ly+2.8,k2,1.9,'#444',700)+txt(x0+w-6,ly+2.8,tb,1.9,'#444',700,'end');}
+ const step=(w-14)/Math.max(n,1);for(let i=0;i<n;i++){const cx=x0+7+step*(i+.5);s+=`<rect x="${cx-1}" y="${ly+5.2}" width="2" height="1.6" fill="${M[0]==='ai'||M[0]==='aih'||M[0]==='ao'?'#f7f7f4':col}" stroke="#777" stroke-width=".2"/>`+txt(cx,ly+8.6,String(i),n>8?1.4:1.8,'#444',600);}
  return s;}
 /* single-line: the module as a box with its channel terminals along the bottom and its power on top */
 function f5kTerms(o){const M=F5KM[o.p.fm]||['di','',16],k=M[0],n=M[2];if(k==='ad')return [[-20,-30,'24V'],[-8,-30,'0V'],[10,30,'ETH1'],[26,30,'ETH2']];
- const pre=k==='di'||k==='ai'||k==='hs'?'I':'O',L=[...Array(n)].map((_,i)=>pre+i);if(k==='di'||k==='do')L.push('COM');if(k==='ai'||k==='ao')L.push('COM');
- const W=Math.max(60,L.length*12+12),x0=-W/2+12;return [[-12,-30,'24V'],[0,-30,'0V'],...L.map((l,i)=>[r2(x0+i*12),30,l])];}
+ let L;if(k==='aih'){L=[];for(let i=0;i<n;i++)L.push('I'+i+'+','I'+i+'−','24V_'+i);}
+ else{const pre=k==='di'||k==='ai'||k==='hs'?'I':'O';L=[...Array(n)].map((_,i)=>pre+i);L.push('COM');}
+ const W=Math.max(60,L.length*12+12),x0=-W/2+12;return [[-12,-30,'SA+'],[0,-30,'SA−'],...L.map((l,i)=>[r2(x0+i*12),30,l])];}
 /* a junction box's columns: its terminals, then the devices fitted in it
    (NO / NC pushbuttons, lamps, a buzzer), each with a top and a bottom connection */
 function sjbGeo(o){const n=Math.max(0,+o.p.n||0),a=+o.p.n0||1,pb=+o.p.pb||0,pbc=+o.p.pbc||0,lp=+o.p.lp||0,bz=+o.p.bz?1:0,C=[];
@@ -1761,7 +1783,7 @@ function hmiDraw(o){const M=HMIM[o.p.hm]||HMIM['HMIGTO4310 — GTO 7" W'],w=M.w,
 const INKC={red:{c:'#dc2626',o:1,n:'אדום'},blue:{c:'#2563eb',o:1,n:'כחול'},black:{c:'#111',o:1,n:'שחור'},green:{c:'#16a34a',o:1,n:'ירוק'},hl:{c:'#facc15',o:.38,n:'מרקר צהוב'}};
 function inkPath(P){if(P.length===1)return `M${P[0][0]} ${P[0][1]}l.01 0`;let d=`M${r2(P[0][0])} ${r2(P[0][1])}`;for(let i=1;i<P.length-1;i++){const mx=(P[i][0]+P[i+1][0])/2,my=(P[i][1]+P[i+1][1])/2;d+=`Q${r2(P[i][0])} ${r2(P[i][1])} ${r2(mx)} ${r2(my)}`;}const L=P[P.length-1];return d+`L${r2(L[0])} ${r2(L[1])}`;}
 const DEF={
- f5k:{layer:4,rail:true,edit:['tag','fm'],def:{tag:'',fm:'5094-IB16'},lbl:{fm:'דגם'},sel:{fm:F5K_SEL},size:o=>f5kAd(o.p.fm)?{w:87,h:112}:{w:37,h:112},draw:o=>f5kDraw(o)},
+ f5k:{layer:4,rail:true,edit:['tag','fm'],def:{tag:'',fm:'5094-IB16'},lbl:{fm:'דגם'},sel:{fm:F5K_SEL},size:o=>f5kAd(o.p.fm)?{w:87,h:112}:{w:94,h:128},draw:o=>f5kDraw(o)},
  mcb:{layer:4,rail:true,edit:['tag','rating','color'],ratings:['B6','B10','B16','B20','C6','C10','C16','C20','C25','C32','C40','C50','C63','D16','D25','D32'],
   def:{poles:1,rating:'C16'},
   size:o=>({w:M*(o.p.poles==='1N'?1:o.p.poles),h:A9H}),draw:o=>a9mcb(o),
@@ -2544,8 +2566,8 @@ const SDEF={
  sf5k:{layer:4,sld:true,edit:['tag','fm','desc'],def:{tag:'A1',fm:'5094-IB16',desc:''},lbl:{fm:'דגם'},sel:{fm:F5K_SEL},
   size:o=>{const T=f5kTerms(o),xs=T.map(t=>t[0]);return {w:Math.max(60,Math.max(...xs)-Math.min(...xs)+24),h:60};},terms:o=>f5kTerms(o),
   draw:o=>{const M=F5KM[o.p.fm]||['di','',16],{w}=DEF.sf5k.size(o),T=f5kTerms(o);let s=`<rect x="${-w/2}" y="-20" width="${w}" height="40" fill="#fff" stroke="${SK}" stroke-width="1.4"/>`;
-   T.forEach(([x,y,l])=>{s+=sL(x,y,x,y<0?-20:20)+txt(x,y<0?-16:16.5,l,l.length>3?3:3.6,SK,700);});
-   s+=sT(0,-4,o.p.fm,6.5,800)+txt(0,5,{ad:'EtherNet/IP',di:'DI',do:'DO',ro:'DO ממסר',ai:'AI',ao:'AO',hs:'HSC'}[M[0]]+(M[2]?' × '+M[2]:''),5,SK,600);
+   T.forEach(([x,y,l])=>{s+=sL(x,y,x,y<0?-20:20)+txt(x,y<0?-16:16.5,l,l.length>4?2.4:l.length>3?3:3.6,SK,700);});
+   s+=sT(0,-4,o.p.fm,6.5,800)+txt(0,5,{ad:'EtherNet/IP',di:'DI',do:'DO',ro:'DO ממסר',ai:'AI',aih:'AI ISO / HART',ao:'AO',hs:'HSC'}[M[0]]+(M[2]?' × '+M[2]:''),5,SK,600);
    return s+sLbl(o,w);}},
  splc:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'A1',rating:'PLC',desc:'כניסה / יציאה PLC'},size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sL(0,-30,0,-10)+sL(0,10,0,30)+sR(-14,-10,28,20)+sT(0,4,o.p.rating||'PLC',7.5)+sLbl(o,40)},
