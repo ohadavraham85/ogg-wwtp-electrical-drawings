@@ -5027,7 +5027,7 @@ function rotHandle(o){if(!canRot(o))return '';const {w,h}=sizeOf(o),k=1/view.s,s
  return `<g data-rot="${o.id}" style="cursor:grab"><path d="M${tx} ${ty}L${hx} ${hy}" stroke="#ff8c00" stroke-width="${1.2*k}" stroke-dasharray="${3*k} ${2*k}"/><circle cx="${hx}" cy="${hy}" r="${r*1.8}" fill="transparent"/><circle cx="${hx}" cy="${hy}" r="${r}" fill="#ff8c00" stroke="#000" stroke-width="${1.2*k}"/>`+
   `<path d="M${hx-r*.45} ${hy-r*.15}a${r*.5} ${r*.5} 0 1 1 ${r*.18} ${r*.55}" fill="none" stroke="#000" stroke-width="${1.6*k}" stroke-linecap="round"/><path d="M${hx-r*.62} ${hy-r*.5}l${r*.12} ${r*.42}l${r*.4} ${-r*.12}" fill="none" stroke="#000" stroke-width="${1.6*k}" stroke-linecap="round" stroke-linejoin="round"/>`+
   (G&&G.mode==='rot'&&G.o===o?`<g transform="translate(${hx+16*k} ${hy-16*k})"><rect x="0" y="${-10*k}" width="${46*k}" height="${20*k}" rx="${4*k}" fill="#000" stroke="#ff8c00" stroke-width="${1.2*k}"/><text x="${23*k}" y="0" font-size="${12*k}" fill="#ffb340" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Arial" direction="ltr">${Math.round(o.rot)}°</text></g>`:'')+`</g>`;}
-function rotSVG(){if(wireMode||measMode)return '';const a=sel&&get(sel),b=HOVID&&HOVID!==sel&&get(HOVID);return (a&&!multi.size?rotHandle(a):'')+(b&&!G?rotHandle(b):'');}
+function rotSVG(){if(wireMode||measMode)return '';const a=sel&&get(sel),b=HOVID&&HOVID!==sel&&get(HOVID);const GI=multi.size?grpRotIds():null,inG=q=>q&&(GI&&GI.includes(q.id)||q.blk);return (a&&!multi.size&&!a.blk?rotHandle(a):'')+(GI&&!(G&&G.mode==='rot')?grotHandle():'')+(b&&!G&&!inG(b)?rotHandle(b):'');}
 svg.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||P.has(e.pointerId))return;const t=e.target.closest('[data-id],[data-rot]'),id=t?(t.dataset.rot||t.dataset.id):null;
  if(id){clearTimeout(hovT);if(id!==HOVID){HOVID=id;render();}}else if(HOVID){clearTimeout(hovT);hovT=setTimeout(()=>{HOVID=null;render();},700);}});
 /* ================= 90° guides while routing a cable =================
@@ -5506,7 +5506,8 @@ svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(
  const clEl=e.target.closest('[data-cl]');if(clEl&&so0()&&!wireMode&&!globalLock){const o=so0(),{h}=sizeOf(o);G.mode='cl';G.o=o;G.b0=fromLocal(o,0,h/2);G.base=h-cabX(o);return;}
  const lmEl=e.target.closest('[data-lymv]');if(lmEl&&!wireMode&&layoutRect()){G.mode='lymv';G.o0=Object.assign({},ORG());G.w0=toWorld(e.clientX,e.clientY);return;}
  const lyEl=e.target.closest('[data-lyh]');if(lyEl&&!wireMode){const R=layoutRect();if(R){G.mode='lyr';G.h=lyEl.dataset.lyh;G.R0=R;return;}}
- const rEl=e.target.closest('[data-rot]');if(rEl&&!wireMode){const ro=get(rEl.dataset.rot);if(canRot(ro)){G.mode='rot';G.o=ro;G.r0=ro.rot;if(sel!==ro.id){sel=ro.id;multi.clear();updateBar();}return;}}
+ const grEl=e.target.closest('[data-grot]');if(grEl&&!wireMode&&!globalLock){const I=grpRotIds();if(I){const S0=grpSnap(I),[wx,wy]=toWorld(e.clientX,e.clientY);G.mode='grot';G.S=S0;G.a0=Math.atan2(wy-S0.c[1],wx-S0.c[0])*180/Math.PI;G.ang=0;return;}}
+ const rEl=e.target.closest('[data-rot]');if(rEl&&!wireMode){const ro=get(rEl.dataset.rot);if(ro&&ro.blk&&!globalLock){sel=ro.id;multi.clear();blkExpand();updateBar();const I=grpRotIds();if(I){const S0=grpSnap(I),[wx,wy]=toWorld(e.clientX,e.clientY);G.mode='grot';G.S=S0;G.a0=Math.atan2(wy-S0.c[1],wx-S0.c[0])*180/Math.PI;G.ang=0;return;}}if(canRot(ro)){G.mode='rot';G.o=ro;G.r0=ro.rot;if(sel!==ro.id){sel=ro.id;multi.clear();updateBar();}return;}}
  const pnEl=e.target.closest('[data-dpin]');if(pnEl){G.dpin=pnEl.dataset.dpin;return;}
  const dEl=e.target.closest('[data-dim]');if(dEl){G.dim=dEl.dataset.dim;return;}
  const hEl=e.target.closest('[data-h]'),so=sel&&get(sel);
@@ -5553,6 +5554,8 @@ svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)&&measMode&&e.point
   const E=Math.max(0,Math.round((d-G.base)/10)*10);o.p.cl=CABLEN[o.type]+E;const h=G.base+E;o.x=r2(G.b0[0]+ux*h/2);o.y=r2(G.b0[1]+uy*h/2);render();}
  else if(G.mode==='lymv'){const [wx,wy]=toWorld(e.clientX,e.clientY);state[OKEY()]={x:r2(gs(G.o0.x+wx-G.w0[0])),y:r2(gs(G.o0.y+wy-G.w0[1]))};render();}
  else if(G.mode==='lyr'){const [wx,wy]=toWorld(e.clientX,e.clientY);layResize(G,wx,wy,e.altKey);render();}
+ else if(G.mode==='grot'){const [wx,wy]=toWorld(e.clientX,e.clientY);let a=Math.atan2(wy-G.S.c[1],wx-G.S.c[0])*180/Math.PI-G.a0;a=((a%360)+540)%360-180;
+  if(!e.altKey)a=Math.round(a/15)*15;else{const n=Math.round(a/90)*90;if(Math.abs(a-n)<3)a=n;}G.ang=a;grpApply(G.S,a);render();}
  else if(G.mode==='rot'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY);let a=Math.atan2(wy-o.y,wx-o.x)*180/Math.PI+(CABLEN[o.type]?0:90);
   if(!e.altKey){a=Math.round(a/15)*15;}else{const n=Math.round(a/90)*90;if(Math.abs(a-n)<3)a=n;}o.rot=r2(((a%360)+360)%360);render();}
  else if(G.mode==='tip'){const o=G.o,[wx,wy]=toWorld(e.clientX,e.clientY),sp=mdSnap(wx,wy);o.p.tip=sp&&Math.hypot(sp.x-wx,sp.y-wy)<12/view.s?{...sp}:{x:r2(wx),y:r2(wy)};render();}
@@ -5733,6 +5736,7 @@ function endPtr(e){if(!P.has(e.pointerId))return;P.delete(e.pointerId);
  if(g.mode==='cl'){if(g.moved){commit();renderNow();toast(`אורך הכבל: ${((+g.o.p.cl||0)/1000).toFixed(2)} מ'`);}else renderNow();return;}
  if(g.mode==='lymv'){if(g.moved){commit();renderNow();toast('הדף הוזז');}else renderNow();return;}
  if(g.mode==='lyr'){if(g.moved){commit();renderNow();const L=state[LKEY()];toast(`דף ${L.paper} · קנה מידה 1:${+(+L.scale).toFixed(2)}`);}else renderNow();return;}
+ if(g.mode==='grot'){if(g.moved&&g.ang){commit();renderNow();updateBar();toast(`הקבוצה סובבה ב-${Math.round(g.ang)}°`);}else renderNow();return;}
  if(g.mode==='rot'){if(g.moved){commit();renderNow();updateBar();toast(`סובב ל-${Math.round(g.o.rot)}°`);}else renderNow();return;}
  if(g.mode==='tip'){if(g.moved){commit();renderNow();}return;}
  if(g.mode==='wmid'){if(g.moved){commit();renderNow();updateBar();toast(g.ax==='x'?'החוט הוזז — הוא נשאר במיקום הזה לרוחב':'החוט הוזז — הוא נשאר בגובה הזה');}else select(g.id,g.add);return;}
@@ -5801,15 +5805,23 @@ $('bMir').onclick=()=>{const L=selIds().map(get).filter(o=>o&&o.type!=='wire'&&o
  // several parts flip as one group, about the middle of the selection
  let cx=0;if(L.length>1){const b=L.map(bbW);cx=(Math.min(...b.map(q=>q.x0))+Math.max(...b.map(q=>q.x1)))/2;}
  L.forEach(o=>{o.mx=!o.mx;if(o.mx===false)delete o.mx;o.rot=r2((360-(+o.rot||0))%360);if(L.length>1)o.x=r2(2*cx-o.x);});commit();renderNow();updateBar();toast(L.length>1?`${L.length} רכיבים הופכו במראה`:'הרכיב הופך במראה');};
-/* Several selected parts (or a block) turn together by 90° about the middle of their joint box: each part
-   moves round that point and turns with it; text labels keep reading upright; free wire corners between the
-   parts turn too and the wires' dragged runs reset. */
-function rotGroup(ids){const S=new Set(ids),P=ids.map(get).filter(o=>o&&o.type!=='wire'&&o.type!=='mdim'&&!o.locked);if(P.some(o=>o.type==='cabinet')){toast('ארון לא מסתובב');return;}if(!P.length)return;
- let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;P.forEach(o=>{const b=bbW(o);x0=Math.min(x0,b.x0);x1=Math.max(x1,b.x1);y0=Math.min(y0,b.y0);y1=Math.max(y1,b.y1);});
- const cx=(x0+x1)/2,cy=(y0+y1)/2,R=(x,y)=>[r2(cx-(y-cy)),r2(cy+(x-cx))];
- P.forEach(o=>{[o.x,o.y]=R(o.x,o.y);if(o.type!=='label'&&o.type!=='callout')o.rot=((o.rot||0)+90)%360;if(o.type==='callout'&&o.p.tip&&!o.p.tip.of){[o.p.tip.x,o.p.tip.y]=R(o.p.tip.x,o.p.tip.y);}});
- state.objs.forEach(w=>{if(w.type!=='wire'||!w.pts||!w.pts.some(p=>p.r)||!w.pts.every(p=>!p.r||S.has(p.r)))return;w.pts=w.pts.map(p=>p.r?p:(([x,y])=>({x,y}))(R(p.x,p.y)));if(w.p){delete w.p.xm;delete w.p.ym;}});
- commit();renderNow();}
+/* Several selected parts (or a block) turn together about the middle of their joint box: each part moves round
+   that point and turns with it; text labels / callouts keep reading upright; free wire corners between the parts
+   turn too and the wires' dragged runs reset. The button turns by 90°; the group handle (grotHandle, mode 'grot')
+   turns freely in 15° steps (Alt: free, sticking to 90°). */
+function grpRotIds(){const I=selIds().filter(i=>{const q=get(i);return q&&q.type!=='wire'&&q.type!=='mdim'&&!q.locked;});return I.length>1?I:null;}
+function grpBox(I){let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;I.map(get).forEach(o=>{const b=bbW(o);x0=Math.min(x0,b.x0);x1=Math.max(x1,b.x1);y0=Math.min(y0,b.y0);y1=Math.max(y1,b.y1);});return {x0,x1,y0,y1,cx:(x0+x1)/2,cy:(y0+y1)/2};}
+function grpSnap(I){const S=new Set(I),B=grpBox(I);return {c:[B.cx,B.cy],P:I.map(get).map(o=>({o,x:o.x,y:o.y,r:o.rot||0,tip:o.type==='callout'&&o.p.tip&&!o.p.tip.of?{...o.p.tip}:null})),
+ W:state.objs.filter(w=>w.type==='wire'&&w.pts&&w.pts.some(p=>p.r)&&w.pts.every(p=>!p.r||S.has(p.r))).map(w=>({w,pts:w.pts.map(p=>({...p}))}))};}
+function grpApply(G0,ang){const [cx,cy]=G0.c,t=ang*Math.PI/180,c=Math.cos(t),sn=Math.sin(t),R=(x,y)=>[r2(cx+(x-cx)*c-(y-cy)*sn),r2(cy+(x-cx)*sn+(y-cy)*c)];
+ G0.P.forEach(q=>{const o=q.o;[o.x,o.y]=R(q.x,q.y);if(o.type!=='label'&&o.type!=='callout')o.rot=r2((((q.r+ang)%360)+360)%360);if(q.tip)[o.p.tip.x,o.p.tip.y]=R(q.tip.x,q.tip.y);});
+ G0.W.forEach(q=>{q.w.pts=q.pts.map(p=>p.r?p:(([x,y])=>({x,y}))(R(p.x,p.y)));if(q.w.p){delete q.w.p.xm;delete q.w.p.ym;}});}
+function rotGroup(ids){const I=ids.filter(i=>{const q=get(i);return q&&q.type!=='wire'&&q.type!=='mdim'&&!q.locked;});if(I.some(i=>get(i).type==='cabinet')){toast('ארון לא מסתובב');return;}if(I.length<2)return;
+ grpApply(grpSnap(I),90);commit();renderNow();}
+function grotHandle(){const I=grpRotIds();if(!I||I.some(i=>get(i).type==='cabinet'))return '';const B=grpBox(I),k=1/view.s,r=11*k,hx=B.cx,hy=B.y0-34*k,ang=G&&G.mode==='grot'?G.ang||0:null;
+ return `<g data-grot="1" style="cursor:grab"><rect x="${B.x0}" y="${B.y0}" width="${B.x1-B.x0}" height="${B.y1-B.y0}" fill="none" stroke="#ff8c00" stroke-width="${1*k}" stroke-dasharray="${5*k} ${4*k}" pointer-events="none"/><path d="M${hx} ${B.y0}L${hx} ${hy}" stroke="#ff8c00" stroke-width="${1.2*k}" stroke-dasharray="${3*k} ${2*k}"/><circle cx="${hx}" cy="${hy}" r="${r*1.8}" fill="transparent"/><circle cx="${hx}" cy="${hy}" r="${r}" fill="#ff8c00" stroke="#000" stroke-width="${1.2*k}"/>`+
+  `<path d="M${hx-r*.45} ${hy-r*.15}a${r*.5} ${r*.5} 0 1 1 ${r*.18} ${r*.55}" fill="none" stroke="#000" stroke-width="${1.6*k}" stroke-linecap="round"/><path d="M${hx-r*.62} ${hy-r*.5}l${r*.12} ${r*.42}l${r*.4} ${-r*.12}" fill="none" stroke="#000" stroke-width="${1.6*k}" stroke-linecap="round" stroke-linejoin="round"/>`+
+  (ang!==null?`<g transform="translate(${hx+18*k} ${hy-16*k})"><rect x="0" y="${-10*k}" width="${46*k}" height="${20*k}" rx="${4*k}" fill="#000" stroke="#ff8c00" stroke-width="${1.2*k}"/><text x="${23*k}" y="0" font-size="${12*k}" fill="#ffb340" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Arial" direction="ltr">${Math.round(ang)}°</text></g>`:'')+`</g>`;}
 $('bRot').onclick=()=>{const I=selIds().filter(i=>get(i)?.type!=='wire');if(I.length>1){rotGroup(selIds());return;}const o=sel&&get(sel);if(!o||o.type==='wire'||o.type==='mdim'||o.type==='callout'||o.locked)return;if(o.type==='cabinet'){toast('ארון לא מסתובב');return;}o.rot=(o.rot+90)%360;commit();renderNow();};
 /* duplicate several selected parts at once: they keep their layout, wires between them (and their own
    text boxes) come along, and the group lands to the right of the originals at the first free spot */
