@@ -1007,6 +1007,41 @@ function tagBox(t,cx,cy,maxW,maxH){const cw=.58,pad=.7;let fz=Math.min(110,maxH/
  const fit=L=>Math.max(...L.map(x=>x.length))*cw+pad*2;if(fit(lines)*fz>maxW){const sp=[...t.matchAll(/ /g)].map(m=>m.index);if(sp.length){const mid=sp.reduce((a,b)=>Math.abs(b-t.length/2)<Math.abs(a-t.length/2)?b:a);lines=[t.slice(0,mid),t.slice(mid+1)];}}
  fz=Math.max(20,Math.min(fz,maxW/fit(lines),maxH/(lines.length*1.3+.6)));const bw=Math.min(maxW,fit(lines)*fz),bh=(lines.length*1.3+.5)*fz;
  return `<rect x="${cx-bw/2}" y="${cy-bh/2}" width="${bw}" height="${bh}" rx="${fz*.25}" fill="#fff" stroke="#111827" stroke-width="${Math.max(2,fz/20)}"/>`+lines.map((x,i)=>txt(cx,cy+(i-(lines.length-1)/2)*fz*1.3,x,fz,'#111827',800)).join('');}
+/* Allen-Bradley FLEX 5000 I/O (5094): an EtherNet/IP adapter and I/O modules on a DIN
+   rail, light grey like the real ones (sizes approximate). F5KM: model → [kind, text, channels]. */
+const F5KM={'5094-AEN2TR':['ad','מתאם EtherNet/IP — 2 פורטים, DLR / PRP',0],'5094-IB16':['di','16 כניסות דיגיטליות 24VDC',16],'5094-IB16XT':['di','16 כניסות דיגיטליות 24VDC (XT)',16],
+ '5094-OB16':['do','16 יציאות דיגיטליות 24VDC 0.5A',16],'5094-OB16XT':['do','16 יציאות דיגיטליות 24VDC (XT)',16],'5094-OW8I':['ro','8 יציאות ממסר מבודדות',8],
+ '5094-IF8':['ai','8 כניסות אנלוגיות mA / V',8],'5094-IY8':['ai','8 כניסות אנלוגיות אוניברסליות (mA / V / RTD / TC)',8],'5094-OF8':['ao','8 יציאות אנלוגיות mA / V',8],'5094-HSC':['hs','מונה מהיר — 2 ערוצים',2]};
+const F5K_SEL=Object.entries(F5KM).map(([k,[,d]])=>[k,k+' — '+d]);
+const f5kAd=m=>(F5KM[m]||['io'])[0]==='ad';
+function f5kDraw(o){const m=o.p.fm,M=F5KM[m]||['di','',16],{w,h}=sizeOf(o),x0=-w/2,y0=-h/2,lg='#e3e4e0',ed='#a7a9a4';let s='';
+ const vents=(a,b)=>{let v='';for(let x=a+3;x<b-3;x+=6)v+=`<rect x="${x}" y="${y0+2}" width="3.2" height="7" rx="1" fill="#cfd0cb" stroke="${ed}" stroke-width=".4"/>`;return v;};
+ if(M[0]==='ad'){const xs=x0+w*.58;
+  s+=`<rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="2.5" fill="${lg}" stroke="#8d8f8a" stroke-width=".8"/>`+vents(x0,x0+w)+`<path d="M${xs} ${y0+10}V${y0+h}" stroke="${ed}" stroke-width=".6"/>`;
+  s+=`<circle cx="${x0+7}" cy="${y0+18}" r="3.4" fill="#5a5d5f"/>`+txt(x0+7,y0+18,'AB',2.6,'#fff',800)+txt(x0+12,y0+18,'Allen-Bradley',4.2,'#4b4d4f',700,'start');
+  s+=`<rect x="${x0+5}" y="${y0+27}" width="${w*.36}" height="12" rx="1.5" fill="#f4f4f2" stroke="${ed}" stroke-width=".5"/>`+txt(x0+7,y0+36,'IP ADDRESS',2.6,'#555',600,'start')+`<rect x="${x0+w*.44}" y="${y0+27}" width="9" height="12" rx="1" fill="#fff" stroke="${ed}" stroke-width=".5"/>`;
+  s+=`<rect x="${x0+5}" y="${y0+45}" width="3" height="3" fill="#7ad94a"/>`+txt(x0+10,y0+46.6,'POWER',3,'#333',800,'start');
+  [0,1].forEach(i=>{const yy=y0+52+i*24;s+=`<rect x="${x0+w*.26}" y="${yy}" width="${w*.28}" height="20" rx="1.5" fill="#d8d9d4" stroke="${ed}" stroke-width=".5"/><rect x="${x0+w*.31}" y="${yy+5}" width="${w*.18}" height="10" rx=".8" fill="#2f3133"/>`+txt(x0+w*.57,yy+10,String(i+1),3,'#333',700,'start');});
+  s+=`<rect x="${x0+5}" y="${y0+57}" width="${w*.19}" height="13" rx="1.5" fill="#fff" stroke="${ed}" stroke-width=".4"/>`+txt(x0+5+w*.095,y0+64,'MAC',2.4,'#666',600);
+  [0,1,2].forEach(i=>{const cy=y0+22+i*15;s+=`<circle cx="${xs+9}" cy="${cy}" r="5.6" fill="#f2f2ef" stroke="#888" stroke-width=".6"/><circle cx="${xs+9}" cy="${cy}" r="2.6" fill="#555"/><path d="M${xs+9} ${cy-2.2}v4.4" stroke="#fff" stroke-width=".7"/>`+txt(xs+2,cy-5,['X100','X10','X1'][i],2,'#444',700,'end');});
+  s+=`<rect x="${xs+16}" y="${y0+13}" width="${x0+w-xs-19}" height="47" rx="1.5" fill="#cfd0cb"/>`+txt(xs+16+(x0+w-xs-19)/2,y0+18,'FLEX 5000',3.4,'#444',800);
+  ['STATUS','NET','LINK 1','LINK 2'].forEach((l,i)=>{const yy=y0+26+i*8;s+=txt(x0+w-8,yy,l,2.4,'#444',700,'end')+`<rect x="${x0+w-6.5}" y="${yy-1.6}" width="3.2" height="3.2" fill="${i?'#9ea09b':'#e9f97a'}" stroke="#777" stroke-width=".3"/>`;});
+  s+=`<rect x="${xs+16}" y="${y0+55}" width="${x0+w-xs-19}" height="7" fill="#3a3c3e"/>`+txt(xs+16+(x0+w-xs-19)/2,y0+58.6,m,Math.min(3.3,(x0+w-xs-21)/(m.length*.6)),'#fff',800);
+  s+=`<rect x="${xs+5}" y="${y0+66}" width="7" height="13" rx="3" fill="#d6d7d2" stroke="#888" stroke-width=".5"/><rect x="${xs+7.2}" y="${y0+68}" width="2.6" height="5" rx="1.2" fill="#666"/>`+txt(xs+3,y0+69,'PRP',2.2,'#333',800,'end')+txt(xs+3,y0+77,'DLR',2.2,'#333',800,'end');
+  return s;}
+ const n=M[2],col=M[0]==='di'?'#7ad94a':M[0]==='do'||M[0]==='ro'?'#f5c542':M[0]==='ai'||M[0]==='ao'?'#5aa9f0':'#7ad94a';
+ s+=`<rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="2.5" fill="${lg}" stroke="#8d8f8a" stroke-width=".8"/>`+vents(x0,x0+w);
+ s+=`<rect x="${x0+3}" y="${y0+12}" width="${w-6}" height="${h*.34}" rx="1.5" fill="#d3d4cf"/>`+txt(0,y0+16.5,'FLEX 5000',2.6,'#444',800);
+ const rows=Math.ceil(n/2)||1;for(let i=0;i<n;i++){const c=i%2,r=Math.floor(i/2),yy=y0+21+r*((h*.34-12)/rows);s+=`<rect x="${c?3:-8}" y="${yy}" width="3" height="2.6" fill="${col}" fill-opacity=".85" stroke="#777" stroke-width=".2"/>`+txt(c?7.5:-9.5,yy+1.3,String(i),1.9,'#444',600,c?'start':'end');}
+ s+=`<rect x="${x0+3}" y="${y0+h*.34+13}" width="${w-6}" height="6.5" fill="#3a3c3e"/>`+txt(0,y0+h*.34+16.3,m.replace('5094-',''),3,'#fff',800);
+ // removable terminal block: spring clamps in two columns
+ const ty=y0+h*.34+22,th=h-(h*.34+25);s+=`<rect x="${x0+2.5}" y="${ty}" width="${w-5}" height="${th}" rx="1.5" fill="#d9dad5" stroke="${ed}" stroke-width=".5"/>`;
+ const k=Math.max(8,Math.ceil(n/2)+2);for(let r=0;r<k;r++){const yy=ty+3+r*((th-5)/k);[-1,1].forEach(c=>s+=`<rect x="${c*w*.22-3.4}" y="${yy}" width="6.8" height="${Math.max(2,(th-5)/k-1.4)}" rx=".8" fill="#b9bab5"/><rect x="${c*w*.22-1.4}" y="${yy+.6}" width="2.8" height="1.6" fill="#f17c2a"/>`);}
+ return s;}
+/* single-line: the module as a box with its channel terminals along the bottom and its power on top */
+function f5kTerms(o){const M=F5KM[o.p.fm]||['di','',16],k=M[0],n=M[2];if(k==='ad')return [[-20,-30,'24V'],[-8,-30,'0V'],[10,30,'ETH1'],[26,30,'ETH2']];
+ const pre=k==='di'||k==='ai'||k==='hs'?'I':'O',L=[...Array(n)].map((_,i)=>pre+i);if(k==='di'||k==='do')L.push('COM');if(k==='ai'||k==='ao')L.push('COM');
+ const W=Math.max(60,L.length*12+12),x0=-W/2+12;return [[-12,-30,'24V'],[0,-30,'0V'],...L.map((l,i)=>[r2(x0+i*12),30,l])];}
 /* a junction box's columns: its terminals, then the devices fitted in it
    (NO / NC pushbuttons, lamps, a buzzer), each with a top and a bottom connection */
 function sjbGeo(o){const n=Math.max(0,+o.p.n||0),a=+o.p.n0||1,pb=+o.p.pb||0,pbc=+o.p.pbc||0,lp=+o.p.lp||0,bz=+o.p.bz?1:0,C=[];
@@ -1489,6 +1524,7 @@ function hmiDraw(o){const M=HMIM[o.p.hm]||HMIM['HMIGTO4310 — GTO 7" W'],w=M.w,
 const INKC={red:{c:'#dc2626',o:1,n:'אדום'},blue:{c:'#2563eb',o:1,n:'כחול'},black:{c:'#111',o:1,n:'שחור'},green:{c:'#16a34a',o:1,n:'ירוק'},hl:{c:'#facc15',o:.38,n:'מרקר צהוב'}};
 function inkPath(P){if(P.length===1)return `M${P[0][0]} ${P[0][1]}l.01 0`;let d=`M${r2(P[0][0])} ${r2(P[0][1])}`;for(let i=1;i<P.length-1;i++){const mx=(P[i][0]+P[i+1][0])/2,my=(P[i][1]+P[i+1][1])/2;d+=`Q${r2(P[i][0])} ${r2(P[i][1])} ${r2(mx)} ${r2(my)}`;}const L=P[P.length-1];return d+`L${r2(L[0])} ${r2(L[1])}`;}
 const DEF={
+ f5k:{layer:4,rail:true,edit:['tag','fm'],def:{tag:'',fm:'5094-IB16'},lbl:{fm:'דגם'},sel:{fm:F5K_SEL},size:o=>f5kAd(o.p.fm)?{w:87,h:112}:{w:37,h:112},draw:o=>f5kDraw(o)},
  mcb:{layer:4,rail:true,edit:['tag','rating','color'],ratings:['B6','B10','B16','B20','C6','C10','C16','C20','C25','C32','C40','C50','C63','D16','D25','D32'],
   def:{poles:1,rating:'C16'},
   size:o=>({w:M*(o.p.poles==='1N'?1:o.p.poles),h:A9H}),draw:o=>a9mcb(o),
@@ -2261,6 +2297,12 @@ const SDEF={
   draw:o=>sL(0,-30,0,-9)+sL(0,9,0,30)+sC(0,0,9,o.p.color&&o.p.color!=='white'?COLORS[o.p.color]+'55':'#fff')+sL(-6.4,-6.4,6.4,6.4)+sL(-6.4,6.4,6.4,-6.4)+sLbl(o,40)},
  shorn:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'H5',rating:'230V',desc:'צופר / זמזם'},size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sL(0,-30,0,-6)+sL(0,8,0,30)+`<path d="M-10 -6h20a10 12 0 0 1 -20 0z" fill="#fff" stroke="${SK}" stroke-width="2"/>`+sL(-10,8,10,8)+sLbl(o,40)},
+ sf5k:{layer:4,sld:true,edit:['tag','fm','desc'],def:{tag:'A1',fm:'5094-IB16',desc:''},lbl:{fm:'דגם'},sel:{fm:F5K_SEL},
+  size:o=>{const T=f5kTerms(o),xs=T.map(t=>t[0]);return {w:Math.max(60,Math.max(...xs)-Math.min(...xs)+24),h:60};},terms:o=>f5kTerms(o),
+  draw:o=>{const M=F5KM[o.p.fm]||['di','',16],{w}=DEF.sf5k.size(o),T=f5kTerms(o);let s=`<rect x="${-w/2}" y="-20" width="${w}" height="40" fill="#fff" stroke="${SK}" stroke-width="1.4"/>`;
+   T.forEach(([x,y,l])=>{s+=sL(x,y,x,y<0?-20:20)+txt(x,y<0?-16:16.5,l,l.length>3?3:3.6,SK,700);});
+   s+=sT(0,-4,o.p.fm,6.5,800)+txt(0,5,{ad:'EtherNet/IP',di:'DI',do:'DO',ro:'DO ממסר',ai:'AI',ao:'AO',hs:'HSC'}[M[0]]+(M[2]?' × '+M[2]:''),5,SK,600);
+   return s+sLbl(o,w);}},
  splc:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'A1',rating:'PLC',desc:'כניסה / יציאה PLC'},size:()=>({w:40,h:60}),terms:IO,
   draw:o=>sL(0,-30,0,-10)+sL(0,10,0,30)+sR(-14,-10,28,20)+sT(0,4,o.p.rating||'PLC',7.5)+sLbl(o,40)},
  scont:{layer:4,sld:true,edit:['tag','rating','desc'],def:{tag:'K1',rating:'LC1D 25A',desc:''},ratings:['LC1D 9A','LC1D 12A','LC1D 18A','LC1D 25A','LC1D 32A','LC1D 40A','LC1D 65A','LC1D 95A'],size:()=>({w:40,h:60}),terms:IO,
@@ -2935,6 +2977,7 @@ const LIB=[
   {g:'ממסר חוסר מתח NVR (U<) — עם מגע מחליף',items:[{t:'snvr',n:'ממסר חוסר מתח NVR תלת-פאזי'},{t:'snvr',n:'ממסר חוסר מתח NVR חד-פאזי',p:{nph:'1',rating:'RM17UBE15'}}]},
   {g:'מגעים מחליפים (Change-over · C/O) — מספרים ומפעיל בעריכה',items:[{t:'sco',n:'מגע מחליף של ממסר / מגען'},{t:'sco',n:'מגע מחליף 21-22-24',p:{cn:'21-22-24'}},{t:'sco',n:'לחצן מחליף',p:{tag:'S1',cact:'push',desc:'לחצן מחליף'}},{t:'sco',n:'בורר מחליף',p:{tag:'S2',cact:'turn',desc:'בורר'}},{t:'sco',n:'מפסק גבול מחליף',p:{tag:'B1',cact:'limit',desc:'מפסק גבול'}},{t:'sco',n:'מצוף מחליף',p:{tag:'B2',cact:'float',desc:'מצוף'}},{t:'sco',n:'מפסק לחץ מחליף',p:{tag:'B3',cact:'press',desc:'מפסק לחץ'}},{t:'sco',n:'תרמוסטט מחליף',p:{tag:'B4',cact:'temp',desc:'תרמוסטט'}},{t:'sco',n:'מגע מחליף של טיימר',p:{tag:'KT1',cact:'delay',cn:'15-16-18',desc:'טיימר'}},{t:'sco',n:'מגע מחליף של ממסר תרמי',p:{tag:'F1',cn:'95-96-98',desc:'ממסר תרמי'}}]},
   {g:'סלילים וממסרים',items:[{t:'scoil',n:'סליל מגען / ממסר'},{t:'splc',n:'כניסה / יציאה PLC'}]},
+  {g:'Allen-Bradley FLEX 5000 I/O',items:Object.keys(F5KM).map(k=>({t:'sf5k',n:'FLEX 5000 '+k+' — '+F5KM[k][1],p:{fm:k,tag:f5kAd(k)?'A10':'A11'}}))},
   {g:'טיימרים ושעונים',items:[{t:'stcoil',n:'טיימר השהיה בהפעלה'},{t:'stcoiloff',n:'טיימר השהיה בניתוק'},{t:'stno',n:'מגע טיימר NO'},{t:'stnc',n:'מגע טיימר NC'},{t:'sclock',n:'שעון שבת / שעון זמן'},{t:'sclockc',n:'מגע שעון'}]},
   {g:'בקרת כניסה לדלת',items:[{t:'smaglock',n:'מנעול אלקטרומגנטי (אלקטרומגנט)'},{t:'scardr',n:'קורא כרטיסים (סמל)'}]},
   {g:'חיישנים ומפסקי תהליך',items:[{t:'sprox',n:'גשש אינדוקטיבי (סמל)'},{t:'sprox',n:'גשש קיבולי (סמל)',p:{px:'cap',desc:'גשש קיבולי'}},{t:'sfloat',n:'מצוף'},{t:'spress',n:'מפסק לחץ'},{t:'sthermo',n:'תרמוסטט'},{t:'slimit',n:'מפסק גבול'}]},
@@ -3048,6 +3091,7 @@ const LIB=[
    {g:'אביזרי 22 מ"מ לחזית — בחר צבע ואז אביזר',colors:true,items:I('חור 22 מ"מ','לחצן','לחצן מואר','נורית 22','בורר 2 מצבים','בורר 3 מצבים','בורר מפתח','לחצן חירום','פוטנציומטר','זמזם')},
    {g:'נורית 22 מ"מ עם מד מתח / זרם — ומשנה הזרם הקטן שלה',items:[{t:'pl22m',n:'נורית 22 עם מד מתח + זרם'},{t:'pl22m',n:'נורית 22 עם מד מתח',p:{mm:'v',rating:'AC 60-500V'}},{t:'pl22m',n:'נורית 22 עם מד זרם',p:{mm:'a',rating:'AC 0-100A'}},{t:'pl22m',n:'נורית 22 ירוקה עם מד מתח + זרם',p:{color:'green',dc:'green'}},{t:'ctmini',n:'משנה זרם קטן לנורית (טבעת)'}]}]},
   {tab:'בקרים (PLC)',icon:'▣',hint:'מוסיפים קודם שאסי (Rack), ואז ספק, מעבד וכרטיסים — כל אחד נתפס לחריץ הקרוב בשאסי (הספק לחריץ PS). הדגם נבחר במאפיינים.',groups:[
+   {g:'Allen-Bradley FLEX 5000 I/O (על פס DIN)',items:Object.keys(F5KM).map(k=>({t:'f5k',n:k+' — '+F5KM[k][1],p:{fm:k,tag:f5kAd(k)?'A10':''}}))},
    {g:'Schneider Modicon M340 — שאסי',items:[{t:'m340rack',n:'שאסי M340 BMXXBP0400 (4 חריצים)',p:{slots:4}},{t:'m340rack',n:'שאסי M340 BMXXBP0600 (6 חריצים)',p:{slots:6}},{t:'m340rack',n:'שאסי M340 BMXXBP0800 (8 חריצים)',p:{slots:8}},{t:'m340rack',n:'שאסי M340 BMXXBP1200 (12 חריצים)',p:{slots:12}}]},
    {g:'M340 — ספקי כוח',items:[{t:'m340mod',n:'BMXCPS2000 — ספק 100-240VAC 20W',p:{model:'BMXCPS2000'}},{t:'m340mod',n:'BMXCPS3500 — ספק 100-240VAC 36W',p:{model:'BMXCPS3500'}},{t:'m340mod',n:'BMXCPS2010 — ספק 24VDC',p:{model:'BMXCPS2010'}}]},
    {g:'M340 — מעבדים ותקשורת',items:[{t:'m340mod',n:'BMXP341000 — מעבד Modbus',p:{model:'BMXP341000'}},{t:'m340mod',n:'BMXP342020 — מעבד Ethernet',p:{model:'BMXP342020'}},{t:'m340mod',n:'BMXP342030 — מעבד CANopen',p:{model:'BMXP342030'}},{t:'m340mod',n:'BMXNOE0100 — תקשורת Ethernet',p:{model:'BMXNOE0100'}},{t:'m340mod',n:'BMXNOM0200 — תקשורת טורית',p:{model:'BMXNOM0200'}}]},
@@ -3792,7 +3836,7 @@ async function openShared(){let ds=[];try{ds=await SH.list();}catch(e){toast('ל
    main switch and any meter over a busbar, then a feeder per protective device —
    drives and motor breakers to a motor, the rest to a load named after the part.
    The panel doesn't say what feeds what, so it's a draft to correct. */
-const SLD_MAP={mcb:'sbrk',rcd:'srcd',mpcb:'smpcb',gv2:'smpcb',vsd:'svfd',atv630:'svfd',cont:'scont',lc1d:'scont',lc1k:'scont',lc2d:'srev',lc2k:'srev',nsx:'sbrk',nsxm:'sbrk',acb:'sacb',ats480:'sats480',spd:'sspd',psu:'spsu'};
+const SLD_MAP={mcb:'sbrk',rcd:'srcd',mpcb:'smpcb',gv2:'smpcb',vsd:'svfd',atv630:'svfd',cont:'scont',lc1d:'scont',lc1k:'scont',lc2d:'srev',lc2k:'srev',nsx:'sbrk',nsxm:'sbrk',acb:'sacb',ats480:'sats480',spd:'sspd',psu:'spsu',f5k:'sf5k'};
 function sldFromPanel(){if(curView()!=='sld')switchDoc('sld');genSld();}
 function genSld(){if(state.tab==='both')switchDoc('sld');delete state.originS;const P=panelObjs().filter(o=>o.type!=='wire'&&o.type!=='label').slice().sort((a,b)=>a.y-b.y||a.x-b.x);
  if(!P.length){toast('אין רכיבים בחזית הלוח');return;}
