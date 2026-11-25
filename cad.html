@@ -1112,7 +1112,9 @@ function lg(o,y=21.5){return o.p.tag?`<rect x="-15" y="${y-4.5}" width="30" heig
 /* QR code on the panel: 'doc' links to this drawing in the shared folder
    (APP_URL?d=id — index.html passes it on and the tool opens it), 'info' is the
    drawing's name / number / revision as text, 'url' any text or link. */
-const APP_URL='https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/';
+/* the app's own address (for QR links): wherever it is served from — Firebase Hosting (ohadcad.web.app) or elsewhere;
+   opened as a local file, the Firebase Hosting address */
+const APP_URL=/^https?:/.test(location.protocol)?new URL('./',location.href).href:'https://ohadcad.web.app/';
 const QRK={doc:'קישור לשרטוט הזה (בתיקייה המשותפת)',info:'פרטי השרטוט (שם, מספר, גרסה)',url:'קישור / טקסט חופשי'};
 function qrText(o){const k=o.p.qk||'doc';if(k==='url')return o.p.qt||APP_URL;
  if(k==='info')return ['OhadCad',state.name,state.dwgno?'DWG '+state.dwgno:'',state.rev!=null&&state.rev!==''?'Rev '+state.rev:''].filter(Boolean).join(' | ');

@@ -1,7 +1,7 @@
 # OhadCad
 
 Panel-layout and single-line diagram drawing tool, a standalone PWA.
-Live at https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/ (GitHub Pages from `main`, no build step).
+Live at https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/ (GitHub Pages from `main`, no build step). Moving to Firebase Hosting (https://ohadcad.web.app, `firebase.json` / `.firebaserc`, the owner deploys from his computer with `firebase deploy --only hosting`); the code is to be kept on the owner's computer. `APP_URL` follows the address the app is served from.
 
 ## Working with the owner
 - Reply in Hebrew only, including progress messages, in plain simple language.
