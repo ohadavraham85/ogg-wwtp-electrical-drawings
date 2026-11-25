@@ -912,6 +912,31 @@ function ab194Draw(o){const S=ab194Sz(o),F=AB194FN[o.p.fn]||AB194FN.io,red=o.p.h
  if(o.p.hd==='p')s+=`<path d="M${S*.22} ${S*.3}h${S*.12}v${S*.07}h${-S*.12}Z" fill="#888" stroke="#333" stroke-width="${.4*k}"/><circle cx="${S*.28}" cy="${S*.335}" r="${1.2*k}" fill="#222"/>`;
  if(o.p.tag)s+=`<rect x="${-S/2+2}" y="${S/2+2.5}" width="${S-4}" height="9" rx="1" fill="#f3f3f0" stroke="#888" stroke-width=".4"/>`+txt(0,S/2+7,o.p.tag,4.4,'#222',700);
  return s;}
+/* Phoenix Contact DIN-rail power supplies, front view at 1:1 with the maker's sizes (W × H × D mm, phoenixcontact.com).
+   PXPS: model → [family, order no., W, H, D, A, W(atts)]. Input L N ⏚ on top, output + + − − below (drawing order;
+   check the maker's terminal layout for the exact side). */
+const PXPS={'QUINT4-PS/1AC/24DC/5':['QUINT','2904600',36,130,125,5,120],'QUINT4-PS/1AC/24DC/10':['QUINT','2904601',50,130,125,10,240],'QUINT4-PS/1AC/24DC/20':['QUINT','2904602',70,130,125,20,480],'QUINT4-PS/1AC/24DC/40':['QUINT','2904603',120,130,140,40,960],
+ 'TRIO-PS-2G/1AC/24DC/5':['TRIO','2903148',35,130,115,5,120],'TRIO-PS-2G/1AC/24DC/10':['TRIO','2903149',42,130,160,10,240],'TRIO-PS-2G/1AC/24DC/20':['TRIO','2903151',68,130,160,20,480],
+ 'UNO-PS/1AC/24DC/60W':['UNO','2902992',35,90,84,2.5,60],'UNO-PS/1AC/24DC/100W':['UNO','2902993',55,90,84,4.2,100],'UNO-PS/1AC/24DC/150W':['UNO','2904376',37,130,125,6.25,150],'UNO-PS/1AC/24DC/240W':['UNO','2904372',45,130,125,10,240]};
+const pxOf=o=>PXPS[o.p.pm]||PXPS['QUINT4-PS/1AC/24DC/10'];
+function pxTerms(o){const M=pxOf(o),w=M[2],h=M[3];return [...spread(w-4,3).map((x,i)=>[x,-h/2,['L','N','PE'][i]]),...spread(w-4,4).map((x,i)=>[x,h/2,['+','+','−','−'][i]])];}
+function pxpsDraw(o){const M=pxOf(o),[fam,ord,w,h]=M,x0=-w/2,y0=-h/2,Q=fam==='QUINT',U=fam==='UNO',body=Q?'#4a4f54':U?'#dfe1dd':'#c9ccc8',fg=Q?'#f2f2ef':'#2b2f33',grn='#00a650';let s='';
+ const th=Math.min(16,h*.13);
+ s+=`<rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="2" fill="${body}" stroke="#2b2f33" stroke-width=".8"/>`;
+ // terminal blocks top and bottom (screw clamps)
+ [[y0,3],[y0+h-th,4]].forEach(([ty,n])=>{s+=`<rect x="${x0+1}" y="${ty}" width="${w-2}" height="${th}" rx="1.2" fill="#9ea3a7" stroke="#5f666b" stroke-width=".5"/>`;
+  spread(w-4,n).forEach(x=>s+=`<circle cx="${x}" cy="${ty+th*.42}" r="${Math.min(3.2,(w-4)/n*.32)}" fill="#d8dbde" stroke="#555" stroke-width=".4"/><path d="M${x-2} ${ty+th*.42}h4" stroke="#333" stroke-width=".7"/><rect x="${x-Math.min(3,(w-4)/n*.3)}" y="${ty+th*.72}" width="${Math.min(6,(w-4)/n*.6)}" height="${th*.2}" fill="#3a3f44"/>`);});
+ const lbT=['L','N','⏚'],lbB=['+','+','−','−'];spread(w-4,3).forEach((x,i)=>s+=txt(x,y0+th+3,lbT[i],2.6,fg,800));spread(w-4,4).forEach((x,i)=>s+=txt(x,y0+h-th-3,lbB[i],2.8,fg,800));
+ // front: brand, family, rating, LEDs, potentiometer
+ const fy=y0+th+7,cw=w-6;s+=`<rect x="${x0+3}" y="${fy}" width="${cw}" height="${Math.max(10,h-2*th-14)}" rx="1.5" fill="${Q?'#3b4045':U?'#eceeeb':'#d6d9d5'}" stroke="${Q?'#2a2e32':'#9aa0a4'}" stroke-width=".4"/>`;
+ const fs=Math.min(3.4,cw/12);s+=`<rect x="${x0+3}" y="${fy}" width="${cw}" height="${fs*1.9}" rx="1.5" fill="${grn}"/>`+txt(0,fy+fs*.95,'PHOENIX CONTACT',Math.min(fs*.85,cw/9.5),'#fff',800);
+ s+=txt(0,fy+fs*3.3,fam+' POWER',Math.min(fs*1.15,cw/7.5),Q?'#7fd9a6':grn,800)+txt(0,fy+fs*5.2,'24V DC / '+M[5]+'A',Math.min(fs*1.05,cw/8.5),fg,800)+txt(0,fy+fs*6.9,M[6]+' W',Math.min(fs*.9,cw/6),fg,600);
+ const ly=fy+fs*8.8;s+=`<circle cx="${x0+6.5}" cy="${ly}" r="1.5" fill="#22c55e" stroke="#0f5132" stroke-width=".3"/>`+txt(x0+9,ly,'DC OK',Math.min(2.2,cw/12),fg,700,'start');
+ if(!U||M[3]>100){const py=ly+7;s+=`<circle cx="${0}" cy="${py}" r="2.6" fill="#e5e7e9" stroke="#555" stroke-width=".4"/><path d="M0 ${py-1.8}v3.6" stroke="#333" stroke-width=".7"/>`+txt(0,py+4.8,'24…28V',Math.min(2.1,cw/9),fg,600);}
+ if(Q&&w>=50)s+=`<rect x="${x0+w-11}" y="${ly-2}" width="6" height="4" rx=".6" fill="#1f2326" stroke="#888" stroke-width=".3"/>`+txt(x0+w-8,ly+4.6,'NFC',1.8,fg,700);
+ s+=txt(0,y0+h-th-9,ord,Math.min(2.4,cw/7),fg,600);
+ if(o.p.tag)s+=`<rect x="${-Math.min(cw,22)/2}" y="${y0+h/2+4}" width="${Math.min(cw,22)}" height="7" rx="1" fill="#f3f3f0" stroke="#888" stroke-width=".3"/>`+txt(0,y0+h/2+7.5,o.p.tag,Math.min(4,cw/4),'#222',700);
+ return s;}
 function pdModel(o){const f=o.p.hmat==='xb4'?'XB4B':'XB5A',L=PDL[o.p.lcol]||PDL.w;return L[2]?`${f}W7373${L[2]}${o.p.pv||'M'}5`:`${f}L73415`;}
 function pbdblDraw(o){const {w,h}=pdDim(o),x4=o.p.hmat==='xb4',L=PDL[o.p.lcol]||PDL.w,lamp=!!L[2];let s='';
  s+=x4?`<defs><linearGradient id="pdc${o.id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1f2f3"/><stop offset=".5" stop-color="#a7adb3"/><stop offset="1" stop-color="#e3e5e7"/></linearGradient></defs><rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="6" fill="url(#pdc${o.id})" stroke="#4b5563" stroke-width=".6"/>`
@@ -1920,6 +1945,8 @@ const DEF={
   size:()=>DIN(72),terms:()=>dinTerms(72,['L','N','PE'],['+','+','−','−']),
   face:(o,w)=>{let s='';for(let i=0;i<7;i++)s+=`<rect x="${-26+i*8}" y="-19" width="4" height="1.2" fill="#bbb"/>`;
    return s+`<circle cx="-27" cy="-11" r="1.6" fill="#22c55e"/><circle cx="27" cy="-11" r="2.6" fill="#ddd" stroke="#777" stroke-width=".5"/>`+txt(0,-7,'POWER SUPPLY',3.4,'#333',700)+txt(0,5,o.p.rating,5,'#1d4ed8',700);}},
+ pxps:{layer:4,rail:true,edit:['tag','pm'],def:{tag:'',pm:'QUINT4-PS/1AC/24DC/10'},lbl:{pm:'דגם Phoenix Contact'},sel:{pm:Object.entries(PXPS).map(([k,v])=>[k,k+' — '+v[1]+' ('+v[2]+'×'+v[3]+'×'+v[4]+')'])},
+  size:o=>{const M=pxOf(o);return {w:M[2],h:M[3]};},terms:o=>pxTerms(o),draw:o=>pxpsDraw(o)},
  meter:{layer:4,rail:true,edit:['tag','rating'],ratings:['3×230/400V 80A','1×230V 40A'],def:{rating:'3×230/400V 80A'},
   size:()=>DIN(72),terms:()=>dinTerms(72,['L1','L2','L3','N'],['L1','L2','L3','N']),
   face:(o,w)=>`<rect x="-27" y="-18" width="54" height="13" rx="1" fill="#a9c79a" stroke="#6b8a5d" stroke-width=".5"/>`+txt(0,-11.5,'00123.4',6.5,'#1b2b14',700,'middle','Courier New,monospace')+txt(23,-1,'kWh',3.2,'#333',700)+`<circle cx="-24" cy="-1" r="1.4" fill="#ef4444"/>`+txt(0,10,o.p.rating,3.8,'#222',700)},
@@ -3370,7 +3397,7 @@ const LIB=[
   {g:'מפסקי פחת',items:[{t:'rcd',n:'RCD 2P',p:{poles:2}},{t:'rcd',n:'RCD 4P',p:{poles:4}},{t:'rcd',n:'RCBO 1P+N',p:{poles:2,rating:'C16 30mA'}}]},
   {g:'מיתוג והגנת מנועים',items:[{t:'mpcb',n:'מפסק הגנת מנוע'},{t:'cont',n:'מגען 3P'},{t:'relay',n:'ממסר'},{t:'timer',n:'ממסר זמן'}]},
   {g:'מפסקים ראשיים והגנות',items:[{t:'iso',n:'מפסק ראשי 3P',p:{poles:3}},{t:'iso',n:'מפסק ראשי 4P',p:{poles:4}},{t:'spd',n:'מגן ברק SPD'}]},
-  {g:'נוספים',items:[{t:'lamp',n:'נורת סימון'},{t:'socket',n:'שקע לפס DIN'},{t:'psu',n:'ספק כוח'},{t:'meter',n:'מונה אנרגיה'}]},
+  {g:'נוספים',items:[{t:'lamp',n:'נורת סימון'},{t:'socket',n:'שקע לפס DIN'},{t:'psu',n:'ספק כוח'},{t:'meter',n:'מונה אנרגיה'}]},{g:'Phoenix Contact — ספקי כוח מקוריים (מידות היצרן)',items:[{t:'pxps',n:"Phoenix QUINT4 24VDC 5A (רוחב 36)",p:{pm:"QUINT4-PS/1AC/24DC/5"}},{t:'pxps',n:"Phoenix QUINT4 24VDC 10A (רוחב 50)",p:{pm:"QUINT4-PS/1AC/24DC/10"}},{t:'pxps',n:"Phoenix QUINT4 24VDC 20A (רוחב 70)",p:{pm:"QUINT4-PS/1AC/24DC/20"}},{t:'pxps',n:"Phoenix QUINT4 24VDC 40A (רוחב 120)",p:{pm:"QUINT4-PS/1AC/24DC/40"}},{t:'pxps',n:"Phoenix TRIO 2G 24VDC 5A (רוחב 35)",p:{pm:"TRIO-PS-2G/1AC/24DC/5"}},{t:'pxps',n:"Phoenix TRIO 2G 24VDC 10A (רוחב 42)",p:{pm:"TRIO-PS-2G/1AC/24DC/10"}},{t:'pxps',n:"Phoenix TRIO 2G 24VDC 20A (רוחב 68)",p:{pm:"TRIO-PS-2G/1AC/24DC/20"}},{t:'pxps',n:"Phoenix UNO 24VDC 60W (רוחב 35)",p:{pm:"UNO-PS/1AC/24DC/60W"}},{t:'pxps',n:"Phoenix UNO 24VDC 100W (רוחב 55)",p:{pm:"UNO-PS/1AC/24DC/100W"}},{t:'pxps',n:"Phoenix UNO 24VDC 150W (רוחב 37)",p:{pm:"UNO-PS/1AC/24DC/150W"}},{t:'pxps',n:"Phoenix UNO 24VDC 240W (רוחב 45)",p:{pm:"UNO-PS/1AC/24DC/240W"}}]},
  ]},
  {tab:'מנועים, כבלים ותעלות',hint:'מנוע: את ההספק ואת המשאבה שעליו (צנטריפוגלית, בורג, מפוח, טבולה) בוחרים במאפיינים. כבל: הגידים נפתחים בצבעים התקניים, ומכל קצה גיד אפשר למשוך חוט. תעלה: מאריכים בעיגולים שבקצוות.',groups:[
   {g:'מנועים ומשאבות',items:[{t:'emotor',n:'מנוע 1.5kW',p:{rating:'1.5kW'}},{t:'emotor',n:'מנוע 7.5kW',p:{rating:'7.5kW'}},{t:'emotor',n:'מנוע 15kW',p:{rating:'15kW'}},{t:'emotor',n:'מנוע 37kW',p:{rating:'37kW'}},
@@ -3476,6 +3503,7 @@ const LIB=[
    {g:'ControlLogix — כרטיסי כניסות / יציאות',items:[{t:'clxmod',n:'1756-IB16 — 16 DI 24VDC',p:{model:'1756-IB16'}},{t:'clxmod',n:'1756-IB32 — 32 DI 24VDC',p:{model:'1756-IB32'}},{t:'clxmod',n:'1756-IA16 — 16 DI 120VAC',p:{model:'1756-IA16'}},{t:'clxmod',n:'1756-OB16E — 16 DO 24VDC',p:{model:'1756-OB16E'}},{t:'clxmod',n:'1756-OB32 — 32 DO 24VDC',p:{model:'1756-OB32'}},{t:'clxmod',n:'1756-OW16I — 16 DO ממסר',p:{model:'1756-OW16I'}},{t:'clxmod',n:'1756-IF8 — 8 AI',p:{model:'1756-IF8'}},{t:'clxmod',n:'1756-IF16 — 16 AI',p:{model:'1756-IF16'}},{t:'clxmod',n:'1756-OF8 — 8 AO',p:{model:'1756-OF8'}},{t:'clxmod',n:'1756-IR6I — 6 RTD',p:{model:'1756-IR6I'}},{t:'clxmod',n:'1756-IT6I — 6 TC',p:{model:'1756-IT6I'}}]}]},
   {tab:'ספקים ומדידה',icon:'⚡',groups:[
    {g:'ספקים ועזר',items:I('ספק כוח','שקע לפס DIN','נורת סימון')},
+   {g:'Phoenix Contact — ספקי כוח מקוריים (מידות היצרן)',items:I("Phoenix QUINT4 24VDC 5A (רוחב 36)","Phoenix QUINT4 24VDC 10A (רוחב 50)","Phoenix QUINT4 24VDC 20A (רוחב 70)","Phoenix QUINT4 24VDC 40A (רוחב 120)","Phoenix TRIO 2G 24VDC 5A (רוחב 35)","Phoenix TRIO 2G 24VDC 10A (רוחב 42)","Phoenix TRIO 2G 24VDC 20A (רוחב 68)","Phoenix UNO 24VDC 60W (רוחב 35)","Phoenix UNO 24VDC 100W (רוחב 55)","Phoenix UNO 24VDC 150W (רוחב 37)","Phoenix UNO 24VDC 240W (רוחב 45)")},
    {g:'מדידה',items:I('מונה אנרגיה')},
    {g:'מדי מתח וזרם אנלוגיים לדלת (72×72 / 96×96)',items:[{t:'anm',n:'מד מתח אנלוגי 72×72 0-500V'},{t:'anm',n:'מד זרם אנלוגי 72×72 0-400A',p:{anv:'a',rating:'0-400A',tag:'P2'}},{t:'anm',n:'מד זרם אנלוגי 72×72 0-100A',p:{anv:'a',rating:'0-100A',tag:'P2'}},{t:'anm',n:'מד מתח אנלוגי 96×96 0-500V',p:{anz:'96'}},{t:'anm',n:'מד זרם אנלוגי 96×96 0-1000A',p:{anz:'96',anv:'a',rating:'0-1000A',tag:'P2'}}]},
    {g:'מדי הספק SATEC לדלת (96×96)',items:[{t:'satec',n:'SATEC PM175 — מנתח איכות חשמל'},{t:'satec',n:'SATEC PM172',p:{sm:'pm172'}},{t:'satec',n:'SATEC PM135',p:{sm:'pm135'}}]},
@@ -4300,7 +4328,7 @@ async function openShared(){let ds=[];try{ds=await SH.list();}catch(e){toast('ל
    main switch and any meter over a busbar, then a feeder per protective device —
    drives and motor breakers to a motor, the rest to a load named after the part.
    The panel doesn't say what feeds what, so it's a draft to correct. */
-const SLD_MAP={mcb:'sbrk',rcd:'srcd',mpcb:'smpcb',gv2:'smpcb',vsd:'svfd',atv630:'svfd',cont:'scont',lc1d:'scont',lc1k:'scont',lc2d:'srev',lc2k:'srev',nsx:'sbrk',nsxm:'sbrk',acb:'sacb',ats480:'sats480',spd:'sspd',psu:'spsu',f5k:'sf5k',ab800f:'ssel',ab194l:'ssel'};
+const SLD_MAP={mcb:'sbrk',rcd:'srcd',mpcb:'smpcb',gv2:'smpcb',vsd:'svfd',atv630:'svfd',cont:'scont',lc1d:'scont',lc1k:'scont',lc2d:'srev',lc2k:'srev',nsx:'sbrk',nsxm:'sbrk',acb:'sacb',ats480:'sats480',spd:'sspd',psu:'spsu',f5k:'sf5k',ab800f:'ssel',ab194l:'ssel',pxps:'spsu'};
 function sldFromPanel(){if(curView()!=='sld')switchDoc('sld');genSld();}
 function genSld(){if(state.tab==='both')switchDoc('sld');delete state.originS;const P=panelObjs().filter(o=>o.type!=='wire'&&o.type!=='label').slice().sort((a,b)=>a.y-b.y||a.x-b.x);
  if(!P.length){toast('אין רכיבים בחזית הלוח');return;}
