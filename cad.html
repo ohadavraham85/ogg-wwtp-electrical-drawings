@@ -937,6 +937,28 @@ function pxpsDraw(o){const M=pxOf(o),[fam,ord,w,h]=M,x0=-w/2,y0=-h/2,Q=fam==='QU
  s+=txt(0,y0+h-th-9,ord,Math.min(2.4,cw/7),fg,600);
  if(o.p.tag)s+=`<rect x="${-Math.min(cw,22)/2}" y="${y0+h/2+4}" width="${Math.min(cw,22)}" height="7" rx="1" fill="#f3f3f0" stroke="#888" stroke-width=".3"/>`+txt(0,y0+h/2+7.5,o.p.tag,Math.min(4,cw/4),'#222',700);
  return s;}
+/* Modular stepped distribution block on a DIN rail (front view): one insulated bar per pole, stacked as steps so
+   every screw can be reached from the front; a big input clamp at the left of each bar and a row of outputs.
+   DBA: rating → [width in 18 mm modules, input mm², outputs per pole, output mm²] — typical sizes, not one maker's
+   drawing. DBP: pole set → poles; colours IEC (L1 brown, L2 black, L3 grey, N blue, PE green-yellow). */
+const DBA={40:[4,16,7,10],63:[4,25,7,16],80:[5,25,9,16],100:[6,35,11,16],125:[6,35,11,16],160:[8,50,13,25],250:[12,120,15,35]};
+const DBP={'4':['L1','L2','L3','N'],'5':['L1','L2','L3','N','PE'],'3':['L1','L2','L3'],'2':['L','N'],'1L':['L'],'1N':['N'],'1PE':['PE']};
+const DBC={L1:'#7a4a24',L2:'#1f1f1f',L3:'#8c9196',L:'#7a4a24',N:'#1f6fd1',PE:'#3aa34a'};
+const dbOf=o=>DBA[o.p.amp]||DBA[125],dbPoles=o=>DBP[o.p.pl]||DBP['4'],dbN=o=>Math.max(2,Math.min(24,+o.p.no||dbOf(o)[2]));
+const dbSz=o=>{const M=dbOf(o),P=dbPoles(o);return {w:M[0]*18,h:20+P.length*16};};
+function dbTerms(o){const {w,h}=dbSz(o),P=dbPoles(o);return [...spread(w-6,P.length).map((x,i)=>[x,-h/2,P[i]]),...spread(w-6,P.length).map((x,i)=>[x,h/2,P[i]+'′'])];}
+function dblkDraw(o){const {w,h}=dbSz(o),M=dbOf(o),P=dbPoles(o),n=dbN(o),x0=-w/2,y0=-h/2;let s='';
+ s+=`<rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="2.5" fill="#3a3f44" stroke="#1d2023" stroke-width=".8"/><rect x="${x0+1.5}" y="${y0+1.5}" width="${w-3}" height="7" rx="1.5" fill="#4b5157"/>`+txt(0,y0+5,(o.p.tag?o.p.tag+' · ':'')+(o.p.amp||125)+'A · '+P.length+'P',Math.min(4,w/14),'#e5e7e9',700);
+ const big=Math.min(7.5,Math.max(4,Math.sqrt(M[1])*1.05)),sm=Math.min(4.2,Math.max(2.6,Math.sqrt(M[3])*.9));
+ P.forEach((pl,i)=>{const st=i*2.2,by=y0+10+i*16,bx=x0+3+st,bw=w-6-st,c=DBC[pl]||'#888';
+  s+=`<rect x="${bx}" y="${by}" width="${bw}" height="14" rx="1.2" fill="${i%2?'#565c62':'#5f666c'}" stroke="#25292c" stroke-width=".5"/><rect x="${bx}" y="${by+12.6}" width="${bw}" height="1.4" fill="#1d2023" opacity=".55"/>`;
+  s+=`<rect x="${bx+.8}" y="${by+1}" width="4.2" height="12" rx=".8" fill="${c}"/>`+(pl==='PE'?`<path d="M${bx+.8} ${by+4}l4.2 -3M${bx+.8} ${by+9}l4.2 -3M${bx+.8} ${by+13}l4.2 -3" stroke="#e8d21f" stroke-width="1.2"/>`:'')+txt(bx+2.9,by+7,pl,2.2,'#fff',800);
+  // copper bar behind the clamps, the input clamp and the outputs
+  s+=`<rect x="${bx+6}" y="${by+5.6}" width="${bw-7}" height="2.8" fill="#c9773a" opacity=".85"/>`;
+  const ix=bx+6+big/2+1;s+=`<rect x="${ix-big/2}" y="${by+7-big/2}" width="${big}" height="${big}" rx="1" fill="#2a2e32" stroke="#9aa0a6" stroke-width=".4"/><circle cx="${ix}" cy="${by+7}" r="${big*.32}" fill="#cfd3d6" stroke="#555" stroke-width=".3"/><path d="M${ix-big*.22} ${by+7}h${big*.44}" stroke="#333" stroke-width=".6"/>`;
+  const ox0=ix+big/2+2,ow=(bx+bw-1.5-ox0)/n;for(let k=0;k<n;k++){const cx=ox0+ow*(k+.5);s+=`<circle cx="${cx}" cy="${by+7}" r="${Math.min(sm/2,ow*.42)}" fill="#cfd3d6" stroke="#444" stroke-width=".3"/><path d="M${cx-Math.min(sm/2,ow*.42)*.7} ${by+7}h${Math.min(sm/2,ow*.42)*1.4}" stroke="#333" stroke-width=".45"/>`;}});
+ s+=`<rect x="${x0}" y="${y0+h-4}" width="${w}" height="4" rx="1.5" fill="#2a2e32"/>`+txt(0,y0+h-2,'IN '+M[1]+'mm² · OUT '+n+'×'+M[3]+'mm²',Math.min(2.4,w/30),'#c9ced2',600);
+ return s;}
 function pdModel(o){const f=o.p.hmat==='xb4'?'XB4B':'XB5A',L=PDL[o.p.lcol]||PDL.w;return L[2]?`${f}W7373${L[2]}${o.p.pv||'M'}5`:`${f}L73415`;}
 function pbdblDraw(o){const {w,h}=pdDim(o),x4=o.p.hmat==='xb4',L=PDL[o.p.lcol]||PDL.w,lamp=!!L[2];let s='';
  s+=x4?`<defs><linearGradient id="pdc${o.id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1f2f3"/><stop offset=".5" stop-color="#a7adb3"/><stop offset="1" stop-color="#e3e5e7"/></linearGradient></defs><rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="6" fill="url(#pdc${o.id})" stroke="#4b5563" stroke-width=".6"/>`
@@ -2005,6 +2027,9 @@ const DEF={
    const PC=['#8b5a2b','#1d1d1d','#8f8f8f'];
    spread(w,o.p.mods).forEach((x,i)=>{const c=o.p.ph==3?PC[i%3]:'#b87333';s+=`<rect x="${x-1.4}" y="4" width="2.8" height="4.5" fill="${c}"/>`;});
    return s;}},
+ dblk:{layer:4,rail:true,edit:['tag','amp','pl','no'],def:{tag:'',amp:'125',pl:'4',no:''},lbl:{amp:'זרם נקוב',pl:'קטבים',no:'יציאות לכל קוטב (ריק = לפי הגודל)'},num:['no'],
+  sel:{amp:Object.keys(DBA).map(a=>[a,a+'A — '+DBA[a][0]+' מודולים ('+DBA[a][0]*18+' מ"מ)']),pl:[['4','4P — L1 L2 L3 N'],['5','5P — L1 L2 L3 N PE'],['3','3P — L1 L2 L3'],['2','2P — L N'],['1L','1P — L'],['1N','1P — N (כחול)'],['1PE','1P — PE (ירוק-צהוב)']]},
+  size:o=>dbSz(o),terms:o=>dbTerms(o),draw:o=>dblkDraw(o)},
  busbar:{layer:3,resize:'len',minLen:40,edit:['tag','len','color','orient'],def:{len:300,color:'orange',tag:'L1'},
   size:o=>({w:o.p.len,h:12}),
   terms:o=>{const L=o.p.len,t=[];for(let u=-L/2+25;u<=L/2-12;u+=25)t.push([r2(u),0,'']);return t;},
@@ -3409,7 +3434,7 @@ const LIB=[
  {tab:'פסי צבירה ומסופים לחוטים',groups:[
   {g:'קבוצות מהדקים',items:[{t:'tbg',n:'מהדקים חד-פאזי L N PE',p:{set:'1P'}},{t:'tbg',n:'מהדקים תלת-פאזי L1-L3',p:{set:'3P'}},{t:'tbg',n:'מהדקים 4 קטבים +N',p:{set:'4P'}},{t:'tbg',n:'מהדקים 5 קטבים +N +PE',p:{set:'5P'}}]},
   {g:'מהדקים',items:[{t:'tb',n:'מהדק אפור',p:{kind:'grey'}},{t:'tb',n:'מהדק כחול N',p:{kind:'blue'}},{t:'tb',n:'מהדק הארקה',p:{kind:'pe'}},{t:'tb',n:'מהדק אדום',p:{kind:'red'}},{t:'tb',n:'מהדק לבן',p:{kind:'white'}},{t:'tb',n:'מהדק כתום',p:{kind:'orange'}},{t:'tb',n:'מהדק סגול',p:{kind:'purple'}}]},
-  {g:'פסי צבירה',items:[{t:'comb',n:'מסרק 1P',p:{ph:1}},{t:'comb',n:'מסרק 3P',p:{ph:3}},{t:'busbar',n:'פס צבירה L1',p:{tag:'L1',color:'orange'}},{t:'busbar',n:'פס צבירה N',p:{tag:'N',color:'blue'}},{t:'busbar',n:'פס הארקה PE',p:{tag:'PE',color:'green'}}]},
+  {g:'פסי צבירה',items:[{t:'comb',n:'מסרק 1P',p:{ph:1}},{t:'comb',n:'מסרק 3P',p:{ph:3}},{t:'busbar',n:'פס צבירה L1',p:{tag:'L1',color:'orange'}},{t:'busbar',n:'פס צבירה N',p:{tag:'N',color:'blue'}},{t:'busbar',n:'פס הארקה PE',p:{tag:'PE',color:'green'}}]},{g:'בלוקי חלוקה מודולריים מדורגים (פס צבירה לפס DIN)',items:[{t:'dblk',n:"בלוק חלוקה מדורג 4P 40A",p:{"amp": "40", "pl": "4"}},{t:'dblk',n:"בלוק חלוקה מדורג 4P 63A",p:{"amp": "63", "pl": "4"}},{t:'dblk',n:"בלוק חלוקה מדורג 4P 100A",p:{"amp": "100", "pl": "4"}},{t:'dblk',n:"בלוק חלוקה מדורג 4P 125A",p:{"amp": "125", "pl": "4"}},{t:'dblk',n:"בלוק חלוקה מדורג 4P 160A",p:{"amp": "160", "pl": "4"}},{t:'dblk',n:"בלוק חלוקה מדורג 4P 250A",p:{"amp": "250", "pl": "4"}},{t:'dblk',n:"בלוק חלוקה מדורג 5P 125A (+PE)",p:{"amp": "125", "pl": "5"}},{t:'dblk',n:"בלוק חלוקה מדורג 3P 125A",p:{"amp": "125", "pl": "3"}},{t:'dblk',n:"בלוק חלוקה מדורג 2P 63A",p:{"amp": "63", "pl": "2"}},{t:'dblk',n:"בלוק חלוקה 1P N 125A",p:{"amp": "125", "pl": "1N"}},{t:'dblk',n:"בלוק חלוקה 1P PE 125A",p:{"amp": "125", "pl": "1PE"}}]},
  ]},
  {tab:'קופסאות CI וחזית',groups:[
   {g:'קופסאות CI-K ללחצנים (גובה×רוחב מ"מ)',items:['K1','K2','K3','K4','K5'].map(k=>({t:'cibox',n:CISZ[k].n,p:{size:k}}))},
@@ -3483,7 +3508,8 @@ const LIB=[
    {g:'קבוצות מהדקים',items:I('מהדקים חד-פאזי L N PE','מהדקים תלת-פאזי L1-L3','מהדקים 4 קטבים +N','מהדקים 5 קטבים +N +PE')},
    {g:'מהדק בודד — צבע וגודל (חתך) בעריכה',items:I('מהדק אפור','מהדק כחול N','מהדק הארקה','מהדק אדום','מהדק לבן','מהדק כתום','מהדק סגול')},
    {g:'מהדק כפול (שתי קומות) — צבע, גודל וסימון לכל קומה בעריכה',items:[{t:'tbd',n:'מהדק כפול אפור'},{t:'tbd',n:'מהדק כפול כחול',p:{kind:'blue'}},{t:'tbd',n:'מהדק כפול הארקה',p:{kind:'pe'}},{t:'tbd',n:'מהדק כפול אדום',p:{kind:'red'}},{t:'tbd',n:'מהדק כפול 4 ממ"ר',p:{tsz:'4'}},{t:'tbf',n:'מהדק כפול עם פיוז 5×20'},{t:'tbf',n:'מהדק פיוז קומה אחת 5×20',p:{lv:'1'}},{t:'tbf',n:'מהדק פיוז 6.3×32',p:{lv:'1',fz:'6x32',fa:'6.3A',led:'230'}}]},
-   {g:'מסרקים ופסי צבירה',items:I('מסרק 1P','מסרק 3P','פס צבירה L1','פס צבירה N','פס הארקה PE')}]},
+   {g:'מסרקים ופסי צבירה',items:I('מסרק 1P','מסרק 3P','פס צבירה L1','פס צבירה N','פס הארקה PE')},
+   {g:'בלוקי חלוקה מודולריים מדורגים (פס צבירה לפס DIN)',items:I("בלוק חלוקה מדורג 4P 40A","בלוק חלוקה מדורג 4P 63A","בלוק חלוקה מדורג 4P 100A","בלוק חלוקה מדורג 4P 125A","בלוק חלוקה מדורג 4P 160A","בלוק חלוקה מדורג 4P 250A","בלוק חלוקה מדורג 5P 125A (+PE)","בלוק חלוקה מדורג 3P 125A","בלוק חלוקה מדורג 2P 63A","בלוק חלוקה 1P N 125A","בלוק חלוקה 1P PE 125A")}]},
   {tab:'לחצנים ונוריות',icon:'◉',hint:all['לחצן']?LIB.find(T=>T.groups.some(g=>g.items.includes(all['לחצן']))).hint:'',groups:[
    {g:'קופסאות לחצנים שניידר Harmony (XALD / XALK) — בוחרים במאפיינים מה בכל קדח',items:[{t:'xbox',n:'קופסת לחצנים 1 קדח — XALD01',p:{n:1,h1:'start'}},{t:'xbox',n:'קופסת לחצנים 2 קדחים — XALD02',p:{n:2,h1:'start',h2:'stop'}},{t:'xbox',n:'קופסת לחצנים 3 קדחים — XALD03',p:{n:3,h1:'start',h2:'stop',h3:'lampg'}},{t:'xbox',n:'קופסת חירום צהובה — XALK',p:{n:1,h1:'estop',yel:'1'}}]},
    {g:'לחצנים כפולים Harmony לחור 22 — I ירוק למעלה, נורה באמצע, O אדום למטה',items:[{t:'pbdbl',n:'לחצן כפול XB5 עם נורה לבנה 230V — XB5AW73731M5',p:{lcol:'w'}},{t:'pbdbl',n:'לחצן כפול XB5 עם נורה ירוקה 230V — XB5AW73733M5',p:{lcol:'g'}},{t:'pbdbl',n:'לחצן כפול XB5 עם נורה אדומה 230V — XB5AW73734M5',p:{lcol:'r'}},{t:'pbdbl',n:'לחצן כפול XB5 עם נורה כתומה 24V — XB5AW73735B5',p:{lcol:'o',pv:'B'}},{t:'pbdbl',n:'לחצן כפול XB5 בלי נורה — XB5AL73415',p:{lcol:'none'}},{t:'pbdbl',n:'לחצן כפול מתכת XB4 עם נורה לבנה 230V — XB4BW73731M5',p:{hmat:'xb4',lcol:'w'}},{t:'pbdbl',n:'לחצן כפול מתכת XB4 עם נורה ירוקה 24V — XB4BW73733B5',p:{hmat:'xb4',lcol:'g',pv:'B'}},{t:'pbdbl',n:'לחצן כפול מתכת XB4 בלי נורה — XB4BL73415',p:{hmat:'xb4',lcol:'none'}},{t:'pbdbl',n:'לחצן כפול חצים ▲▼ XB5 עם נורה לבנה 230V',p:{leg:'ud',lcol:'w'}},{t:'pbdbl',n:'לחצן כפול חצים ▲▼ XB5 שחור, בלי נורה',p:{leg:'udk',lcol:'none'}},{t:'pbdbl',n:'לחצן כפול חצים ▲▼ מתכת XB4 עם נורה לבנה 24V',p:{hmat:'xb4',leg:'ud',lcol:'w',pv:'B'}}]},
@@ -4328,7 +4354,7 @@ async function openShared(){let ds=[];try{ds=await SH.list();}catch(e){toast('ל
    main switch and any meter over a busbar, then a feeder per protective device —
    drives and motor breakers to a motor, the rest to a load named after the part.
    The panel doesn't say what feeds what, so it's a draft to correct. */
-const SLD_MAP={mcb:'sbrk',rcd:'srcd',mpcb:'smpcb',gv2:'smpcb',vsd:'svfd',atv630:'svfd',cont:'scont',lc1d:'scont',lc1k:'scont',lc2d:'srev',lc2k:'srev',nsx:'sbrk',nsxm:'sbrk',acb:'sacb',ats480:'sats480',spd:'sspd',psu:'spsu',f5k:'sf5k',ab800f:'ssel',ab194l:'ssel',pxps:'spsu'};
+const SLD_MAP={mcb:'sbrk',rcd:'srcd',mpcb:'smpcb',gv2:'smpcb',vsd:'svfd',atv630:'svfd',cont:'scont',lc1d:'scont',lc1k:'scont',lc2d:'srev',lc2k:'srev',nsx:'sbrk',nsxm:'sbrk',acb:'sacb',ats480:'sats480',spd:'sspd',psu:'spsu',f5k:'sf5k',ab800f:'ssel',ab194l:'ssel',pxps:'spsu',dblk:'sbusm'};
 function sldFromPanel(){if(curView()!=='sld')switchDoc('sld');genSld();}
 function genSld(){if(state.tab==='both')switchDoc('sld');delete state.originS;const P=panelObjs().filter(o=>o.type!=='wire'&&o.type!=='label').slice().sort((a,b)=>a.y-b.y||a.x-b.x);
  if(!P.length){toast('אין רכיבים בחזית הלוח');return;}
