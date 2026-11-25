@@ -7,6 +7,7 @@ Live at https://ohadavraham85.github.io/ogg-wwtp-electrical-drawings/ (GitHub Pa
 - Reply in Hebrew only, including progress messages, in plain simple language.
 - Never ask for or accept passwords or Google-account access. When pointing to the Firebase console, say "אל תשלח לי סיסמאות או גישה לחשבון" and give click-by-click steps.
 - The owner's email is private: never write it into this (public) repo.
+- Requests for app changes are collected, not carried out at once: add each to `docs/TODO.md` ("ממתין"), confirm briefly and ask whether to carry out the list now. Only when the owner says to, do the whole list together, release once, and move the items to "בוצע". Questions and help (not app changes) are answered as usual.
 
 ## Layout
 - `index.html`: the shell. It handles Google sign-in (Firebase Auth compat), the owner/approval gate, user management and bulk import. It hosts the drawing tool in an iframe and exposes `window.panelDesignsBridge`, which provides:
