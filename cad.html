@@ -733,7 +733,7 @@ body.homeon #drawer{z-index:66}body.homeon #modal{z-index:70}body.homeon #toast{
 body.shnav #bMenu,body.shnav #bHome{display:none}body.shnav #selInfo{display:none}
 body.shnav #home .hello{visibility:hidden}
 @media (max-width:600px) and (min-height:501px){body.shnav #bMenu,body.shnav #bHome{display:inline-flex!important}body.shnav #selInfo{display:flex!important}body.shnav #home .hello{visibility:visible}}
-#fbBtn{position:fixed;left:30px;top:calc(env(safe-area-inset-top) + var(--toph) + var(--toph2) + 26px);z-index:5;display:flex;align-items:center;gap:5px;height:34px;padding:0 11px 0 9px;border-radius:17px;background:var(--card);border:1px solid var(--line-acc);color:var(--acc-light);font:700 13px Heebo,Arial,sans-serif;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.35);opacity:.92}
+#fbBtn{position:fixed;left:30px;top:calc(env(safe-area-inset-top) + var(--toph) + var(--toph2) + 26px);z-index:8;display:flex;align-items:center;gap:5px;height:34px;padding:0 11px 0 9px;border-radius:17px;background:var(--card);border:1px solid var(--line-acc);color:var(--acc-light);font:700 13px Heebo,Arial,sans-serif;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.35);opacity:.92}
 #fbBtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}#fbBtn:hover{opacity:1;background:var(--card2)}
 body.homeon #fbBtn,body.v3on #fbBtn{display:none}
 @media (max-width:600px) and (min-height:501px){#fbBtn{top:calc(env(safe-area-inset-top) + 64px);left:10px;height:32px}#fbBtn span{display:none}#fbBtn{padding:0 8px}}
@@ -6455,6 +6455,10 @@ function fbExport(L){const open=L.filter(x=>!x.done),list=open.length?open:L;if(
   list.map((x,i)=>`<div class="it"><div class="t">${i+1}. ${E(x.text||'(בלי טקסט)')}</div><div class="m">${E(x.doc)}${x.page?' · '+E(x.page):''}${x.ver?' · גרסה '+E(x.ver):''} · ${E(fmtWhen(x.at))}${x.by?' · '+E(x.by):''}${x.done?' · טופל':''}</div>${x.img?`<img src="${x.img}" alt="צילום ${i+1}">`:''}</div>`).join('')+`</body></html>`;
  saveFile(`משובים-OhadCad-${ds}.html`,h);}
 $('fbBtn').onclick=()=>fbCapture();
+/* keep the feedback button just under whatever bars are showing at the top (toolbar, doc tabs, recent parts) */
+function fbPos(){const B=$('fbBtn');if(!B)return;let y=0;['top','docTabs','favBar','tabs'].forEach(id=>{const e=$(id);if(!e)return;const r=e.getBoundingClientRect(),cs=getComputedStyle(e);if(cs.display==='none'||cs.visibility==='hidden'||!r.height||r.top>innerHeight/2)return;y=Math.max(y,r.bottom);});
+ B.style.top=Math.round(y+10)+'px';}
+addEventListener('resize',fbPos);setTimeout(fbPos,300);setTimeout(fbPos,1500);setInterval(fbPos,2000);
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.shiftKey&&(e.key==='F'||e.key==='f'||e.code==='KeyF')){e.preventDefault();fbCapture();}});
 function openDrawer(){const T=(ic,n,fn,tip,on)=>({ic,n,fn,tip:tip||n,on:!!on});
  const sh=SH&&SH.menu?SH.menu():[],shIc=t=>/משתמש/.test(t)?'users':/ייבוא/.test(t)?'imp':/ארכיון/.test(t)?'archive':/התנתק/.test(t)?'logout':'info',

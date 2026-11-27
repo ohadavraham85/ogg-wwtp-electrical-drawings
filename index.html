@@ -196,11 +196,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 353;
+const VERSION = 354;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'כפתור משוב על המסך, גלגל הגדרות בפס העליון, פתח כבלים וכוורת, מעברים בקיר, גובה מהרצפה, הקטנת שנאי, מקרא קצר בייצוא ובלוקים שזזים שלמים';
+const WHATS_NEW = 'כפתור המשוב תמיד גלוי — מתחת לסרגלים העליונים, לא מוסתר מאחורי הרכיבים האחרונים';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
