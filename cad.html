@@ -4922,6 +4922,7 @@ function wrapLabels(){document.querySelectorAll('#docTabs button,#sbar button').
    One drawn icon set (thin, rounded strokes in the text colour) for the document
    bar and the status bar, in place of emoji. */
 const IC={
+ note:'<path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/>',
  view:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
  newp:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11v6M9 14h6"/>',
  tpl:'<rect x="3" y="3" width="18" height="7" rx="1"/><rect x="3" y="14" width="9" height="7" rx="1"/><rect x="15" y="14" width="6" height="7" rx="1"/>',
@@ -5164,14 +5165,38 @@ function layAdd(d){laySync();if(curDoc()!==d)switchDoc(d);const [,lk]=LAYDOC.fin
  const e={id:uid(),d,name:'דף '+(state.lays.filter(x=>x.d===d).length+1),paper:prev.paper||'A3',orient:prev.orient||'L',scale:prev.scale||10,org:null};state.lays.push(e);
  state[lk]={on:1,paper:e.paper,orient:e.orient,scale:e.scale,lid:e.id};placeOnSheet();laySync();commit();renderNow();fit();layoutDialog();}
 function layEdit(id){laySync();const e=state.lays.find(x=>x.id===id);if(!e)return;
- modal('דף ייצור — '+esc(e.name),`<div class="fld"><label>שם הדף</label><input id="ly_name" value="${esc(e.name)}"></div><div class="hint">${e.d==='sld'?'⚡ חד קווי':'🗄 חזית לוח'} · ${e.paper} ${e.orient==='P'?'לאורך':'לרוחב'} · 1:${e.scale}</div>`,
+ modal('דף ייצור — '+esc(e.name),`<div class="fld"><label>שם הדף</label><input id="ly_name" value="${esc(e.name)}"></div><div class="hint">${LYDN[e.d]||e.d} · ${e.paper} ${e.orient==='P'?'לאורך':'לרוחב'} · 1:${e.scale}</div>`,
   [{t:'שמור',cls:'pri',fn:()=>{e.name=$('ly_name').value.trim()||e.name;commit();buildLayTabs();}},
    {t:'⚙ גודל וקנה מידה…',fn:()=>{e.name=$('ly_name').value.trim()||e.name;layShow(id);setTimeout(layoutDialog,30);}},
-   {t:'🗑 מחק דף',fn:()=>{state.lays=state.lays.filter(x=>x.id!==id);LAYDOC.forEach(([,lk])=>{if(state[lk]&&state[lk].lid===id){delete state[lk];const nx=state.lays.find(x=>x.d===e.d);if(nx){const [,lk2]=LAYDOC.find(x=>x[0]===nx.d);state[lk2]={on:0,paper:nx.paper,orient:nx.orient,scale:nx.scale,lid:nx.id};}}});commit();renderNow();toast('הדף נמחק');}},{t:'ביטול'}]);}
+   {t:'📑 כל הדפים…',fn:()=>{e.name=$('ly_name').value.trim()||e.name;setTimeout(layManager,30);}},
+   {t:'🗑 מחק דף',fn:()=>{layDel(id);toast('הדף נמחק');}},{t:'ביטול'}]);}
+function layDel(id){const e=state.lays.find(x=>x.id===id);if(!e)return;state.lays=state.lays.filter(x=>x.id!==id);LAYDOC.forEach(([,lk])=>{if(state[lk]&&state[lk].lid===id){delete state[lk];const nx=state.lays.find(x=>x.d===e.d);if(nx){const [,lk2]=LAYDOC.find(x=>x[0]===nx.d);state[lk2]={on:0,paper:nx.paper,orient:nx.orient,scale:nx.scale,lid:nx.id};}}});commit();renderNow();}
+/* Pages manager: every production sheet of the drawing in one table — which document it shows (front / plan /
+   single-line), name, paper, orientation, scale, order — with show / delete and "+ new page" per document.
+   A sheet is a printed frame laid over one of the documents; the PDF prints them in this order. */
+const LYDN={panel:'🗄 חזית לוח',top:'📐 היטל על',sld:'⚡ חד קווי'};
+function laySet(e,patch){Object.assign(e,patch);LAYDOC.forEach(([d,lk])=>{const L=state[lk];if(L&&L.lid===e.id){if(patch.d&&patch.d!==d){delete state[lk];}else Object.assign(L,{paper:e.paper,orient:e.orient,scale:e.scale});}});}
+function layManager(){laySync();const STD=[1,2,2.5,5,10,15,20,25,50,75,100,200],a=layActive(),O=(v,arr)=>arr.map(([k,l])=>`<option value="${k}" ${String(k)===String(v)?'selected':''}>${l}</option>`).join('');
+ const rows=state.lays.map((e,i)=>`<tr data-lm="${e.id}" style="${a===e.id?'background:rgba(255,140,0,.12)':''}"><td><select data-k="d" style="min-width:120px">${O(e.d,Object.entries(LYDN))}</select></td><td><input data-k="name" value="${esc(e.name)}" style="width:100%;min-width:120px"></td>
+  <td><select data-k="paper" style="min-width:64px">${O(e.paper,['A4','A3','A2','A1','A0'].map(x=>[x,x]))}</select></td><td><select data-k="orient" style="min-width:82px">${O(e.orient,[['L','לרוחב'],['P','לאורך']])}</select></td>
+  <td><select data-k="scale" style="min-width:76px">${O(e.scale,[...new Set([...STD,+e.scale])].sort((x,y)=>x-y).map(x=>[x,'1:'+x]))}</select></td>
+  <td style="white-space:nowrap" class="lmb"><button class="wbtn" data-la="up" ${i?'':'disabled'} title="למעלה">▲</button><button class="wbtn" data-la="dn" ${i<state.lays.length-1?'':'disabled'} title="למטה">▼</button><button class="wbtn" data-la="show" title="הצג את הדף">👁</button><button class="wbtn" data-la="del" title="מחק את הדף">🗑</button></td></tr>`).join('');
+ modal('📑 ניהול דפים',`<style>#mBody .lmb .wbtn{padding:6px 8px;min-width:0}#mBody td{padding:3px 2px}</style><div class="hint" style="margin-top:0">כל דף הוא מסגרת הדפסה (עם טבלת כותרת ומקרא) שמונחת על אחד המסמכים: <b>חזית לוח</b>, <b>היטל על</b> או <b>חד קווי</b>. כאן משייכים כל דף למסמך, משנים שם, גודל, כיוון וקנה מידה, ומסדרים את הסדר — וכך הם יודפסו ב-PDF. 👁 מציג דף; את המיקום שלו על השרטוט מזיזים בגרירת המסגרת.</div>
+  ${state.lays.length?`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="text-align:right;color:var(--mut,#999)"><th>מסמך</th><th>שם הדף</th><th>גודל</th><th>כיוון</th><th>קנה מידה</th><th></th></tr>${rows}</table></div>`:'<div class="hint">עוד אין דפים.</div>'}
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">${Object.entries(LYDN).map(([d,l])=>`<button class="wbtn" data-ladd="${d}">＋ דף ${l}</button>`).join('')}</div>`,[{t:'סגור'}]);
+ try{const mb=$('modal').querySelector('.mbox');mb.style.width='min(900px,96vw)';mb.style.maxWidth='96vw';}catch(err){}
+ const B=$('mBody');
+ B.onchange=ev=>{const r=ev.target.closest('[data-lm]'),k=ev.target.dataset.k;if(!r||!k)return;const e=state.lays.find(x=>x.id===r.dataset.lm);if(!e)return;const v=ev.target.value;
+  if(k==='name'){e.name=v.trim()||e.name;}else if(k==='d'){laySet(e,{d:v,org:null});}else laySet(e,{[k]:k==='scale'?+v:v});commit();renderNow();buildLayTabs();if(k==='d')layManager();};
+ B.onclick=ev=>{const ad=ev.target.closest('[data-ladd]');if(ad){closeModal();setTimeout(()=>layAdd(ad.dataset.ladd),30);return;}
+  const b=ev.target.closest('[data-la]'),r=ev.target.closest('[data-lm]');if(!b||!r)return;const id=r.dataset.lm,i=state.lays.findIndex(x=>x.id===id),act=b.dataset.la;
+  if(act==='show'){closeModal();layShow(id);return;}
+  if(act==='del'){if(!confirm('למחוק את הדף "'+state.lays[i].name+'"? (השרטוט עצמו לא נמחק)'))return;layDel(id);buildLayTabs();layManager();return;}
+  const j=act==='up'?i-1:i+1;if(j<0||j>=state.lays.length)return;const t=state.lays[i];state.lays[i]=state.lays[j];state.lays[j]=t;commit();buildLayTabs();layManager();};}
 let LYSIG='';function buildLayTabs(){const B=$('lyTabs');if(!B)return;laysInit();laySync();const a=layActive(),one=state.tab!=='both';const sig=JSON.stringify([a,curDoc(),state.lays.map(e=>[e.id,e.d,e.name,e.paper,e.scale])]);if(sig===LYSIG&&B.firstChild)return;LYSIG=sig;
  const cd=curDoc();let h=[['panel','🗄','חזית לוח'],['top','📐','היטל על'],['sld','⚡','חד קווי'],['both','◧','משולב']].map(([d,ic,l0])=>`<button data-ly="m:${d}" class="doc${cd===d&&!a?' on':''}${cd===d&&a?' cur':''}" title="${{panel:'חזית לוח',sld:'חד קווי',top:'היטל על — תוכנית החדרים מלמעלה',both:'חזית וחד קווי יחד'}[d]} — השרטוט עצמו, בלי דף">${ic}<span class="lyl"> ${l0}</span></button>`).join('')+'<span class="lysep"></span>';
  state.lays.forEach(e=>{h+=`<button data-ly="${e.id}" class="${a===e.id?'on':''}" title="${esc(e.name)} — ${e.d==='sld'?'חד קווי':e.d==='top'?'היטל על':'חזית לוח'} · ${e.paper} 1:${e.scale}\nלחיצה כפולה: שם, הגדרות, מחיקה">${e.d==='sld'?'⚡':e.d==='top'?'📐':'🗄'} <bdi>${esc(e.name)}</bdi><small dir="ltr">${e.paper} 1:${e.scale}</small></button>`;});
- h+=`<button class="add" data-ly="add" title="דף ייצור חדש">＋</button>`;B.innerHTML=h;layPos();}
+ h+=`<button class="add" data-ly="add" title="דף ייצור חדש">＋</button><button class="add" data-ly="mgr" title="ניהול דפים — שיוך למסמך, שם, גודל, קנה מידה, סדר ומחיקה">📑</button>`;B.innerHTML=h;layPos();}
 function layPos(){const B=$('lyTabs'),sb=$('sbar');if(!B||!sb)return;const r=sb.getBoundingClientRect(),cs=getComputedStyle(sb),wb=$('wireBar');
  if(wb&&!wb.classList.contains('hidden')&&wb.getBoundingClientRect().height){B.style.left='max(26px,env(safe-area-inset-left))';B.style.bottom=Math.round(innerHeight-wb.getBoundingClientRect().top+8)+'px';B.style.height='';B.classList.remove('glued');B.style.maxWidth='calc(100vw - 120px)';return;}
  if(cs.display==='none'||!r.width){B.style.left='max(26px,env(safe-area-inset-left))';B.style.bottom=cs.bottom;B.style.height='';B.classList.remove('glued');}
@@ -5182,6 +5207,7 @@ function railHint(){const r=$('rail');if(!r)return;const over=r.scrollWidth-r.cl
 try{$('rail').addEventListener('scroll',railHint,{passive:true});addEventListener('resize',railHint);setTimeout(railHint,600);setTimeout(railHint,2000);}catch(e){}try{document.fonts.ready.then(layPos);}catch(e){}setTimeout(layPos,800);
 let lyLast=null,lyT=0;
 $('lyTabs').addEventListener('click',e=>{const b=e.target.closest('[data-ly]');if(!b)return;const k=b.dataset.ly,now=Date.now();
+ if(k==='mgr'){layManager();return;}
  if(k===lyLast&&now-lyT<450&&k!=='add'&&!k.startsWith('m:')){lyLast=null;layEdit(k);return;}lyLast=k;lyT=now;
  if(k.startsWith('m:')){const d=k.slice(2);if(curDoc()!==d)switchDoc(d);layModel();}else if(k==='add'){const d=curDoc();if(d!=='both'){layAdd(d);return;}modal('דף ייצור חדש','<div class="hint">לאיזה מסמך?</div>',[{t:'🗄 חזית לוח',cls:'pri',fn:()=>{setTimeout(()=>layAdd('panel'),30);}},{t:'⚡ חד קווי',fn:()=>{setTimeout(()=>layAdd('sld'),30);}},{t:'📐 היטל על',fn:()=>{setTimeout(()=>layAdd('top'),30);}},{t:'ביטול'}]);}
  else layShow(k);});
@@ -6329,6 +6355,62 @@ function aboutDialog(){const v=(SH&&SH.version)||'';modal('אודות OhadCad',`
    (bridge menu(): [label, fn, icon?]) under "חשבון". */
 const DSEC_KEY='ohadcad.dsec';
 function dsecOpen(){try{return JSON.parse(localStorage.getItem(DSEC_KEY)||'null')||{proj:1,out:1};}catch(e){return {proj:1,out:1};}}
+/* ================= Feedback (משוב) =================
+   fbCapture: a picture of what is on screen (the drawing area), marked up in red (pen / circle / arrow) with a
+   note, saved with the drawing's name, page and date — with the shell as a shared design of kind 'fb'
+   (bridge feedbacks / save / remove), opened directly in localStorage 'ohadcad.fb'. fbList: the list (handled /
+   edit / delete) and "ייצוא" = one HTML file with every note and its picture, to send for fixing. Ctrl+Shift+F. */
+const FBK='ohadcad.fb';
+function fbLocal(){try{return JSON.parse(localStorage.getItem(FBK)||'[]');}catch(e){return [];}}
+function fbLocalSet(a){try{localStorage.setItem(FBK,JSON.stringify(a));return true;}catch(e){toast('אין מקום בזיכרון המכשיר למשוב נוסף');return false;}}
+async function fbAll(){if(SH&&SH.feedbacks){const L=await SH.feedbacks();return L.map(d=>{let x={};try{x=JSON.parse(d.data)||{};}catch(e){}return Object.assign(x,{id:d.id,by:x.by||d.by,at:x.at||d.at});});}return fbLocal();}
+async function fbPut(it){const data=JSON.stringify(it);
+ if(SH&&SH.feedbacks){const nd=await SH.save({id:it.id||undefined,name:'משוב — '+(it.doc||''),data,parts:0,kind:'fb'});it.id=nd.id;return it;}
+ const a=fbLocal();if(!it.id)it.id=uid();const i=a.findIndex(x=>x.id===it.id);if(i>=0)a[i]=it;else a.unshift(it);fbLocalSet(a);return it;}
+async function fbDel(id){if(SH&&SH.feedbacks){await SH.remove(id);return;}fbLocalSet(fbLocal().filter(x=>x.id!==id));}
+function fbShot(){return new Promise(res=>{try{const r=svg.getBoundingClientRect(),W=Math.max(1,Math.round(r.width)),H=Math.max(1,Math.round(r.height)),c=svg.cloneNode(true);
+ c.setAttribute('xmlns','http://www.w3.org/2000/svg');c.setAttribute('width',W);c.setAttribute('height',H);c.removeAttribute('style');c.removeAttribute('class');
+ const bg=getComputedStyle(stage).backgroundColor||'#fff',img=new Image();
+ img.onload=()=>{const k=Math.min(1,1400/W),cv=document.createElement('canvas');cv.width=Math.round(W*k);cv.height=Math.round(H*k);const g=cv.getContext('2d');g.fillStyle=bg&&bg!=='rgba(0, 0, 0, 0)'?bg:'#fff';g.fillRect(0,0,cv.width,cv.height);g.drawImage(img,0,0,cv.width,cv.height);res(cv);};
+ img.onerror=()=>res(null);img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(c));}catch(e){res(null);}});}
+function fbJpeg(cv){let q=.85,u=cv.toDataURL('image/jpeg',q);while(u.length>600000&&q>.3){q-=.1;u=cv.toDataURL('image/jpeg',q);}return u;}
+async function fbCapture(){const base=await fbShot();if(!base){toast('לא הצלחתי לצלם את המסך');return;}fbEdit({at:new Date().toISOString(),doc:state.name||'',dwgno:state.dwgno||'',page:fbPage(),by:(()=>{try{const m=SH&&SH.me&&(typeof SH.me==='function'?SH.me():SH.me);return (m&&m.label)||'';}catch(e){return '';}})(),ver:(SH&&SH.version)||'',text:'',done:false},base);}
+function fbPage(){const d=curDoc(),dn={panel:'חזית לוח',sld:'חד קווי',top:'היטל על',both:'משולב'}[d];const a=layActive(),e=a&&state.lays&&state.lays.find(x=>x.id===a);return dn+(e?' · '+e.name:'');}
+/* the markup editor: the picture with red strokes on top; for an existing note, only the text */
+function fbEdit(it,base){const S=[];let tool='pen',cur=null;
+ const pic=base?`<div class="fbtools" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">${[['pen','✏️ עט'],['circle','⭕ עיגול'],['arrow','➜ חץ']].map(([k,l])=>`<button class="wbtn${k==='pen'?' on':''}" data-ft="${k}">${l}</button>`).join('')}<button class="wbtn" data-ft="undo">↶ בטל</button></div><canvas id="fbC" style="width:100%;border:1px solid var(--line,#888);border-radius:8px;touch-action:none;cursor:crosshair"></canvas>`:(it.img?`<img src="${it.img}" style="width:100%;border-radius:8px;border:1px solid var(--line,#888)">`:'');
+ modal(base?'📝 משוב חדש':'📝 עריכת משוב',`${pic}<div class="fld" style="margin-top:8px"><label>מה לתקן / לשפר?</label><textarea id="fbT" rows="4" style="width:100%;font:inherit" placeholder="למשל: הכפתור הזה צריך להיות גדול יותר">${esc(it.text||'')}</textarea></div><div class="hint">${esc(it.doc||'')}${it.page?' · '+esc(it.page):''} · ${fmtWhen(it.at)}</div>`,
+  [{t:'💾 שמור משוב',cls:'pri',fn:()=>{it.text=$('fbT').value.trim();if(base){draw();it.img=fbJpeg(cv);}if(!it.text&&!it.img){toast('המשוב ריק');return false;}fbPut(it).then(()=>toast('המשוב נשמר ברשימת המשובים')).catch(e=>toast('שמירת המשוב נכשלה'+(e&&e.code?' ('+e.code+')':'')));}},{t:'ביטול'}]);
+ try{const mb=$('modal').querySelector('.mbox');mb.style.width='min(980px,96vw)';mb.style.maxWidth='96vw';}catch(e){}
+ if(!base){setTimeout(()=>$('fbT')&&$('fbT').focus(),50);return;}
+ const cv=$('fbC');cv.width=base.width;cv.height=base.height;const g=cv.getContext('2d'),lw=Math.max(3,base.width/320);
+ const P=e=>{const r=cv.getBoundingClientRect();return [(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height];};
+ function stroke(s){g.strokeStyle='#e11d48';g.lineWidth=lw;g.lineCap='round';g.lineJoin='round';g.beginPath();
+  if(s.k==='pen'){s.p.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.stroke();}
+  else if(s.k==='circle'){const [a,b]=s.p[0],[c,d]=s.p[s.p.length-1];g.ellipse((a+c)/2,(b+d)/2,Math.abs(c-a)/2+1,Math.abs(d-b)/2+1,0,0,Math.PI*2);g.stroke();}
+  else{const [a,b]=s.p[0],[c,d]=s.p[s.p.length-1],t=Math.atan2(d-b,c-a),h=lw*5;g.moveTo(a,b);g.lineTo(c,d);g.moveTo(c,d);g.lineTo(c-h*Math.cos(t-.45),d-h*Math.sin(t-.45));g.moveTo(c,d);g.lineTo(c-h*Math.cos(t+.45),d-h*Math.sin(t+.45));g.stroke();}}
+ function draw(){g.drawImage(base,0,0);S.forEach(stroke);if(cur)stroke(cur);}draw();
+ cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);cur={k:tool,p:[P(e)]};});
+ cv.addEventListener('pointermove',e=>{if(!cur)return;const q=P(e);if(cur.k==='pen')cur.p.push(q);else cur.p[1]=q;draw();});
+ const up=()=>{if(cur&&cur.p.length>1)S.push(cur);cur=null;draw();};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+ $('mBody').onclick=e=>{const b=e.target.closest('[data-ft]');if(!b)return;const k=b.dataset.ft;if(k==='undo'){S.pop();draw();return;}tool=k;$('mBody').querySelectorAll('[data-ft]').forEach(x=>x.classList.toggle('on',x===b));};}
+async function fbList(){let L=[];try{L=await fbAll();}catch(e){toast('לא הצלחתי לטעון את המשובים');return;}
+ const open=L.filter(x=>!x.done).length,row=x=>`<div data-fb="${x.id}" style="display:grid;grid-template-columns:120px 1fr auto;gap:10px;align-items:start;padding:8px;margin-bottom:8px;border:1px solid var(--line,#8884);border-radius:10px;${x.done?'opacity:.55':''}">
+  ${x.img?`<img src="${x.img}" data-fa="edit" style="width:120px;border-radius:6px;cursor:pointer">`:'<span></span>'}<div><div style="white-space:pre-wrap;font-weight:600">${esc(x.text||'(בלי טקסט)')}</div><div class="hint" style="margin:4px 0 0">${esc(x.doc||'')}${x.page?' · '+esc(x.page):''} · ${esc(fmtWhen(x.at))}${x.by?' · '+esc(x.by):''}</div></div>
+  <div style="display:flex;flex-direction:column;gap:4px"><button class="wbtn" data-fa="done">${x.done?'↺ פתח שוב':'✓ טופל'}</button><button class="wbtn" data-fa="edit">✏️ ערוך</button><button class="wbtn" data-fa="del">🗑</button></div></div>`;
+ modal(`📝 רשימת משובים (${open} פתוחים מתוך ${L.length})`,(L.length?L.map(row).join(''):'<div class="hint">עוד אין משובים. בכל מקום באפליקציה: תפריט ← "משוב חדש", או Ctrl+Shift+F.</div>'),
+  [{t:'📝 משוב חדש',fn:()=>{setTimeout(fbCapture,60);}},{t:'⬇ ייצוא לקובץ',cls:'pri',fn:()=>{fbExport(L);return false;}},{t:'סגור'}]);
+ try{const mb=$('modal').querySelector('.mbox');mb.style.width='min(860px,96vw)';mb.style.maxWidth='96vw';}catch(e){}
+ $('mBody').onclick=async e=>{const b=e.target.closest('[data-fa]'),r=e.target.closest('[data-fb]');if(!b||!r)return;const it=L.find(x=>x.id===r.dataset.fb);if(!it)return;const a=b.dataset.fa;
+  if(a==='done'){it.done=!it.done;await fbPut(it).catch(()=>{});fbList();}
+  else if(a==='edit'){fbEdit(it,null);}
+  else if(a==='del'){if(!confirm('למחוק את המשוב?'))return;await fbDel(it.id).catch(()=>{});fbList();}};}
+function fbExport(L){const open=L.filter(x=>!x.done),list=open.length?open:L;if(!list.length){toast('אין משובים לייצוא');return;}
+ const d=new Date(),ds=d.toISOString().slice(0,10),E=t=>String(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ const h=`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>משובים OhadCad ${ds}</title><style>body{font:15px/1.5 Arial,sans-serif;margin:24px;color:#111}h1{font-size:22px}.it{border:1px solid #ccc;border-radius:10px;padding:12px;margin:0 0 18px;page-break-inside:avoid}.it img{max-width:100%;border:1px solid #ddd;border-radius:6px;margin-top:8px}.m{color:#666;font-size:13px}.t{white-space:pre-wrap;font-weight:700}</style></head><body><h1>משובים — OhadCad · ${ds}</h1><p class="m">${list.length} משובים${open.length?' פתוחים':''}</p>`+
+  list.map((x,i)=>`<div class="it"><div class="t">${i+1}. ${E(x.text||'(בלי טקסט)')}</div><div class="m">${E(x.doc)}${x.page?' · '+E(x.page):''}${x.ver?' · גרסה '+E(x.ver):''} · ${E(fmtWhen(x.at))}${x.by?' · '+E(x.by):''}${x.done?' · טופל':''}</div>${x.img?`<img src="${x.img}" alt="צילום ${i+1}">`:''}</div>`).join('')+`</body></html>`;
+ saveFile(`משובים-OhadCad-${ds}.html`,h);}
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.shiftKey&&(e.key==='F'||e.key==='f'||e.code==='KeyF')){e.preventDefault();fbCapture();}});
 function openDrawer(){const T=(ic,n,fn,tip,on)=>({ic,n,fn,tip:tip||n,on:!!on});
  const sh=SH&&SH.menu?SH.menu():[],shIc=t=>/משתמש/.test(t)?'users':/ייבוא/.test(t)?'imp':/ארכיון/.test(t)?'archive':/התנתק/.test(t)?'logout':'info',
   shN=t=>String(t).replace(/^[^\p{L}\d(]+/u,'').replace(/^לוחות שנמחקו — שחזור$/,'לוחות שנמחקו').replace(/^ייבוא לוחות מהאפליקציה הקודמת$/,'ייבוא מהאפליקציה הישנה').replace(/^ארכיון: .*$/,'ארכיון תוכניות').replace(/^התנתקות \((.*)\)$/,'התנתקות');
@@ -6337,8 +6419,9 @@ function openDrawer(){const T=(ic,n,fn,tip,on)=>({ic,n,fn,tip:tip||n,on:!!on});
    ...(SH?[T('open','פתח',openShared,'פתח מהתיקייה המשותפת'),T('save','שמור',saveShared,'שמור עכשיו בתיקייה המשותפת (נשמר גם אוטומטית)'),T('saveas','שמור עותק',()=>saveSharedAs(true),'שמור עותק בשם…')]:[T('open','פתח',openProjects,'פתח פרויקט שמור'),T('saveas','שמור בשם',saveAs,'שמור בשם…')]),T('tpl','מתבנית',templatesDialog,'פרויקט חדש מתבנית (שלנו ודוגמאות)'),T('saveas','שמור כתבנית',saveAsTemplate,'שומר את השרטוט הפתוח כתבנית — תופיע לכולם בחלון "מתבנית"'),
    T('reset','גרסאות',versionsDialog,'היסטוריית הגרסאות של הלוח — שחזור או פתיחה כעותק'),
    T('info','פרטי פרויקט',()=>{sel=null;multi.clear();renderNow();editDialog();},'שם, מספר שרטוט, גרסה')]},
+  {k:'fb',t:'משובים',it:[T('note','משוב חדש',fbCapture,'צילום של מה שעל המסך + סימון ומה לתקן (Ctrl+Shift+F)'),T('bom','רשימת משובים',fbList,'כל המשובים — סימון "טופל", עריכה, וייצוא לקובץ אחד עם התמונות')]},
   {k:'home',t:'מסך הבית',it:[T('view','מסך הבית',homeOpen,'מסך הבית: השרטוט הפתוח, שרטוטים אחרונים, חדש / מתבנית / פתח'),T('save',isFavDoc(cloudId)?'הסר ממועדפים':'למועדפים',favCurrent,'מוסיף את השרטוט הפתוח לתיקיית המועדפים (מופיעה בראש מסך הבית)',isFavDoc(cloudId)),...(SH&&SH.setFolder?[T('open','העבר לתיקייה',()=>{if(!cloudId){toast('השרטוט עוד לא נשמר בתיקייה המשותפת');return;}foldPick(cloudId);},'מעביר את השרטוט הפתוח לתיקייה (משותפת לכולם)')]:[])]},
-  {k:'out',t:'הדפסה וייצוא',it:[T('table','מקרא בדף',toggleLegCol,'עמודת מקרא צרה בצד ימין של דף הייצור (סמל, תיאור וכמות — מתעדכנת לבד, גם ב-PDF). מקרא חופשי שמזיזים: בספרייה, שרטוט וסימון',!state.legOff),T('print','הדפסה',printPreview,'תצוגה לפני הדפסה (Ctrl+P)'),T('pdf','PDF',pdfDialog,'ייצוא PDF עם טבלת שרטוט'),T('png','תמונה',exportImage,'ייצוא תמונה (PNG)'),T('dxf','AutoCAD',dxfExport,'ייצוא DXF ל-AutoCAD'),
+  {k:'out',t:'הדפסה וייצוא',it:[T('page','ניהול דפים',layManager,'כל דפי הייצור: שיוך לחזית / היטל על / חד קווי, שם, גודל, קנה מידה, סדר ומחיקה'),T('table','מקרא בדף',toggleLegCol,'עמודת מקרא צרה בצד ימין של דף הייצור (סמל, תיאור וכמות — מתעדכנת לבד, גם ב-PDF). מקרא חופשי שמזיזים: בספרייה, שרטוט וסימון',!state.legOff),T('print','הדפסה',printPreview,'תצוגה לפני הדפסה (Ctrl+P)'),T('pdf','PDF',pdfDialog,'ייצוא PDF עם טבלת שרטוט'),T('png','תמונה',exportImage,'ייצוא תמונה (PNG)'),T('dxf','AutoCAD',dxfExport,'ייצוא DXF ל-AutoCAD'),
    T('bom','רשימת ציוד',bom,'רשימת ציוד (BOM)'),T('exp','הורד קובץ',()=>saveFile(safeName(state.name)+'.json',JSON.stringify(state)),'הורד קובץ פרויקט (JSON)'),T('imp','ייבוא קובץ',importJSON,'ייבוא קובץ פרויקט'),T('clip','העתק קובץ',copyJSON,'העתק את קובץ הפרויקט')]},
   {k:'chk',t:'בדיקה וחיווט',it:[T('check','התאמת מסמכים',xcheckDialog,'בדיקת התאמה: חזית ↔ חד קווי'),T('sld','חד קווי מהלוח',sldFromPanel,'צור טיוטת חד קווי מרכיבי חזית הלוח (מחליף את החד קווי הנוכחי — אפשר לבטל)'),T('link','הפניות',toggleXR,'הצג / הסתר הפניות חזית ↔ חד קווי ליד כל רכיב',state.xrShow),T('cross','קשתות בהצטלבות',toggleHops,'חוטים שמצטלבים בלי חיבור: קשת קפיצה מעל החוט השני (כבוי = רווח קטן בחוט החוצה)',state.hops),
    T('num','מספור חוטים',numberWires,'מספר חוטים לפי נקודות פוטנציאל'),T('tag','מספרי חוטים',toggleWN,'הצג / הסתר את מספרי החוטים',state.wnShow),T('table','טבלאות',()=>wireTables(),'טבלאות חוטים, מהדקים וכבלים'),T('labels','מדבקות',printLabels,'מדבקות מספרי חוטים'),
@@ -7114,7 +7197,8 @@ function drawnBox(b0){try{const ns='http://www.w3.org/2000/svg',sv=document.crea
 async function makePdf(t){toast('מכין תצוגה…');
  // one drawing page for the panel front and one for the single-line diagram (each that has something on it)
  const docs=[];withDoc('panel',()=>{if(state.objs.length)docs.push('panel');});if(topObjs().length)docs.push('top');withDoc('sld',()=>{if(state.objs.length)docs.push('sld');});if(!docs.length)docs.push('panel');
- laySync();const PG=[];docs.forEach(d=>{const ls=state.lays.filter(x=>x.d===d);if(ls.length)ls.forEach(l=>PG.push([d,l,ls.length]));else PG.push([d,null,0]);});
+ laySync();const PG=[];// pages in the order of the pages manager; a document with no page of its own gets one plain page
+ state.lays.forEach(l=>{if(docs.includes(l.d))PG.push([l.d,l,state.lays.filter(x=>x.d===l.d).length]);});docs.forEach(d=>{if(!state.lays.some(x=>x.d===d))PG.push([d,null,0]);});
  const LY0=withDoc(PG[0][0],()=>layWith(PG[0][1],layoutRect));if(LY0){t.paper=LY0.L.paper;t.orient=LY0.L.orient;}let [W,H]=PAPER[t.paper]||PAPER.A3;if(t.orient==='P')[W,H]=[H,W];
  const BP=t.bomPage==='1'?[['רשימת ציוד — חזית לוח',bomData()],['רשימת ציוד — חד קווי',bomDataSld()]].filter(x=>x[1].length):[];const pages=PG.length+BP.length;const svgs=[],SZ=[];const DOCN={panel:'חזית לוח',sld:'חד קווי',top:'היטל על'};
  PG.forEach(([d,lay,nl],di)=>withDoc(d,()=>layWith(lay,()=>{const LY=layoutRect(),PW=LY?LY.W:W,PH=LY?LY.H:H,tt=Object.assign({},t,{title:(t.title||state.name)+(docs.length>1?' — '+DOCN[d]:'')+(nl>1?' — '+lay.name:'')});

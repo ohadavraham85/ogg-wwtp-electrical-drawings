@@ -196,11 +196,11 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
-const VERSION = 351;
+const VERSION = 352;
 // Shown at the bottom of the sign-in screen, and as a popup the first time this
 // version runs on a device — update this string whenever VERSION is bumped, to a
 // short line describing what changed.
-const WHATS_NEW = 'הכנה למעבר לאחסון ב-Firebase: קישורי QR לפי כתובת האתר הנוכחית';
+const WHATS_NEW = 'כלי משוב עם צילום וסימון (Ctrl+Shift+F) וייצוא לקובץ; ניהול דפים — שיוך, שם, גודל, קנה מידה וסדר הדפסה';
 const LAST_VER_KEY = 'ohadcad-last-seen-version';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -406,6 +406,11 @@ const bridge = {
     await ready;
     return [...designs.values()].filter((d) => !d.kind).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt))).map(info);
   },
+  // feedback notes with a picture (kind 'fb', the tool's "משוב"), newest first, kept out of list()
+  async feedbacks() {
+    await ready;
+    return [...designs.values()].filter((d) => d.kind === 'fb').sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))).map((d) => ({ id: d.id, data: d.data, by: d.createdBy, byEmail: d.createdByEmail, at: d.createdAt }));
+  },
   // drawings saved as templates (kind 'tpl'), shared with everyone, kept out of list()
   async templates() {
     await ready;
@@ -450,7 +455,7 @@ const bridge = {
     }
     // version history: before overwriting, keep the previous content when the last kept
     // version is 10+ minutes old or someone else saved it
-    if (ex && ex.data && ex.data !== input.data && (!ex.verAt || Date.now() - Date.parse(ex.verAt) > VER_GAP || (ex.updatedByEmail && ex.updatedByEmail !== me.email))) {
+    if (ex && ex.kind !== 'fb' && ex.data && ex.data !== input.data && (!ex.verAt || Date.now() - Date.parse(ex.verAt) > VER_GAP || (ex.updatedByEmail && ex.updatedByEmail !== me.email))) {
       keepVersion(sv && sv.data ? { ...ex, ...sv, id: ex.id } : ex); d = { ...d, verAt: now };
     }
     if (new Blob([input.data]).size > MAX_DESIGN) { const e = new Error('too-big'); e.code = 'too-big'; e.size = new Blob([input.data]).size; throw e; }
