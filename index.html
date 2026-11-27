@@ -180,7 +180,7 @@ html.uil .panel p,html.uil .tag{color:#374151;font-weight:500}html.uil .btn{font
   </div>
 </div>
 <div id="topbar" hidden>
-  <span class="tbNav"><button id="tbMenu" class="tbNavB" title="תפריט" aria-label="תפריט"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="tbHome" class="tbNavB" title="מסך הבית — שרטוטים אחרונים, חדש, פתח והגדרות" aria-label="מסך הבית"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/></svg></button></span>
+  <span class="tbNav"><button id="tbMenu" class="tbNavB" title="תפריט" aria-label="תפריט"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="tbHome" class="tbNavB" title="מסך הבית — שרטוטים אחרונים, חדש, פתח והגדרות" aria-label="מסך הבית"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/></svg></button><button id="tbSet" class="tbNavB" title="הגדרות וחשבון" aria-label="הגדרות"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></span>
   <span class="tbDocW"><button id="tbDoc" class="tbDoc" hidden title="מאפייני השרטוט — שם, מספר שרטוט, גרסה"><svg viewBox="0 0 24 24"><path d="M6 2.8h8l4.5 4.5V21.2H6z"/><path d="M14 2.8v4.5h4.5"/><path d="M9 12h6M9 15.5h6"/></svg><b id="tbDocN"></b><span id="tbDocS"></span></button></span>
   <span class="tbWho"><span>שלום, <b id="tbName"></b></span><span class="sep">·</span><span id="tbClock"></span><span class="sep">·</span><span>גרסה <b id="tbVer"></b></span></span>
   <span class="tbBrand"><img class="tbIcon" src="icons/icon.svg" alt=""><img class="tbWm" src="icons/wordmark-dark.svg" alt="OhadCad"></span>
@@ -601,6 +601,7 @@ function start() {
   const toolCall = (fn) => { try { const w = f.contentWindow; if (w && typeof w[fn] === 'function') w[fn](); } catch (_) {} };
   $('tbMenu').onclick = () => toolCall('openDrawer');
   $('tbHome').onclick = () => toolCall('homeOpen');
+  $('tbSet').onclick = () => toolCall('homeSettings');
   document.querySelector('#topbar .tbBrand').onclick = () => toolCall('homeOpen');
   $('tbDoc').onclick = () => toolCall('docProps');
   f.title = 'OhadCad';
